@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict/>
+	</array>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Inter-Regular.otf</string>
+		<string>Inter-Medium.otf</string>
+		<string>Inter-SemiBold.otf</string>
+		<string>Inter-Bold.otf</string>
+		<string>Inter-Black.otf</string>
+	</array>
+    
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>This app requires Bluetooth access to connect with your IoT device.</string>
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>Bluetooth is needed to discover and pair with your IoT device.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Location access is needed to find nearby Bluetooth devices and detect WiFi networks.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Location access is needed to detect WiFi networks for device configuration.</string>
+
+    
+</dict>
+</plist>
