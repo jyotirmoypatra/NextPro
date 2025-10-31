@@ -302,10 +302,7 @@
 				ENABLE_PREVIEWS = YES;
 				EXCLUDED_ARCHS = "";
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/NextPro",
-					"$(SDKROOT)/../../../../../../../../../Users/jyotirmoypatra/Documents/NextPro/NextPro",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/NextPro";
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/NextPro/DoorMasterSDK.framework/Headers";
 				INFOPLIST_FILE = NextPro/Info.plist;
@@ -344,10 +341,7 @@
 				DEVELOPMENT_TEAM = 48M2N88866;
 				ENABLE_PREVIEWS = YES;
 				EXCLUDED_ARCHS = "";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/NextPro",
-					"$(SDKROOT)/../../../../../../../../../Users/jyotirmoypatra/Documents/NextPro/NextPro",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/NextPro";
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/NextPro/DoorMasterSDK.framework/Headers";
 				INFOPLIST_FILE = NextPro/Info.plist;
