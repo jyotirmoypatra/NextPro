@@ -128,6 +128,11 @@ struct OnboardPageDeviceScanView: View {
 
                 // "Scan Again" button
                 Button(action: {
+                    // Double-check scanning state before starting
+                    guard !isScanning else {
+                        print("⚠️ Ignoring scan request - already scanning")
+                        return
+                    }
                     startDeviceScan()
                 }) {
                     HStack {
@@ -305,41 +310,47 @@ struct OnboardPageDeviceScanView: View {
     }
 
     private func startDeviceScan() {
+        // Double guard check for scanning state
         guard !isScanning else {
-            print("⚠️ Scan already in progress")
+            print("⚠️ Scan already in progress - ignoring request")
             return
         }
 
         // Check if Bluetooth is ready for scanning
         if bluetoothStateMessage.contains("Powered Off") ||
            bluetoothStateMessage.contains("Unsupported") ||
-           bluetoothStateMessage.contains("Unauthorized") {
+           bluetoothStateMessage.contains("Unauthorized") ||
+           bluetoothStateMessage.contains("Failed") {
             print("❌ Cannot scan - Bluetooth not ready: \(bluetoothStateMessage)")
             return
         }
 
-        print("🔍 Starting device scan...")
+        print("🔍 Starting device scan... (isScanning was: \(isScanning))")
+
+        // Immediately set scanning state to prevent race conditions
         isScanning = true
         scannedDevices.removeAll()
         selectedDeviceIndex = nil
         selectedDeviceSN = nil
         bluetoothStateMessage = "Scanning for devices..."
 
-        // Scan for 3 seconds (3000ms)
+        print("📡 About to call LibDevModel.scanDevice()")
+
+        // Scan for 10 seconds (10000ms)
         let ret = LibDevModel.scanDevice(10000)
         print("📡 Scan device return code: \(ret)")
 
         if ret != 0 {
-            print("❌ Failed to start device scan: \(ret)")
+            print("❌ Failed to start device scan: \(ret) - resetting scanning state")
             isScanning = false
             bluetoothStateMessage = "Failed to start scanning (\(ret))"
         } else {
-            print("✅ Device scan initiated successfully")
+            print("✅ Device scan initiated successfully - scanning state: \(isScanning)")
 
             // Set a timeout in case the callback doesn't fire
-            DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 11) { [self] in  // Match scan duration + 1 second
                 if isScanning {
-                    print("⏰ Scan timeout - forcing completion")
+                    print("⏰ Scan timeout - forcing completion after 11 seconds")
                     isScanning = false
                     bluetoothStateMessage = scannedDevices.isEmpty ? "No devices found nearby" : ""
                 }
