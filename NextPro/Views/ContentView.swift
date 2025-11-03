@@ -22,6 +22,7 @@ struct ContentView: View {
                 //OnboardPageWiFiListView(selectedDeviceSN: "asswd3434545")
                 //SDKTestView()
                 //OnboardPageDeviceScanView()
+              // OnboardPageWiFiListView(selectedDeviceSN: "jjhdjhjdhjdh83787837")
                 //HomeView()
                      .transition(.move(edge: .trailing))
             }

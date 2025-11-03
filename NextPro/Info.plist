@@ -24,6 +24,10 @@
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>Location access is needed to detect WiFi networks for device configuration.</string>
 
+    <key>com.apple.developer.networking.wifi-info</key>
+    <true/>
     
+
+
 </dict>
 </plist>
