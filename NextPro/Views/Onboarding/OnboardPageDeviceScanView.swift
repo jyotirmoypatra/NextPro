@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreBluetooth
 
 struct OnboardPageDeviceScanView: View {
     @Environment(\.dismiss) private var dismiss
@@ -15,6 +16,8 @@ struct OnboardPageDeviceScanView: View {
     @State private var scannedDevices: [(sn: String, rssi: Int)] = []
     @State private var isScanning = false
     @State private var bluetoothStateMessage = ""
+    @StateObject private var bleManager = BLEManager()
+    @State private var isConnecting = false
 
     var body: some View {
         ZStack {
@@ -68,14 +71,20 @@ struct OnboardPageDeviceScanView: View {
                                             .foregroundColor(.red)
                                             .multilineTextAlignment(.center)
                                             .padding()
-                                    } else if isScanning {
-                                        // Loader
-                                        ProgressView("Scanning for devices...")
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                            .foregroundColor(.white)
-                                            .padding(.top, 30)
+                                    }
+                                     else if isScanning {
+                                        VStack(spacing: 10) {
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                                .scaleEffect(1.5)
+                                            Text("Scanning...")
+                                                .font(.custom("Inter-SemiBold", size: 16))
+                                                .foregroundColor(.white)
+                                        }
+                                        .padding(.top, 40)
+                                    }
 
-                                    } else  if scannedDevices.isEmpty {
+                                        else  if scannedDevices.isEmpty {
                                             Text("No devices found yet...")
                                                 .foregroundColor(.white.opacity(0.6))
                                                 .padding(.top, 20)
@@ -184,6 +193,10 @@ struct OnboardPageDeviceScanView: View {
                     .navigationDestination(isPresented: $navigateToWiFiListView) {
                         OnboardPageWiFiListView(selectedDeviceSN: selectedDeviceSN ?? "")
                     }
+      
+
+
+
                 }
                 .padding(.bottom, 30)
             }
@@ -313,7 +326,7 @@ struct OnboardPageDeviceScanView: View {
         bluetoothStateMessage = "Scanning for devices..."
 
         // Scan for 3 seconds (3000ms)
-        let ret = LibDevModel.scanDevice(3000)
+        let ret = LibDevModel.scanDevice(10000)
         print("📡 Scan device return code: \(ret)")
 
         if ret != 0 {

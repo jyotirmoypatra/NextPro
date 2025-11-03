@@ -18,11 +18,12 @@ struct ContentView: View {
                     .transition(.opacity)
                    
             } else {
-             //  LoginView()
+               LoginView()
                 //OnboardPageWiFiListView(selectedDeviceSN: "asswd3434545")
-               //SDKTestView()
-                OnboardPageDeviceScanView()
-                    .transition(.move(edge: .trailing))
+                //SDKTestView()
+                //OnboardPageDeviceScanView()
+                //HomeView()
+                     .transition(.move(edge: .trailing))
             }
         }
         .onAppear {
