@@ -18,10 +18,10 @@ struct ContentView: View {
                     .transition(.opacity)
                    
             } else {
-               LoginView()
+              // LoginView()
                 //OnboardPageWiFiListView(selectedDeviceSN: "asswd3434545")
                 //SDKTestView()
-                //OnboardPageDeviceScanView()
+                OnboardPageDeviceScanView()
               // OnboardPageWiFiListView(selectedDeviceSN: "jjhdjhjdhjdh83787837")
                 //HomeView()
                      .transition(.move(edge: .trailing))

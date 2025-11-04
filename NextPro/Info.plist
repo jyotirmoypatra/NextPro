@@ -14,20 +14,18 @@
 		<string>Inter-Bold.otf</string>
 		<string>Inter-Black.otf</string>
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+        <string>bluetooth-central</string>
+	</array>
+	<key>com.apple.developer.networking.wifi-info</key>
+	<true/>
     
     <key>NSBluetoothAlwaysUsageDescription</key>
-    <string>This app requires Bluetooth access to connect with your IoT device.</string>
-    <key>NSBluetoothPeripheralUsageDescription</key>
-    <string>Bluetooth is needed to discover and pair with your IoT device.</string>
+    <string>This app uses Bluetooth to discover and connect to nearby devices.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Location access is needed to find nearby Bluetooth devices and detect WiFi networks.</string>
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Location access is needed to detect WiFi networks for device configuration.</string>
-
-    <key>com.apple.developer.networking.wifi-info</key>
-    <true/>
-    
-
-
+    <string>Location access is required to scan for Bluetooth devices.</string>
 </dict>
 </plist>

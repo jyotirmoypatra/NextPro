@@ -66,29 +66,44 @@ struct OnboardPageDeviceScanView: View {
                 // Device list (scrollable)
                                 ScrollView(showsIndicators: false) {
                                     VStack(spacing: 12) {
-                                    if !bluetoothStateMessage.isEmpty {
-                                        Text(bluetoothStateMessage)
-                                            .foregroundColor(.red)
-                                            .multilineTextAlignment(.center)
-                                            .padding()
-                                    }
-                                     else if isScanning {
-                                        VStack(spacing: 10) {
-                                            ProgressView()
-                                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                                .scaleEffect(1.5)
-                                            Text("Scanning...")
-                                                .font(.custom("Inter-SemiBold", size: 16))
-                                                .foregroundColor(.white)
+//                                    if !bluetoothStateMessage.isEmpty {
+//                                        Text(bluetoothStateMessage)
+//                                            .foregroundColor(.red)
+//                                            .multilineTextAlignment(.center)
+//                                            .padding()
+//                                    }
+//                                    
+//
+//                                    else  if scannedDevices.isEmpty {
+//                                            Text("No devices found yet...")
+//                                                .foregroundColor(.white.opacity(0.6))
+//                                                .padding(.top, 20)
+//                                    }
+                                        
+                                        if bluetoothStateMessage.contains("Scanning for devices") {
+                                            VStack(spacing: 12) {
+                                                ProgressView()
+                                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                                    .scaleEffect(1.4)
+                                                Text("Scanning for devices...")
+                                                    .foregroundColor(.white)
+                                                    .font(.custom("Inter-Regular", size: 15))
+                                            }
+                                            .padding(.top, 20)
                                         }
-                                        .padding(.top, 40)
-                                    }
-
-                                        else  if scannedDevices.isEmpty {
+                                        else if !bluetoothStateMessage.isEmpty {
+                                            Text(bluetoothStateMessage)
+                                                .foregroundColor(.red)
+                                                .multilineTextAlignment(.center)
+                                                .padding()
+                                        }
+                                        else if scannedDevices.isEmpty {
                                             Text("No devices found yet...")
                                                 .foregroundColor(.white.opacity(0.6))
                                                 .padding(.top, 20)
-                                    } else {
+                                        }
+
+                                        else {
                                             ForEach(Array(scannedDevices.enumerated()), id: \.element.sn) { index, device in
                                                 HStack {
                                                     Image("smartphone")
@@ -144,15 +159,14 @@ struct OnboardPageDeviceScanView: View {
                     .frame(maxWidth: .infinity)
                     .padding()
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.white.opacity(0.8), lineWidth: 1)
-                    )
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.white.opacity(0.8), lineWidth: 1)
+                        )
+                        .opacity(isScanning ? 0.5 : 1)
                 }
                 .disabled(isScanning || bluetoothStateMessage.contains("Failed") || bluetoothStateMessage.contains("Unsupported") || bluetoothStateMessage.contains("Unauthorized") || bluetoothStateMessage.contains("Powered Off"))
-                .padding(.top, 10)
+                .padding(.top, 5)
                 .padding(.horizontal, 10)
-
-                Spacer()
 
                 // Bottom controls
                 HStack {
@@ -194,7 +208,6 @@ struct OnboardPageDeviceScanView: View {
                             .padding()
                     }
                     .disabled(selectedDeviceSN == nil)
-//
                     .navigationDestination(isPresented: $navigateToWiFiListView) {
                         OnboardPageWiFiListView(selectedDeviceSN: selectedDeviceSN ?? "")
                     }
@@ -207,17 +220,7 @@ struct OnboardPageDeviceScanView: View {
             }
             .padding(.horizontal, 20)
         }
-//        .onAppear{
-//            isScanning = true
-//            bleManager.startScanning()
-//            
-////            // stop loader after timeout or when devices found
-////                   DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-////                       if !bleManager.devices.isEmpty {
-////                           isScanning = false
-////                       }
-////                   }
-//        }
+
 
         .onAppear {
             setupDoorMasterSDK()

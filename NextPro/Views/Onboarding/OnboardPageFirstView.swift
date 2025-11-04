@@ -72,9 +72,6 @@ struct OnboardPageFirstView: View {
                             .padding()
                         
                     }
-//                    .navigationDestination(isPresented: $navigateToGetStarted) {
-//                        GetStartedView()
-//                    }
                     Spacer()
                     
                     // Page indicator dots
