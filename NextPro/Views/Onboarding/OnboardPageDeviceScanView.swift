@@ -19,6 +19,8 @@ struct OnboardPageDeviceScanView: View {
     @StateObject private var bleManager = BLEManager()
     @State private var isConnecting = false
     @State private var showBLEDebug = false
+    private var isBluetoothInitialized = false
+
 
     var body: some View {
         ZStack {
@@ -247,9 +249,10 @@ struct OnboardPageDeviceScanView: View {
             .padding(.horizontal, 20)
         }
 
-
         .onAppear {
-            initializeBluetooth()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                initializeBluetooth()
+            }
         }
         .navigationDestination(isPresented: $navigateToWiFiListView) {
             OnboardPageWiFiListView(selectedDeviceSN: selectedDeviceSN ?? "")
@@ -261,6 +264,12 @@ struct OnboardPageDeviceScanView: View {
 
     private func initializeBluetooth() {
         print("🔄 Initializing Bluetooth...")
+        
+        if isBluetoothInitialized {
+                print("⚠️ Bluetooth already initialized — skipping reinit")
+                return
+            }
+        
         bluetoothStateMessage = "Initializing Bluetooth..."
 
         // First, try to release any existing SDK instance to avoid -101 error
@@ -268,9 +277,10 @@ struct OnboardPageDeviceScanView: View {
         LibDevModel.releaseSDK()
 
         // Small delay to ensure cleanup
-        usleep(50000) // 0.05 seconds
+        usleep(200_000) // 0.05 seconds
 
         let ret = LibDevModel.initBluetooth()
+
         print("📡 initBluetooth return code: \(ret)")
 
         if ret != 0 {

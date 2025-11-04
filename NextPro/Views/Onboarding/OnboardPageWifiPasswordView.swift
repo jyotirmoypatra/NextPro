@@ -41,10 +41,10 @@ struct OnboardPageWifiPasswordView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .ignoresSafeArea()
-
+            
             Color.black.opacity(0.8)
                 .ignoresSafeArea()
-            
+            ScrollView {
             VStack(spacing: 25) {
                 // Fixed password section
                 VStack(alignment: .leading, spacing: 6) {
@@ -56,7 +56,7 @@ struct OnboardPageWifiPasswordView: View {
                             .font(.system(size: 14))
                             .foregroundColor(.red)
                     }
-
+                    
                     ZStack(alignment: .leading) {
                         if password.isEmpty {
                             Text("Enter Password")
@@ -64,7 +64,7 @@ struct OnboardPageWifiPasswordView: View {
                                 .foregroundColor(Color.white.opacity(0.5))
                                 .padding(.leading, 12)
                         }
-
+                        
                         SecureField("", text: $password)
                             .padding()
                             .background(Color.white.opacity(0.15))
@@ -169,14 +169,14 @@ struct OnboardPageWifiPasswordView: View {
                         .foregroundColor(.white)
                         .padding(.top, 20)
                 }
-
+                
                 if !statusMessage.isEmpty {
                     Text(statusMessage)
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                 }
-
+                
                 Spacer()
                 
                 // Bottom controls
@@ -212,6 +212,7 @@ struct OnboardPageWifiPasswordView: View {
                 .padding(.bottom, 30)
                 .padding(.horizontal)
             }
+        }
         }
         .navigationBarBackButtonHidden(true)
         .ignoresSafeArea(.keyboard, edges: .bottom)
