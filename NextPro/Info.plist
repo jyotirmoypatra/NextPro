@@ -2,18 +2,18 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict/>
-	</array>
-	<key>UIAppFonts</key>
-	<array>
-		<string>Inter-Regular.otf</string>
-		<string>Inter-Medium.otf</string>
-		<string>Inter-SemiBold.otf</string>
-		<string>Inter-Bold.otf</string>
-		<string>Inter-Black.otf</string>
-	</array>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict/>
+    </array>
+    <key>UIAppFonts</key>
+    <array>
+        <string>Inter-Regular.otf</string>
+        <string>Inter-Medium.otf</string>
+        <string>Inter-SemiBold.otf</string>
+        <string>Inter-Bold.otf</string>
+        <string>Inter-Black.otf</string>
+    </array>
     
     
     <!-- 🩵 Bluetooth permissions -->
@@ -30,15 +30,15 @@
 
     
     
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
-		<string>processing</string>
-		<string>bluetooth-central</string>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>processing</string>
+        <string>bluetooth-central</string>
         <string>location</string>
-	</array>
-	<key>com.apple.developer.networking.wifi-info</key>
-	<true/>
+    </array>
+    <key>com.apple.developer.networking.wifi-info</key>
+    <true/>
   
 
 </dict>

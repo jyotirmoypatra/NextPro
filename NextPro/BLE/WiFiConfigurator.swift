@@ -17,8 +17,8 @@ class WiFiConfigurator {
     ) {
         let devModel = LibDevModel()
         devModel.devSn = deviceSN
-        devModel.devMac = "58:cf:79:1a:89:ce"     // optional, if available
-        devModel.eKey = "92fc410e8d125331c26faf21c7e77292000000000000000000000000000000001000"       // optional (some SDKs need user key)
+        devModel.devMac = "58:cf:79:1d:f7:e6"     // optional, if available
+        devModel.eKey = "97b4c368894a17be950800a8022b7a21000000000000000000000000000000001000"       // optional (some SDKs need user key)
         devModel.devType = 2    // set from docs / device type
 
         // Change IP & port to match your actual server

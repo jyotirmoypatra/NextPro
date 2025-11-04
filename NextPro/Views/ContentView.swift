@@ -19,10 +19,10 @@ struct ContentView: View {
                    
             } else {
                 NavigationStack {
-                    // LoginView()
+                     LoginView()
                     //OnboardPageWiFiListView(selectedDeviceSN: "asswd3434545")
                     //SDKTestView()
-                    OnboardPageFirstView()  // Start with the first onboarding page
+                   // OnboardPageFirstView()  // Start with the first onboarding page
                     // OnboardPageDeviceScanView()  // Uncomment to start directly at device scan
                     // OnboardPageWiFiListView(selectedDeviceSN: "jjhdjhjdhjdh83787837")
                     //HomeView()

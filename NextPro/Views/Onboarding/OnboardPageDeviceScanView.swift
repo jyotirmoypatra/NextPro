@@ -249,7 +249,6 @@ struct OnboardPageDeviceScanView: View {
 
 
         .onAppear {
-            setupDoorMasterSDK()
             initializeBluetooth()
         }
         .navigationDestination(isPresented: $navigateToWiFiListView) {
@@ -259,6 +258,65 @@ struct OnboardPageDeviceScanView: View {
     }
 
     // MARK: - DoorMasterSDK Integration
+
+    private func initializeBluetooth() {
+        print("🔄 Initializing Bluetooth...")
+        bluetoothStateMessage = "Initializing Bluetooth..."
+
+        // First, try to release any existing SDK instance to avoid -101 error
+        print("🔄 Releasing any existing SDK instance...")
+        LibDevModel.releaseSDK()
+
+        // Small delay to ensure cleanup
+        usleep(50000) // 0.05 seconds
+
+        let ret = LibDevModel.initBluetooth()
+        print("📡 initBluetooth return code: \(ret)")
+
+        if ret != 0 {
+            print("❌ Failed to start Bluetooth initialization: \(ret)")
+            bluetoothStateMessage = "Failed to initialize Bluetooth (\(ret))"
+
+            // Try to understand the error code
+            switch ret {
+            case -101:
+                print("❌ Error -101: SDK already initialized or Bluetooth state issue")
+                print("🔄 Attempting to reset and retry...")
+                bluetoothStateMessage = "Resetting Bluetooth..."
+
+                // Try one more time after a longer delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    self.retryBluetoothInit()
+                }
+            case -1:
+                print("❌ Error -1: General failure")
+            case -2:
+                print("❌ Error -2: Invalid parameters")
+            default:
+                print("❌ Unknown error code: \(ret)")
+            }
+        } else {
+            print("✅ Bluetooth initialization started successfully")
+            // Setup SDK after init call
+            setupDoorMasterSDK()
+        }
+    }
+
+    private func retryBluetoothInit() {
+        print("🔄 Retrying Bluetooth initialization...")
+        bluetoothStateMessage = "Retrying Bluetooth initialization..."
+
+        let ret = LibDevModel.initBluetooth()
+        print("📡 Retry initBluetooth return code: \(ret)")
+
+        if ret == 0 {
+            print("✅ Bluetooth initialization successful on retry")
+            setupDoorMasterSDK()
+        } else {
+            print("❌ Bluetooth initialization failed even on retry: \(ret)")
+            bluetoothStateMessage = "Bluetooth initialization failed (\(ret))"
+        }
+    }
 
     private func setupDoorMasterSDK() {
         print("🔧 Setting up DoorMaster SDK...")
@@ -296,8 +354,7 @@ struct OnboardPageDeviceScanView: View {
                 } else {
                     print("⚠️ No devices received in scan callback")
                 }
-                isScanning = false
-                bluetoothStateMessage = scannedDevices.isEmpty ? "No devices found nearby" : ""
+                completeScan()
             }
         }
         print("✅ Scan callback setup complete")
@@ -316,8 +373,7 @@ struct OnboardPageDeviceScanView: View {
                 } else {
                     print("⚠️ No devices received in BG scan callback")
                 }
-                isScanning = false
-                bluetoothStateMessage = scannedDevices.isEmpty ? "No devices found nearby" : ""
+                completeScan()
             }
         }
         print("✅ BG Scan callback setup complete")
@@ -355,15 +411,15 @@ struct OnboardPageDeviceScanView: View {
         }
     }
 
-    private func initializeBluetooth() {
-        print("🔄 Initializing Bluetooth...")
-        bluetoothStateMessage = "Initializing Bluetooth..."
-        let ret = LibDevModel.initBluetooth()
-        if ret != 0 {
-            print("❌ Failed to start Bluetooth initialization: \(ret)")
-            bluetoothStateMessage = "Failed to initialize Bluetooth (\(ret))"
-        }
-    }
+//    private func initializeBluetooth() {
+//        print("🔄 Initializing Bluetooth...")
+//        bluetoothStateMessage = "Initializing Bluetooth..."
+//        let ret = LibDevModel.initBluetooth()
+//        if ret != 0 {
+//            print("❌ Failed to start Bluetooth initialization: \(ret)")
+//            bluetoothStateMessage = "Failed to initialize Bluetooth (\(ret))"
+//        }
+//    }
 
     private func startDeviceScan() {
         // Double guard check for scanning state
@@ -390,44 +446,72 @@ struct OnboardPageDeviceScanView: View {
         selectedDeviceSN = nil
         bluetoothStateMessage = "Scanning for devices..."
 
-        print("📡 About to call LibDevModel.scanDevice(10000)")
+        // Ensure no background scanning is running before starting regular scan
+        print("🔄 Stopping any background scanning before regular scan...")
+        let stopRet = LibDevModel.stopBackgroundMode()
+        if stopRet != 0 {
+            print("⚠️ Failed to stop background mode: \(stopRet)")
+        }
+        usleep(100000) // 0.1 second delay
 
-        // Try regular scan first
-        let ret = LibDevModel.scanDevice(10000)
+        print("📡 About to call LibDevModel.scanDevice(5000)")
+
+        // Use shorter scan time (5 seconds) to avoid conflicts
+        let ret = LibDevModel.scanDevice(5000)
         print("📡 Scan device return code: \(ret)")
 
         if ret == 0 {
             print("✅ Regular scan initiated successfully, waiting for callback...")
-        } else {
-            print("❌ Regular scan failed (error: \(ret)), trying background scan...")
-
-            // Try background scan as fallback
-            let bgRet = LibDevModel.startBackgroundMode()
-            print("📡 Background scan return code: \(bgRet)")
-
-            if bgRet == 0 {
-                print("✅ Background scan started, waiting for BG callback...")
-            } else {
-                print("❌ Background scan also failed (error: \(bgRet))")
-            }
-        }
-
-        if ret != 0 {
-            print("❌ Failed to start device scan: \(ret) - resetting scanning state")
-            isScanning = false
-            bluetoothStateMessage = "Failed to start scanning (\(ret))"
-        } else {
-            print("✅ Device scan initiated successfully - scanning state: \(isScanning)")
+            isScanning = true
+            bluetoothStateMessage = "Scanning for devices..."
 
             // Set a timeout in case the callback doesn't fire
-            DispatchQueue.main.asyncAfter(deadline: .now() + 11) { [self] in  // Match scan duration + 1 second
+            DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [self] in  // 5 second scan + 3 second buffer
                 if isScanning {
-                    print("⏰ Scan timeout - forcing completion after 11 seconds")
-                    isScanning = false
-                    bluetoothStateMessage = scannedDevices.isEmpty ? "No devices found nearby" : ""
+                    print("⏰ Scan timeout - trying background scan as fallback...")
+                    completeScan() // Complete current scan first
+
+                    // Try background scan as fallback
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.tryBackgroundScan()
+                    }
                 }
             }
+        } else {
+            print("❌ Regular scan failed (error: \(ret)), trying background scan...")
+            tryBackgroundScan()
         }
+    }
+
+    private func tryBackgroundScan() {
+        print("🔄 Trying background scan as fallback...")
+
+        let bgRet = LibDevModel.startBackgroundMode()
+        print("📡 Background scan return code: \(bgRet)")
+
+        if bgRet == 0 {
+            print("✅ Background scan started successfully")
+            isScanning = true
+            bluetoothStateMessage = "Scanning for devices (background mode)..."
+
+            // Set a timeout for background scan
+            DispatchQueue.main.asyncAfter(deadline: .now() + 15) { [self] in
+                if isScanning {
+                    print("⏰ Background scan timeout - forcing completion")
+                    completeScan()
+                }
+            }
+        } else {
+            print("❌ Background scan also failed (error: \(bgRet))")
+            completeScan()
+            bluetoothStateMessage = "Failed to start scanning (\(bgRet))"
+        }
+    }
+
+    private func completeScan() {
+        isScanning = false
+        bluetoothStateMessage = scannedDevices.isEmpty ? "No devices found nearby" : ""
+        print("✅ Scan completed. Found \(scannedDevices.count) devices")
     }
 }
 
