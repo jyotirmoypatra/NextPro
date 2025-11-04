@@ -95,10 +95,7 @@ struct OnboardPageFirstView: View {
                             .font(.custom("Inter-SemiBold", size: 16))
                             .foregroundColor(.white)
                             .padding()
-                        
-                    }
-                    .navigationDestination(isPresented: $navigateToDeviceScanView) {
-                        OnboardPageDeviceScanView()
+
                     }
 
                    
@@ -106,6 +103,9 @@ struct OnboardPageFirstView: View {
                 .padding(.bottom, 30)
             }
             .padding(.horizontal, 20)
+        }
+        .navigationDestination(isPresented: $navigateToDeviceScanView) {
+            OnboardPageDeviceScanView()
         }
         .navigationBarBackButtonHidden(true)
     }

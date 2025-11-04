@@ -18,6 +18,7 @@ struct OnboardPageDeviceScanView: View {
     @State private var bluetoothStateMessage = ""
     @StateObject private var bleManager = BLEManager()
     @State private var isConnecting = false
+    @State private var showBLEDebug = false
 
     var body: some View {
         ZStack {
@@ -66,19 +67,7 @@ struct OnboardPageDeviceScanView: View {
                 // Device list (scrollable)
                                 ScrollView(showsIndicators: false) {
                                     VStack(spacing: 12) {
-//                                    if !bluetoothStateMessage.isEmpty {
-//                                        Text(bluetoothStateMessage)
-//                                            .foregroundColor(.red)
-//                                            .multilineTextAlignment(.center)
-//                                            .padding()
-//                                    }
-//                                    
-//
-//                                    else  if scannedDevices.isEmpty {
-//                                            Text("No devices found yet...")
-//                                                .foregroundColor(.white.opacity(0.6))
-//                                                .padding(.top, 20)
-//                                    }
+
                                         
                                         if bluetoothStateMessage.contains("Scanning for devices") {
                                             VStack(spacing: 12) {
@@ -168,6 +157,46 @@ struct OnboardPageDeviceScanView: View {
                 .padding(.top, 5)
                 .padding(.horizontal, 10)
 
+                // Debug button to compare with native BLE scanning
+                Button(action: {
+                    showBLEDebug.toggle()
+                    if showBLEDebug {
+                        print("🔍 Starting native BLE scan for comparison...")
+                        bleManager.startScanning()
+                    } else {
+                        bleManager.stopScanning()
+                    }
+                }) {
+                    Text(showBLEDebug ? "Stop BLE Debug (\(bleManager.devices.count) found)" : "BLE Debug")
+                        .font(.custom("Inter-SemiBold", size: 14))
+                        .foregroundColor(.yellow)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.black.opacity(0.5))
+                        .cornerRadius(8)
+                }
+                .padding(.top, 10)
+
+                // Debug view for native BLE devices
+                if showBLEDebug && !bleManager.devices.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Native BLE Devices:")
+                            .font(.custom("Inter-SemiBold", size: 14))
+                            .foregroundColor(.yellow)
+
+                        ForEach(bleManager.devices, id: \.identifier) { device in
+                            Text("• \(device.name ?? "Unknown") (\(device.identifier.uuidString.prefix(8))...)")
+                                .font(.custom("Inter-Regular", size: 12))
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                    }
+                    .padding()
+                    .background(Color.black.opacity(0.3))
+                    .cornerRadius(8)
+                    .padding(.horizontal, 10)
+                    .padding(.top, 10)
+                }
+
                 // Bottom controls
                 HStack {
                     // Prev button
@@ -208,9 +237,6 @@ struct OnboardPageDeviceScanView: View {
                             .padding()
                     }
                     .disabled(selectedDeviceSN == nil)
-                    .navigationDestination(isPresented: $navigateToWiFiListView) {
-                        OnboardPageWiFiListView(selectedDeviceSN: selectedDeviceSN ?? "")
-                    }
       
 
 
@@ -226,16 +252,21 @@ struct OnboardPageDeviceScanView: View {
             setupDoorMasterSDK()
             initializeBluetooth()
         }
-        
-        
-
-
+        .navigationDestination(isPresented: $navigateToWiFiListView) {
+            OnboardPageWiFiListView(selectedDeviceSN: selectedDeviceSN ?? "")
+        }
         .navigationBarBackButtonHidden(true)
     }
 
     // MARK: - DoorMasterSDK Integration
 
     private func setupDoorMasterSDK() {
+        print("🔧 Setting up DoorMaster SDK...")
+
+        // Disable service filtering to detect all Bluetooth devices (including Thinmo devices)
+        LibDevModel.notFilteringServiceWhenScan()
+        print("✅ Service filtering disabled")
+
         // Set up Bluetooth initialization callback
         LibDevModel.onInitBluetoothOver { ret in
             DispatchQueue.main.async {
@@ -252,6 +283,7 @@ struct OnboardPageDeviceScanView: View {
         }
 
         // Set up scan callback
+        print("🔧 Setting up scan callback...")
         LibDevModel.onScanOver { devDict in
             DispatchQueue.main.async {
                 print("✅ Scan completed with \(devDict?.count ?? 0) devices found")
@@ -268,6 +300,27 @@ struct OnboardPageDeviceScanView: View {
                 bluetoothStateMessage = scannedDevices.isEmpty ? "No devices found nearby" : ""
             }
         }
+        print("✅ Scan callback setup complete")
+
+        // Set up background scan callback as backup
+        print("🔧 Setting up background scan callback...")
+        LibDevModel.onBGScanOver { devDict in
+            DispatchQueue.main.async {
+                print("✅ BG Scan completed with \(devDict?.count ?? 0) devices found")
+                if let devices = devDict as? [String: Int] {
+                    print("📱 BG Devices found: \(devices)")
+                    // Convert to array sorted by RSSI (strongest signal first)
+                    scannedDevices = devices.map { (sn: $0.key, rssi: $0.value) }
+                        .sorted { $0.rssi > $1.rssi }
+                    print("📋 BG Processed \(scannedDevices.count) devices")
+                } else {
+                    print("⚠️ No devices received in BG scan callback")
+                }
+                isScanning = false
+                bluetoothStateMessage = scannedDevices.isEmpty ? "No devices found nearby" : ""
+            }
+        }
+        print("✅ BG Scan callback setup complete")
 
         // Set up Bluetooth state change callback
         LibDevModel.onBluetoothStateOver { state in
@@ -337,11 +390,27 @@ struct OnboardPageDeviceScanView: View {
         selectedDeviceSN = nil
         bluetoothStateMessage = "Scanning for devices..."
 
-        print("📡 About to call LibDevModel.scanDevice()")
+        print("📡 About to call LibDevModel.scanDevice(10000)")
 
-        // Scan for 10 seconds (10000ms)
+        // Try regular scan first
         let ret = LibDevModel.scanDevice(10000)
         print("📡 Scan device return code: \(ret)")
+
+        if ret == 0 {
+            print("✅ Regular scan initiated successfully, waiting for callback...")
+        } else {
+            print("❌ Regular scan failed (error: \(ret)), trying background scan...")
+
+            // Try background scan as fallback
+            let bgRet = LibDevModel.startBackgroundMode()
+            print("📡 Background scan return code: \(bgRet)")
+
+            if bgRet == 0 {
+                print("✅ Background scan started, waiting for BG callback...")
+            } else {
+                print("❌ Background scan also failed (error: \(bgRet))")
+            }
+        }
 
         if ret != 0 {
             print("❌ Failed to start device scan: \(ret) - resetting scanning state")
@@ -367,3 +436,4 @@ struct OnboardPageDeviceScanView: View {
         OnboardPageDeviceScanView()
     }
 }
+

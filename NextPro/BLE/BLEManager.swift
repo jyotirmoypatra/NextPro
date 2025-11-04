@@ -234,7 +234,33 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     ) {
         if !devices.contains(where: { $0.identifier == peripheral.identifier }) {
             devices.append(peripheral)
-            print("📱 Found device: \(peripheral.name ?? "Unknown") RSSI: \(RSSI)")
+
+            // Enhanced logging for debugging DoorMaster SDK compatibility
+            print("📱 Found device: \(peripheral.name ?? "Unknown")")
+            print("   UUID: \(peripheral.identifier.uuidString.prefix(8))...")
+            print("   RSSI: \(RSSI)")
+            print("   Services: \(advertisementData[CBAdvertisementDataServiceUUIDsKey] ?? "None")")
+            print("   Manufacturer: \(advertisementData[CBAdvertisementDataManufacturerDataKey] != nil ? "Present" : "None")")
+            print("   Local Name: \(advertisementData[CBAdvertisementDataLocalNameKey] ?? "None")")
+            print("   TX Power: \(advertisementData[CBAdvertisementDataTxPowerLevelKey] ?? "None")")
+            print("   Is Connectable: \(advertisementData[CBAdvertisementDataIsConnectable] ?? "Unknown")")
+
+            // Check for patterns that DoorMaster SDK might look for
+            if let services = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] {
+                let serviceStrings = services.map { $0.uuidString }
+                print("   Service UUIDs: \(serviceStrings)")
+
+                // Check for common BLE door lock service patterns
+                let hasLockServices = serviceStrings.contains { uuid in
+                    uuid.lowercased().contains("180f") || // Battery service
+                    uuid.lowercased().contains("180a") || // Device info
+                    uuid.lowercased().contains("ffe0") || // Common for door locks
+                    uuid.lowercased().starts(with: "0000") // Standard services
+                }
+                if hasLockServices {
+                    print("   🎯 Potentially DoorMaster-compatible services detected")
+                }
+            }
         }
     }
 

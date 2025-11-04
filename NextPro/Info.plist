@@ -14,18 +14,32 @@
 		<string>Inter-Bold.otf</string>
 		<string>Inter-Black.otf</string>
 	</array>
+    
+    
+    <!-- 🩵 Bluetooth permissions -->
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>This app requires Bluetooth access to connect and control nearby smart devices.</string>
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>This app uses Bluetooth to discover and connect to compatible devices.</string>
+
+    <!-- 📍 Location permissions -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Location access is required to scan for nearby Bluetooth devices.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Location access is needed to detect and connect to Bluetooth devices even when the app is in background.</string>
+
+    
+    
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
 		<string>processing</string>
-        <string>bluetooth-central</string>
+		<string>bluetooth-central</string>
+        <string>location</string>
 	</array>
 	<key>com.apple.developer.networking.wifi-info</key>
 	<true/>
-    
-    <key>NSBluetoothAlwaysUsageDescription</key>
-    <string>This app uses Bluetooth to discover and connect to nearby devices.</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Location access is required to scan for Bluetooth devices.</string>
+  
+
 </dict>
 </plist>

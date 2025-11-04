@@ -157,6 +157,8 @@ struct OnboardPageWiFiListView: View {
             }
             .padding(.horizontal, 20)
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+
         .onAppear {
             checkLocationPermissionAndFetchWiFi()
         }

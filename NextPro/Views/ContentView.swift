@@ -18,13 +18,16 @@ struct ContentView: View {
                     .transition(.opacity)
                    
             } else {
-              // LoginView()
-                //OnboardPageWiFiListView(selectedDeviceSN: "asswd3434545")
-                //SDKTestView()
-                OnboardPageDeviceScanView()
-              // OnboardPageWiFiListView(selectedDeviceSN: "jjhdjhjdhjdh83787837")
-                //HomeView()
-                     .transition(.move(edge: .trailing))
+                NavigationStack {
+                    // LoginView()
+                    //OnboardPageWiFiListView(selectedDeviceSN: "asswd3434545")
+                    //SDKTestView()
+                    OnboardPageFirstView()  // Start with the first onboarding page
+                    // OnboardPageDeviceScanView()  // Uncomment to start directly at device scan
+                    // OnboardPageWiFiListView(selectedDeviceSN: "jjhdjhjdhjdh83787837")
+                    //HomeView()
+                }
+                .transition(.move(edge: .trailing))
             }
         }
         .onAppear {

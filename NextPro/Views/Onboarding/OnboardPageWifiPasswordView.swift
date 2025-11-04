@@ -214,6 +214,7 @@ struct OnboardPageWifiPasswordView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 
     // MARK: - WiFi Configuration
