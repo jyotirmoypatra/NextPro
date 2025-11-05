@@ -159,45 +159,7 @@ struct OnboardPageDeviceScanView: View {
                 .padding(.top, 5)
                 .padding(.horizontal, 10)
 
-                // Debug button to compare with native BLE scanning
-                Button(action: {
-                    showBLEDebug.toggle()
-                    if showBLEDebug {
-                        print("🔍 Starting native BLE scan for comparison...")
-                        bleManager.startScanning()
-                    } else {
-                        bleManager.stopScanning()
-                    }
-                }) {
-                    Text(showBLEDebug ? "Stop BLE Debug (\(bleManager.devices.count) found)" : "BLE Debug")
-                        .font(.custom("Inter-SemiBold", size: 14))
-                        .foregroundColor(.yellow)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.black.opacity(0.5))
-                        .cornerRadius(8)
-                }
-                .padding(.top, 10)
 
-                // Debug view for native BLE devices
-                if showBLEDebug && !bleManager.devices.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Native BLE Devices:")
-                            .font(.custom("Inter-SemiBold", size: 14))
-                            .foregroundColor(.yellow)
-
-                        ForEach(bleManager.devices, id: \.identifier) { device in
-                            Text("• \(device.name ?? "Unknown") (\(device.identifier.uuidString.prefix(8))...)")
-                                .font(.custom("Inter-Regular", size: 12))
-                                .foregroundColor(.white.opacity(0.8))
-                        }
-                    }
-                    .padding()
-                    .background(Color.black.opacity(0.3))
-                    .cornerRadius(8)
-                    .padding(.horizontal, 10)
-                    .padding(.top, 10)
-                }
 
                 // Bottom controls
                 HStack {
