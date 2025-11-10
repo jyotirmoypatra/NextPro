@@ -19,6 +19,7 @@ struct OnboardPageDeviceScanView: View {
     @StateObject private var bleManager = BLEManager()
     @State private var isConnecting = false
     @State private var showBLEDebug = false
+    @State private var isBackgroundModeActive = false
     private var isBluetoothInitialized = false
 
 
@@ -418,13 +419,18 @@ struct OnboardPageDeviceScanView: View {
         selectedDeviceSN = nil
         bluetoothStateMessage = "Scanning for devices..."
 
-        // Ensure no background scanning is running before starting regular scan
-        print("🔄 Stopping any background scanning before regular scan...")
-        let stopRet = LibDevModel.stopBackgroundMode()
-        if stopRet != 0 {
-            print("⚠️ Failed to stop background mode: \(stopRet)")
+        // Only stop background mode if it's actually running
+        if isBackgroundModeActive {
+            print("🔄 Stopping background mode before regular scan...")
+            let stopRet = LibDevModel.stopBackgroundMode()
+            if stopRet == 0 {
+                print("✅ Background mode stopped successfully")
+                isBackgroundModeActive = false
+            } else {
+                print("⚠️ Failed to stop background mode: \(stopRet)")
+            }
+            usleep(100000) // 0.1 second delay
         }
-        usleep(100000) // 0.1 second delay
 
         print("📡 About to call LibDevModel.scanDevice(5000)")
 
@@ -464,6 +470,7 @@ struct OnboardPageDeviceScanView: View {
         if bgRet == 0 {
             print("✅ Background scan started successfully")
             isScanning = true
+            isBackgroundModeActive = true  // Track that background mode is active
             bluetoothStateMessage = "Scanning for devices (background mode)..."
 
             // Set a timeout for background scan
@@ -481,6 +488,18 @@ struct OnboardPageDeviceScanView: View {
     }
 
     private func completeScan() {
+        // Stop background mode if it's still active
+        if isBackgroundModeActive {
+            print("🔄 Stopping background mode after scan completion...")
+            let stopRet = LibDevModel.stopBackgroundMode()
+            if stopRet == 0 {
+                print("✅ Background mode stopped successfully")
+            } else {
+                print("⚠️ Failed to stop background mode: \(stopRet)")
+            }
+            isBackgroundModeActive = false
+        }
+        
         isScanning = false
         bluetoothStateMessage = scannedDevices.isEmpty ? "No devices found nearby" : ""
         print("✅ Scan completed. Found \(scannedDevices.count) devices")
