@@ -18,6 +18,7 @@ struct AutoOpenDoorView: View {
     @State private var isMonitoring = false
     @State private var lastOpenAttempt: Date? = nil
     @State private var rssiThreshold = -60 // Configurable RSSI threshold (dBm)
+    @State private var hasTriggeredInCurrentProximity = false // Track if we've already opened in this approach
 
     // Create device name for BLE monitoring (matches BLE advertisement name)
     private var deviceBLEName: String {
@@ -282,9 +283,9 @@ struct AutoOpenDoorView: View {
             print("📱 AutoOpenDoorView disappeared")
         }
         .onReceive(bleManager.$monitoredDeviceRSSI) { rssi in
-            // Automatically check and attempt to open door when RSSI changes
-            if isMonitoring && !doorManager.isProcessing {
-                checkAndAttemptOpen()
+            // Proximity-based logic: open when close, reset when far
+            if isMonitoring {
+                handleProximityChange(rssi: rssi)
             }
         }
     }
@@ -341,34 +342,40 @@ struct AutoOpenDoorView: View {
         bleManager.stopMonitoringDevice()
     }
 
-    private func checkAndAttemptOpen() {
-        guard isMonitoring,
-              !doorManager.isProcessing,
-              let rssi = bleManager.monitoredDeviceRSSI,
-              rssi >= rssiThreshold else {
+    // MARK: - Proximity-Based Auto-Open Logic
+    private func handleProximityChange(rssi: Int?) {
+        guard let currentRSSI = rssi else {
+            // No signal - reset for next approach
+            if hasTriggeredInCurrentProximity {
+                print("📡 Signal lost - resetting for next approach")
+                hasTriggeredInCurrentProximity = false
+                doorManager.resetState()
+            }
             return
         }
-
-        // Check if we haven't attempted to open recently (prevent spam)
-        if let lastAttempt = lastOpenAttempt,
-           Date().timeIntervalSince(lastAttempt) < 3 { // 3 second cooldown
-            return
-        }
-
-        print("🚪 RSSI threshold met (\(rssi) >= \(rssiThreshold)), attempting to open door")
-        lastOpenAttempt = Date()
-
-        // Automatically open the door
-        doorManager.openSelectedDoor(selectedDoor)
-
-        // Reset after a delay to allow for new attempts
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            if !self.doorManager.isProcessing {
-                self.doorManager.resetState()
-                // Resume monitoring if still active
-                if self.isMonitoring {
-                    print("🔄 Resuming RSSI monitoring after door operation")
-                }
+        
+        // Check if signal is STRONG (>= threshold, e.g., -40 dBm or better)
+        if currentRSSI >= rssiThreshold {
+            // User is CLOSE - trigger door open if we haven't already
+            if !hasTriggeredInCurrentProximity && !doorManager.isProcessing {
+                print("🚪 ✅ PROXIMITY DETECTED! RSSI: \(currentRSSI) dBm (≥ \(rssiThreshold) dBm)")
+                print("🔥 FIRING door open command NOW!")
+                
+                hasTriggeredInCurrentProximity = true
+                lastOpenAttempt = Date()
+                
+                // Fire door open immediately
+                doorManager.openSelectedDoor(selectedDoor)
+            }
+        } else {
+            // Signal is WEAK (< threshold) - user moved away
+            if hasTriggeredInCurrentProximity {
+                print("📉 RSSI dropped to \(currentRSSI) dBm (< \(rssiThreshold) dBm)")
+                print("🔄 User moved away - AUTO RESET for next approach")
+                
+                // Reset state - ready for next proximity event
+                hasTriggeredInCurrentProximity = false
+                doorManager.resetState()
             }
         }
     }
