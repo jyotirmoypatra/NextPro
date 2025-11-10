@@ -172,7 +172,7 @@ class DoorManager: ObservableObject {
         devModel.devMac = door.devMac
         devModel.devType = door.devType
         devModel.eKey = door.eKey
-        devModel.privilege = 1
+        devModel.privilege = 13
         // Note: cardno is NOT needed here - it goes in the array parameter
         
         print("📋 Write Card Config:")

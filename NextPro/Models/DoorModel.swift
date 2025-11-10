@@ -22,7 +22,7 @@ struct DoorModel: Identifiable {
         name: String,
         devSn: String,
         devMac: String,
-        devType: Int32 = 1,
+        devType: Int32 = 2,
         eKey: String,
         cardno: String,
         isSelected: Bool = false
