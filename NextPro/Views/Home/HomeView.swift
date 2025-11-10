@@ -11,21 +11,20 @@ struct HomeView: View {
     @State private var selectedTab = 0
 
     var body: some View {
-        NavigationStack {
-            GeometryReader { geo in
-                ZStack {
-                    // Background Image
-                    Image("backgroundimg")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geo.size.width, height: geo.size.height)
-                        .ignoresSafeArea()
+        GeometryReader { geo in
+            ZStack {
+                // Background Image
+                Image("backgroundimg")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .ignoresSafeArea()
 
-                    // Black translucent overlay
-                    Color.black.opacity(0.85)
-                        .ignoresSafeArea()
+                // Black translucent overlay
+                Color.black.opacity(0.85)
+                    .ignoresSafeArea()
 
-                    VStack(spacing: 0) {
+                VStack(spacing: 0) {
                     // MARK: - Top Bar
                     // MARK: - Top Bar
                     HStack {
@@ -88,11 +87,9 @@ struct HomeView: View {
                     .padding(.vertical, 20)
                     .background(Color.black.opacity(0.9))
                     .ignoresSafeArea(edges: .bottom)
-                    }
-                    .frame(width: geo.size.width, height: geo.size.height)
                 }
+                .frame(width: geo.size.width, height: geo.size.height)
             }
-            .navigationBarHidden(true)
         }
     }
 }

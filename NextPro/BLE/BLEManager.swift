@@ -11,11 +11,16 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     @Published var isBluetoothOn = false
     @Published var bluetoothStateMessage = ""
     @Published var connectedPeripheral: CBPeripheral?
+    @Published var monitoredDeviceRSSI: Int? = nil
     @StateObject private var bleManager = BLEManager()
 
-
+    // RSSI monitoring properties
     private var centralManager: CBCentralManager!
     private var connectionCompletion: ((Bool, String) -> Void)?
+    private var monitoredDeviceIdentifier: UUID?
+    private var monitoredDeviceName: String? // Track by device name (e.g., "XM-4280125893")
+    private var rssiUpdateTimer: Timer?
+    private var continuousScanTimer: Timer?
 
     // MARK: - Init
     override init() {
@@ -106,6 +111,9 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
+        // Store RSSI for this device
+        deviceLastRSSI[peripheral.identifier] = RSSI.intValue
+
         if !devices.contains(where: { $0.identifier == peripheral.identifier }) {
             devices.append(peripheral)
 
@@ -135,6 +143,9 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
                     print("   🎯 Potentially DoorMaster-compatible services detected")
                 }
             }
+        } else {
+            // Device already in list, just update RSSI
+            print("📊 Updated RSSI for \(peripheral.name ?? "Unknown"): \(RSSI) dBm")
         }
     }
 
@@ -181,4 +192,130 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
             print("🔹 Characteristic: \(char.uuid)")
         }
     }
+
+    // MARK: - RSSI Monitoring Methods
+    func startMonitoringDevice(identifier: UUID) {
+        print("🔍 Starting RSSI monitoring for device: \(identifier)")
+        monitoredDeviceIdentifier = identifier
+        monitoredDeviceRSSI = nil
+
+        // Start continuous scanning if not already scanning
+        if !isScanning {
+            startContinuousScanning()
+        }
+
+        // Start RSSI update timer (every 500ms)
+        rssiUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.updateMonitoredDeviceRSSI()
+        }
+    }
+    
+    // New method: Monitor by device name (more reliable for door devices)
+    func startMonitoringDeviceByName(_ deviceName: String) {
+        print("🔍 Starting RSSI monitoring for device name: \(deviceName)")
+        monitoredDeviceName = deviceName
+        monitoredDeviceRSSI = nil
+
+        // Start continuous scanning if not already scanning
+        if !isScanning {
+            startContinuousScanning()
+        }
+
+        // Start RSSI update timer (every 500ms)
+        rssiUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.updateMonitoredDeviceRSSI()
+        }
+    }
+
+    func stopMonitoringDevice() {
+        print("🛑 Stopping RSSI monitoring")
+        monitoredDeviceIdentifier = nil
+        monitoredDeviceName = nil
+        monitoredDeviceRSSI = nil
+        rssiUpdateTimer?.invalidate()
+        rssiUpdateTimer = nil
+        stopContinuousScanning()
+    }
+
+    private func startContinuousScanning() {
+        guard centralManager.state == .poweredOn else {
+            print("⚠️ Cannot start continuous scanning - Bluetooth not powered on")
+            return
+        }
+
+        print("🔄 Starting continuous BLE scanning...")
+        isScanning = true
+        bluetoothStateMessage = "Monitoring for device..."
+
+        // Continuous scanning with shorter intervals
+        continuousScanTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self = self, self.isScanning else { return }
+            self.centralManager.scanForPeripherals(withServices: nil, options: nil)
+
+            // Stop scan after 0.8 seconds, then restart
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                if self.isScanning {
+                    self.centralManager.stopScan()
+                }
+            }
+        }
+
+        // Start first scan immediately
+        centralManager.scanForPeripherals(withServices: nil, options: nil)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            if self.isScanning {
+                self.centralManager.stopScan()
+            }
+        }
+    }
+
+    private func stopContinuousScanning() {
+        continuousScanTimer?.invalidate()
+        continuousScanTimer = nil
+        if isScanning {
+            centralManager.stopScan()
+            isScanning = false
+            print("🛑 Stopped continuous scanning")
+        }
+    }
+
+    private func updateMonitoredDeviceRSSI() {
+        // Check if monitoring by name (preferred for door devices)
+        if let monitoredName = monitoredDeviceName {
+            // Find device by name
+            if let device = devices.first(where: { $0.name == monitoredName }),
+               let lastRSSI = deviceLastRSSI[device.identifier] {
+                DispatchQueue.main.async {
+                    self.monitoredDeviceRSSI = lastRSSI
+                }
+                print("📊 RSSI update for \(monitoredName): \(lastRSSI) dBm")
+            } else {
+                // Device not currently visible
+                DispatchQueue.main.async {
+                    self.monitoredDeviceRSSI = nil
+                }
+            }
+            return
+        }
+        
+        // Fallback: Check by UUID
+        guard let monitoredID = monitoredDeviceIdentifier else { return }
+
+        // Find the monitored device in current devices list
+        if let device = devices.first(where: { $0.identifier == monitoredID }),
+           let lastRSSI = deviceLastRSSI[device.identifier] {
+            DispatchQueue.main.async {
+                self.monitoredDeviceRSSI = lastRSSI
+            }
+            print("📊 RSSI update for \(device.name ?? "Unknown"): \(lastRSSI) dBm")
+        } else {
+            // Device not currently visible
+            DispatchQueue.main.async {
+                self.monitoredDeviceRSSI = nil
+            }
+        }
+    }
+
+    // Dictionary to store last known RSSI for each device
+    private var deviceLastRSSI: [UUID: Int] = [:]
 }
