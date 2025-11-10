@@ -46,18 +46,18 @@ class DoorStorageManager: ObservableObject {
         // Add your doors here - update with real values
         DoorModel(
             name: "Main Door",
-            devSn: "4283847520",
-            devMac: "d8:3b:da:36:53:62",
-            eKey: "41f888c5017576eb80f030fe8730851d000000000000000000000000000000001000",
+            devSn: "4280125893",
+            devMac: "58:cf:79:1a:8d:0e",
+            eKey: "3ca884ca4f8d16e28199c11df14cfbcf000000000000000000000000000000001000",
             cardno: "1557198962",
             isSelected: true  // First door selected by default
         ),
         DoorModel(
             name: "DOOR 2",
-            devSn: "4282894706",
-            devMac: "58:cf:79:1d:f7:e6",
-            eKey: "97b4c368894a17be950800a8022b7a21000000000000000000000000000000001000",
-            cardno: "1557198963",
+            devSn: "4282184653",
+            devMac: "a0:76:4e:5a:ae:a2",
+            eKey: "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
+            cardno: "1557198962",
             isSelected: false
         ),
       

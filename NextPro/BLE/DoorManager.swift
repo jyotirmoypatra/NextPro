@@ -16,6 +16,8 @@ class DoorManager: ObservableObject {
     @Published var statusMessage = "Ready"
     @Published var lastResult: String?
     @Published var errorMessage: String?
+    @Published var retrievedCards: [String] = []
+    @Published var cardReadProgress: String = ""
     
     private var resetTimer: DispatchWorkItem?
     
@@ -147,6 +149,304 @@ class DoorManager: ObservableObject {
         }
     }
     
+    // MARK: - Write Card Number to Device
+    func writeCardNumber(_ door: DoorModel) {
+        print("💳 ========================================")
+        print("💳 WRITE CARD OPERATION STARTED")
+        print("💳 ========================================")
+        print("💳 Writing card number to door: \(door.name)")
+        
+        // Cancel any existing reset timer
+        resetTimer?.cancel()
+        
+        isProcessing = true
+        statusMessage = "Writing card to \(door.name)..."
+        errorMessage = nil
+        lastResult = nil
+        
+        // Create LibDevModel object
+        let devModel = LibDevModel()
+        
+        // Set ONLY required parameters as per SDK doc
+        devModel.devSn = door.devSn
+        devModel.devMac = door.devMac
+        devModel.devType = door.devType
+        devModel.eKey = door.eKey
+        devModel.privilege = 1
+        // Note: cardno is NOT needed here - it goes in the array parameter
+        
+        print("📋 Write Card Config:")
+        print("   Name: \(door.name)")
+        print("   devSn: \(devModel.devSn ?? "nil")")
+        print("   devMac: \(devModel.devMac ?? "nil")")
+        print("   devType: \(devModel.devType)")
+        print("   eKey length: \(devModel.eKey?.count ?? 0) chars")
+        print("   Card to write: \(door.cardno)")
+        
+        // Validate card number format (should be numeric, typically 10 digits)
+        if door.cardno.isEmpty {
+            print("❌ ERROR: Card number is empty!")
+            DispatchQueue.main.async {
+                self.isProcessing = false
+                self.statusMessage = "Invalid card number"
+                self.errorMessage = "Card number is empty"
+            }
+            return
+        }
+        
+        // Create card array with the door's card number (max 50 cards per batch)
+        let cardArray = [door.cardno]
+        print("📋 Card array to write: \(cardArray)")
+        
+        // Call SDK to write card
+        print("📤 Calling LibDevModel.writeCard(toDevice:andCards:)...")
+        let result = LibDevModel.writeCard(toDevice: devModel, andCards: cardArray)
+        
+        print("📤 ========================================")
+        print("📤 writeCard() RESULT: \(result)")
+        print("📤 ========================================")
+        
+        if result != 0 {
+            DispatchQueue.main.async {
+                self.isProcessing = false
+                self.statusMessage = "Failed to initiate write"
+                self.errorMessage = "SDK error: \(result). Check if device is powered on and nearby."
+                print("❌ writeCard failed with code: \(result)")
+                
+                // Common error codes:
+                // -1: General failure
+                // -2: Invalid parameters
+                // -101: Bluetooth not initialized or device issue
+                if result == -101 {
+                    self.errorMessage = "Bluetooth issue. Try restarting the app."
+                } else if result == -2 {
+                    self.errorMessage = "Invalid parameters. Check device config."
+                }
+            }
+            
+            // Auto-reset after error
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                self.resetState()
+            }
+        } else {
+            print("⏳ Write card command sent successfully, waiting for device callback...")
+            print("⏳ The device needs to be:")
+            print("   1. Powered ON")
+            print("   2. Within Bluetooth range")
+            print("   3. Not connected to another device")
+            
+            // Safety timeout - reset after 30 seconds if no callback
+            resetTimer = DispatchWorkItem { [weak self] in
+                guard let self = self else { return }
+                if self.isProcessing {
+                    print("⚠️ Write operation timed out - no callback received in 30 seconds")
+                    print("⚠️ Possible reasons:")
+                    print("   - Device is too far away")
+                    print("   - Device is powered off")
+                    print("   - Device is busy with another connection")
+                    DispatchQueue.main.async {
+                        self.isProcessing = false
+                        self.statusMessage = "Operation timed out"
+                        self.errorMessage = "No response from device. Is it powered on and nearby?"
+                        self.lastResult = "Timeout"
+                    }
+                    // Auto-reset after timeout
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                        self.resetState()
+                    }
+                }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 30, execute: resetTimer!)
+        }
+    }
+    
+    // MARK: - Retrieve Card Numbers from Device
+    func retrieveCardNumbers(_ door: DoorModel) {
+        print("📖 ========================================")
+        print("📖 RETRIEVE CARDS OPERATION STARTED")
+        print("📖 ========================================")
+        print("📖 Retrieving cards from door: \(door.name)")
+        
+        // Cancel any existing reset timer
+        resetTimer?.cancel()
+        
+        isProcessing = true
+        statusMessage = "Retrieving cards from \(door.name)..."
+        errorMessage = nil
+        lastResult = nil
+        retrievedCards = []
+        cardReadProgress = ""
+        
+        // Create LibDevModel object
+        let devModel = LibDevModel()
+        
+        // Set required parameters
+        devModel.devSn = door.devSn
+        devModel.devMac = door.devMac
+        devModel.devType = door.devType
+        devModel.eKey = door.eKey
+        
+        // Set privilege to ADMIN for reading operations (1=super admin, 2=admin, 4=normal user)
+        // Reading card info requires higher privileges
+        devModel.privilege = 1  // Super admin privilege for reading
+        
+        // Set other optional parameters
+        devModel.verified = SharedConfig.verified
+        devModel.startDate = SharedConfig.startDate
+        devModel.endDate = SharedConfig.endDate
+        
+        print("📋 Retrieve Card Config:")
+        print("   Name: \(door.name)")
+        print("   devSn: \(devModel.devSn ?? "nil")")
+        print("   devMac: \(devModel.devMac ?? "nil")")
+        print("   devType: \(devModel.devType)")
+        print("   privilege: \(devModel.privilege) (1=super admin for reading)")
+        print("   eKey length: \(devModel.eKey?.count ?? 0) chars")
+        
+        // Call SDK to retrieve cards with progress and complete callbacks
+        print("📤 Calling LibDevModel.getCardNumbers(fromDevice:andProgress:andComplete:)...")
+        
+        let result = LibDevModel.getCardNumbers(
+            fromDevice: devModel,
+            andProgress: { [weak self] cur, all in
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                    let progress = "Reading \(cur)/\(all) cards..."
+                    self.cardReadProgress = progress
+                    self.statusMessage = progress
+                    print("📊 Progress: \(progress)")
+                }
+            },
+            andComplete: { [weak self] result, all, cardnumbers in
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                    
+                    print("📥 ========================================")
+                    print("📥 RETRIEVE CARDS COMPLETED")
+                    print("📥 Result code: \(result)")
+                    print("📥 Total cards: \(all)")
+                    print("📥 Cards: \(cardnumbers ?? [])")
+                    print("📥 ========================================")
+                    
+                    // Cancel the safety timeout timer
+                    self.resetTimer?.cancel()
+                    self.isProcessing = false
+                    self.cardReadProgress = ""
+                    
+                    if result == 0 {
+                        // Success
+                        if let cards = cardnumbers, !cards.isEmpty {
+                            self.retrievedCards = cards
+                            self.statusMessage = "✅ Retrieved \(cards.count) card(s) successfully!"
+                            self.lastResult = "Success"
+                            self.errorMessage = nil
+                            print("✅ SUCCESS: Retrieved \(cards.count) cards")
+                            print("📋 Card list: \(cards)")
+                        } else {
+                            self.retrievedCards = []
+                            self.statusMessage = "✅ No cards stored on device"
+                            self.lastResult = "Success"
+                            self.errorMessage = nil
+                            print("✅ Device has no cards stored")
+                        }
+                        
+                        // Schedule auto-reset after 15 seconds (longer to read results)
+                        self.resetTimer = DispatchWorkItem { [weak self] in
+                            self?.resetState()
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 15, execute: self.resetTimer!)
+                    } else {
+                        // Error - provide detailed explanation
+                        self.retrievedCards = []
+                        
+                        // Map error codes to user-friendly messages
+                        var errorDesc = ""
+                        switch result {
+                        case 1:
+                            errorDesc = "Timeout - device not responding"
+                        case 2:
+                            errorDesc = "Device not found nearby"
+                        case 3:
+                            errorDesc = "Connection failed"
+                        case 4:
+                            errorDesc = "Authentication failed - check eKey"
+                        case 5:
+                            errorDesc = "Invalid parameters"
+                        case 14:
+                            errorDesc = "Operation not permitted - check device privileges or device may not support this feature"
+                        default:
+                            errorDesc = "Unknown error code: \(result)"
+                        }
+                        
+                        self.statusMessage = "❌ Failed to retrieve cards"
+                        self.errorMessage = errorDesc
+                        self.lastResult = "Failed"
+                        print("❌ FAILED: Error code \(result) - \(errorDesc)")
+                        
+                        if result == 14 {
+                            print("⚠️ ERROR 14 possible reasons:")
+                            print("   1. eKey doesn't have admin privileges")
+                            print("   2. Device doesn't support card reading via BLE")
+                            print("   3. Device is in a locked state")
+                            print("   4. Feature requires super admin (privilege=1)")
+                        }
+                        
+                        // Auto-reset after error
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+                            self.resetState()
+                        }
+                    }
+                }
+            }
+        )
+        
+        print("📤 ========================================")
+        print("📤 getCardNumbers() RESULT: \(result)")
+        print("📤 ========================================")
+        
+        if result != 0 {
+            DispatchQueue.main.async {
+                self.isProcessing = false
+                self.statusMessage = "Failed to initiate retrieve"
+                self.errorMessage = "SDK error: \(result). Check device connection."
+                print("❌ getCardNumbers failed with code: \(result)")
+                
+                if result == -101 {
+                    self.errorMessage = "Bluetooth issue. Try restarting the app."
+                } else if result == -2 {
+                    self.errorMessage = "Invalid parameters. Check device config."
+                }
+            }
+            
+            // Auto-reset after error
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                self.resetState()
+            }
+        } else {
+            print("⏳ Retrieve command sent successfully, waiting for device response...")
+            
+            // Safety timeout - reset after 60 seconds (reading cards can take time)
+            resetTimer = DispatchWorkItem { [weak self] in
+                guard let self = self else { return }
+                if self.isProcessing {
+                    print("⚠️ Retrieve operation timed out - no completion callback in 60 seconds")
+                    DispatchQueue.main.async {
+                        self.isProcessing = false
+                        self.statusMessage = "Operation timed out"
+                        self.errorMessage = "No response from device"
+                        self.lastResult = "Timeout"
+                        self.cardReadProgress = ""
+                    }
+                    // Auto-reset after timeout
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                        self.resetState()
+                    }
+                }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 60, execute: resetTimer!)
+        }
+    }
+    
     // MARK: - Scan and Open Nearest Door
     func scanAndOpenNearestDoor() {
         print("🔍 Scanning for nearest door...")
@@ -240,9 +540,17 @@ class DoorManager: ObservableObject {
     
     // MARK: - Handle Control Result
     private func handleControlResult(_ ret: Int32, msgDict: NSMutableDictionary?) {
-        print("📥 Control result received:")
-        print("   Return code: \(ret)")
-        print("   Message dict: \(msgDict ?? [:])")
+        print("📥 ========== SDK CALLBACK RECEIVED ==========")
+        print("📥 Return code: \(ret)")
+        print("📥 Message dict: \(msgDict ?? [:])")
+        
+        // Log all keys in msgDict for debugging
+        if let dict = msgDict {
+            print("📥 Message dict details:")
+            for (key, value) in dict {
+                print("   • \(key): \(value)")
+            }
+        }
         
         // Cancel the safety timeout timer
         resetTimer?.cancel()
@@ -251,10 +559,19 @@ class DoorManager: ObservableObject {
         
         switch ret {
         case 0:
-            statusMessage = "✅ Door opened successfully!"
-            lastResult = "Success"
-            errorMessage = nil
-            print("✅ SUCCESS: Door opened!")
+            // Check if this was a write card operation or door open
+            if statusMessage.contains("Writing") {
+                statusMessage = "✅ Card written successfully!"
+                lastResult = "Success"
+                errorMessage = nil
+                print("✅ SUCCESS: Card written to device!")
+                print("✅ The card number can now be used on this device")
+            } else {
+                statusMessage = "✅ Door opened successfully!"
+                lastResult = "Success"
+                errorMessage = nil
+                print("✅ SUCCESS: Door opened!")
+            }
             
             // Schedule auto-reset after 10 seconds
             resetTimer = DispatchWorkItem { [weak self] in
@@ -336,6 +653,8 @@ class DoorManager: ObservableObject {
         lastResult = nil
         errorMessage = nil
         isProcessing = false
+        retrievedCards = []
+        cardReadProgress = ""
     }
     
     // MARK: - Helper Functions
