@@ -17,7 +17,7 @@ struct AutoOpenDoorView: View {
     @StateObject private var bleManager = BLEManager()
     @State private var isMonitoring = false
     @State private var lastOpenAttempt: Date? = nil
-    @State private var rssiThreshold = -60 // Configurable RSSI threshold (dBm)
+    @State private var rssiThreshold = -40 // Configurable RSSI threshold (dBm)
     @State private var hasTriggeredInCurrentProximity = false // Track if we've already opened in this approach
 
     // Create device name for BLE monitoring (matches BLE advertisement name)
@@ -37,29 +37,117 @@ struct AutoOpenDoorView: View {
             )
             .ignoresSafeArea()
 
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 25) {
                     // Header
+                    HStack {
+                        Image(systemName: isMonitoring ? "wifi" : "wifi.slash")
+                            .foregroundColor(isMonitoring ? .green : .red)
+                            .font(.system(size: 24))
+                        Text("Signal Strength")
+                            .font(.headline)
+                            .foregroundColor(.white)
+
+                        Spacer()
+
+                        if isMonitoring {
+                            Button(action: stopMonitoring) {
+                                Text("Stop")
+                                    .font(.caption.bold())
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color.red.opacity(0.8))
+                                    .cornerRadius(12)
+                            }
+                        } else {
+                            Button(action: startMonitoring) {
+                                Text("Start")
+                                    .font(.caption.bold())
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color.green.opacity(0.8))
+                                    .cornerRadius(12)
+                            }
+                        }
+                    }
+
+                    Divider().background(Color.white.opacity(0.2))
+                    // RSSI Display
                     VStack(spacing: 15) {
                         ZStack {
                             Circle()
-                                .fill(Color.green.opacity(0.2))
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 8)
                                 .frame(width: 120, height: 120)
 
-                            Image(systemName: "sensor.tag.radiowaves.forward.fill")
-                                .font(.system(size: 50))
-                                .foregroundColor(.green)
+                            if let rssi = bleManager.monitoredDeviceRSSI {
+                                Circle()
+                                    .trim(from: 0, to: rssiStrength)
+                                    .stroke(rssiColor, lineWidth: 8)
+                                    .frame(width: 120, height: 120)
+                                    .rotationEffect(.degrees(-90))
+
+                                VStack {
+                                    Text("\(rssi)")
+                                        .font(.system(size: 32, weight: .bold))
+                                        .foregroundColor(.white)
+                                    Text("dBm")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                            } else {
+                                VStack {
+                                    Image(systemName: "wifi.slash")
+                                        .font(.system(size: 32))
+                                        .foregroundColor(.gray)
+                                    Text("No signal")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                            }
                         }
 
-                        Text("NFC-Style Door Opening")
-                            .font(.title2.bold())
-                            .foregroundColor(.white)
+                        // RSSI Status Text
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(rssiColor)
+                                .frame(width: 8, height: 8)
 
-                        Text("Hold near door to auto-open")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
+                            Text(rssiStatusText)
+                                .font(.subheadline)
+                                .foregroundColor(.white)
+
+                            if isMonitoring && doorManager.isProcessing {
+                                Text("• Opening...")
+                                    .font(.subheadline)
+                                    .foregroundColor(.blue)
+                            }
+                        }
                     }
-                    .padding(.top, 40)
+
+                    // Threshold Info
+                    HStack {
+                        Text("Threshold: \(rssiThreshold) dBm")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        Spacer()
+                        Button(action: { rssiThreshold = max(rssiThreshold - 5, -90) }) {
+                            Image(systemName: "minus.circle")
+                                .foregroundColor(.gray)
+                        }
+                        Button(action: { rssiThreshold = min(rssiThreshold + 5, -30) }) {
+                            Image(systemName: "plus.circle")
+                                .foregroundColor(.gray)
+                        }
+                    }
+                }
+                .padding(20)
+                .padding(.top,40)
+                .background(Color.white.opacity(0.08))
+                .cornerRadius(16)
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.15), lineWidth: 1))
+                .padding(.horizontal, 20)
 
                     // Door Information Card
                     VStack(alignment: .leading, spacing: 16) {
@@ -81,6 +169,7 @@ struct AutoOpenDoorView: View {
                         }
                     }
                     .padding(20)
+                    .padding(.top,30)
                     .background(Color.white.opacity(0.08))
                     .cornerRadius(16)
                     .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.15), lineWidth: 1))
@@ -88,114 +177,9 @@ struct AutoOpenDoorView: View {
 
                     // RSSI Monitoring Card
                     VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            Image(systemName: isMonitoring ? "wifi" : "wifi.slash")
-                                .foregroundColor(isMonitoring ? .green : .red)
-                                .font(.system(size: 24))
-                            Text("Signal Strength")
-                                .font(.headline)
-                                .foregroundColor(.white)
+                       
 
-                            Spacer()
-
-                            if isMonitoring {
-                                Button(action: stopMonitoring) {
-                                    Text("Stop")
-                                        .font(.caption.bold())
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(Color.red.opacity(0.8))
-                                        .cornerRadius(12)
-                                }
-                            } else {
-                                Button(action: startMonitoring) {
-                                    Text("Start")
-                                        .font(.caption.bold())
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(Color.green.opacity(0.8))
-                                        .cornerRadius(12)
-                                }
-                            }
-                        }
-
-                        Divider().background(Color.white.opacity(0.2))
-
-                        // RSSI Display
-                        VStack(spacing: 15) {
-                            ZStack {
-                                Circle()
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 8)
-                                    .frame(width: 120, height: 120)
-
-                                if let rssi = bleManager.monitoredDeviceRSSI {
-                                    Circle()
-                                        .trim(from: 0, to: rssiStrength)
-                                        .stroke(rssiColor, lineWidth: 8)
-                                        .frame(width: 120, height: 120)
-                                        .rotationEffect(.degrees(-90))
-
-                                    VStack {
-                                        Text("\(rssi)")
-                                            .font(.system(size: 32, weight: .bold))
-                                            .foregroundColor(.white)
-                                        Text("dBm")
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
-                                    }
-                                } else {
-                                    VStack {
-                                        Image(systemName: "wifi.slash")
-                                            .font(.system(size: 32))
-                                            .foregroundColor(.gray)
-                                        Text("No signal")
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
-                                    }
-                                }
-                            }
-
-                            // RSSI Status Text
-                            HStack(spacing: 8) {
-                                Circle()
-                                    .fill(rssiColor)
-                                    .frame(width: 8, height: 8)
-
-                                Text(rssiStatusText)
-                                    .font(.subheadline)
-                                    .foregroundColor(.white)
-
-                                if isMonitoring && doorManager.isProcessing {
-                                    Text("• Opening...")
-                                        .font(.subheadline)
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                        }
-
-                        // Threshold Info
-                        HStack {
-                            Text("Threshold: \(rssiThreshold) dBm")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                            Spacer()
-                            Button(action: { rssiThreshold = max(rssiThreshold - 5, -90) }) {
-                                Image(systemName: "minus.circle")
-                                    .foregroundColor(.gray)
-                            }
-                            Button(action: { rssiThreshold = min(rssiThreshold + 5, -30) }) {
-                                Image(systemName: "plus.circle")
-                                    .foregroundColor(.gray)
-                            }
-                        }
-                    }
-                    .padding(20)
-                    .background(Color.white.opacity(0.08))
-                    .cornerRadius(16)
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.15), lineWidth: 1))
-                    .padding(.horizontal, 20)
+                        
 
                     // Status Card
                     VStack(alignment: .leading, spacing: 12) {
@@ -250,28 +234,13 @@ struct AutoOpenDoorView: View {
                     .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.15), lineWidth: 1))
                     .padding(.horizontal, 20)
 
-                    // Instructions
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("How it works:")
-                            .font(.headline)
-                            .foregroundColor(.white)
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            instructionRow(number: "1", text: "Tap 'Start' to begin monitoring")
-                            instructionRow(number: "2", text: "Hold device near the door")
-                            instructionRow(number: "3", text: "Door will open automatically when signal is strong enough")
-                            instructionRow(number: "4", text: "View resets after each attempt")
-                        }
-                    }
-                    .padding(20)
-                    .background(Color.white.opacity(0.05))
-                    .cornerRadius(16)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
+                    
 
                     Spacer()
                 }
-            }
+                .frame(maxWidth: .infinity)
+            }.frame(maxWidth: .infinity)
+                .clipped()
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(false)
@@ -394,21 +363,6 @@ struct AutoOpenDoorView: View {
         }
     }
 
-    private func instructionRow(number: String, text: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Text(number)
-                .font(.caption.bold())
-                .foregroundColor(.blue)
-                .frame(width: 20, height: 20)
-                .background(Color.blue.opacity(0.2))
-                .clipShape(Circle())
-
-            Text(text)
-                .font(.subheadline)
-                .foregroundColor(.white)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
 }
 
 #Preview {
