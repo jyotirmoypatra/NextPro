@@ -224,8 +224,8 @@ struct OnboardPageWifiPasswordView: View {
                         .disabled(isConfiguring || password.isEmpty)
                         .navigationDestination(isPresented: $navigateToSuccessView) {
                              // Assuming SuccessConnctionView is defined elsewhere
-                             // SuccessConnctionView()
-                             Text("Success View Placeholder")
+                              SuccessConnctionView()
+                             //Text("Success View Placeholder")
                         }
                     }
                     .padding(.bottom, 30)
