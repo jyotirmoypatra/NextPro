@@ -164,6 +164,37 @@ struct OpenDoorsTabContent: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 10)
                 
+                // NFC Auto-Open Button
+                if let door = selectedDoor {
+                    NavigationLink(destination: AutoOpenDoorView(selectedDoor: door)) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "sensor.tag.radiowaves.forward.fill")
+                                .font(.system(size: 20))
+                            Text("Open Door as NFC")
+                                .font(.body.bold())
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 55)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.green.opacity(0.8), Color.teal.opacity(0.7)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(16)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                        .shadow(color: Color.green.opacity(0.3), radius: 10, x: 0, y: 5)
+                    }
+                    .disabled(doorManager.isProcessing)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 10)
+                }
+                
                 // Write Card Number Button
                 Button(action: {
                     if let door = selectedDoor {

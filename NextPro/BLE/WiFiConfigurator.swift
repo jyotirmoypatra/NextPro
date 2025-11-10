@@ -15,10 +15,27 @@ class WiFiConfigurator {
         wifiPassword: String,
         completion: @escaping (Bool, String) -> Void
     ) {
+        print("🔧 ========================================")
+        print("🔧 WiFi Configuration Started")
+        print("🔧 ========================================")
+        print("🔧 Looking up device config for SN: \(deviceSN)")
+        
+        // Get device config from DeviceConfigManager
+        guard let deviceConfig = DeviceConfigManager.shared.findDevice(bySn: deviceSN) else {
+            print("❌ Device not found in configuration!")
+            completion(false, "❌ Device \(deviceSN) not configured. Please add to DeviceConfig.swift")
+            return
+        }
+        
+        print("✅ Found device: \(deviceConfig.name)")
+        print("   SN: \(deviceConfig.devSn)")
+        print("   MAC: \(deviceConfig.devMac)")
+        print("   eKey: \(deviceConfig.eKey.prefix(20))...")
+        
         let devModel = LibDevModel()
-        devModel.devSn = deviceSN
-        devModel.devMac = "a0:76:4e:5a:ae:a2"     // optional, if available
-        devModel.eKey = "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000"       // optional (some SDKs need user key)
+        devModel.devSn = deviceConfig.devSn
+        devModel.devMac = deviceConfig.devMac
+        devModel.eKey = deviceConfig.eKey
         devModel.devType = 2    // set from docs / device type
 
         // Change IP & port to match your actual server
@@ -33,16 +50,50 @@ class WiFiConfigurator {
             wiFiPwd: wifiPassword
         ) { retCode, msgDict in
             DispatchQueue.main.async {
+                print("📥 ========================================")
+                print("📥 WiFi Config Callback Received")
+                print("📥 Return Code: \(retCode)")
+                print("📥 Message Dict: \(msgDict ?? [:])")
+                print("📥 ========================================")
+                
                 if retCode == 0 {
+                    print("✅ SUCCESS: Wi-Fi configured successfully!")
                     completion(true, "✅ Wi-Fi configured successfully.")
                 } else {
-                    completion(false, "❌ Wi-Fi config failed. Code: \(retCode)")
+                    // Map error codes
+                    var errorMsg = ""
+                    switch retCode {
+                    case 1:
+                        errorMsg = "Timeout - device not responding"
+                    case 2:
+                        errorMsg = "Device not found nearby"
+                    case 3:
+                        errorMsg = "Connection failed"
+                    case 4:
+                        errorMsg = "Authentication failed - check eKey"
+                    case 5:
+                        errorMsg = "Invalid parameters"
+                    case 11:
+                        errorMsg = "Configuration rejected - check MAC/eKey match"
+                    default:
+                        errorMsg = "Error code: \(retCode)"
+                    }
+                    
+                    print("❌ FAILED: \(errorMsg)")
+                    completion(false, "❌ Wi-Fi config failed. \(errorMsg)")
                 }
             }
         }
+        
+        print("📤 ========================================")
+        print("📤 configWiFi() RESULT: \(ret)")
+        print("📤 ========================================")
 
         if ret != 0 {
+            print("❌ Failed to start WiFi configuration")
             completion(false, "❌ Failed to start configuration. Code: \(ret)")
+        } else {
+            print("⏳ Waiting for device callback...")
         }
     }
 }
