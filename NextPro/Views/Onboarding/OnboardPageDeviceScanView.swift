@@ -13,6 +13,7 @@ struct OnboardPageDeviceScanView: View {
     @State private var navigateToWiFiListView = false
     @State private var selectedDeviceIndex: Int? = nil
     @State private var selectedDeviceSN: String? = nil
+    @State private var selectedDeviceConfig: DeviceConfig? = nil // Store matched device config
     @State private var scannedDevices: [(sn: String, rssi: Int)] = []
     @State private var isScanning = false
     @State private var bluetoothStateMessage = ""
@@ -21,6 +22,9 @@ struct OnboardPageDeviceScanView: View {
     @State private var showBLEDebug = false
     @State private var isBackgroundModeActive = false
     private var isBluetoothInitialized = false
+    
+    // Device config manager
+    private let deviceConfigManager = DeviceConfigManager.shared
 
 
     var body: some View {
@@ -97,22 +101,40 @@ struct OnboardPageDeviceScanView: View {
 
                                         else {
                                             ForEach(Array(scannedDevices.enumerated()), id: \.element.sn) { index, device in
+                                                let deviceConfig = deviceConfigManager.findDevice(bySn: device.sn)
+                                                let isConfigured = deviceConfig != nil
+                                                
                                                 HStack {
                                                     Image("smartphone")
                                                         .resizable()
                                                         .frame(width: 22, height: 22)
-                                                        .foregroundColor(.white)
+                                                        .foregroundColor(isConfigured ? .green : .white)
 
                                                     VStack(alignment: .leading, spacing: 4) {
-                                                        Text("Device \(device.sn)")
-                                                            .font(.custom("Inter-SemiBold", size: 16))
-                                                            .foregroundColor(.white)
-                                                        Text("Signal: \(device.rssi)dB")
-                                                            .font(.custom("Inter-Regular", size: 14))
-                                                            .foregroundColor(.white.opacity(0.6))
+                                                        if let config = deviceConfig {
+                                                            Text(config.name)
+                                                                .font(.custom("Inter-SemiBold", size: 16))
+                                                                .foregroundColor(.white)
+                                                            Text("SN: \(device.sn) • \(device.rssi)dB")
+                                                                .font(.custom("Inter-Regular", size: 12))
+                                                                .foregroundColor(.white.opacity(0.6))
+                                                        } else {
+                                                            Text("Device \(device.sn)")
+                                                                .font(.custom("Inter-SemiBold", size: 16))
+                                                                .foregroundColor(.white)
+                                                            Text("Signal: \(device.rssi)dB • Not Configured")
+                                                                .font(.custom("Inter-Regular", size: 12))
+                                                                .foregroundColor(.orange.opacity(0.8))
+                                                        }
                                                     }
 
                                                     Spacer()
+                                                    
+                                                    if isConfigured {
+                                                        Image(systemName: "checkmark.circle.fill")
+                                                            .foregroundColor(.green)
+                                                            .font(.system(size: 16))
+                                                    }
 
                                                     Image(systemName: selectedDeviceIndex == index ? "checkmark.square.fill" : "square")
                                                         .resizable()
@@ -121,10 +143,27 @@ struct OnboardPageDeviceScanView: View {
                                                         .onTapGesture {
                                                             selectedDeviceIndex = index
                                                             selectedDeviceSN = device.sn
+                                                            selectedDeviceConfig = deviceConfig
+                                                            
+                                                            if let config = deviceConfig {
+                                                                print("✅ Selected configured device: \(config.name)")
+                                                                print("   SN: \(config.devSn)")
+                                                                print("   MAC: \(config.devMac)")
+                                                                print("   eKey: \(config.eKey.prefix(20))...")
+                                                            } else {
+                                                                print("⚠️ Selected unconfigured device: \(device.sn)")
+                                                            }
                                                         }
                                                 }
                                                 .padding()
-                                                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.1)))
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 10)
+                                                        .fill(isConfigured ? Color.green.opacity(0.1) : Color.white.opacity(0.1))
+                                                )
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 10)
+                                                        .stroke(isConfigured ? Color.green.opacity(0.3) : Color.clear, lineWidth: 1)
+                                                )
                                             }
                                         }
                                     }
@@ -192,8 +231,17 @@ struct OnboardPageDeviceScanView: View {
                     // Next button
                     Button(action: {
                         guard selectedDeviceSN != nil else { return }
-                        // TODO: Connect to selected device using DoorMasterSDK
-                        // For now, just navigate to WiFi list
+                        
+                        if let config = selectedDeviceConfig {
+                            print("🎯 Proceeding with configured device:")
+                            print("   Name: \(config.name)")
+                            print("   SN: \(config.devSn)")
+                            print("   MAC: \(config.devMac)")
+                            print("   Will use this config for WiFi setup and door operations")
+                        } else {
+                            print("⚠️ Proceeding with unconfigured device: \(selectedDeviceSN ?? "unknown")")
+                        }
+                        
                         navigateToWiFiListView = true
                     }) {
                         Text("Next")

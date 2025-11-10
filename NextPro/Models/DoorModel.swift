@@ -42,28 +42,37 @@ struct DoorModel: Identifiable {
 class DoorStorageManager: ObservableObject {
     static let shared = DoorStorageManager()
     
-    @Published var doors: [DoorModel] = [
-        // Add your doors here - update with real values
-        DoorModel(
-            name: "Main Door",
-            devSn: "4280125893",
-            devMac: "58:cf:79:1a:8d:0e",
-            eKey: "3ca884ca4f8d16e28199c11df14cfbcf000000000000000000000000000000001000",
-            cardno: "1557198962",
-            isSelected: true  // First door selected by default
-        ),
-        DoorModel(
-            name: "DOOR 2",
-            devSn: "4282184653",
-            devMac: "a0:76:4e:5a:ae:a2",
-            eKey: "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
-            cardno: "1557198962",
-            isSelected: false
-        ),
-      
-    ]
+    @Published var doors: [DoorModel] = []
     
-    private init() {}
+    private init() {
+        // Auto-populate from DeviceConfig
+        loadDoorsFromDeviceConfig()
+    }
+    
+    // MARK: - Load Doors from DeviceConfig
+    private func loadDoorsFromDeviceConfig() {
+        let deviceConfigManager = DeviceConfigManager.shared
+        let devices = deviceConfigManager.getAllDevices()
+        
+        print("📋 Loading \(devices.count) doors from DeviceConfig...")
+        
+        doors = devices.enumerated().map { index, device in
+            DoorModel(
+                name: device.name,
+                devSn: device.devSn,
+                devMac: device.devMac,
+                devType: 2, // Default device type (1=access reader, 2=integrated, etc.)
+                eKey: device.eKey,
+                cardno: "1557198962", // Default card number - can be updated per door if needed
+                isSelected: index == 0  // First door selected by default
+            )
+        }
+        
+        print("✅ Loaded \(doors.count) doors from DeviceConfig")
+        for (index, door) in doors.enumerated() {
+            print("   Door \(index + 1): \(door.name) (SN: \(door.devSn))")
+        }
+    }
     
     func selectDoor(_ door: DoorModel) {
         for index in doors.indices {
