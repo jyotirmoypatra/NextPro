@@ -328,10 +328,18 @@ struct AutoOpenDoorView: View {
         .navigationBarBackButtonHidden(false)
         .onAppear {
             print("📱 AutoOpenDoorView appeared for door: \(selectedDoor.name)")
+            startMonitoring()
         }
         .onDisappear {
             stopMonitoring()
             print("📱 AutoOpenDoorView disappeared")
+        }
+        .onReceive(bleManager.$isBluetoothOn) { isOn in
+            // Start monitoring when Bluetooth becomes available
+            if isOn && isMonitoring && bleManager.monitoredDeviceRSSI == nil {
+                print("📡 Bluetooth state changed to ON - starting monitoring")
+                bleManager.startMonitoringDeviceByName(deviceBLEName)
+            }
         }
         .onReceive(bleManager.$monitoredDeviceRSSI) { rssi in
             // Proximity-based logic: open when close, reset when far
@@ -383,8 +391,29 @@ struct AutoOpenDoorView: View {
         print("🔍 Starting RSSI monitoring for door: \(selectedDoor.name) (BLE Name: \(deviceName))")
         isMonitoring = true
 
-        // Start BLE monitoring for this device by name
-        bleManager.startMonitoringDeviceByName(deviceName)
+        // Check if Bluetooth is ready, if not, retry after delay
+        if bleManager.isBluetoothOn {
+            // Bluetooth ready - start immediately
+            bleManager.startMonitoringDeviceByName(deviceName)
+        } else {
+            // Bluetooth not ready yet - wait and retry
+            print("⏳ Bluetooth not ready yet, waiting 0.5s...")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak bleManager] in
+                if let bleManager = bleManager, bleManager.isBluetoothOn {
+                    print("✅ Bluetooth now ready, starting monitoring...")
+                    bleManager.startMonitoringDeviceByName(deviceName)
+                } else {
+                    print("⚠️ Bluetooth still not ready after delay")
+                    // Try one more time after another delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak bleManager] in
+                        if let bleManager = bleManager {
+                            print("🔄 Final retry...")
+                            bleManager.startMonitoringDeviceByName(deviceName)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private func stopMonitoring() {

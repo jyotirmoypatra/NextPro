@@ -12,7 +12,6 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     @Published var bluetoothStateMessage = ""
     @Published var connectedPeripheral: CBPeripheral?
     @Published var monitoredDeviceRSSI: Int? = nil
-    @StateObject private var bleManager = BLEManager()
 
     // RSSI monitoring properties
     private var centralManager: CBCentralManager!
