@@ -36,8 +36,9 @@
     <array>
         <string>fetch</string>
         <string>processing</string>
-        <string>bluetooth-central</string>
         <string>location</string>
+        <string>bluetooth-central</string>
+        <string>bluetooth-peripheral</string>
     </array>
     <key>com.apple.developer.networking.wifi-info</key>
     <true/>

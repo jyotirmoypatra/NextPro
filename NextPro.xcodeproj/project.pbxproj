@@ -308,7 +308,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/NextPro/DoorMasterSDK.framework/Headers";
 				INFOPLIST_FILE = NextPro/Info.plist;
-				INFOPLIST_KEY_NFCReaderUsageDescription = "App requires NFC access to read card information.";
+				INFOPLIST_KEY_NFCReaderUsageDescription = "This app uses NFC to scan smart cards.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app requires Bluetooth access to connect and control nearby smart devices.";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "This app uses Bluetooth to discover and connect to compatible devices.";
 				INFOPLIST_KEY_NSBluetoothWhileInUseUsageDescription = "";
@@ -357,7 +357,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/NextPro/DoorMasterSDK.framework/Headers";
 				INFOPLIST_FILE = NextPro/Info.plist;
-				INFOPLIST_KEY_NFCReaderUsageDescription = "App requires NFC access to read card information.";
+				INFOPLIST_KEY_NFCReaderUsageDescription = "This app uses NFC to scan smart cards.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app requires Bluetooth access to connect and control nearby smart devices.";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "This app uses Bluetooth to discover and connect to compatible devices.";
 				INFOPLIST_KEY_NSBluetoothWhileInUseUsageDescription = "";
