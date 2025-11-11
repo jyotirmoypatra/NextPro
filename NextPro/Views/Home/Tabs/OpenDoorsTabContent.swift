@@ -136,33 +136,33 @@ struct OpenDoorsTabContent: View {
                 Spacer()
                 
                 // Open Door Button
-                Button(action: {
-                    if let door = selectedDoor {
-                        doorManager.openSelectedDoor(door)
-                    }
-                }) {
-                    HStack(spacing: 12) {
-                        Image(systemName: doorManager.isProcessing ? "hourglass" : "key.fill")
-                            .font(.system(size: 24))
-                        Text(doorManager.isProcessing ? "Opening..." : "Open Door")
-                            .font(.title3.bold())
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 65)
-                    .background(
-                        LinearGradient(
-                            colors: (doorManager.isProcessing || selectedDoor == nil) ? [Color.gray, Color.gray.opacity(0.7)] : [Color.blue, Color.purple],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .cornerRadius(18)
-                    .shadow(color: (doorManager.isProcessing || selectedDoor == nil) ? Color.clear : Color.blue.opacity(0.4), radius: 15, x: 0, y: 8)
-                }
-                .disabled(doorManager.isProcessing || selectedDoor == nil)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 10)
+//                Button(action: {
+//                    if let door = selectedDoor {
+//                        doorManager.openSelectedDoor(door)
+//                    }
+//                }) {
+//                    HStack(spacing: 12) {
+//                        Image(systemName: doorManager.isProcessing ? "hourglass" : "key.fill")
+//                            .font(.system(size: 24))
+//                        Text(doorManager.isProcessing ? "Opening..." : "Open Door")
+//                            .font(.title3.bold())
+//                    }
+//                    .foregroundColor(.white)
+//                    .frame(maxWidth: .infinity)
+//                    .frame(height: 65)
+//                    .background(
+//                        LinearGradient(
+//                            colors: (doorManager.isProcessing || selectedDoor == nil) ? [Color.gray, Color.gray.opacity(0.7)] : [Color.blue, Color.purple],
+//                            startPoint: .leading,
+//                            endPoint: .trailing
+//                        )
+//                    )
+//                    .cornerRadius(18)
+//                    .shadow(color: (doorManager.isProcessing || selectedDoor == nil) ? Color.clear : Color.blue.opacity(0.4), radius: 15, x: 0, y: 8)
+//                }
+//                .disabled(doorManager.isProcessing || selectedDoor == nil)
+//                .padding(.horizontal, 20)
+//                .padding(.bottom, 10)
                 
                 // NFC Auto-Open Button
                 if let door = selectedDoor {
@@ -196,34 +196,34 @@ struct OpenDoorsTabContent: View {
                 }
                 
                 // Write Card Number Button
-                Button(action: {
-                    if let door = selectedDoor {
-                        print("🎯 USER TAPPED: Write Card Number button")
-                        print("🎯 Selected door: \(door.name)")
-                        doorManager.writeCardNumber(door)
-                    }
-                }) {
-                    HStack(spacing: 12) {
-                        Image(systemName: doorManager.isProcessing ? "hourglass" : "creditcard.fill")
-                            .font(.system(size: 20))
-                        Text(doorManager.isProcessing ? "Writing..." : "Write Card Number")
-                            .font(.body.bold())
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 55)
-                    .background(
-                        (doorManager.isProcessing || selectedDoor == nil) ? Color.gray.opacity(0.5) : Color.green.opacity(0.7)
-                    )
-                    .cornerRadius(16)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                    )
-                }
-                .disabled(doorManager.isProcessing || selectedDoor == nil)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 10)
+//                Button(action: {
+//                    if let door = selectedDoor {
+//                        print("🎯 USER TAPPED: Write Card Number button")
+//                        print("🎯 Selected door: \(door.name)")
+//                        doorManager.writeCardNumber(door)
+//                    }
+//                }) {
+//                    HStack(spacing: 12) {
+//                        Image(systemName: doorManager.isProcessing ? "hourglass" : "creditcard.fill")
+//                            .font(.system(size: 20))
+//                        Text(doorManager.isProcessing ? "Writing..." : "Write Card Number")
+//                            .font(.body.bold())
+//                    }
+//                    .foregroundColor(.white)
+//                    .frame(maxWidth: .infinity)
+//                    .frame(height: 55)
+//                    .background(
+//                        (doorManager.isProcessing || selectedDoor == nil) ? Color.gray.opacity(0.5) : Color.green.opacity(0.7)
+//                    )
+//                    .cornerRadius(16)
+//                    .overlay(
+//                        RoundedRectangle(cornerRadius: 16)
+//                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+//                    )
+//                }
+//                .disabled(doorManager.isProcessing || selectedDoor == nil)
+//                .padding(.horizontal, 20)
+//                .padding(.bottom, 10)
                 
                 // Retrieve Card Info Button (Requires Admin eKey - Currently Disabled)
                 // Uncomment if you have an admin eKey
