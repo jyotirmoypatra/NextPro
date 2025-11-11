@@ -17,7 +17,7 @@ struct AutoOpenDoorView: View {
     @StateObject private var bleManager = BLEManager()
     @State private var isMonitoring = false
     @State private var lastOpenAttempt: Date? = nil
-    @State private var rssiThreshold = -40 // Configurable RSSI threshold (dBm)
+    @State private var rssiThreshold = -35 // Configurable RSSI threshold (dBm)
     @State private var hasTriggeredInCurrentProximity = false // Track if we've already opened in this approach
 
     // Create device name for BLE monitoring (matches BLE advertisement name)
@@ -38,7 +38,7 @@ struct AutoOpenDoorView: View {
             .ignoresSafeArea()
 
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 25) {
+                VStack(spacing: 10) {
                     // Header
                     HStack {
                         Image(systemName: isMonitoring ? "wifi" : "wifi.slash")
@@ -95,98 +95,76 @@ struct AutoOpenDoorView: View {
                                  }
                              }
                              
-                             // Main scanner circle
-                             ZStack {
-                                 // Outer ring
-                                 Circle()
-                                     .stroke(Color.white.opacity(0.1), lineWidth: 2)
-                                     .frame(width: 180, height: 180)
+                            // Main scanner circle
+                            ZStack {
+
                                  
-                                 // Inner filled circle
-                                 Circle()
-                                     .fill(
-                                         RadialGradient(
-                                             colors: [
-                                                 rssiColor.opacity(0.15),
-                                                 rssiColor.opacity(0.05),
-                                                 Color.clear
-                                             ],
-                                             center: .center,
-                                             startRadius: 0,
-                                             endRadius: 80
-                                         )
-                                     )
-                                     .frame(width: 160, height: 160)
-                                 
-                                 // Content
-                                 VStack(spacing: 12) {
-                                     if let rssi = bleManager.monitoredDeviceRSSI {
-                                         // NFC Icon with pulse
-                                         Image(systemName: doorManager.isProcessing ? "checkmark.circle.fill" : "sensor.tag.radiowaves.forward.fill")
-                                             .font(.system(size: 50, weight: .medium))
-                                             .foregroundColor(rssiColor)
-                                             .scaleEffect(doorManager.isProcessing ? 1.0 : (rssi >= rssiThreshold ? 1.1 : 1.0))
-                                             .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: rssi >= rssiThreshold)
-                                         
-                                         // Status text
-                                         Text(nfcStatusText)
-                                             .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                             .foregroundColor(.white)
-                                             .multilineTextAlignment(.center)
-                                         
-                                         // RSSI value (small)
-                                         Text("\(rssi) dBm")
-                                             .font(.system(size: 13, weight: .medium))
-                                             .foregroundColor(.gray)
-                                             .padding(.horizontal, 12)
-                                             .padding(.vertical, 4)
-                                             .background(Color.white.opacity(0.08))
-                                             .cornerRadius(12)
-                                     } else {
-                                         // Searching state
-                                         VStack(spacing: 8) {
-                                             ProgressView()
-                                                 .scaleEffect(1.2)
-                                                 .tint(.blue)
-                                             
-                                             Text("Searching for device...")
-                                                 .font(.system(size: 15, weight: .medium))
-                                                 .foregroundColor(.gray)
-                                         }
-                                     }
-                                 }
+                                // Content
+                                VStack(spacing: 12) {
+                                    if let rssi = bleManager.monitoredDeviceRSSI {
+                                        // Circular wave design
+                                        ZStack {
+                                            // Animated concentric circles
+                                            ForEach(0..<3, id: \.self) { index in
+                                                Circle()
+                                                    .stroke(rssiColor.opacity(0.6), lineWidth: 2)
+                                                    .frame(width: waveSize(for: index), height: waveSize(for: index))
+                                                    .opacity(waveOpacity(for: index))
+                                                    .animation(
+                                                        Animation.easeOut(duration: 2.0)
+                                                            .repeatForever(autoreverses: false)
+                                                            .delay(Double(index) * 0.4),
+                                                        value: rssi >= rssiThreshold
+                                                    )
+                                            }
+                                            
+                                            // Center dot
+                                            Circle()
+                                                .fill(rssiColor)
+                                                .frame(width: doorManager.isProcessing ? 50 : 40, height: doorManager.isProcessing ? 50 : 40)
+                                                .shadow(color: rssiColor.opacity(0.6), radius: 8)
+                                                .overlay(
+                                                    doorManager.isProcessing ?
+                                                    Image(systemName: "checkmark")
+                                                        .font(.system(size: 20, weight: .bold))
+                                                        .foregroundColor(.white)
+                                                    : nil
+                                                )
+                                                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: doorManager.isProcessing)
+                                        }
+                                        .frame(height: 100)
+                                        
+                                        // Status text
+                                        Text(nfcStatusText)
+                                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                            .foregroundColor(.white)
+                                            .multilineTextAlignment(.center)
+                                        
+                                        // RSSI value (small)
+                                        Text("\(rssi) dBm")
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundColor(.gray)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 4)
+                                            .background(Color.white.opacity(0.08))
+                                            .cornerRadius(12)
+                                    } else {
+                                        // Searching state
+                                        VStack(spacing: 8) {
+                                            ProgressView()
+                                                .scaleEffect(1.2)
+                                                .tint(.blue)
+                                            
+                                            Text("Searching for device...")
+                                                .font(.system(size: 15, weight: .medium))
+                                                .foregroundColor(.gray)
+                                        }
+                                    }
+                                }
                              }
                          }
                          .frame(height: 220)
                          
-                         // Status indicator
-                         HStack(spacing: 12) {
-                             Circle()
-                                 .fill(rssiColor)
-                                 .frame(width: 8, height: 8)
-                                 .shadow(color: rssiColor, radius: 4)
-                             
-                             Text(rssiStatusText)
-                                 .font(.system(size: 14, weight: .medium))
-                                 .foregroundColor(.white.opacity(0.9))
-                             
-                             Spacer()
-                             
-                             if doorManager.isProcessing {
-                                 HStack(spacing: 6) {
-                                     ProgressView()
-                                         .scaleEffect(0.8)
-                                         .tint(.blue)
-                                     Text("Opening...")
-                                         .font(.system(size: 13, weight: .medium))
-                                         .foregroundColor(.blue)
-                                 }
-                             }
-                         }
-                         .padding(.horizontal, 24)
-                         .padding(.vertical, 14)
-                         .background(Color.white.opacity(0.06))
-                         .cornerRadius(14)
                      }
 
                     // Threshold Info
@@ -199,49 +177,31 @@ struct AutoOpenDoorView: View {
                             Image(systemName: "minus.circle")
                                 .foregroundColor(.gray)
                         }
-                        Button(action: { rssiThreshold = min(rssiThreshold + 5, -30) }) {
+                        Button(action: { rssiThreshold = min(rssiThreshold + 5, -20) }) {
                             Image(systemName: "plus.circle")
                                 .foregroundColor(.gray)
                         }
                     }
+                    
+                    Divider().background(Color.white.opacity(0.2))
+
+                    VStack(spacing: 12) {
+                        infoRow(label: "Name", value: selectedDoor.name)
+                        infoRow(label: "Serial", value: selectedDoor.devSn)
+                        infoRow(label: "Card", value: selectedDoor.cardno)
+                    }
                 }
-                .padding(20)
+                .padding(10)
                 .background(Color.white.opacity(0.08))
                 .cornerRadius(16)
                 .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.15), lineWidth: 1))
                 .padding(.horizontal, 20)
 
-                    // Door Information Card
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            Image(systemName: "door.left.hand.open")
-                                .foregroundColor(.blue)
-                                .font(.system(size: 24))
-                            Text("Selected Door")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                        }
-
-                        Divider().background(Color.white.opacity(0.2))
-
-                        VStack(spacing: 12) {
-                            infoRow(label: "Name", value: selectedDoor.name)
-                            infoRow(label: "Serial", value: selectedDoor.devSn)
-                            infoRow(label: "Card", value: selectedDoor.cardno)
-                        }
-                    }
-                    .padding(20)
-                    .background(Color.white.opacity(0.08))
-                    .cornerRadius(16)
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.15), lineWidth: 1))
-                    .padding(.horizontal, 20)
+    
 
                     // RSSI Monitoring Card
                     VStack(alignment: .leading, spacing: 16) {
-                       
-
-                        
-
+                      
                     // Status Card
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
@@ -350,20 +310,6 @@ struct AutoOpenDoorView: View {
         }
     }
 
-    private var rssiStatusText: String {
-        guard let rssi = bleManager.monitoredDeviceRSSI else {
-            return isMonitoring ? "Scanning..." : "Not monitoring"
-        }
-
-        if rssi >= rssiThreshold {
-            return "Signal strong - Ready to open"
-        } else if rssi >= rssiThreshold - 10 {
-            return "Signal moderate - Move closer"
-        } else {
-            return "Signal weak - Get closer to door"
-        }
-    }
-
     // MARK: - Methods
     private func startMonitoring() {
         let deviceName = deviceBLEName
@@ -453,17 +399,7 @@ struct AutoOpenDoorView: View {
         }
     }
     
-    // MARK: - Signal Bar Helpers
-    private func signalBarColor(for index: Int, rssi: Int) -> Color {
-        let barThreshold = rssiThreshold + (index * 10)
-        return rssi >= barThreshold ? rssiColor : Color.gray.opacity(0.3)
-    }
-    
-    private func signalBarOpacity(for index: Int, rssi: Int) -> Double {
-        let barThreshold = rssiThreshold + (index * 10)
-        return rssi >= barThreshold ? 1.0 : 0.3
-    }
-    
+  
     // MARK: - NFC Animation Helpers
     private var nfcStatusText: String {
         guard let rssi = bleManager.monitoredDeviceRSSI else { return "Searching..." }
@@ -475,7 +411,7 @@ struct AutoOpenDoorView: View {
         } else if rssi >= rssiThreshold - 10 {
             return "Move Closer"
         } else {
-            return "Out of Range"
+            return "Door Locked"
         }
     }
     
@@ -485,6 +421,25 @@ struct AutoOpenDoorView: View {
     
     private var scanWaveOpacity: Double {
         return isMonitoring ? 0.0 : 0.6
+    }
+    
+    // Circular wave animation helpers
+    private func waveSize(for index: Int) -> CGFloat {
+        guard let rssi = bleManager.monitoredDeviceRSSI, rssi >= rssiThreshold else {
+            return 40 // Static size when not in range
+        }
+        // Expanding circles from 40 to 100
+        let baseSize: CGFloat = 40
+        let expansion: CGFloat = 20
+        return baseSize + (CGFloat(index + 1) * expansion)
+    }
+    
+    private func waveOpacity(for index: Int) -> Double {
+        guard let rssi = bleManager.monitoredDeviceRSSI, rssi >= rssiThreshold else {
+            return 0.0 // Hidden when not in range
+        }
+        // Fade out as circles expand
+        return 1.0 - (Double(index) * 0.25)
     }
 
 }
