@@ -12,6 +12,7 @@ import Combine
 class DoorManager: ObservableObject {
     static let shared = DoorManager()
     
+    // Door operation states
     @Published var isProcessing = false
     @Published var statusMessage = "Ready"
     @Published var lastResult: String?
@@ -19,7 +20,14 @@ class DoorManager: ObservableObject {
     @Published var retrievedCards: [String] = []
     @Published var cardReadProgress: String = ""
     
+    // Device scanning states
+    @Published var scannedDevices: [(sn: String, rssi: Int)] = []
+    @Published var isScanning = false
+    @Published var bluetoothStateMessage = ""
+    @Published var isBluetoothInitialized = false
+    
     private var resetTimer: DispatchWorkItem?
+    private var isBackgroundModeActive = false
     
     // MARK: - Shared Configuration (applies to all doors)
     private struct SharedConfig {
@@ -30,39 +38,97 @@ class DoorManager: ObservableObject {
     }
     
     private init() {
-        // Initialize SDK
+        // Initialize SDK without showing system Bluetooth alert
         print("🔧 Initializing DoorMasterSDK...")
         let result = LibDevModel.initBluetoothNotShowPower()
         print("📱 SDK Init result: \(result)")
         
-        // Setup callbacks
-       // setupCallbacks()
-        // 2️⃣ Wait 0.5 sec to ensure internal BLE is fully ready before registering callbacks
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.setupCallbacks()
-            }
+        // Wait 0.5s to ensure internal BLE is fully ready before registering callbacks
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.setupCallbacks()
+        }
     }
     
     // MARK: - Setup Callbacks
     private func setupCallbacks() {
+        print("🔧 Setting up SDK callbacks...")
+        
         // Bluetooth initialization callback
-        LibDevModel.onInitBluetoothOver { result in
-            print("✅ Bluetooth initialized with result: \(result)")
+        LibDevModel.onInitBluetoothOver { [weak self] result in
+            guard let self = self else { return }
+            DispatchQueue.main.async {
+                if result == 0 {
+                    print("✅ Bluetooth initialized successfully")
+                    self.isBluetoothInitialized = true
+                    self.bluetoothStateMessage = ""
+                } else {
+                    print("❌ Bluetooth initialization failed: \(result)")
+                    self.bluetoothStateMessage = "Bluetooth initialization failed (\(result))"
+                }
+            }
         }
         
         // Bluetooth state callback
-        LibDevModel.onBluetoothStateOver { state in
-            let stateStr = self.bluetoothStateString(state)
-            print("📡 Bluetooth state: \(stateStr)")
+        LibDevModel.onBluetoothStateOver { [weak self] state in
+            guard let self = self else { return }
+            DispatchQueue.main.async {
+                let stateStr = self.bluetoothStateString(state)
+                print("📡 Bluetooth state: \(stateStr)")
+                
+                switch state {
+                case 0: self.bluetoothStateMessage = "Bluetooth: Unknown"
+                case 1: self.bluetoothStateMessage = "Bluetooth: Resetting"
+                case 2: self.bluetoothStateMessage = "Bluetooth: Unsupported"
+                case 3: self.bluetoothStateMessage = "Bluetooth: Unauthorized"
+                case 4: self.bluetoothStateMessage = "Bluetooth: Powered Off"
+                case 5:
+                    self.bluetoothStateMessage = "Bluetooth: Powered On"
+                    print("✅ Bluetooth is now powered on")
+                default:
+                    self.bluetoothStateMessage = "Bluetooth: State \(state)"
+                }
+            }
         }
         
-        // Control result callback
+        // Control result callback (door open/write card operations)
         LibDevModel.onControlOver { [weak self] ret, msgDict in
             guard let self = self else { return }
             DispatchQueue.main.async {
                 self.handleControlResult(ret, msgDict: msgDict)
             }
         }
+        
+        // Scan callback
+        LibDevModel.onScanOver { [weak self] devDict in
+            guard let self = self else { return }
+            DispatchQueue.main.async {
+                print("✅ Scan completed with \(devDict?.count ?? 0) devices found")
+                if let devices = devDict as? [String: Int] {
+                    print("📱 Devices found: \(devices)")
+                    self.scannedDevices = devices.map { (sn: $0.key, rssi: $0.value) }
+                        .sorted { $0.rssi > $1.rssi }
+                    print("📋 Processed \(self.scannedDevices.count) devices")
+                }
+                self.completeScan()
+            }
+        }
+        
+        // Background scan callback
+        LibDevModel.onBGScanOver { [weak self] devDict in
+            guard let self = self else { return }
+            DispatchQueue.main.async {
+                print("✅ BG Scan completed with \(devDict?.count ?? 0) devices found")
+                if let devices = devDict as? [String: Int] {
+                    print("📱 BG Devices found: \(devices)")
+                    self.scannedDevices = devices.map { (sn: $0.key, rssi: $0.value) }
+                        .sorted { $0.rssi > $1.rssi }
+                    print("📋 BG Processed \(self.scannedDevices.count) devices")
+                }
+                self.completeScan()
+            }
+        }
+        
+        print("✅ All SDK callbacks registered successfully")
     }
     
     
@@ -333,6 +399,171 @@ class DoorManager: ObservableObject {
             self?.resetState()
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: resetTimer!)
+    }
+    
+    // MARK: - Bluetooth Initialization (for onboarding)
+    func initializeBluetoothForScanning() {
+        print("🔄 Initializing Bluetooth for device scanning...")
+        
+        guard !isBluetoothInitialized else {
+            print("⚠️ Bluetooth already initialized — skipping reinit")
+            return
+        }
+        
+        bluetoothStateMessage = "Initializing Bluetooth..."
+        
+        // Release any existing SDK instance
+        print("🔄 Releasing any existing SDK instance...")
+        LibDevModel.releaseSDK()
+        usleep(200_000) // 0.2 seconds delay
+        
+        let ret = LibDevModel.initBluetooth()
+        print("📡 initBluetooth return code: \(ret)")
+        
+        if ret != 0 {
+            print("❌ Failed to start Bluetooth initialization: \(ret)")
+            bluetoothStateMessage = "Failed to initialize Bluetooth (\(ret))"
+            
+            // Handle specific error codes
+            if ret == -101 {
+                print("❌ Error -101: SDK already initialized, retrying...")
+                bluetoothStateMessage = "Resetting Bluetooth..."
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    self.retryBluetoothInit()
+                }
+            }
+        } else {
+            print("✅ Bluetooth initialization started successfully")
+            setupScanningSDK()
+        }
+    }
+    
+    private func retryBluetoothInit() {
+        print("🔄 Retrying Bluetooth initialization...")
+        bluetoothStateMessage = "Retrying Bluetooth initialization..."
+        
+        let ret = LibDevModel.initBluetooth()
+        print("📡 Retry initBluetooth return code: \(ret)")
+        
+        if ret == 0 {
+            print("✅ Bluetooth initialization successful on retry")
+            setupScanningSDK()
+        } else {
+            print("❌ Bluetooth initialization failed even on retry: \(ret)")
+            bluetoothStateMessage = "Bluetooth initialization failed (\(ret))"
+        }
+    }
+    
+    private func setupScanningSDK() {
+        print("🔧 Setting up SDK for scanning...")
+        
+        // Disable service filtering to detect all Bluetooth devices
+        LibDevModel.notFilteringServiceWhenScan()
+        print("✅ Service filtering disabled")
+        
+        // Note: Scan callbacks are already registered in setupCallbacks()
+        print("✅ SDK ready for scanning")
+    }
+    
+    // MARK: - Device Scanning
+    func startDeviceScan() {
+        guard !isScanning else {
+            print("⚠️ Scan already in progress - ignoring request")
+            return
+        }
+        
+        // Check if Bluetooth is ready
+        if bluetoothStateMessage.contains("Powered Off") ||
+           bluetoothStateMessage.contains("Unsupported") ||
+           bluetoothStateMessage.contains("Unauthorized") ||
+           bluetoothStateMessage.contains("Failed") {
+            print("❌ Cannot scan - Bluetooth not ready: \(bluetoothStateMessage)")
+            return
+        }
+        
+        print("🔍 Starting device scan...")
+        isScanning = true
+        scannedDevices.removeAll()
+        bluetoothStateMessage = "Scanning for devices..."
+        
+        // Stop background mode if active
+        if isBackgroundModeActive {
+            print("🔄 Stopping background mode before regular scan...")
+            let stopRet = LibDevModel.stopBackgroundMode()
+            if stopRet == 0 {
+                print("✅ Background mode stopped successfully")
+                isBackgroundModeActive = false
+            } else {
+                print("⚠️ Failed to stop background mode: \(stopRet)")
+            }
+            usleep(100_000) // 0.1 second delay
+        }
+        
+        print("📡 Calling LibDevModel.scanDevice(5000)")
+        let ret = LibDevModel.scanDevice(5000) // 5 second scan
+        print("📡 Scan device return code: \(ret)")
+        
+        if ret == 0 {
+            print("✅ Regular scan initiated successfully")
+            
+            // Timeout fallback
+            DispatchQueue.main.asyncAfter(deadline: .now() + 8) {
+                if self.isScanning {
+                    print("⏰ Scan timeout - trying background scan as fallback...")
+                    self.completeScan()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.tryBackgroundScan()
+                    }
+                }
+            }
+        } else {
+            print("❌ Regular scan failed (error: \(ret)), trying background scan...")
+            tryBackgroundScan()
+        }
+    }
+    
+    private func tryBackgroundScan() {
+        print("🔄 Trying background scan as fallback...")
+        
+        let bgRet = LibDevModel.startBackgroundMode()
+        print("📡 Background scan return code: \(bgRet)")
+        
+        if bgRet == 0 {
+            print("✅ Background scan started successfully")
+            isScanning = true
+            isBackgroundModeActive = true
+            bluetoothStateMessage = "Scanning for devices (background mode)..."
+            
+            // Timeout for background scan
+            DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+                if self.isScanning {
+                    print("⏰ Background scan timeout - forcing completion")
+                    self.completeScan()
+                }
+            }
+        } else {
+            print("❌ Background scan also failed (error: \(bgRet))")
+            completeScan()
+            bluetoothStateMessage = "Failed to start scanning (\(bgRet))"
+        }
+    }
+    
+    private func completeScan() {
+        // Stop background mode if active
+        if isBackgroundModeActive {
+            print("🔄 Stopping background mode after scan completion...")
+            let stopRet = LibDevModel.stopBackgroundMode()
+            if stopRet == 0 {
+                print("✅ Background mode stopped successfully")
+            } else {
+                print("⚠️ Failed to stop background mode: \(stopRet)")
+            }
+            isBackgroundModeActive = false
+        }
+        
+        isScanning = false
+        bluetoothStateMessage = scannedDevices.isEmpty ? "No devices found nearby" : ""
+        print("✅ Scan completed. Found \(scannedDevices.count) devices")
     }
     
     // MARK: - Reset State
