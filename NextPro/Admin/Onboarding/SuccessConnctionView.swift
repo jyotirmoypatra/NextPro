@@ -61,7 +61,7 @@ struct SuccessConnctionView: View {
                         .cornerRadius(10) // Rounded corners
                     }
                     .navigationDestination(isPresented: $navigateToHome) {
-                        HomeView()
+                        HomeViewAdmin()
                     }
                 }
                 .padding(.vertical, 40)

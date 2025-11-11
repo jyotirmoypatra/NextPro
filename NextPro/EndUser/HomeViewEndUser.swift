@@ -1,5 +1,5 @@
 //
-//  HomeView.swift
+//  HomeViewAdmin.swift
 //  NextPro
 //
 //  Created by JYOTIRMOY PATRA on 30/10/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct HomeView: View {
+struct HomeViewEndUser: View {
     @State private var selectedTab = 0
 
     var body: some View {
@@ -55,11 +55,11 @@ struct HomeView: View {
                     VStack {
                         switch selectedTab {
                         case 0:
-                            HomeTabContent()
+                            OpenDoorEndUserView()
                         case 1:
-                            OpenDoorsTabContent()
+                            MembershipEndUserView()
                         case 2:
-                            ProfileTabContent()
+                            ProfileEndUserView()
                         default:
                             EmptyView()
                         }
@@ -70,17 +70,18 @@ struct HomeView: View {
 
                     // MARK: - Custom Bottom Tab Bar
                     HStack {
-                        TabBarItem(title: "Home", icon: "house", isSelected: selectedTab == 0)
+                        TabBarItemUser(title: "Open Doors", icon: "key.horizontal", isSelected: selectedTab == 0)
                             .onTapGesture { selectedTab = 0 }
-
+                        
                         Spacer()
 
-                        TabBarItem(title: "Open Doors", icon: "key.horizontal", isSelected: selectedTab == 1)
+                        TabBarItemUser(title: "Membership", icon: "person.crop.circle.fill.badge.checkmark", isSelected: selectedTab == 1)
                             .onTapGesture { selectedTab = 1 }
 
+
                         Spacer()
 
-                        TabBarItem(title: "Profile", icon: "person", isSelected: selectedTab == 2)
+                        TabBarItemUser(title: "Profile", icon: "person", isSelected: selectedTab == 2)
                             .onTapGesture { selectedTab = 2 }
                     }
                     .padding(.horizontal, 40)
@@ -95,7 +96,7 @@ struct HomeView: View {
 }
 
 // MARK: - Tab Bar Item
-struct TabBarItem: View {
+struct TabBarItemUser: View {
     var title: String
     var icon: String
     var isSelected: Bool
@@ -113,5 +114,5 @@ struct TabBarItem: View {
 }
 
 #Preview {
-    HomeView()
+    HomeViewAdmin()
 }
