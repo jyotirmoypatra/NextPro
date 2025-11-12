@@ -70,7 +70,7 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
         mqttClient.autoReconnect = true
         mqttClient.enableSSL = false
         mqttClient.delegate = self
-        mqttClient.logLevel = .debug
+      //  mqttClient.logLevel = .debug
         mqtt = mqttClient
         _ = mqttClient.connect() // store result just to silence compiler
     }

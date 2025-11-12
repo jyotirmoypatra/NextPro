@@ -29,6 +29,20 @@ class DoorManager: ObservableObject {
     private var resetTimer: DispatchWorkItem?
     private var isBackgroundModeActive = false
     
+    @Published var doorEvent: DoorEvent?
+
+    struct DoorEvent {
+        let devSn: String
+        let status: Status
+        
+        enum Status {
+            case starting
+            case success
+            case failure
+        }
+    }
+
+    
     // MARK: - Shared Configuration (applies to all doors)
     private struct SharedConfig {
         static let privilege: Int32 = 4       // 1=super admin, 2=admin, 4=normal user
@@ -133,7 +147,7 @@ class DoorManager: ObservableObject {
     
     
     // MARK: - Open Selected Door
-    func openSelectedDoor(_ door: DoorModel) {
+    func openSelectedDoor(_ door: DoorModelUser) {
         print("🚪 Opening door: \(door.name)")
         
         // Cancel any existing reset timer
@@ -143,6 +157,11 @@ class DoorManager: ObservableObject {
         statusMessage = "Opening \(door.name)..."
         errorMessage = nil
         lastResult = nil
+        
+        
+        DispatchQueue.main.async {
+               self.doorEvent = DoorEvent(devSn: door.devSn, status: .starting)
+           }
         
         // Create LibDevModel object
         let devModel = LibDevModel()
@@ -173,34 +192,16 @@ class DoorManager: ObservableObject {
         print("📤 openDoor() called, result: \(result)")
         
         if result != 0 {
-            DispatchQueue.main.async {
-                self.isProcessing = false
-                self.statusMessage = "Failed to initiate"
-                self.errorMessage = "SDK returned error code: \(result)"
-                print("❌ openDoor failed with code: \(result)")
-            }
-        } else {
-            print("⏳ Waiting for callback result...")
-            
-            // Safety timeout - reset after 30 seconds if no callback
-            resetTimer = DispatchWorkItem { [weak self] in
-                guard let self = self else { return }
-                if self.isProcessing {
-                    print("⚠️ Operation timed out - no callback received in 30 seconds")
-                    DispatchQueue.main.async {
-                        self.isProcessing = false
-                        self.statusMessage = "Operation timed out"
-                        self.errorMessage = "No response from device"
-                        self.lastResult = "Timeout"
-                    }
-                    // Auto-reset after timeout
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                        self.resetState()
-                    }
-                }
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 30, execute: resetTimer!)
-        }
+               DispatchQueue.main.async {
+                   self.doorEvent = DoorEvent(devSn: door.devSn, status: .failure)
+               }
+               self.isProcessing = false
+               self.statusMessage = "Failed to initiate"
+               self.errorMessage = "SDK returned error code: \(result)"
+           } else {
+               print("⏳ Waiting for SDK callback...")
+               // Callback will handle .success or .failure
+           }
     }
     
     // MARK: - Scan and Open Nearest Door
@@ -265,6 +266,73 @@ class DoorManager: ObservableObject {
             }
         }
     }
+    ///// Scan for devices and open if a nearby one is detected
+    func scanAndOpenNearestDoorWithRSSI(threshold: Int = -60) {
+        print("🔍 Scanning for nearest door with RSSI threshold \(threshold)dBm...")
+
+        isProcessing = true
+        statusMessage = "Scanning for nearby doors..."
+        errorMessage = nil
+        lastResult = nil
+
+        let doors = DoorStorageManager.shared.doors
+        guard !doors.isEmpty else {
+            DispatchQueue.main.async {
+                self.isProcessing = false
+                self.statusMessage = "No doors configured"
+                self.errorMessage = "Please add doors first"
+            }
+            return
+        }
+
+        // Clear old results
+        scannedDevices.removeAll()
+
+        // Start BLE scan
+        let timeout: Int32 = 4000
+        let result = LibDevModel.scanDevice(timeout)
+
+        if result == 0 {
+            print("✅ Scan started successfully")
+
+            // Wait for results that get stored via the global callback
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4.2) {
+                guard !self.scannedDevices.isEmpty else {
+                    print("⚠️ No nearby devices found.")
+                    self.statusMessage = "No nearby door detected"
+                    self.isProcessing = false
+                    return
+                }
+
+                print("📶 RSSI Results: \(self.scannedDevices)")
+
+                // Find nearest device
+                if let nearest = self.scannedDevices.max(by: { $0.rssi < $1.rssi }) {
+                    print("📡 Nearest device: \(nearest.sn) with RSSI: \(nearest.rssi)dBm")
+
+                    if nearest.rssi > threshold {
+                        // ✅ Found close enough device
+                        if let door = doors.first(where: { $0.devSn == nearest.sn }) {
+                            print("🚪 Opening \(door.name) (RSSI \(nearest.rssi)dBm within threshold)")
+                            self.openSelectedDoor(door)
+                        } else {
+                            print("⚠️ Device SN \(nearest.sn) not in door list")
+                        }
+                    } else {
+                        print("🚫 Device too far (RSSI \(nearest.rssi)dBm < \(threshold)dBm)")
+                        self.statusMessage = "No nearby door found (too far)"
+                        self.isProcessing = false
+                    }
+                }
+            }
+
+        } else {
+            print("❌ Failed to start scan, error: \(result)")
+            self.isProcessing = false
+            self.statusMessage = "Scan failed"
+        }
+    }
+
     
     // MARK: - Manual Scan
     func scanForDevices() {

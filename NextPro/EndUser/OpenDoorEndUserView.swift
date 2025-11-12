@@ -6,16 +6,16 @@
 
 import SwiftUI
 import CoreBluetooth
+import Combine
 
 struct OpenDoorEndUserView: View {
     @StateObject private var mqttManager = MQTTManager.shared
-    @State private var doors = [
-        DoorModelUser(name: "Iron Hive Gym: Gate", duration: "For 5 Second", devSn: "4280125893", devMac: "58:cf:79:1a:8d:0e", devType: 2, eKey: "3ca884ca4f8d16e28199c11df14cfbcf000000000000000000000000000000001000",cardno: "1557198962"),
-       // DoorModelUser(name: "Iron Hive Gym: Door 1", duration: "For 5 Second", devSn: "4282705968", devMac: "58:cf:79:1a:89:ce", devType: 2, eKey: "92fc410e8d125331c26faf21c7e77292000000000000000000000000000000001000",cardno: "1557198962"),
-        //DoorModelUser(name: "Iron Hive Gym: Door 1", duration: "For 5 Second", devSn: "4283847520", devMac: "d8:3b:da:36:53:62", devType: 2, eKey: "41f888c5017576eb80f030fe8730851d000000000000000000000000000000001000",cardno: "1557198962")
-        
-    ]
-    
+    @StateObject private var doorStorage = DoorStorageManager.shared
+    @StateObject private var doorManager = DoorManager.shared
+    @State private var isAutoOpenEnabled = false
+    @State private var isAutoOpeningActive = false
+    @StateObject private var bleManager = BLEManager()
+    @State private var lastDoorRSSI: [String: Int] = [:]
     var body: some View {
         ZStack {
         
@@ -48,29 +48,124 @@ struct OpenDoorEndUserView: View {
                 .padding(.bottom, 12)
                 .background(Color.black)
                 .zIndex(1)
+
                 
-                
-             
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 16) {
-                        ForEach(doors, id: \.name) { door in
-                            DoorCardView(door: door)
-                        }
+                // 🔹 Auto Open Toggle Section
+                HStack {
+                    Image(systemName: isAutoOpenEnabled ? "dot.radiowaves.left.and.right" : "wave.3.left.circle")
+                        .foregroundColor(isAutoOpenEnabled ? .green : .gray)
+                        .font(.system(size: 18))
+                    
+                    Toggle(isOn: $isAutoOpenEnabled) {
+                        Text("Auto Open Nearest Door")
+                            .font(.custom("Inter-Regular", size: 15))
+                            .foregroundColor(.white)
                     }
-                    .padding(.top, 10)
-                    .padding(.horizontal, 20)
+                    .toggleStyle(SwitchToggleStyle(tint: .green))
                 }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(Color.white.opacity(0.08))
+                .cornerRadius(10)
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+                .onChange(of: isAutoOpenEnabled) { newValue in
+                    if newValue {
+                        print("🟢 Auto-open enabled — starting continuous BLE scanning...")
+                        
+                        // Start continuous scanning so BLE keeps discovering devices
+                        bleManager.startContinuousScanning()
+                        
+                        // Begin monitoring RSSI and auto-open logic
+                        monitorAndAutoOpenNearbyDoor()
+                    } else {
+                        print("🔴 Auto-open disabled — stopping all BLE monitoring...")
+                        
+                        // Stop everything cleanly
+                        bleManager.stopContinuousScanning()
+                        bleManager.stopMonitoringDevice()
+                        bleManager.stopScanning() // in case standard scan was running
+                    }
+                }
+
+
+                
+                ScrollView(showsIndicators: false) {
+                       VStack(spacing: 16) {
+                           if doorStorage.isLoading {
+                               ProgressView("Loading Doors...")
+                                   .foregroundColor(.white)
+                                   .padding(.top, 40)
+                           } else if let error = doorStorage.errorMessage {
+                               Text("⚠️ \(error)")
+                                   .foregroundColor(.red)
+                                   .padding(.top, 40)
+                           } else if doorStorage.doors.isEmpty {
+                               Text("No doors found.")
+                                   .foregroundColor(.gray)
+                                   .padding(.top, 40)
+                           } else {
+                               ForEach(doorStorage.doors) { door in
+                                   DoorCardView(door: door)
+                               }
+                           }
+                       }
+                       .padding(.top, 10)
+                       .padding(.horizontal, 20)
+                   }
             }
         }
         .background(Color.black.opacity(0.4))
-        .onAppear {
+
+        .task {
+                    // Load door list dynamically from API or mock
+                    await doorStorage.loadDoors()
+
+                    // Connect MQTT once loaded
                     mqttManager.connect()
-                    // Subscribe to all device topics on appear
-                    for door in doors {
+                    for door in doorStorage.doors {
                         mqttManager.subscribeToDevice(door.devSn)
                     }
                 }
     }
+
+
+    func monitorAndAutoOpenNearbyDoor() {
+        // Continuously monitor discovered BLE devices
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+            // If user has turned it off, stop timer
+            guard isAutoOpenEnabled else {
+                timer.invalidate()
+                return
+            }
+
+            for peripheral in bleManager.devices {
+                let name = peripheral.name ?? ""
+                let rssi = bleManager.monitoredDeviceRSSI ?? bleManager.deviceLastRSSI[peripheral.identifier] ?? -100
+
+                // Example match logic: door BLE name like "XM-<devSn>"
+                if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
+                    print("📡 Found matching door \(door.name) (RSSI: \(rssi)dBm)")
+
+                    if rssi > -50 && rssi < 0 {
+                        print("🚪 Door nearby! Opening \(door.name)...")
+                        doorManager.openSelectedDoor(door)
+
+                        // ✅ Turn off auto-open after one success
+                        isAutoOpenEnabled = false
+                        bleManager.stopScanning()
+                        bleManager.stopMonitoringDevice()
+
+                        // Stop this timer permanently
+                        timer.invalidate()
+
+                        break
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 
@@ -196,14 +291,75 @@ struct DoorCardView: View {
                 }
             }
         }
+        
+        .onReceive(doorManager.$doorEvent.compactMap({ $0 })) { event in
+            guard event.devSn == door.devSn else { return }
+            switch event.status {
+            case .starting:
+                animateOpeningStart()
+            case .success:
+                animateSuccess()
+            case .failure:
+                animateFailure()
+            }
+        }
+
 
     }
     
-    
+    // MARK: - Animations
+    func animateOpeningStart() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            showDurationText = true
+            ringColor = .green
+            lockIcon = "lock.open.fill"
+            isOpening = true
+            progress = 0.0
+        }
+        withAnimation(.linear(duration: 3.0)) {
+            progress = 1.0
+        }
+        resetAnimationAfterDelay()
+    }
+
+    // ✅ Success → show green, then reset
+    func animateSuccess() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            ringColor = .green
+            lockIcon = "lock.open.fill"
+            isOpening = true
+        }
+        resetAnimationAfterDelay()
+    }
+
+    // ❌ Failure → red, then reset
+    func animateFailure() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            ringColor = .red
+            lockIcon = "xmark"
+            isOpening = false
+        }
+        resetAnimationAfterDelay()
+    }
+
+    // ⏳ Common reset (3 seconds later)
+    func resetAnimationAfterDelay() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                ringColor = .white
+                lockIcon = "lock.fill"
+                isOpening = false
+                showDurationText = false
+                progress = 0.0
+            }
+        }
+    }
+
     // MARK: - Bluetooth Check
     func checkBluetoothAndProceed(for door: DoorModelUser) {
         if bluetoothManager.state == .poweredOn {
-            openSelectedDoor(door)
+           // openSelectedDoor(door)
+            doorManager.openSelectedDoor(door)
         } else {
             showBluetoothAlert = true
         }
@@ -217,64 +373,7 @@ struct DoorCardView: View {
         }
     }
     
-    // MARK: - Door Open Logic
-    func openSelectedDoor(_ door: DoorModelUser) {
-        print("🚪 Opening door: \(door.name)")
-        let mqtt = MQTTManager.shared
-        mqtt.subscribeToDevice(door.devSn)
-        mqtt.sendOpenDoorCommand(to: door.devSn)
-       
-        
-        let devModel = LibDevModel()
-        devModel.devSn = door.devSn
-        devModel.devMac = door.devMac
-        devModel.devType = door.devType
-        devModel.eKey = door.eKey
-        devModel.cardno = door.cardno
-        devModel.privilege = 4
-        devModel.verified = 1
-        devModel.startDate = "20240101000000"
-        devModel.endDate = "20251231235959"
-        
-        let result = LibDevModel.openDoor(devModel)
-        print("📤 openDoor() result: \(result)")
-        
-        // 🔹 Animate progress clockwise smoothly (3s)
-        withAnimation(.easeInOut(duration: 0.3)) {
-            showDurationText = true
-            ringColor = .green
-            lockIcon = "lock.open.fill"
-            isOpening = true
-            progress = 0.0 // ensure starts from 0 each tap
-        }
-        
-        // Animate from 0 → 1 (smooth clockwise)
-        withAnimation(.linear(duration: 3.0)) {
-            progress = 1.0
-        }
-        
-        // Reset visuals after complete
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                ringColor = .white
-                lockIcon = "lock.fill"
-                isOpening = false
-                showDurationText = false
-                progress = 0.0 // reset cleanly for next tap
-            }
-        }
-    }
-}
-
-
-struct DoorModelUser {
-    let name: String
-    let duration: String
-    let devSn: String
-    let devMac: String
-    let devType: Int32
-    let eKey: String
-    let cardno: String
+    
 }
 
 #Preview {

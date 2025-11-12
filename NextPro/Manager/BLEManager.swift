@@ -236,7 +236,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         stopContinuousScanning()
     }
 
-    private func startContinuousScanning() {
+     func startContinuousScanning() {
         guard centralManager.state == .poweredOn else {
             print("⚠️ Cannot start continuous scanning - Bluetooth not powered on")
             return
@@ -268,7 +268,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         }
     }
 
-    private func stopContinuousScanning() {
+     func stopContinuousScanning() {
         continuousScanTimer?.invalidate()
         continuousScanTimer = nil
         if isScanning {
@@ -278,7 +278,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         }
     }
 
-    private func updateMonitoredDeviceRSSI() {
+     func updateMonitoredDeviceRSSI() {
         // Check if monitoring by name (preferred for door devices)
         if let monitoredName = monitoredDeviceName {
             // Find device by name
@@ -316,5 +316,5 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
 
     // Dictionary to store last known RSSI for each device
-    private var deviceLastRSSI: [UUID: Int] = [:]
+     var deviceLastRSSI: [UUID: Int] = [:]
 }
