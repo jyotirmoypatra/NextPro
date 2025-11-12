@@ -65,16 +65,22 @@ struct OpenDoorEndUserView: View {
 }
 
 
-
 struct DoorCardView: View {
     let door: DoorModelUser
-    var progress: CGFloat = 1.0   // Static 100% ring
+    @State private var progress: CGFloat = 0.0   // Start empty
     @StateObject private var doorManager = DoorManager.shared
     @State private var showBluetoothAlert = false
-        @State private var bluetoothManager = CBCentralManager()
+    @State private var bluetoothManager = CBCentralManager()
+    
+    // Animation states
+    @State private var isOpening = false
+    @State private var ringColor: Color = .white
+    @State private var lockIcon: String = "lock.fill"
+    @State private var showDurationText = false
+    
     var body: some View {
         HStack {
-            // Left door details
+            // Left details
             VStack(alignment: .leading, spacing: 5) {
                 Image("dooricon")
                     .resizable()
@@ -89,40 +95,42 @@ struct DoorCardView: View {
                     .font(.custom("Inter-Regular", size: 12))
                     .foregroundColor(.gray)
                 
-                Text(door.duration)
-                    .font(.custom("Inter-Regular", size: 12))
-                    .foregroundColor(.gray)
+                if showDurationText {
+                    Text(door.duration)
+                        .font(.custom("Inter-Regular", size: 12))
+                        .foregroundColor(.gray)
+                        .transition(.opacity)
+                }
             }
             Spacer()
             
-            // ✅ Clickable Lock Button
+           
             Button(action: {
-            // openSelectedDoor(door)
                 checkBluetoothAndProceed(for: door)
             }) {
                 ZStack {
-                    // Black background circle
+                    // Base black circle
                     Circle()
                         .fill(Color.black)
                         .frame(width: 48, height: 48)
                     
-                    // White progress ring
+                    
                     Circle()
                         .trim(from: 0, to: progress)
                         .stroke(
-                            Color.white,
+                            ringColor,
                             style: StrokeStyle(lineWidth: 3, lineCap: .round)
                         )
                         .frame(width: 48, height: 48)
-                        .rotationEffect(.degrees(-90))
+                        .rotationEffect(.degrees(-90)) // clockwise start at top
                     
-                    // Lock icon
-                    Image(systemName: "lock.fill")
-                        .foregroundColor(.white.opacity(0.5))
+                    Image(systemName: lockIcon)
+                        .foregroundColor(isOpening ? .green : .white.opacity(0.6))
                         .font(.system(size: 20))
+                        .scaleEffect(isOpening ? 1.1 : 1.0)
                 }
             }
-            .buttonStyle(.plain) // Remove default button highlight
+            .buttonStyle(.plain)
         }
         .padding()
         .background(Color.white.opacity(0.09))
@@ -131,79 +139,89 @@ struct DoorCardView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.white.opacity(0.1), lineWidth: 1)
         )
-        // 🔹 Bluetooth OFF Alert
-               .alert(isPresented: $showBluetoothAlert) {
-                   Alert(
-                       title: Text("Bluetooth is Off"),
-                       message: Text("Please enable Bluetooth to open the door."),
-                       primaryButton: .default(Text("Open Settings"), action: {
-                           openBluetoothSettings()
-                       }),
-                       secondaryButton: .cancel(Text("Cancel"))
-                   )
-               }
-               .onAppear {
-                   // 🔹 Check Bluetooth state on appear
-                   DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                       if bluetoothManager.state != .poweredOn {
-                           showBluetoothAlert = true
-                       }
-                   }
-               }
+        .alert(isPresented: $showBluetoothAlert) {
+            Alert(
+                title: Text("Bluetooth is Off"),
+                message: Text("Please enable Bluetooth to open the door."),
+                primaryButton: .default(Text("Open Settings"), action: {
+                    openBluetoothSettings()
+                }),
+                secondaryButton: .cancel(Text("Cancel"))
+            )
+        }
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                if bluetoothManager.state != .poweredOn {
+                    showBluetoothAlert = true
+                }
+            }
+        }
     }
     
-    // MARK: - Bluetooth Checking Logic
-        func checkBluetoothAndProceed(for door: DoorModelUser) {
-            if bluetoothManager.state == .poweredOn {
-                openSelectedDoor(door)
-            } else {
-                showBluetoothAlert = true
-            }
+    
+    // MARK: - Bluetooth Check
+    func checkBluetoothAndProceed(for door: DoorModelUser) {
+        if bluetoothManager.state == .poweredOn {
+            openSelectedDoor(door)
+        } else {
+            showBluetoothAlert = true
         }
-        
-        // MARK: - Open iPhone Bluetooth Settings
-        func openBluetoothSettings() {
-            if let url = URL(string: "App-Prefs:root=Bluetooth"), UIApplication.shared.canOpenURL(url) {
-                UIApplication.shared.open(url)
-            }
+    }
+    
+    // MARK: - Open Bluetooth Settings
+    func openBluetoothSettings() {
+        if let url = URL(string: "App-Prefs:root=Bluetooth"),
+           UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
         }
+    }
+    
+    // MARK: - Door Open Logic
     func openSelectedDoor(_ door: DoorModelUser) {
         print("🚪 Opening door: \(door.name)")
-
-        let devModel = LibDevModel()
         
-        // Set required parameters from selected door
+        // 🔹 SDK call immediately
+        let devModel = LibDevModel()
         devModel.devSn = door.devSn
         devModel.devMac = door.devMac
         devModel.devType = door.devType
         devModel.eKey = door.eKey
         devModel.cardno = door.cardno
-        
-        // Set optional parameters with defaults
         devModel.privilege = 4
         devModel.verified = 1
         devModel.startDate = "20240101000000"
         devModel.endDate = "20251231235959"
         
-        print("📋 Door Config:")
-        print("   Name: \(door.name)")
-        print("   devSn: \(devModel.devSn ?? "nil")")
-        print("   devMac: \(devModel.devMac ?? "nil")")
-        print("   devType: \(devModel.devType)")
-        print("   cardno: \(devModel.cardno ?? "nil")")
-        
-        // Call SDK to open door
         let result = LibDevModel.openDoor(devModel)
+        print("📤 openDoor() result: \(result)")
         
-        print("📤 openDoor() called, result: \(result)")
+        // 🔹 Animate progress clockwise smoothly (3s)
+        withAnimation(.easeInOut(duration: 0.5)) {
+            showDurationText = true
+            ringColor = .green
+            lockIcon = "lock.open.fill"
+            isOpening = true
+            progress = 0.0 // ensure starts from 0 each tap
+        }
         
-        if result != 0 {
-            
-        } else {
-          
+        // Animate from 0 → 1 (smooth clockwise)
+        withAnimation(.linear(duration: 5.0)) {
+            progress = 1.0
+        }
+        
+        // Reset visuals after complete
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+            withAnimation(.easeInOut(duration: 0.5)) {
+                ringColor = .white
+                lockIcon = "lock.fill"
+                isOpening = false
+                showDurationText = false
+                progress = 0.0 // reset cleanly for next tap
+            }
         }
     }
 }
+
 
 struct DoorModelUser {
     let name: String
