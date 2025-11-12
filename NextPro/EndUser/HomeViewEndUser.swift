@@ -27,27 +27,7 @@ struct HomeViewEndUser: View {
                 VStack(spacing: 0) {
                     // MARK: - Top Bar
                     // MARK: - Top Bar
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("UTL")
-                                .font(.title2.bold())
-                                .foregroundColor(.white)
-                            Text("UTL")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                        }
-                        Spacer()
-
-                        Button(action: {}) {
-                            Image(systemName: "bell")
-                                .foregroundColor(.white)
-                            
-                                .background(Color.black.opacity(0.4))
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 5) // ✅ fixed padding instead of safeAreaInsets.top
+                   
 
 
 
