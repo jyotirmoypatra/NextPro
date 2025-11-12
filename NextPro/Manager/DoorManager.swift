@@ -28,6 +28,7 @@ class DoorManager: ObservableObject {
     
     private var resetTimer: DispatchWorkItem?
     private var isBackgroundModeActive = false
+    private var currentProcessingDoorSn: String?  // Track current door being processed
     
     @Published var doorEvent: DoorEvent?
 
@@ -152,6 +153,9 @@ class DoorManager: ObservableObject {
         
         // Cancel any existing reset timer
         resetTimer?.cancel()
+        
+        // Store the current door SN for callback reference
+        currentProcessingDoorSn = door.devSn
         
         isProcessing = true
         statusMessage = "Opening \(door.name)..."
@@ -395,6 +399,13 @@ class DoorManager: ObservableObject {
                 lastResult = "Success"
                 errorMessage = nil
                 print("✅ SUCCESS: Door opened!")
+                
+                // Emit success event for door opening
+                if let devSn = currentProcessingDoorSn {
+                    DispatchQueue.main.async {
+                        self.doorEvent = DoorEvent(devSn: devSn, status: .success)
+                    }
+                }
             }
             
             // Schedule auto-reset after 10 seconds
@@ -409,6 +420,13 @@ class DoorManager: ObservableObject {
             lastResult = "Timeout"
             print("⏱️ TIMEOUT")
             
+            // Emit failure event
+            if let devSn = currentProcessingDoorSn {
+                DispatchQueue.main.async {
+                    self.doorEvent = DoorEvent(devSn: devSn, status: .failure)
+                }
+            }
+            
             // Auto-reset after 5 seconds for errors
             scheduleErrorReset()
             
@@ -418,6 +436,13 @@ class DoorManager: ObservableObject {
             lastResult = "Not found"
             print("❌ DEVICE NOT FOUND")
             
+            // Emit failure event
+            if let devSn = currentProcessingDoorSn {
+                DispatchQueue.main.async {
+                    self.doorEvent = DoorEvent(devSn: devSn, status: .failure)
+                }
+            }
+            
             scheduleErrorReset()
             
         case 3:
@@ -425,6 +450,13 @@ class DoorManager: ObservableObject {
             errorMessage = "Failed to connect to device"
             lastResult = "Connection failed"
             print("❌ CONNECTION FAILED")
+            
+            // Emit failure event
+            if let devSn = currentProcessingDoorSn {
+                DispatchQueue.main.async {
+                    self.doorEvent = DoorEvent(devSn: devSn, status: .failure)
+                }
+            }
             
             scheduleErrorReset()
             
@@ -434,6 +466,13 @@ class DoorManager: ObservableObject {
             lastResult = "Auth failed"
             print("❌ AUTHENTICATION FAILED")
             
+            // Emit failure event
+            if let devSn = currentProcessingDoorSn {
+                DispatchQueue.main.async {
+                    self.doorEvent = DoorEvent(devSn: devSn, status: .failure)
+                }
+            }
+            
             scheduleErrorReset()
             
         case 5:
@@ -442,6 +481,13 @@ class DoorManager: ObservableObject {
             lastResult = "Invalid params"
             print("❌ INVALID PARAMETERS")
             
+            // Emit failure event
+            if let devSn = currentProcessingDoorSn {
+                DispatchQueue.main.async {
+                    self.doorEvent = DoorEvent(devSn: devSn, status: .failure)
+                }
+            }
+            
             scheduleErrorReset()
             
         default:
@@ -449,6 +495,13 @@ class DoorManager: ObservableObject {
             errorMessage = "Unknown error occurred"
             lastResult = "Error \(ret)"
             print("❌ ERROR CODE: \(ret)")
+            
+            // Emit failure event
+            if let devSn = currentProcessingDoorSn {
+                DispatchQueue.main.async {
+                    self.doorEvent = DoorEvent(devSn: devSn, status: .failure)
+                }
+            }
             
             scheduleErrorReset()
         }
@@ -634,6 +687,11 @@ class DoorManager: ObservableObject {
         print("✅ Scan completed. Found \(scannedDevices.count) devices")
     }
     
+    // MARK: - Clear Door Event
+    func clearDoorEvent() {
+        doorEvent = nil
+    }
+    
     // MARK: - Reset State
     func resetState() {
         print("🔄 Resetting DoorManager state...")
@@ -644,6 +702,8 @@ class DoorManager: ObservableObject {
         isProcessing = false
         retrievedCards = []
         cardReadProgress = ""
+        doorEvent = nil  // Also clear door event on full reset
+        currentProcessingDoorSn = nil  // Clear the current processing door
     }
     
     // MARK: - Helper Functions

@@ -9,11 +9,13 @@ import CoreBluetooth
 import Combine
 
 struct OpenDoorEndUserView: View {
+    @State private var bluetoothManager = CBCentralManager()
     @StateObject private var mqttManager = MQTTManager.shared
     @StateObject private var doorStorage = DoorStorageManager.shared
     @StateObject private var doorManager = DoorManager.shared
     @State private var isAutoOpenEnabled = false
     @State private var isAutoOpeningActive = false
+    @State private var showBluetoothAlert = false
     @StateObject private var bleManager = BLEManager()
     @State private var lastDoorRSSI: [String: Int] = [:]
     var body: some View {
@@ -69,25 +71,52 @@ struct OpenDoorEndUserView: View {
                 .cornerRadius(10)
                 .padding(.horizontal, 20)
                 .padding(.top, 10)
+//                .onChange(of: isAutoOpenEnabled) { newValue in
+//                    if newValue {
+//                        print("🟢 Auto-open enabled — starting continuous BLE scanning...")
+//                        
+//                        // Start continuous scanning so BLE keeps discovering devices
+//                        bleManager.startContinuousScanning()
+//                        
+//                        // Begin monitoring RSSI and auto-open logic
+//                        monitorAndAutoOpenNearbyDoor()
+//                    } else {
+//                        print("🔴 Auto-open disabled — stopping all BLE monitoring...")
+//                        
+//                        // Stop everything cleanly
+//                        bleManager.stopContinuousScanning()
+//                        bleManager.stopMonitoringDevice()
+//                        bleManager.stopScanning() // in case standard scan was running
+//                    }
+//                }
+
                 .onChange(of: isAutoOpenEnabled) { newValue in
                     if newValue {
+                        // ✅ Check Bluetooth first
+                        if bluetoothManager.state != .poweredOn  {
+                            print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
+                            showBluetoothAlert = true
+                            // Turn the toggle back off
+                            isAutoOpenEnabled = false
+                            return
+                        }
+
                         print("🟢 Auto-open enabled — starting continuous BLE scanning...")
-                        
-                        // Start continuous scanning so BLE keeps discovering devices
+
+                        // Start continuous scanning
                         bleManager.startContinuousScanning()
                         
                         // Begin monitoring RSSI and auto-open logic
                         monitorAndAutoOpenNearbyDoor()
                     } else {
                         print("🔴 Auto-open disabled — stopping all BLE monitoring...")
-                        
+
                         // Stop everything cleanly
                         bleManager.stopContinuousScanning()
                         bleManager.stopMonitoringDevice()
                         bleManager.stopScanning() // in case standard scan was running
                     }
                 }
-
 
                 
                 ScrollView(showsIndicators: false) {
@@ -116,7 +145,19 @@ struct OpenDoorEndUserView: View {
             }
         }
         .background(Color.black.opacity(0.4))
-
+        .alert(isPresented: $showBluetoothAlert) {
+                Alert(
+                    title: Text("Bluetooth is Off"),
+                    message: Text("Please enable Bluetooth to use Auto Open."),
+                    primaryButton: .default(Text("Open Settings"), action: {
+                        if let url = URL(string: "App-Prefs:root=Bluetooth"),
+                           UIApplication.shared.canOpenURL(url) {
+                            UIApplication.shared.open(url)
+                        }
+                    }),
+                    secondaryButton: .cancel(Text("Cancel"))
+                )
+            }
         .task {
                     // Load door list dynamically from API or mock
                     await doorStorage.loadDoors()
@@ -301,6 +342,11 @@ struct DoorCardView: View {
                 animateSuccess()
             case .failure:
                 animateFailure()
+            }
+            
+            // Clear the event after processing to prevent re-triggering
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                doorManager.clearDoorEvent()
             }
         }
 

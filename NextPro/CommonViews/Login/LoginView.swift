@@ -11,9 +11,9 @@ import SwiftUI
 struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
-    @State private var navigateToEndUser = false
-    @State private var navigateToAdmin = false
+    @State private var navigateToCreatePassword = false
     @State private var loginError = ""
+    @State private var userType = ""
     
     
     var body: some View {
@@ -147,18 +147,13 @@ struct LoginView: View {
             }
             .navigationBarBackButtonHidden(true)
             .ignoresSafeArea(.keyboard, edges: .bottom) // The key to stop resize
-            .navigationDestination(isPresented: $navigateToEndUser) {
-                HomeViewEndUser()
+            .navigationDestination(isPresented: $navigateToCreatePassword) {
+                CreateNewPasswordView(userTye: self.userType)
                     .navigationBarBackButtonHidden(true)
                            .navigationBarHidden(true)
                            .interactiveDismissDisabled(true)
             }
-            .navigationDestination(isPresented: $navigateToAdmin) {
-                OnboardPageDeviceScanView()
-                    .navigationBarBackButtonHidden(true)
-                           .navigationBarHidden(true)
-                           .interactiveDismissDisabled(true)
-            }
+            
     
     }
     }
@@ -173,14 +168,17 @@ struct LoginView: View {
             }
             
             // Dummy credentials check
-            if trimmedEmail == "jyotirmoy" && trimmedPassword == "123" {
+            if trimmedEmail == "jp" && trimmedPassword == "123" {
                 print("✅ End User login successful.")
                 loginError = ""
-                navigateToEndUser = true
+                navigateToCreatePassword = true
+                userType = "0"
+               
             } else if trimmedEmail == "admin" && trimmedPassword == "admin" {
                 print("✅ Admin login successful.")
                 loginError = ""
-                navigateToAdmin = true
+                navigateToCreatePassword = true
+                userType = "1"
             } else {
                 loginError = "Invalid credentials. Please try again."
             }
