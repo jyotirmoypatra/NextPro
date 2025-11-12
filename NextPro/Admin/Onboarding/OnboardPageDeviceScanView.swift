@@ -11,6 +11,7 @@ import CoreBluetooth
 struct OnboardPageDeviceScanView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var navigateToWiFiListView = false
+    @State private var navigateToHome = false
     @State private var selectedDeviceIndex: Int? = nil
     @State private var selectedDeviceSN: String? = nil
     @State private var selectedDeviceConfig: DeviceConfig? = nil // Store matched device config
@@ -38,12 +39,34 @@ struct OnboardPageDeviceScanView: View {
                 Spacer()
 
                 // Header card
+               
                 VStack(spacing: 15) {
+                    HStack{
+                        Spacer()
+                        Button(action: {
+                            navigateToHome = true
+                        }) {
+                            Text("SKIP")
+                                .font(.custom("Inter-SemiBold", size: 15))
+                                .foregroundColor(.white)
+                        }
+                        .navigationDestination(isPresented: $navigateToHome) {
+                           HomeViewAdmin()
+                                .navigationBarBackButtonHidden(true)
+                                       .navigationBarHidden(true)
+                                       .interactiveDismissDisabled(true)
+                        }
+                        
+                    }
+                  
+                    
                     Image("computer")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 48, height: 48)
                         .foregroundColor(.white)
+                    
+                    
 
                     Text("STEP 2 OF 3")
                         .font(.custom("Inter-SemiBold", size: 16))

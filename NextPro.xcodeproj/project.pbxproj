@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0B0DF6112EC4AA360055BCEC /* CocoaMQTT in Frameworks */ = {isa = PBXBuildFile; productRef = 0B0DF6102EC4AA360055BCEC /* CocoaMQTT */; };
 		0B4E27942EB4AAF40036ECBD /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B4E27932EB4AAF40036ECBD /* CoreBluetooth.framework */; };
 /* End PBXBuildFile section */
 
@@ -55,6 +56,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B4E27942EB4AAF40036ECBD /* CoreBluetooth.framework in Frameworks */,
+				0B0DF6112EC4AA360055BCEC /* CocoaMQTT in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -107,6 +109,7 @@
 			);
 			name = NextPro;
 			packageProductDependencies = (
+				0B0DF6102EC4AA360055BCEC /* CocoaMQTT */,
 			);
 			productName = NextPro;
 			productReference = 0BA387222EB13047000CD1BD /* NextPro.app */;
@@ -136,6 +139,9 @@
 			);
 			mainGroup = 0BA387192EB13047000CD1BD;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0B0DF60F2EC4AA360055BCEC /* XCRemoteSwiftPackageReference "CocoaMQTT" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0BA387232EB13047000CD1BD /* Products */;
 			projectDirPath = "";
@@ -411,6 +417,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0B0DF60F2EC4AA360055BCEC /* XCRemoteSwiftPackageReference "CocoaMQTT" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/emqx/CocoaMQTT.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.9;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0B0DF6102EC4AA360055BCEC /* CocoaMQTT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0B0DF60F2EC4AA360055BCEC /* XCRemoteSwiftPackageReference "CocoaMQTT" */;
+			productName = CocoaMQTT;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0BA3871A2EB13047000CD1BD /* Project object */;
 }

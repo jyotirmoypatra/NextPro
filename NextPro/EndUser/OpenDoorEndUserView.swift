@@ -8,9 +8,11 @@ import SwiftUI
 import CoreBluetooth
 
 struct OpenDoorEndUserView: View {
+    @StateObject private var mqttManager = MQTTManager.shared
     @State private var doors = [
         DoorModelUser(name: "Iron Hive Gym: Gate", duration: "For 5 Second", devSn: "4280125893", devMac: "58:cf:79:1a:8d:0e", devType: 2, eKey: "3ca884ca4f8d16e28199c11df14cfbcf000000000000000000000000000000001000",cardno: "1557198962"),
-        DoorModelUser(name: "Iron Hive Gym: Door 1", duration: "For 5 Second", devSn: "4282705968", devMac: "58:cf:79:1a:89:ce", devType: 2, eKey: "92fc410e8d125331c26faf21c7e77292000000000000000000000000000000001000",cardno: "1557198962")
+       // DoorModelUser(name: "Iron Hive Gym: Door 1", duration: "For 5 Second", devSn: "4282705968", devMac: "58:cf:79:1a:89:ce", devType: 2, eKey: "92fc410e8d125331c26faf21c7e77292000000000000000000000000000000001000",cardno: "1557198962"),
+        //DoorModelUser(name: "Iron Hive Gym: Door 1", duration: "For 5 Second", devSn: "4283847520", devMac: "d8:3b:da:36:53:62", devType: 2, eKey: "41f888c5017576eb80f030fe8730851d000000000000000000000000000000001000",cardno: "1557198962")
         
     ]
     
@@ -61,6 +63,13 @@ struct OpenDoorEndUserView: View {
             }
         }
         .background(Color.black.opacity(0.4))
+        .onAppear {
+                    mqttManager.connect()
+                    // Subscribe to all device topics on appear
+                    for door in doors {
+                        mqttManager.subscribeToDevice(door.devSn)
+                    }
+                }
     }
 }
 
@@ -156,6 +165,38 @@ struct DoorCardView: View {
                 }
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in
+            if let info = notification.userInfo,
+               let doorID = info["doorID"] as? Int,
+               let verified = info["verified"] as? Int {
+                
+                if verified == 200 {
+                    // ✅ Door opened successfully
+                    withAnimation {
+                        ringColor = .green
+                        lockIcon = "lock.open.fill"
+                        isOpening = true
+                    }
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        withAnimation {
+                            ringColor = .white
+                            lockIcon = "lock.fill"
+                            isOpening = false
+                        }
+                    }
+                } else {
+                    // ❌ Door failed to open
+                    withAnimation {
+                        ringColor = .red
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        ringColor = .white
+                    }
+                }
+            }
+        }
+
     }
     
     
@@ -179,8 +220,11 @@ struct DoorCardView: View {
     // MARK: - Door Open Logic
     func openSelectedDoor(_ door: DoorModelUser) {
         print("🚪 Opening door: \(door.name)")
+        let mqtt = MQTTManager.shared
+        mqtt.subscribeToDevice(door.devSn)
+        mqtt.sendOpenDoorCommand(to: door.devSn)
+       
         
-        // 🔹 SDK call immediately
         let devModel = LibDevModel()
         devModel.devSn = door.devSn
         devModel.devMac = door.devMac
@@ -196,7 +240,7 @@ struct DoorCardView: View {
         print("📤 openDoor() result: \(result)")
         
         // 🔹 Animate progress clockwise smoothly (3s)
-        withAnimation(.easeInOut(duration: 0.5)) {
+        withAnimation(.easeInOut(duration: 0.3)) {
             showDurationText = true
             ringColor = .green
             lockIcon = "lock.open.fill"
@@ -205,13 +249,13 @@ struct DoorCardView: View {
         }
         
         // Animate from 0 → 1 (smooth clockwise)
-        withAnimation(.linear(duration: 5.0)) {
+        withAnimation(.linear(duration: 3.0)) {
             progress = 1.0
         }
         
         // Reset visuals after complete
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-            withAnimation(.easeInOut(duration: 0.5)) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            withAnimation(.easeInOut(duration: 0.3)) {
                 ringColor = .white
                 lockIcon = "lock.fill"
                 isOpening = false
