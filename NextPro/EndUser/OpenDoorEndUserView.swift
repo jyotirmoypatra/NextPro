@@ -147,7 +147,7 @@ struct OpenDoorEndUserView: View {
                 if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
                     print("📡 Found matching door \(door.name) (RSSI: \(rssi)dBm)")
 
-                    if rssi > -50 && rssi < 0 {
+                    if rssi > -55 && rssi < 0 {
                         print("🚪 Door nearby! Opening \(door.name)...")
                         doorManager.openSelectedDoor(door)
 
