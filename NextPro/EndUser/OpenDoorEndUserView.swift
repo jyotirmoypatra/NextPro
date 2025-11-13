@@ -71,24 +71,7 @@ struct OpenDoorEndUserView: View {
                 .cornerRadius(10)
                 .padding(.horizontal, 20)
                 .padding(.top, 10)
-//                .onChange(of: isAutoOpenEnabled) { newValue in
-//                    if newValue {
-//                        print("🟢 Auto-open enabled — starting continuous BLE scanning...")
-//                        
-//                        // Start continuous scanning so BLE keeps discovering devices
-//                        bleManager.startContinuousScanning()
-//                        
-//                        // Begin monitoring RSSI and auto-open logic
-//                        monitorAndAutoOpenNearbyDoor()
-//                    } else {
-//                        print("🔴 Auto-open disabled — stopping all BLE monitoring...")
-//                        
-//                        // Stop everything cleanly
-//                        bleManager.stopContinuousScanning()
-//                        bleManager.stopMonitoringDevice()
-//                        bleManager.stopScanning() // in case standard scan was running
-//                    }
-//                }
+
 
                 .onChange(of: isAutoOpenEnabled) { newValue in
                     if newValue {
@@ -159,18 +142,25 @@ struct OpenDoorEndUserView: View {
                 )
             }
         .task {
-                    // Load door list dynamically from API or mock
-                    await doorStorage.loadDoors()
+            await doorStorage.loadDoors()
+            
+            // Connect MQTT once
+            mqttManager.connect()
+            
+            // Subscribe to all doors
+            subscribeToAllDoors()
+        }
 
-                    // Connect MQTT once loaded
-                    mqttManager.connect()
-                    for door in doorStorage.doors {
-                        mqttManager.subscribeToDevice(door.devSn)
-                    }
-                }
+        
+
     }
 
-
+    // Helper function
+    func subscribeToAllDoors() {
+        for door in doorStorage.doors {
+            mqttManager.subscribeToDevice(door.devSn)
+        }
+    }
     func monitorAndAutoOpenNearbyDoor() {
         // Continuously monitor discovered BLE devices
         Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
@@ -248,8 +238,11 @@ struct DoorCardView: View {
                 }
             }
             Spacer()
+            VStack{
+                Text("Offline")
+                    .font(.custom("Inter-Regular", size: 12))
+                    .foregroundColor(.gray)
             
-           
             Button(action: {
                 checkBluetoothAndProceed(for: door)
             }) {
@@ -276,6 +269,8 @@ struct DoorCardView: View {
                 }
             }
             .buttonStyle(.plain)
+            
+        }
         }
         .padding()
         .background(Color.white.opacity(0.09))

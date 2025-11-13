@@ -21,6 +21,7 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
 
     func mqtt(_ mqtt: CocoaMQTT, didPublishAck id: UInt16) {
         print("✅ Publish acknowledged: \(id)")
+        subscribeToDevice("4283847520")
     }
 
     func mqtt(_ mqtt: CocoaMQTT, didSubscribeTopics success: NSDictionary, failed: [String]) {
@@ -77,11 +78,37 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
 
 
     // Subscribe to device response topic (example: up/{SN}/rtdata)
+//    func subscribeToDevice(_ sn: String) {
+//        let topic = "up/\(sn)/rtdata"
+//        mqtt?.subscribe(topic, qos: .qos1)
+//        print("📡 Subscribed to topic: \(topic)")
+//    }
+
     func subscribeToDevice(_ sn: String) {
-        let topic = "up/\(sn)/rtdata"
-        mqtt?.subscribe(topic, qos: .qos1)
-        print("📡 Subscribed to topic: \(topic)")
+        guard let mqtt = mqtt, mqtt.connState == .connected else {
+            print("⚠️ MQTT not connected. Cannot subscribe to \(sn)")
+            return
+        }
+
+        // Topics for the device
+        let topics = ["up/\(sn)/rtdata", "up/\(sn)/data"]
+
+        for topic in topics {
+            mqtt.subscribe(topic, qos: .qos1)
+            print("📡 Subscribing to topic: \(topic) ...")
+        }
     }
+
+//    func subscribeToDevice(_ sn: String) {
+//        guard let mqtt = mqtt, mqtt.connState == .connected else {
+//            print("⚠️ MQTT not connected. Cannot subscribe to \(sn)")
+//            return
+//        }
+//
+//        let topic = "up/\(sn)/rtdata"
+//        mqtt.subscribe(topic, qos: .qos1)
+//        print("📡 Subscribing to topic: \(topic) ...")
+//    }
 
     // Publish open door command to the device
     func sendOpenDoorCommand(to deviceSN: String, doorID: Int = 1, duration: Int = 5) {
