@@ -18,183 +18,171 @@ struct LoginView: View {
     
     var body: some View {
         NavigationStack {
-            // Use GeometryReader to define a fixed, full-screen container
             GeometryReader { geometry in
                 ZStack(alignment: .top) {
-                    // Background layers (fixed)
                     Image("backgroundimg")
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: geometry.size.width, height: geometry.size.height)
                         .ignoresSafeArea()
                     
-                    // Black translucent overlay
-                    Color.black.opacity(0.8)
+                    Color.black.opacity(0.9)
                         .ignoresSafeArea()
                     
                     // Content VStack (fixed at the top)
-                    VStack(spacing: 25) {
-                        Spacer().frame(height: 40)
-                        
-                        // Header Text
-                        VStack(spacing: 5) {
-                            Text("LOG IN TO YOUR ACCOUNT")
-                                .font(.custom("Inter-SemiBold", size: 20))
-                                .foregroundColor(.white)
-                            Text("WELCOME!")
-                                .font(.custom("Inter-Regular", size: 16))
-                                .foregroundColor(Color.gray.opacity(0.8))
-                        }
-                        .padding(.bottom, 40)
-                        
-                        // Email Field
-                        // MARK: - Email Field
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack(spacing: 0) {
-                                Text("Email Address")
-                                    .font(.custom("Inter-Medium", size: 16))
-                                    .foregroundColor(.white)
-                                Text(" *")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.red)
-                            }
-                            
-                            ZStack(alignment: .leading) {
-                                if vm.email.isEmpty {
-                                    Text("Enter Email")
-                                        .foregroundColor(Color.white.opacity(0.5))
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .padding(.leading, 14)
-                                }
-                                
-                                TextField("", text: $vm.email)
-                                    .foregroundColor(.white)
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .padding(.horizontal, 14)
-                                    .frame(height: 50)
-                                    .background(Color.white.opacity(0.15))
-                                    .cornerRadius(10)
-                                    .autocapitalization(.none)
-                                    .disableAutocorrection(true)
-                            }
-                        }
+                    // Scrollable Fields
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 25) {
+                            Spacer().frame(height: 40)
 
-                        
-                        // Password Field
-                        // MARK: - Password Field
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack(spacing: 0) {
-                                Text("Password")
-                                    .font(.custom("Inter-Medium", size: 16))
+                            // Header
+                            VStack(spacing: 5) {
+                                Text("LOG IN TO YOUR ACCOUNT")
+                                    .font(.custom("Inter-SemiBold", size: 20))
                                     .foregroundColor(.white)
-                                Text(" *")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.red)
+                                Text("WELCOME!")
+                                    .font(.custom("Inter-Regular", size: 16))
+                                    .foregroundColor(Color.gray.opacity(0.8))
                             }
-                            
-                            ZStack(alignment: .trailing) {
-                                
+                            .padding(.bottom, 40)
+
+                            // Email Field
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack(spacing: 0) {
+                                    Text("Email Address")
+                                        .font(.custom("Inter-Medium", size: 16))
+                                        .foregroundColor(.white)
+                                    Text(" *")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.red)
+                                }
+
                                 ZStack(alignment: .leading) {
-                                    if vm.password.isEmpty {
-                                        Text("Enter Password")
+                                    if vm.email.isEmpty {
+                                        Text("Enter Email")
                                             .foregroundColor(Color.white.opacity(0.5))
                                             .font(.custom("Inter-Regular", size: 16))
                                             .padding(.leading, 14)
                                     }
-                                    
-                                    if showPassword {
-                                        TextField("", text: $vm.password)
-                                            .foregroundColor(.white)
-                                            .font(.custom("Inter-Regular", size: 16))
-                                            .padding(.horizontal, 14)
-                                            .frame(height: 50)
-                                            .autocapitalization(.none)
-                                            .disableAutocorrection(true)
-                                    } else {
-                                        SecureField("", text: $vm.password)
-                                            .foregroundColor(.white)
-                                            .font(.custom("Inter-Regular", size: 16))
-                                            .padding(.horizontal, 14)
-                                            .frame(height: 50)
-                                            .autocapitalization(.none)
-                                            .disableAutocorrection(true)
-                                    }
+
+                                    TextField("", text: $vm.email)
+                                        .foregroundColor(.white)
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .padding(.horizontal, 14)
+                                        .frame(height: 50)
+                                        .background(Color.white.opacity(0.15))
+                                        .cornerRadius(10)
+                                        .autocapitalization(.none)
+                                        .disableAutocorrection(true)
                                 }
-                                .background(Color.white.opacity(0.15))
-                                .cornerRadius(10)
-                                
-                                // Eye Toggle Button
-                                Button(action: { showPassword.toggle() }) {
-                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                                        .foregroundColor(.white.opacity(0.8))
-                                }
-                                .padding(.trailing, 14)
                             }
-                            
-                            HStack {
-                                Spacer()
-                                Text("Forgot Password?")
-                                    .font(.custom("Inter-Regular", size: 14))
-                                    .foregroundColor(.white)
-                                    .padding(.top, 6)
-                            }
-                        }
 
-                        
-                        Spacer() // Pushes everything above it to the top
-                        
-                        // Bottom section
-                        VStack(spacing: 16) {
-                            // Login Button
-                            Button(action: {
-                                if !network.hasInternet {
-                                    showNoInternetAlert = true
-                                    return
+                            // Password Field
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack(spacing: 0) {
+                                    Text("Password")
+                                        .font(.custom("Inter-Medium", size: 16))
+                                        .foregroundColor(.white)
+                                    Text(" *")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.red)
                                 }
 
-                                
-                                Task {
-                                    await vm.login()
+                                ZStack(alignment: .trailing) {
+                                    ZStack(alignment: .leading) {
+                                        if vm.password.isEmpty {
+                                            Text("Enter Password")
+                                                .foregroundColor(Color.white.opacity(0.5))
+                                                .font(.custom("Inter-Regular", size: 16))
+                                                .padding(.leading, 14)
+                                        }
 
-                                    if vm.loginSuccess {
-                                        navigateToCreatePassword = true
-                                    } else {
-                                        showLoginFailedAlert = true
+                                        if showPassword {
+                                            TextField("", text: $vm.password)
+                                                .foregroundColor(.white)
+                                                .font(.custom("Inter-Regular", size: 16))
+                                                .padding(.horizontal, 14)
+                                                .frame(height: 50)
+                                                .autocapitalization(.none)
+                                                .disableAutocorrection(true)
+                                        } else {
+                                            SecureField("", text: $vm.password)
+                                                .foregroundColor(.white)
+                                                .font(.custom("Inter-Regular", size: 16))
+                                                .padding(.horizontal, 14)
+                                                .frame(height: 50)
+                                                .autocapitalization(.none)
+                                                .disableAutocorrection(true)
+                                        }
                                     }
-                                }
-                                
-                            }) {
-                                Text("LOG IN")
-                                    .font(.custom("Inter-SemiBold", size: 16))
-                                    .foregroundColor(.black)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color.white)
+                                    .background(Color.white.opacity(0.15))
                                     .cornerRadius(10)
+
+                                    Button(action: { showPassword.toggle() }) {
+                                        Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                            .foregroundColor(.white.opacity(0.8))
+                                    }
+                                    .padding(.trailing, 14)
+                                }
+
+                                HStack {
+                                    Spacer()
+                                    Text("Forgot Password?")
+                                        .font(.custom("Inter-Regular", size: 14))
+                                        .foregroundColor(.white)
+                                        .padding(.top, 6)
+                                }
                             }
-                            
-                            // Sign Up Text
-                            HStack {
-                                Text("Don't have an account yet?")
-                                    .foregroundColor(.gray)
-                                    .font(.custom("Inter-Regular", size: 16))
-                                Text("Sign Up")
-                                    .font(.custom("Inter-Bold", size: 16))
-                                    .foregroundColor(.white)
-                                    .fontWeight(.bold)
-                            }
-                            .font(.system(size: 14))
-                            
+
+                            Spacer().frame(height: 150)  // Prevent cut-off
                         }
-                        .padding(.bottom, 30)
-                        
+                        .padding(.horizontal, 30)
+                    }
+
+                    // FOOTER - Fixed at Bottom
+                    VStack(spacing: 16) {
+
+                        Button(action: {
+                            if !network.hasInternet {
+                                showNoInternetAlert = true
+                                return
+                            }
+
+                            Task {
+                                await vm.login()
+                                if vm.loginSuccess {
+                                    navigateToCreatePassword = true
+                                } else {
+                                    showLoginFailedAlert = true
+                                }
+                            }
+                        }) {
+                            Text("LOG IN")
+                                .font(.custom("Inter-SemiBold", size: 16))
+                                .foregroundColor(.black)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.white)
+                                .cornerRadius(10)
+                        }
+
+                        HStack {
+                            Text("Don't have an account yet?")
+                                .foregroundColor(.gray)
+                                .font(.custom("Inter-Regular", size: 16))
+
+                            Text("Sign Up")
+                                .foregroundColor(.white)
+                                .font(.custom("Inter-Bold", size: 16))
+                        }
 
                     }
                     .padding(.horizontal, 30)
+                    .padding(.bottom, 35)
                     .background(.black)
-                    
-                    
-                    
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+
+                        
                     // LOADING OVERLAY
                     if vm.isLoading {
                         ZStack {
