@@ -25,13 +25,7 @@ struct HomeViewEndUser: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // MARK: - Top Bar
-                    // MARK: - Top Bar
                    
-
-
-
-                    // MARK: - Dynamic Page Content
                     VStack {
                         switch selectedTab {
                         case 0:
@@ -48,23 +42,43 @@ struct HomeViewEndUser: View {
                     .transition(.opacity)
                     .animation(.easeInOut(duration: 0.25), value: selectedTab)
 
-                    // MARK: - Custom Bottom Tab Bar
+                    Divider()
+                        .background(Color.white.opacity(0.15))
+
+                    
+                    //tab
                     HStack {
-                        TabBarItemUser(title: "Open Doors", icon: "key.horizontal", isSelected: selectedTab == 0)
-                            .onTapGesture { selectedTab = 0 }
-                        
+                        TabBarItemUser(
+                            title: "Open Doors",
+                            activeIcon: "key-active",
+                            inactiveIcon: "key-inactive",
+                            isSelected: selectedTab == 0
+                        )
+                        .onTapGesture { selectedTab = 0 }
+
                         Spacer()
 
-                        TabBarItemUser(title: "Membership", icon: "person.crop.circle.fill.badge.checkmark", isSelected: selectedTab == 1)
-                            .onTapGesture { selectedTab = 1 }
-
+                        TabBarItemUser(
+                            title: "Membership",
+                            activeIcon: "user-star-active",
+                            inactiveIcon: "user-star-inactive",
+                            isSelected: selectedTab == 1
+                        )
+                        .onTapGesture { selectedTab = 1 }
 
                         Spacer()
-                        
-                        TabBarItemUser(title: "Profile", icon: "person.circle", isSelected: selectedTab == 2)
-                            .onTapGesture { selectedTab = 2 }
+
+                        TabBarItemUser(
+                            title: "Profile",
+                            activeIcon: "profile-circle-active",
+                            inactiveIcon: "profile-circle-inactive",
+                            isSelected: selectedTab == 2
+                        )
+                        .onTapGesture { selectedTab = 2 }
                     }
-                    .padding(.horizontal, 40)
+
+                    
+                    .padding(.horizontal, 30)
                     .padding(.vertical, 20)
                     .background(Color.black.opacity(0.9))
                     .ignoresSafeArea(edges: .bottom)
@@ -75,24 +89,23 @@ struct HomeViewEndUser: View {
     }
 }
 
-// MARK: - Tab Bar Item
+
 struct TabBarItemUser: View {
     var title: String
-    var icon: String
+    var activeIcon: String
+    var inactiveIcon: String
     var isSelected: Bool
 
     var body: some View {
-        VStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 20))
-                .foregroundColor(isSelected ? .white : .gray)
+        VStack(spacing: 8) {
+            Image(isSelected ? activeIcon : inactiveIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
+
             Text(title)
                 .font(.caption)
                 .foregroundColor(isSelected ? .white : .gray)
         }
     }
-}
-
-#Preview {
-    HomeViewAdmin()
 }

@@ -9,12 +9,14 @@ import SwiftUI
 
 
 struct LoginView: View {
+    @StateObject var network = NetworkManager.shared
     @State private var email = ""
     @State private var password = ""
     @State private var navigateToCreatePassword = false
     @State private var loginError = ""
     @State private var userType = ""
-    
+    @State private var showNoInternetAlert = false
+
     
     var body: some View {
         NavigationStack {
@@ -153,6 +155,18 @@ struct LoginView: View {
                            .navigationBarHidden(true)
                            .interactiveDismissDisabled(true)
             }
+            .onReceive(network.$didCheckInternet) { done in
+                if done && !network.hasInternet {
+                    showNoInternetAlert = true
+                }
+            }
+            .alert("No Internet Connection", isPresented: $showNoInternetAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Please check your connection and try again.")
+            }
+
+
             
     
     }

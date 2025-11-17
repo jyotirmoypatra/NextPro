@@ -69,21 +69,37 @@ struct HomeViewAdmin: View {
                     .animation(.easeInOut(duration: 0.25), value: selectedTab)
 
                     // MARK: - Custom Bottom Tab Bar
+                    
                     HStack {
-                        TabBarItem(title: "Home", icon: "house", isSelected: selectedTab == 0)
-                            .onTapGesture { selectedTab = 0 }
+                        TabBarItemUser(
+                            title: "Home",
+                            activeIcon: "home-active",
+                            inactiveIcon: "home-inactive",
+                            isSelected: selectedTab == 0
+                        )
+                        .onTapGesture { selectedTab = 0 }
 
                         Spacer()
 
-                        TabBarItem(title: "Devices", icon: "rectangle.stack.fill", isSelected: selectedTab == 1)
-                            .onTapGesture { selectedTab = 1 }
+                        TabBarItemUser(
+                            title: "Devices",
+                            activeIcon: "user-star-active",
+                            inactiveIcon: "user-star-inactive",
+                            isSelected: selectedTab == 1
+                        )
+                        .onTapGesture { selectedTab = 1 }
 
                         Spacer()
 
-                        TabBarItem(title: "Profile", icon: "person.circle", isSelected: selectedTab == 2)
-                            .onTapGesture { selectedTab = 2 }
+                        TabBarItemUser(
+                            title: "Profile",
+                            activeIcon: "profile-circle-active",
+                            inactiveIcon: "profile-circle-inactive",
+                            isSelected: selectedTab == 2
+                        )
+                        .onTapGesture { selectedTab = 2 }
                     }
-                    .padding(.horizontal, 40)
+                    .padding(.horizontal, 30)
                     .padding(.vertical, 20)
                     .background(Color.black.opacity(0.9))
                     .ignoresSafeArea(edges: .bottom)
@@ -111,6 +127,27 @@ struct TabBarItem: View {
         }
     }
 }
+
+struct TabBarItemAdmin: View {
+    var title: String
+    var activeIcon: String
+    var inactiveIcon: String
+    var isSelected: Bool
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(isSelected ? activeIcon : inactiveIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
+
+            Text(title)
+                .font(.caption)
+                .foregroundColor(isSelected ? .white : .gray)
+        }
+    }
+}
+
 
 #Preview {
     HomeViewAdmin()
