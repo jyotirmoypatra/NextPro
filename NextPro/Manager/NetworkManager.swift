@@ -60,4 +60,40 @@ class NetworkManager: ObservableObject {
             }
         }.resume()
     }
+    
+    
+    //All API list
+    
+    // MARK: - LOGIN API
+       func login(email: String, password: String) async throws -> LoginResponseModel {
+
+          let urlString = APIConfig.url(APIConfig.Endpoints.login)
+
+          guard let url = URL(string: urlString) else {
+              throw URLError(.badURL)
+          }
+           
+           
+           var request = URLRequest(url: url)
+           request.httpMethod = "POST"
+
+           let params = [
+               "email": email,
+               "password": password
+           ]
+
+           request.httpBody = try JSONSerialization.data(withJSONObject: params)
+           request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+           let (data, response) = try await URLSession.shared.data(for: request)
+
+           guard let httpResponse = response as? HTTPURLResponse,
+                 (200...299).contains(httpResponse.statusCode) else {
+               throw URLError(.badServerResponse)
+           }
+
+           let decoded = try JSONDecoder().decode(LoginResponseModel.self, from: data)
+           return decoded
+       }
+    
 }

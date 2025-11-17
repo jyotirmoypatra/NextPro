@@ -1,22 +1,20 @@
+////
+////  LoginView.swift
+////  NextPro
+////
+////  Created by JYOTIRMOY PATRA on 28/10/25.
+////
 //
-//  LoginView.swift
-//  NextPro
-//
-//  Created by JYOTIRMOY PATRA on 28/10/25.
-//
-
 import SwiftUI
 
 
 struct LoginView: View {
     @StateObject var network = NetworkManager.shared
-    @State private var email = ""
-    @State private var password = ""
+    @StateObject private var vm = LoginViewModel()
     @State private var navigateToCreatePassword = false
-    @State private var loginError = ""
-    @State private var userType = ""
     @State private var showNoInternetAlert = false
-
+    @State private var showLoginFailedAlert = false
+    @State private var showPassword = false
     
     var body: some View {
         NavigationStack {
@@ -50,6 +48,7 @@ struct LoginView: View {
                         .padding(.bottom, 40)
                         
                         // Email Field
+                        // MARK: - Email Field
                         VStack(alignment: .leading, spacing: 6) {
                             HStack(spacing: 0) {
                                 Text("Email Address")
@@ -61,25 +60,28 @@ struct LoginView: View {
                             }
                             
                             ZStack(alignment: .leading) {
-                                if email.isEmpty {
-                                    Text("Type..")
+                                if vm.email.isEmpty {
+                                    Text("Enter Email")
+                                        .foregroundColor(Color.white.opacity(0.5))
                                         .font(.custom("Inter-Regular", size: 16))
-                                        .foregroundColor(Color.white.opacity(0.5)) // light placeholder
-                                        .padding(.leading, 12)
+                                        .padding(.leading, 14)
                                 }
                                 
-                                TextField("", text: $email)
-                                    .padding()
-                                    .background(Color.white.opacity(0.15))
-                                    .cornerRadius(8)
+                                TextField("", text: $vm.email)
                                     .foregroundColor(.white)
+                                    .font(.custom("Inter-Regular", size: 16))
+                                    .padding(.horizontal, 14)
+                                    .frame(height: 50)
+                                    .background(Color.white.opacity(0.15))
+                                    .cornerRadius(10)
                                     .autocapitalization(.none)
                                     .disableAutocorrection(true)
                             }
-                            
                         }
+
                         
                         // Password Field
+                        // MARK: - Password Field
                         VStack(alignment: .leading, spacing: 6) {
                             HStack(spacing: 0) {
                                 Text("Password")
@@ -90,19 +92,43 @@ struct LoginView: View {
                                     .foregroundColor(.red)
                             }
                             
-                            ZStack(alignment: .leading) {
-                                if password.isEmpty {
-                                    Text("Type..")
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .foregroundColor(Color.white.opacity(0.5)) // custom placeholder
-                                        .padding(.leading, 12)
-                                }
+                            ZStack(alignment: .trailing) {
                                 
-                                SecureField("", text: $password)
-                                    .padding()
-                                    .background(Color.white.opacity(0.15))
-                                    .cornerRadius(8)
-                                    .foregroundColor(.white)
+                                ZStack(alignment: .leading) {
+                                    if vm.password.isEmpty {
+                                        Text("Enter Password")
+                                            .foregroundColor(Color.white.opacity(0.5))
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .padding(.leading, 14)
+                                    }
+                                    
+                                    if showPassword {
+                                        TextField("", text: $vm.password)
+                                            .foregroundColor(.white)
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .padding(.horizontal, 14)
+                                            .frame(height: 50)
+                                            .autocapitalization(.none)
+                                            .disableAutocorrection(true)
+                                    } else {
+                                        SecureField("", text: $vm.password)
+                                            .foregroundColor(.white)
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .padding(.horizontal, 14)
+                                            .frame(height: 50)
+                                            .autocapitalization(.none)
+                                            .disableAutocorrection(true)
+                                    }
+                                }
+                                .background(Color.white.opacity(0.15))
+                                .cornerRadius(10)
+                                
+                                // Eye Toggle Button
+                                Button(action: { showPassword.toggle() }) {
+                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                        .foregroundColor(.white.opacity(0.8))
+                                }
+                                .padding(.trailing, 14)
                             }
                             
                             HStack {
@@ -110,8 +136,10 @@ struct LoginView: View {
                                 Text("Forgot Password?")
                                     .font(.custom("Inter-Regular", size: 14))
                                     .foregroundColor(.white)
+                                    .padding(.top, 6)
                             }
                         }
+
                         
                         Spacer() // Pushes everything above it to the top
                         
@@ -119,7 +147,22 @@ struct LoginView: View {
                         VStack(spacing: 16) {
                             // Login Button
                             Button(action: {
-                                handleLogin()
+                                if !network.hasInternet {
+                                    showNoInternetAlert = true
+                                    return
+                                }
+
+                                
+                                Task {
+                                    await vm.login()
+
+                                    if vm.loginSuccess {
+                                        navigateToCreatePassword = true
+                                    } else {
+                                        showLoginFailedAlert = true
+                                    }
+                                }
+                                
                             }) {
                                 Text("LOG IN")
                                     .font(.custom("Inter-SemiBold", size: 16))
@@ -141,19 +184,43 @@ struct LoginView: View {
                                     .fontWeight(.bold)
                             }
                             .font(.system(size: 14))
+                            
                         }
                         .padding(.bottom, 30)
+                        
+
                     }
                     .padding(.horizontal, 30)
+                    .background(.black)
+                    
+                    
+                    
+                    // LOADING OVERLAY
+                    if vm.isLoading {
+                        ZStack {
+                            Color.black.opacity(0.4)
+                                .ignoresSafeArea()
+
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(1.8)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .ignoresSafeArea()
+                    }
+
+
+                    
+                    
                 }
             }
             .navigationBarBackButtonHidden(true)
             .ignoresSafeArea(.keyboard, edges: .bottom) // The key to stop resize
             .navigationDestination(isPresented: $navigateToCreatePassword) {
-                CreateNewPasswordView(userTye: self.userType)
+                CreateNewPasswordView(userTye: vm.userType)
                     .navigationBarBackButtonHidden(true)
-                           .navigationBarHidden(true)
-                           .interactiveDismissDisabled(true)
+                    .navigationBarHidden(true)
+                    .interactiveDismissDisabled(true)
             }
             .onReceive(network.$didCheckInternet) { done in
                 if done && !network.hasInternet {
@@ -165,44 +232,17 @@ struct LoginView: View {
             } message: {
                 Text("Please check your connection and try again.")
             }
+            .alert("Login Failed", isPresented: $showLoginFailedAlert) {
+                            Button("OK", role: .cancel) {}
+            } message: {
+                Text(vm.loginError.isEmpty ? "Invalid credentials." : vm.loginError)
+            }
 
-
-            
-    
     }
     }
     
-    func handleLogin() {
-            let trimmedEmail = email.lowercased().trimmingCharacters(in: .whitespaces)
-            let trimmedPassword = password.trimmingCharacters(in: .whitespaces)
-            
-            if trimmedEmail.isEmpty || trimmedPassword.isEmpty {
-                loginError = "Please enter both email and password."
-                return
-            }
-            
-            // Dummy credentials check
-            if trimmedEmail == "jp" && trimmedPassword == "123" {
-                print("✅ End User login successful.")
-                loginError = ""
-                navigateToCreatePassword = true
-                userType = "0"
-               
-            } else if trimmedEmail == "admin" && trimmedPassword == "admin" {
-                print("✅ Admin login successful.")
-                loginError = ""
-                navigateToCreatePassword = true
-                userType = "1"
-            } else {
-                loginError = "Invalid credentials. Please try again."
-            }
-        
-//        navigateToCreatePassword = true
-//        userType = "0"
-        }
 }
 
-#Preview {
-    LoginView()
-}
+
+
 
