@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ProfileTabContent: View {
+struct AdminProfileTabView: View {
 	@State private var showAddCard = false
 	
 	var body: some View {

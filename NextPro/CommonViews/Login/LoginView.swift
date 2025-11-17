@@ -159,32 +159,32 @@ struct LoginView: View {
     }
     
     func handleLogin() {
-//            let trimmedEmail = email.lowercased().trimmingCharacters(in: .whitespaces)
-//            let trimmedPassword = password.trimmingCharacters(in: .whitespaces)
-//            
-//            if trimmedEmail.isEmpty || trimmedPassword.isEmpty {
-//                loginError = "Please enter both email and password."
-//                return
-//            }
-//            
-//            // Dummy credentials check
-//            if trimmedEmail == "jp" && trimmedPassword == "123" {
-//                print("✅ End User login successful.")
-//                loginError = ""
-//                navigateToCreatePassword = true
-//                userType = "0"
-//               
-//            } else if trimmedEmail == "admin" && trimmedPassword == "admin" {
-//                print("✅ Admin login successful.")
-//                loginError = ""
-//                navigateToCreatePassword = true
-//                userType = "1"
-//            } else {
-//                loginError = "Invalid credentials. Please try again."
-//            }
+            let trimmedEmail = email.lowercased().trimmingCharacters(in: .whitespaces)
+            let trimmedPassword = password.trimmingCharacters(in: .whitespaces)
+            
+            if trimmedEmail.isEmpty || trimmedPassword.isEmpty {
+                loginError = "Please enter both email and password."
+                return
+            }
+            
+            // Dummy credentials check
+            if trimmedEmail == "jp" && trimmedPassword == "123" {
+                print("✅ End User login successful.")
+                loginError = ""
+                navigateToCreatePassword = true
+                userType = "0"
+               
+            } else if trimmedEmail == "admin" && trimmedPassword == "admin" {
+                print("✅ Admin login successful.")
+                loginError = ""
+                navigateToCreatePassword = true
+                userType = "1"
+            } else {
+                loginError = "Invalid credentials. Please try again."
+            }
         
-        navigateToCreatePassword = true
-        userType = "0"
+//        navigateToCreatePassword = true
+//        userType = "0"
         }
 }
 

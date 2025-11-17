@@ -57,9 +57,9 @@ struct HomeViewAdmin: View {
                         case 0:
                             HomeTabContent()
                         case 1:
-                            OpenDoorsTabContent()
+                            DeviceAdminTabView()
                         case 2:
-                            ProfileTabContent()
+                            AdminProfileTabView()
                         default:
                             EmptyView()
                         }
@@ -75,12 +75,12 @@ struct HomeViewAdmin: View {
 
                         Spacer()
 
-                        TabBarItem(title: "Open Doors", icon: "key.horizontal", isSelected: selectedTab == 1)
+                        TabBarItem(title: "Devices", icon: "rectangle.stack.fill", isSelected: selectedTab == 1)
                             .onTapGesture { selectedTab = 1 }
 
                         Spacer()
 
-                        TabBarItem(title: "Profile", icon: "person", isSelected: selectedTab == 2)
+                        TabBarItem(title: "Profile", icon: "person.circle", isSelected: selectedTab == 2)
                             .onTapGesture { selectedTab = 2 }
                     }
                     .padding(.horizontal, 40)
