@@ -21,7 +21,6 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
 
     func mqtt(_ mqtt: CocoaMQTT, didPublishAck id: UInt16) {
         print("✅ Publish acknowledged: \(id)")
-        subscribeToDevice("4283847520")
     }
 
     func mqtt(_ mqtt: CocoaMQTT, didSubscribeTopics success: NSDictionary, failed: [String]) {
@@ -78,37 +77,11 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
 
 
     // Subscribe to device response topic (example: up/{SN}/rtdata)
-//    func subscribeToDevice(_ sn: String) {
-//        let topic = "up/\(sn)/rtdata"
-//        mqtt?.subscribe(topic, qos: .qos1)
-//        print("📡 Subscribed to topic: \(topic)")
-//    }
-
     func subscribeToDevice(_ sn: String) {
-        guard let mqtt = mqtt, mqtt.connState == .connected else {
-            print("⚠️ MQTT not connected. Cannot subscribe to \(sn)")
-            return
-        }
-
-        // Topics for the device
-        let topics = ["up/\(sn)/rtdata", "up/\(sn)/data"]
-
-        for topic in topics {
-            mqtt.subscribe(topic, qos: .qos1)
-            print("📡 Subscribing to topic: \(topic) ...")
-        }
+        let topic = "up/\(sn)/rtdata"
+        mqtt?.subscribe(topic, qos: .qos1)
+        print("📡 Subscribed to topic: \(topic)")
     }
-
-//    func subscribeToDevice(_ sn: String) {
-//        guard let mqtt = mqtt, mqtt.connState == .connected else {
-//            print("⚠️ MQTT not connected. Cannot subscribe to \(sn)")
-//            return
-//        }
-//
-//        let topic = "up/\(sn)/rtdata"
-//        mqtt.subscribe(topic, qos: .qos1)
-//        print("📡 Subscribing to topic: \(topic) ...")
-//    }
 
     // Publish open door command to the device
     func sendOpenDoorCommand(to deviceSN: String, doorID: Int = 1, duration: Int = 5) {
@@ -131,48 +104,79 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
         print("✅ MQTT Connected Successfully")
     }
 
-//    func mqtt(_ mqtt: CocoaMQTT, didReceiveMessage message: CocoaMQTTMessage, id: UInt16) {
-//        let msg = message.string ?? ""
-//        print("📨 MQTT Message Received on \(message.topic): \(msg)")
-//        DispatchQueue.main.async {
-//            self.lastMessage = msg
-//        }
-//    }
-
+    
     func mqtt(_ mqtt: CocoaMQTT, didReceiveMessage message: CocoaMQTTMessage, id: UInt16) {
-        let msg = message.string ?? ""
+        guard let msg = message.string else { return }
         print("📨 MQTT Message Received on \(message.topic): \(msg)")
 
         DispatchQueue.main.async {
             self.lastMessage = msg
         }
 
-        // ✅ Decode the message for door open event
-        if message.topic.contains("/rtdata"),
-           let data = msg.data(using: .utf8) {
-            do {
+        guard let data = msg.data(using: .utf8) else { return }
+
+        do {
+            // Decode only the top-level structure first
+            let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+            guard let resource = json?["resource"] as? String else {
+                print("⚠️ Missing resource key")
+                return
+            }
+
+            switch resource {
+            case "events":
+                // Decode the event structure safely
                 let event = try JSONDecoder().decode(DoorEvent.self, from: data)
-                if event.resource == "events",
-                   let first = event.data.first {
+                if let first = event.data.first {
                     NotificationCenter.default.post(
                         name: .doorEventReceived,
                         object: nil,
-                        userInfo: ["doorID": first.doorID,
-                                   "verified": first.verified,
-                                   "time": first.time]
+                        userInfo: [
+                            "doorID": first.doorID,
+                            "verified": first.verified,
+                            "type": first.type,          // ✅ Add this
+                            "sn": event.SN,              // ✅ Add SN for reference
+                            "time": first.time
+                        ]
                     )
-                    print("✅ Door \(first.doorID) event received at \(first.time)")
+                    print("✅ Door event received (SN: \(event.SN), doorID: \(first.doorID), type: \(first.type), verified: \(first.verified))")
                 }
-            } catch {
-                print("⚠️ Failed to decode event: \(error)")
+
+
+            case "commands/result":
+                if let status = json?["status"] as? [String: Any] {
+                    print("✅ Command Result: \(status)")
+                }
+
+            case "heartbeat":
+                print("💓 Heartbeat received.")
+
+            default:
+                print("ℹ️ Unhandled resource type: \(resource)")
             }
+
+        } catch {
+            print("⚠️ Failed to decode MQTT message: \(error)")
         }
     }
+
 
     
     func mqttDidDisconnect(_ mqtt: CocoaMQTT, withError err: Error?) {
         print("❌ MQTT Disconnected: \(err?.localizedDescription ?? "unknown error")")
+           DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+               print("🔄 Attempting to reconnect to MQTT...")
+               self.reconnectIfNeeded()
+           }
     }
+    
+    func reconnectIfNeeded() {
+        guard let mqtt = mqtt else { return }
+        if mqtt.connState != .connected && mqtt.connState != .connecting {
+            _ = mqtt.connect()
+        }
+    }
+
 }
 
 
@@ -187,8 +191,11 @@ struct DoorEvent: Codable {
 }
 
 struct DoorEventData: Codable {
-    let doorID: Int
+    let userID: String
+    let number: String
     let verified: Int
-    let type: Int
+    let doorID: Int
+    let type: Int      // ✅ Added for success/failure check
+    let direction: Int
     let time: String
 }

@@ -60,8 +60,8 @@ struct HomeViewEndUser: View {
 
 
                         Spacer()
-
-                        TabBarItemUser(title: "Profile", icon: "person", isSelected: selectedTab == 2)
+                        
+                        TabBarItemUser(title: "Profile", icon: "person.circle", isSelected: selectedTab == 2)
                             .onTapGesture { selectedTab = 2 }
                     }
                     .padding(.horizontal, 40)

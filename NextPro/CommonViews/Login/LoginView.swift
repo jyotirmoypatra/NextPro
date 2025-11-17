@@ -184,7 +184,7 @@ struct LoginView: View {
 //            }
         
         navigateToCreatePassword = true
-         userType = "0"
+        userType = "0"
         }
 }
 

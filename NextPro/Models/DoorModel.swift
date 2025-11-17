@@ -105,6 +105,7 @@ struct DoorModelUser: Identifiable, Codable {
     let devSn: String
     let devMac: String
     let devType: Int32
+    let doorID: Int32
     let eKey: String
     let cardno: String
     
@@ -114,7 +115,8 @@ struct DoorModelUser: Identifiable, Codable {
         duration: String = "For 5 Second",
         devSn: String,
         devMac: String,
-        devType: Int32 = 2,
+        devType: Int32 = 20,
+        doorID: Int32 ,
         eKey: String,
         cardno: String
     ) {
@@ -124,6 +126,7 @@ struct DoorModelUser: Identifiable, Codable {
         self.devSn = devSn
         self.devMac = devMac
         self.devType = devType
+        self.doorID = doorID
         self.eKey = eKey
         self.cardno = cardno
     }
@@ -157,30 +160,25 @@ class DoorStorageManager: ObservableObject {
                     name: "Iron Hive Gym: Gate",
                     devSn: "4280125893",
                     devMac: "58:cf:79:1a:8d:0e",
+                    doorID: 2,
                     eKey: "3ca884ca4f8d16e28199c11df14cfbcf000000000000000000000000000000001000",
-                    cardno: "1557198962"
-                ),
-                DoorModelUser(
-                    name: "Iron Hive Gym: Door 1",
-                    devSn: "4282705968",
-                    devMac: "58:cf:79:1a:89:ce",
-                    eKey: "92fc410e8d125331c26faf21c7e77292000000000000000000000000000000001000",
-                    cardno: "1557198962"
-                ),
-                DoorModelUser(
-                    name: "Iron Hive Gym: Door 2",
-                    devSn: "4283847520",
-                    devMac: "d8:3b:da:36:53:62",
-                    eKey: "41f888c5017576eb80f030fe8730851d000000000000000000000000000000001000",
-                    cardno: "1557198962"
+                    cardno: "1557049426"
                 ),
                 DoorModelUser(
                     name: "M230(Access control reader)",
                     devSn: "4282894706",
                     devMac: "58:cf:79:1d:f7:e6",
+                    doorID: 1,
                     eKey: "97b4c368894a17be950800a8022b7a21000000000000000000000000000000001000",
-                    cardno: "1557198962"
-                )
+                    cardno: "1557049426"
+                ),
+//                DoorModelUser(
+//                    name: "Iron Hive Gym: Door 2",
+//                    devSn: "4283847520",
+//                    devMac: "d8:3b:da:36:53:62",
+//                    eKey: "41f888c5017576eb80f030fe8730851d000000000000000000000000000000001000",
+//                    cardno: "1557198962"
+//                )
             ]
             
             self.doors = fetchedDoors

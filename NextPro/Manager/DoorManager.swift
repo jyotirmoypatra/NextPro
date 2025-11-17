@@ -29,11 +29,13 @@ class DoorManager: ObservableObject {
     private var resetTimer: DispatchWorkItem?
     private var isBackgroundModeActive = false
     private var currentProcessingDoorSn: String?  // Track current door being processed
+    private var currentProcessingDoorID: Int32?  // Track current door being processed
     
     @Published var doorEvent: DoorEvent?
 
     struct DoorEvent {
         let devSn: String
+        let doorId: Int32
         let status: Status
         
         enum Status {
@@ -149,13 +151,19 @@ class DoorManager: ObservableObject {
     
     // MARK: - Open Selected Door
     func openSelectedDoor(_ door: DoorModelUser) {
+        
         print("🚪 Opening door: \(door.name)")
         
         // Cancel any existing reset timer
         resetTimer?.cancel()
         
+        DispatchQueue.main.async {
+            self.doorEvent = DoorEvent(devSn: door.devSn, doorId: door.doorID, status: .starting)
+           }
+        
         // Store the current door SN for callback reference
         currentProcessingDoorSn = door.devSn
+        currentProcessingDoorID = door.doorID
         
         isProcessing = true
         statusMessage = "Opening \(door.name)..."
@@ -163,10 +171,7 @@ class DoorManager: ObservableObject {
         lastResult = nil
         
         
-        DispatchQueue.main.async {
-               self.doorEvent = DoorEvent(devSn: door.devSn, status: .starting)
-           }
-        
+       
         // Create LibDevModel object
         let devModel = LibDevModel()
         
@@ -197,7 +202,7 @@ class DoorManager: ObservableObject {
         
         if result != 0 {
                DispatchQueue.main.async {
-                   self.doorEvent = DoorEvent(devSn: door.devSn, status: .failure)
+                   self.doorEvent = DoorEvent(devSn: door.devSn, doorId: door.doorID, status: .failure)
                }
                self.isProcessing = false
                self.statusMessage = "Failed to initiate"
@@ -401,11 +406,12 @@ class DoorManager: ObservableObject {
                 print("✅ SUCCESS: Door opened!")
                 
                 // Emit success event for door opening
-                if let devSn = currentProcessingDoorSn {
+                if let devSn = currentProcessingDoorSn,let doorID = currentProcessingDoorID {
                     DispatchQueue.main.async {
-                        self.doorEvent = DoorEvent(devSn: devSn, status: .success)
+                        self.doorEvent = DoorEvent(devSn: devSn, doorId: doorID, status: .success)
                     }
                 }
+                
             }
             
             // Schedule auto-reset after 10 seconds
@@ -421,9 +427,9 @@ class DoorManager: ObservableObject {
             print("⏱️ TIMEOUT")
             
             // Emit failure event
-            if let devSn = currentProcessingDoorSn {
+            if let devSn = currentProcessingDoorSn,let doorId = currentProcessingDoorID {
                 DispatchQueue.main.async {
-                    self.doorEvent = DoorEvent(devSn: devSn, status: .failure)
+                    self.doorEvent = DoorEvent(devSn: devSn, doorId: doorId, status: .failure)
                 }
             }
             
@@ -437,9 +443,9 @@ class DoorManager: ObservableObject {
             print("❌ DEVICE NOT FOUND")
             
             // Emit failure event
-            if let devSn = currentProcessingDoorSn {
+            if let devSn = currentProcessingDoorSn,let doorId = currentProcessingDoorID {
                 DispatchQueue.main.async {
-                    self.doorEvent = DoorEvent(devSn: devSn, status: .failure)
+                    self.doorEvent = DoorEvent(devSn: devSn, doorId: doorId, status: .failure)
                 }
             }
             
@@ -452,9 +458,9 @@ class DoorManager: ObservableObject {
             print("❌ CONNECTION FAILED")
             
             // Emit failure event
-            if let devSn = currentProcessingDoorSn {
+            if let devSn = currentProcessingDoorSn , let doorId = currentProcessingDoorID{
                 DispatchQueue.main.async {
-                    self.doorEvent = DoorEvent(devSn: devSn, status: .failure)
+                    self.doorEvent = DoorEvent(devSn: devSn, doorId: doorId, status: .failure)
                 }
             }
             
@@ -467,9 +473,9 @@ class DoorManager: ObservableObject {
             print("❌ AUTHENTICATION FAILED")
             
             // Emit failure event
-            if let devSn = currentProcessingDoorSn {
+            if let devSn = currentProcessingDoorSn,let doorId  =  currentProcessingDoorID{
                 DispatchQueue.main.async {
-                    self.doorEvent = DoorEvent(devSn: devSn, status: .failure)
+                    self.doorEvent = DoorEvent(devSn: devSn, doorId: doorId, status: .failure)
                 }
             }
             
@@ -482,9 +488,9 @@ class DoorManager: ObservableObject {
             print("❌ INVALID PARAMETERS")
             
             // Emit failure event
-            if let devSn = currentProcessingDoorSn {
+            if let devSn = currentProcessingDoorSn ,let doorId  =  currentProcessingDoorID {
                 DispatchQueue.main.async {
-                    self.doorEvent = DoorEvent(devSn: devSn, status: .failure)
+                    self.doorEvent = DoorEvent(devSn: devSn, doorId: doorId, status: .failure)
                 }
             }
             
@@ -497,9 +503,9 @@ class DoorManager: ObservableObject {
             print("❌ ERROR CODE: \(ret)")
             
             // Emit failure event
-            if let devSn = currentProcessingDoorSn {
+            if let devSn = currentProcessingDoorSn , let  doorId =  currentProcessingDoorID{
                 DispatchQueue.main.async {
-                    self.doorEvent = DoorEvent(devSn: devSn, status: .failure)
+                    self.doorEvent = DoorEvent(devSn: devSn, doorId: doorId, status: .failure)
                 }
             }
             

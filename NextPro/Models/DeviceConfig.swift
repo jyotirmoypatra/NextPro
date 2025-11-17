@@ -26,12 +26,12 @@ class DeviceConfigManager {
     
     // Hardcoded device list - update this array with your devices
     let devices: [DeviceConfig] = [
-//        DeviceConfig(
-//            name: "TC434(Access control machine)",
-//            devSn: "4283847520",
-//            devMac: "d8:3b:da:36:53:62",
-//            eKey: "41f888c5017576eb80f030fe8730851d000000000000000000000000000000001000"
-//        ),
+        DeviceConfig(
+            name: "TC434(Access control machine)",
+            devSn: "4283847520",
+            devMac: "d8:3b:da:36:53:62",
+            eKey: "41f888c5017576eb80f030fe8730851d000000000000000000000000000000001000"
+        ),
 //        DeviceConfig(
 //            name: "TC434(Access control machine)",
 //            devSn: "4286749203",
@@ -137,6 +137,8 @@ class DeviceConfigManager {
         return nil
     }
 }
+
+
 
 
 
