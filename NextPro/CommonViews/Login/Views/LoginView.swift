@@ -201,6 +201,10 @@ struct LoginView: View {
                     
                     
                 }
+                .onTapGesture {
+                    UIApplication.shared.hideKeyboard()
+                }
+
             }
             .navigationBarBackButtonHidden(true)
             .ignoresSafeArea(.keyboard, edges: .bottom) // The key to stop resize
