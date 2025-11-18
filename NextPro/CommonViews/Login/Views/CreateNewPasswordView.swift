@@ -13,6 +13,7 @@ struct CreateNewPasswordView: View {
     var userName: String
     @StateObject var network = NetworkManager.shared
     @StateObject private var viewModel = CreateNewPasswordViewModel()
+    @StateObject private var toastManager = ToastManager.shared
     @State private var showNoInternetAlert = false
     @State private var showUpdateFailedAlert = false
     @State private var navigateToHome = false
@@ -122,6 +123,16 @@ struct CreateNewPasswordView: View {
                             await viewModel.updatePassword(username: self.userName)
 
                             if viewModel.updateSuccess {
+                                // Show success toast
+                                toastManager.show(
+                                    message: "Password updated successfully!",
+                                    type: .success,
+                                    duration: 2.0
+                                )
+                                
+                                // Navigate after a short delay to show the toast
+                                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                                
                                 isAdmin = (userType == "facility_manager")
                                 navigateToHome = true
                             }else{
@@ -184,6 +195,7 @@ struct CreateNewPasswordView: View {
         }
         .navigationBarBackButtonHidden(true)
         .ignoresSafeArea(.keyboard, edges: .bottom)
+        .toast()  // Add toast modifier
 
            
     }

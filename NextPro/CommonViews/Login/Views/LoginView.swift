@@ -11,6 +11,7 @@ import SwiftUI
 struct LoginView: View {
     @StateObject var network = NetworkManager.shared
     @StateObject private var vm = LoginViewModel()
+    @StateObject private var toastManager = ToastManager.shared
     @State private var navigateToCreatePassword = false
     @State private var showNoInternetAlert = false
     @State private var showLoginFailedAlert = false
@@ -152,6 +153,19 @@ struct LoginView: View {
                                
                                 await vm.login()
                                 if vm.loginSuccess {
+                                    
+                                    // Show success toast
+                                    toastManager.show(
+                                        message: "Login successfully!",
+                                        type: .success,
+                                        duration: 2.0
+                                    )
+                                    
+                                    // Navigate after a short delay to show the toast
+                                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                                    
+                                    
+                                    
                                     navigateToCreatePassword = true
                                 } else {
                                     showLoginFailedAlert = true
@@ -230,6 +244,7 @@ struct LoginView: View {
             } message: {
                 Text(vm.loginError.isEmpty ? "Invalid credentials." : vm.loginError)
             }
+            .toast() 
 
     }
     }
