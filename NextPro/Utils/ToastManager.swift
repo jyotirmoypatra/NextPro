@@ -85,7 +85,7 @@ struct ToastView: View {
                 .foregroundColor(.white)
                 .multilineTextAlignment(.leading)
             
-            Spacer()
+           // Spacer()
             
 //            Button(action: onDismiss) {
 //                Image(systemName: "xmark")
@@ -93,7 +93,7 @@ struct ToastView: View {
 //                    .foregroundColor(.white.opacity(0.7))
 //            }
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 30)
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 12)
@@ -118,15 +118,15 @@ struct ToastModifier: ViewModifier {
             
             if let toast = toastManager.currentToast {
                 VStack {
+                    Spacer()
+                    
                     ToastView(toast: toast) {
                         toastManager.dismiss()
                     }
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                     .animation(.spring(response: 0.4, dampingFraction: 0.8), value: toastManager.currentToast)
-                    
-                    Spacer()
                 }
-                .padding(.top, 50)
+                .padding(.bottom, 150)  // Position near bottom like Android toast
                 .zIndex(999)
             }
         }

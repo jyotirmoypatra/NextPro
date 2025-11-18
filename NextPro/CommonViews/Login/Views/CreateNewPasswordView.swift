@@ -15,6 +15,7 @@ struct CreateNewPasswordView: View {
     @StateObject private var viewModel = CreateNewPasswordViewModel()
     @StateObject private var toastManager = ToastManager.shared
     @State private var showNoInternetAlert = false
+    @State private var showPassword = false
     @State private var showUpdateFailedAlert = false
     @State private var navigateToHome = false
     @State private var isAdmin = false
@@ -70,6 +71,7 @@ struct CreateNewPasswordView: View {
                                     .padding()
                                     .background(Color.white.opacity(0.15))
                                     .cornerRadius(8)
+                                    .frame(height: 50)
                                     .foregroundColor(.white)
                                     .autocapitalization(.none)
                                     .disableAutocorrection(true)
@@ -86,18 +88,42 @@ struct CreateNewPasswordView: View {
                                     .font(.system(size: 14))
                                     .foregroundColor(.red)
                             }
-                            ZStack(alignment: .leading) {
-                                if viewModel.confirmPassword.isEmpty {
-                                    Text("Confirm new password")
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .foregroundColor(Color.white.opacity(0.5))
-                                        .padding(.leading, 12)
+                            
+                            ZStack(alignment: .trailing) {
+                                ZStack(alignment: .leading) {
+                                    if viewModel.confirmPassword.isEmpty {
+                                        Text("Confirm new password")
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .foregroundColor(Color.white.opacity(0.5))
+                                            .padding(.leading, 12)
+                                    }
+                                    
+                                    if showPassword {
+                                        TextField("", text: $viewModel.confirmPassword)
+                                            .foregroundColor(.white)
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .padding(.horizontal, 14)
+                                            .frame(height: 50)
+                                            .autocapitalization(.none)
+                                            .disableAutocorrection(true)
+                                    } else {
+                                        SecureField("", text: $viewModel.confirmPassword)
+                                            .foregroundColor(.white)
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .padding(.horizontal, 14)
+                                            .frame(height: 50)
+                                            .autocapitalization(.none)
+                                            .disableAutocorrection(true)
+                                    }
                                 }
-                                SecureField("", text: $viewModel.confirmPassword)
-                                    .padding()
-                                    .background(Color.white.opacity(0.15))
-                                    .cornerRadius(8)
-                                    .foregroundColor(.white)
+                                .background(Color.white.opacity(0.15))
+                                .cornerRadius(10)
+                                
+                                Button(action: { showPassword.toggle() }) {
+                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                        .foregroundColor(.white.opacity(0.8))
+                                }
+                                .padding(.trailing, 14)
                             }
                         }
                         
@@ -127,11 +153,11 @@ struct CreateNewPasswordView: View {
                                 toastManager.show(
                                     message: "Password updated successfully!",
                                     type: .success,
-                                    duration: 2.0
+                                    duration: 1.0
                                 )
                                 
                                 // Navigate after a short delay to show the toast
-                                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                                try? await Task.sleep(nanoseconds: 1_000_000_000)
                                 
                                 isAdmin = (userType == "facility_manager")
                                 navigateToHome = true
@@ -179,6 +205,9 @@ struct CreateNewPasswordView: View {
                     .ignoresSafeArea()
                 }
                 
+            }
+            .onTapGesture {
+                UIApplication.shared.hideKeyboard()
             }
             .alert("No Internet Connection", isPresented: $showNoInternetAlert) {
                 Button("OK", role: .cancel) {}

@@ -158,11 +158,11 @@ struct LoginView: View {
                                     toastManager.show(
                                         message: "Login successfully!",
                                         type: .success,
-                                        duration: 2.0
+                                        duration: 1.0
                                     )
                                     
                                     // Navigate after a short delay to show the toast
-                                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                                    try? await Task.sleep(nanoseconds: 1_000_000_000)
                                     
                                     
                                     
