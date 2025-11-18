@@ -9,5 +9,4 @@
 struct UpdatePasswordResponseModel: Codable {
     let status: Bool
     let message: String
-    let userType: String?
 }

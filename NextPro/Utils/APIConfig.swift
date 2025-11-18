@@ -11,12 +11,12 @@ import Foundation
 struct APIConfig {
     
     // MARK: - Base URL
-    static let baseURL = "https://yourapi.com/api/v1"
+    static let baseURL = "https://devapi.nextprotechnologies.com"
     
     // MARK: - Endpoints
     struct Endpoints {
-        static let login = "/auth/login"
-        static let updatePassword = "/update-password"
+        static let login = "/api/facility-user/login/"
+        static let updatePassword = "/api/facility-user/reset-password/"
     }
     
     

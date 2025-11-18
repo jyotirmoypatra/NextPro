@@ -9,7 +9,8 @@
 import SwiftUI
 
 struct CreateNewPasswordView: View {
-    var userTye: String
+    var userType: String
+    var userName: String
     @StateObject var network = NetworkManager.shared
     @StateObject private var viewModel = CreateNewPasswordViewModel()
     @State private var showNoInternetAlert = false
@@ -116,10 +117,12 @@ struct CreateNewPasswordView: View {
                         }
                         
                         Task {
-                            await viewModel.updatePassword()
+                            
+                            
+                            await viewModel.updatePassword(username: self.userName)
 
                             if viewModel.updateSuccess {
-                                isAdmin = (viewModel.userType == "1")
+                                isAdmin = (userType == "facility_manager")
                                 navigateToHome = true
                             }else{
                                 showUpdateFailedAlert = true
@@ -151,6 +154,20 @@ struct CreateNewPasswordView: View {
                 .padding(.bottom, 30)
                 .background(.black)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                
+                if viewModel.isLoading {
+                    ZStack {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.8)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                }
+                
             }
             .alert("No Internet Connection", isPresented: $showNoInternetAlert) {
                 Button("OK", role: .cancel) {}

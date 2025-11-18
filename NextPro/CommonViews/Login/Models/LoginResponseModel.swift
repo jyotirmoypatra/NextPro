@@ -11,6 +11,9 @@ import Foundation
 struct LoginResponseModel: Decodable {
     let status: Bool
     let message: String
-    let userType: String?
-    let token: String?
+    let user_id: String?
+    let username: String?
+    let user_type: String?
+    let refresh: String?
+    let access: String?
 }

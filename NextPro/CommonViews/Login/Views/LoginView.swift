@@ -149,6 +149,7 @@ struct LoginView: View {
                             }
 
                             Task {
+                               
                                 await vm.login()
                                 if vm.loginSuccess {
                                     navigateToCreatePassword = true
@@ -209,7 +210,7 @@ struct LoginView: View {
             .navigationBarBackButtonHidden(true)
             .ignoresSafeArea(.keyboard, edges: .bottom) // The key to stop resize
             .navigationDestination(isPresented: $navigateToCreatePassword) {
-                CreateNewPasswordView(userTye: vm.userType)
+                CreateNewPasswordView(userType: vm.userType, userName: vm.userName)
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)

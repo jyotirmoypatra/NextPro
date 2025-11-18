@@ -65,51 +65,107 @@ class NetworkManager: ObservableObject {
     //All API list
     
     // MARK: - LOGIN API
-       func login(email: String, password: String) async throws -> LoginResponseModel {
+//       func login(email: String, password: String) async throws -> LoginResponseModel {
+//
+//          let urlString = APIConfig.url(APIConfig.Endpoints.login)
+//
+//           print("Url:\(urlString)")
+//          guard let url = URL(string: urlString) else {
+//              throw URLError(.badURL)
+//          }
+//           
+//           
+//           var request = URLRequest(url: url)
+//           request.httpMethod = "POST"
+//
+//           let params = [
+//               "username": email,
+//               "password": password
+//           ]
+//
+//           print("request param:\(params)")
+//           request.httpBody = try JSONSerialization.data(withJSONObject: params)
+//           request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+//
+//           let (data, response) = try await URLSession.shared.data(for: request)
+//           
+//           if let jsonString = String(data: data, encoding: .utf8) {
+//                   print("📥Login Response JSON:\n\(jsonString)")
+//               }
+//
+//           guard let httpResponse = response as? HTTPURLResponse,
+//                 (200...299).contains(httpResponse.statusCode) else {
+//               throw URLError(.badServerResponse)
+//           }
+//
+//           let decoded = try JSONDecoder().decode(LoginResponseModel.self, from: data)
+//           return decoded
+//       }
+    
+    
+    
+    func login(email: String, password: String) async throws -> LoginResponseModel {
 
-          let urlString = APIConfig.url(APIConfig.Endpoints.login)
+        let urlString = APIConfig.url(APIConfig.Endpoints.login)
+        print("Url:\(urlString)")
 
-          guard let url = URL(string: urlString) else {
-              throw URLError(.badURL)
-          }
+        guard let url = URL(string: urlString) else {
+            throw URLError(.badURL)
+        }
            
-           
-           var request = URLRequest(url: url)
-           request.httpMethod = "POST"
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
 
-           let params = [
-               "email": email,
-               "password": password
-           ]
+        let params = [
+            "username": email,
+            "password": password
+        ]
 
-           print("request param:\(params)")
-           request.httpBody = try JSONSerialization.data(withJSONObject: params)
-           request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        print("request param:\(params)")
+        request.httpBody = try JSONSerialization.data(withJSONObject: params)
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 
-           let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
 
-           guard let httpResponse = response as? HTTPURLResponse,
-                 (200...299).contains(httpResponse.statusCode) else {
-               throw URLError(.badServerResponse)
-           }
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("📥Login Response JSON:\n\(jsonString)")
+        }
 
-           let decoded = try JSONDecoder().decode(LoginResponseModel.self, from: data)
-           return decoded
-       }
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+
+        // Decode always
+        let decoded = try JSONDecoder().decode(LoginResponseModel.self, from: data)
+
+        // Backend returns 200 even for invalid login, so catch failure here
+        if decoded.status == false {
+            throw NSError(domain: "LoginError", code: 401, userInfo: [
+                NSLocalizedDescriptionKey: decoded.message
+            ])
+        }
+
+        return decoded
+    }
+
     
     // MARK: - Update Password API
-    func updatePassword(newPassword: String, confirmPassword: String) async throws -> UpdatePasswordResponseModel {
+    func updatePassword(newPassword: String, confirmPassword: String , userName: String) async throws -> UpdatePasswordResponseModel {
 
-            guard let url = URL(string: APIConfig.baseURL + APIConfig.Endpoints.updatePassword) else {
+        let urlString = APIConfig.url(APIConfig.Endpoints.updatePassword)
+
+            print("Url:\(urlString)")
+            guard let url = URL(string: urlString) else {
                 throw URLError(.badURL)
             }
-
+             
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
 
             let params: [String: Any] = [
-                "newPassword": newPassword,
-                "confirmPassword": confirmPassword
+                "username" : userName,
+                "new_password": newPassword,
+                "confirm_password": confirmPassword
             ]
             
             print("request param:\(params)")
@@ -118,12 +174,25 @@ class NetworkManager: ObservableObject {
 
             let (data, response) = try await URLSession.shared.data(for: request)
 
-            guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode) else {
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📥UpdatePAssword Response JSON:\n\(jsonString)")
+            }
+
+            guard let httpResponse = response as? HTTPURLResponse else {
                 throw URLError(.badServerResponse)
             }
 
-            return try JSONDecoder().decode(UpdatePasswordResponseModel.self, from: data)
+            // Decode always
+            let decoded = try JSONDecoder().decode(UpdatePasswordResponseModel.self, from: data)
+
+            // Backend returns 200 even for invalid login, so catch failure here
+            if decoded.status == false {
+                throw NSError(domain: "LoginError", code: 401, userInfo: [
+                    NSLocalizedDescriptionKey: decoded.message
+                ])
+            }
+
+            return decoded
         }
     
 }

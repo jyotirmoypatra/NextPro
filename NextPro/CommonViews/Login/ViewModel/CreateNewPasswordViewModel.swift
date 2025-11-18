@@ -16,9 +16,12 @@ class CreateNewPasswordViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage = ""
     @Published var updateSuccess = false
-    @Published var userType = ""
+    let network = NetworkManager.shared
 
-    func updatePassword() async {
+    func updatePassword(username: String) async {
+        
+        errorMessage = ""
+        
         guard !newPassword.isEmpty, !confirmPassword.isEmpty else {
             errorMessage = "Please fill all fields"
             return
@@ -29,20 +32,27 @@ class CreateNewPasswordViewModel: ObservableObject {
             return
         }
 
+        // Internet check
+        guard network.hasInternet else {
+            errorMessage = "No internet connection."
+            return
+        }
+        
+        
         isLoading = true
-        errorMessage = ""
+        
 
         do {
             let response = try await NetworkManager.shared.updatePassword(
                 newPassword: newPassword,
-                confirmPassword: confirmPassword
+                confirmPassword: confirmPassword,
+                userName: username
             )
 
             DispatchQueue.main.async {
                 self.isLoading = false
 
                 if response.status {
-                    self.userType = response.userType ?? ""
                     self.updateSuccess = true
                 } else {
                     self.errorMessage = response.message
@@ -53,7 +63,9 @@ class CreateNewPasswordViewModel: ObservableObject {
             DispatchQueue.main.async {
                 self.isLoading = false
                 self.errorMessage = error.localizedDescription
+                
             }
         }
+        
     }
 }
