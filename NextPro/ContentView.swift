@@ -19,7 +19,8 @@ struct ContentView: View {
                    
             } else {
                 NavigationStack {
-                   LoginView()
+                 //  LoginView()
+                    CreateNewPasswordView(userTye: "String")
                     //OnboardPageWiFiListView(selectedDeviceSN: "asswd3434545")
                     //SDKTestView()
                    // OnboardPageFirstView()  // Start with the first onboarding page

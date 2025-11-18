@@ -16,9 +16,11 @@ struct APIConfig {
     // MARK: - Endpoints
     struct Endpoints {
         static let login = "/auth/login"
-
-       
+        static let updatePassword = "/update-password"
     }
+    
+    
+    
     
     static func url(_ endpoint: String) -> String {
         return baseURL + endpoint

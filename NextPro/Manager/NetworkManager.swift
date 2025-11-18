@@ -82,6 +82,7 @@ class NetworkManager: ObservableObject {
                "password": password
            ]
 
+           print("request param:\(params)")
            request.httpBody = try JSONSerialization.data(withJSONObject: params)
            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 
@@ -95,5 +96,34 @@ class NetworkManager: ObservableObject {
            let decoded = try JSONDecoder().decode(LoginResponseModel.self, from: data)
            return decoded
        }
+    
+    // MARK: - Update Password API
+    func updatePassword(newPassword: String, confirmPassword: String) async throws -> UpdatePasswordResponseModel {
+
+            guard let url = URL(string: APIConfig.baseURL + APIConfig.Endpoints.updatePassword) else {
+                throw URLError(.badURL)
+            }
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+
+            let params: [String: Any] = [
+                "newPassword": newPassword,
+                "confirmPassword": confirmPassword
+            ]
+            
+            print("request param:\(params)")
+            request.httpBody = try JSONSerialization.data(withJSONObject: params)
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200...299).contains(httpResponse.statusCode) else {
+                throw URLError(.badServerResponse)
+            }
+
+            return try JSONDecoder().decode(UpdatePasswordResponseModel.self, from: data)
+        }
     
 }

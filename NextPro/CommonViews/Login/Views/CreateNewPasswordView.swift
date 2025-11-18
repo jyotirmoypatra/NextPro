@@ -3,17 +3,19 @@
 //  NextPro
 //
 //  Created by JYOTIRMOY PATRA on 29/10/25.
-//
+
 
 
 import SwiftUI
 
 struct CreateNewPasswordView: View {
-    var userTye : String
-    @State private var newPassword = ""
-    @State private var confirsPassword = ""
-    @State private var navigateToHome: Bool = false
-    @State private var isAdmin: Bool = false
+    var userTye: String
+    @StateObject var network = NetworkManager.shared
+    @StateObject private var viewModel = CreateNewPasswordViewModel()
+    @State private var showNoInternetAlert = false
+    @State private var showUpdateFailedAlert = false
+    @State private var navigateToHome = false
+    @State private var isAdmin = false
 
 
     var body: some View {
@@ -56,13 +58,13 @@ struct CreateNewPasswordView: View {
                             }
                             
                             ZStack(alignment: .leading) {
-                                if newPassword.isEmpty {
+                                if viewModel.newPassword.isEmpty {
                                     Text("Enter new password")
                                         .font(.custom("Inter-Regular", size: 16))
                                         .foregroundColor(Color.white.opacity(0.5))
                                         .padding(.leading, 12)
                                 }
-                                TextField("", text: $newPassword)
+                                SecureField("", text: $viewModel.newPassword)
                                     .padding()
                                     .background(Color.white.opacity(0.15))
                                     .cornerRadius(8)
@@ -83,13 +85,13 @@ struct CreateNewPasswordView: View {
                                     .foregroundColor(.red)
                             }
                             ZStack(alignment: .leading) {
-                                if confirsPassword.isEmpty {
+                                if viewModel.confirmPassword.isEmpty {
                                     Text("Confirm new password")
                                         .font(.custom("Inter-Regular", size: 16))
                                         .foregroundColor(Color.white.opacity(0.5))
                                         .padding(.leading, 12)
                                 }
-                                SecureField("", text: $confirsPassword)
+                                SecureField("", text: $viewModel.confirmPassword)
                                     .padding()
                                     .background(Color.white.opacity(0.15))
                                     .cornerRadius(8)
@@ -99,40 +101,69 @@ struct CreateNewPasswordView: View {
                         
                         Spacer()
                         
-                        // Bottom Button
-                        VStack(spacing: 16) {
-                            Button(action: {
-                                isAdmin = userTye == "1"
-                                navigateToHome = true
-                            }) {
-                                Text("UPDATE PASSWORD")
-                                    .font(.custom("Inter-SemiBold", size: 16))
-                                    .foregroundColor(.black)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color.white)
-                                    .cornerRadius(10)
-                            }
-                            .navigationDestination(isPresented: $navigateToHome) {
-                                if isAdmin {
-                                    HomeViewAdmin()
-                                        .navigationBarBackButtonHidden(true)
-                                        .navigationBarHidden(true)
-                                        .interactiveDismissDisabled(true)
-                                } else {
-                                    HomeViewEndUser()
-                                        .navigationBarBackButtonHidden(true)
-                                        .navigationBarHidden(true)
-                                        .interactiveDismissDisabled(true)
-                                }
-                            }
-                        }
-                        .padding(.bottom, 30)
+                       
                         
                     }
                     .padding(.horizontal, 25) // ✅ Apply padding to entire VStack
                 }
+                
+                // Bottom Button
+                VStack(spacing: 16) {
+                    Button(action: {
+                        if !network.hasInternet {
+                            showNoInternetAlert = true
+                            return
+                        }
+                        
+                        Task {
+                            await viewModel.updatePassword()
+
+                            if viewModel.updateSuccess {
+                                isAdmin = (viewModel.userType == "1")
+                                navigateToHome = true
+                            }else{
+                                showUpdateFailedAlert = true
+                            }
+                        }
+                        
+                    }) {
+                        Text("UPDATE PASSWORD")
+                            .font(.custom("Inter-SemiBold", size: 16))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(10)
+                    }
+                    .navigationDestination(isPresented: $navigateToHome) {
+                        if isAdmin {
+                            HomeViewAdmin()
+                                .navigationBarBackButtonHidden(true)
+                                .navigationBarHidden(true)
+                        } else {
+                            HomeViewEndUser()
+                                .navigationBarBackButtonHidden(true)
+                                .navigationBarHidden(true)
+                        }
+                    }
+                }
+                .padding(.horizontal, 30)
+                .padding(.bottom, 30)
+                .background(.black)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
+            .alert("No Internet Connection", isPresented: $showNoInternetAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Please check your connection and try again.")
+            }
+            
+            .alert("Update Failed", isPresented: $showUpdateFailedAlert) {
+                            Button("OK", role: .cancel) {}
+            } message: {
+                Text(viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage)
+            }
+            
         }
         .navigationBarBackButtonHidden(true)
         .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -141,6 +172,3 @@ struct CreateNewPasswordView: View {
     }
 }
 
-#Preview {
-    CreateNewPasswordView(userTye: "")
-}
