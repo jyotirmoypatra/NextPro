@@ -9,6 +9,7 @@
 import SwiftUI
 import Combine
 
+@MainActor
 class CreateNewPasswordViewModel: ObservableObject {
 
     @Published var newPassword = ""
@@ -49,22 +50,17 @@ class CreateNewPasswordViewModel: ObservableObject {
                 userName: username
             )
 
-            DispatchQueue.main.async {
-                self.isLoading = false
+            isLoading = false
 
-                if response.status {
-                    self.updateSuccess = true
-                } else {
-                    self.errorMessage = response.message
-                }
+            if response.status {
+                updateSuccess = true
+            } else {
+                errorMessage = response.message
             }
 
         } catch {
-            DispatchQueue.main.async {
-                self.isLoading = false
-                self.errorMessage = error.localizedDescription
-                
-            }
+            isLoading = false
+            errorMessage = error.localizedDescription
         }
         
     }

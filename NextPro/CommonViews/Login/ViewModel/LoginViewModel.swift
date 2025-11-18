@@ -119,42 +119,40 @@ class LoginViewModel: ObservableObject {
         do {
             let response = try await network.login(email: trimmedEmail, password: trimmedPassword)
 
-            DispatchQueue.main.async {
-                self.isLoading = false
-                if response.status {
-                    
-                    print("✅ Login success")
-                    
-                    // Update values
-                    self.userType = response.user_type ?? ""
-                    self.userName = response.username ?? ""
-                    self.loginSuccess = true
-                    
-                    // Save tokens
-                    if let access = response.access {
-                        KeychainManager.shared.save(access, forKey: "access_token")
-                    }
-                    
-                    if let refresh = response.refresh {
-                        KeychainManager.shared.save(refresh, forKey: "refresh_token")
-                    }
-                    
-                    // Save user details
-                    UserDefaults.standard.set(response.user_id ?? "", forKey: "user_id")
-                    UserDefaults.standard.set(response.username ?? "", forKey: "username")
-                    UserDefaults.standard.set(response.user_type ?? "", forKey: "user_type")
-                    
-                } else {
-                    // Backend error message
-                    self.loginError = response.message
+            isLoading = false
+            
+            if response.status {
+                
+                print("✅ Login success")
+                
+                // Update values
+                userType = response.user_type ?? ""
+                userName = response.username ?? ""
+                loginSuccess = true
+                
+                // Save tokens
+                if let access = response.access {
+                    KeychainManager.shared.save(access, forKey: "access_token")
                 }
+                
+                if let refresh = response.refresh {
+                    KeychainManager.shared.save(refresh, forKey: "refresh_token")
+                }
+                
+                // Save user details
+                UserDefaults.standard.set(response.user_id ?? "", forKey: "user_id")
+                UserDefaults.standard.set(response.username ?? "", forKey: "username")
+                UserDefaults.standard.set(response.user_type ?? "", forKey: "user_type")
+                
+            } else {
+                // Backend error message
+                loginError = response.message
             }
 
         } catch {
-            DispatchQueue.main.async {
-                print("❌ API ERROR:", error.localizedDescription)
-                self.loginError = error.localizedDescription // show real message instead of generic
-            }
+            isLoading = false
+            print("❌ API ERROR:", error.localizedDescription)
+            loginError = error.localizedDescription // show real message instead of generic
         }
 
         
