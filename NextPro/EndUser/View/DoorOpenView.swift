@@ -62,9 +62,9 @@ struct DoorOpenView: View {
                 .padding(.bottom, 12)
                 
                 
-                ScrollView{
+                ScrollView(.vertical, showsIndicators: false){
                     VStack{
-                        Spacer(minLength: 80)
+                       Spacer(minLength: 80)
                         VStack(spacing: 40) {
                             // 🔒 Lock + Progress ring (placed above card)
                             
@@ -166,6 +166,13 @@ struct DoorOpenView: View {
                             
                         }
                         Spacer(minLength: 80)
+                        
+                        //animation here
+//                        LottieView(name: "Read_Sensor_NFC")
+//                            .frame(height: 300)
+//                            .padding(.top, -20)
+
+                        
                     }
                     .padding(.bottom, 40)
                     
@@ -326,10 +333,10 @@ struct DoorOpenView: View {
             isOpening = true
             progress = 0.0
         }
-        withAnimation(.linear(duration: 3.0)) {
-            progress = 0.8
+        withAnimation(.linear(duration: 2.0)) {
+            progress = 1.0
         }
-        // resetAnimationAfterDelay()
+        resetAnimationAfterDelay()
     }
     func animateSuccess() {
         withAnimation(.easeInOut(duration: 0.3)) {
@@ -354,7 +361,7 @@ struct DoorOpenView: View {
     
     // ⏳ Common reset (3 seconds later)
     func resetAnimationAfterDelay() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
             withAnimation(.easeInOut(duration: 0.3)) {
                 ringColor = .white
                 lockIcon = "lock.fill"

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0B0DF6112EC4AA360055BCEC /* CocoaMQTT in Frameworks */ = {isa = PBXBuildFile; productRef = 0B0DF6102EC4AA360055BCEC /* CocoaMQTT */; };
 		0B4E27942EB4AAF40036ECBD /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B4E27932EB4AAF40036ECBD /* CoreBluetooth.framework */; };
+		0BC382C12ECF078600DA5D81 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 0BC382C02ECF078600DA5D81 /* Lottie */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -57,6 +58,7 @@
 			files = (
 				0B4E27942EB4AAF40036ECBD /* CoreBluetooth.framework in Frameworks */,
 				0B0DF6112EC4AA360055BCEC /* CocoaMQTT in Frameworks */,
+				0BC382C12ECF078600DA5D81 /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -110,6 +112,7 @@
 			name = NextPro;
 			packageProductDependencies = (
 				0B0DF6102EC4AA360055BCEC /* CocoaMQTT */,
+				0BC382C02ECF078600DA5D81 /* Lottie */,
 			);
 			productName = NextPro;
 			productReference = 0BA387222EB13047000CD1BD /* NextPro.app */;
@@ -141,6 +144,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				0B0DF60F2EC4AA360055BCEC /* XCRemoteSwiftPackageReference "CocoaMQTT" */,
+				0BC382BF2ECF078600DA5D81 /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0BA387232EB13047000CD1BD /* Products */;
@@ -427,6 +431,14 @@
 				minimumVersion = 2.1.9;
 			};
 		};
+		0BC382BF2ECF078600DA5D81 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.2;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -434,6 +446,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0B0DF60F2EC4AA360055BCEC /* XCRemoteSwiftPackageReference "CocoaMQTT" */;
 			productName = CocoaMQTT;
+		};
+		0BC382C02ECF078600DA5D81 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0BC382BF2ECF078600DA5D81 /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
