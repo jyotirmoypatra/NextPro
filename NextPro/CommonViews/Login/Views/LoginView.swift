@@ -16,6 +16,8 @@ struct LoginView: View {
     @State private var showNoInternetAlert = false
     @State private var showLoginFailedAlert = false
     @State private var showPassword = false
+    @State private var navigateToHome = false
+    @State private var isAdmin = false
     
     var body: some View {
         NavigationStack {
@@ -164,9 +166,11 @@ struct LoginView: View {
                                     // Navigate after a short delay to show the toast
                                     try? await Task.sleep(nanoseconds: 1_000_000_000)
                                     
+                                   // navigateToCreatePassword = true
                                     
+                                    isAdmin = (vm.userType == "facility_manager")
+                                    navigateToHome = true
                                     
-                                    navigateToCreatePassword = true
                                 } else {
                                     showLoginFailedAlert = true
                                 }
@@ -223,12 +227,25 @@ struct LoginView: View {
             }
             .navigationBarBackButtonHidden(true)
             .ignoresSafeArea(.keyboard, edges: .bottom) // The key to stop resize
-            .navigationDestination(isPresented: $navigateToCreatePassword) {
-                CreateNewPasswordView(userType: vm.userType, userName: vm.userName)
-                    .navigationBarBackButtonHidden(true)
-                    .navigationBarHidden(true)
-                    .interactiveDismissDisabled(true)
+//            .navigationDestination(isPresented: $navigateToCreatePassword) {
+//                CreateNewPasswordView(userType: vm.userType, userName: vm.userName)
+//                    .navigationBarBackButtonHidden(true)
+//                    .navigationBarHidden(true)
+//                    .interactiveDismissDisabled(true)
+//            }
+            
+            .navigationDestination(isPresented: $navigateToHome) {
+                if isAdmin {
+                    HomeViewAdmin()
+                        .navigationBarBackButtonHidden(true)
+                        .navigationBarHidden(true)
+                } else {
+                    HomeViewEndUser()
+                        .navigationBarBackButtonHidden(true)
+                        .navigationBarHidden(true)
+                }
             }
+            
             .onReceive(network.$didCheckInternet) { done in
                 if done && !network.hasInternet {
                     showNoInternetAlert = true
