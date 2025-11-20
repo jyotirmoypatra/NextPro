@@ -183,10 +183,10 @@ class DoorManager: ObservableObject {
         devModel.cardno = door.cardno
         
         // Set optional parameters with defaults
-        devModel.privilege = SharedConfig.privilege
-        devModel.verified = SharedConfig.verified
-        devModel.startDate = SharedConfig.startDate
-        devModel.endDate = SharedConfig.endDate
+//        devModel.privilege = SharedConfig.privilege
+//        devModel.verified = SharedConfig.verified
+//        devModel.startDate = SharedConfig.startDate
+//        devModel.endDate = SharedConfig.endDate
         
         print("📋 Door Config:")
         print("   Name: \(door.name)")

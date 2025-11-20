@@ -26,8 +26,8 @@ struct ContentView: View {
                    // OnboardPageFirstView()  // Start with the first onboarding page
                  // OnboardPageDeviceScanView()  // Uncomment to start directly at device scan
                     // OnboardPageWiFiListView(selectedDeviceSN: "jjhdjhjdhjdh83787837")
-                 //  HomeViewAdmin()
-                  HomeViewEndUser()
+                // HomeViewAdmin()
+                 HomeViewEndUser()
                    // OnboardPageWifiPasswordView(selectedDeviceSN: "99222", selectedWiFiNetwork: "2323")
                 }
                 .transition(.move(edge: .trailing))

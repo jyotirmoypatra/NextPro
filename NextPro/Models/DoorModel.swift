@@ -115,7 +115,7 @@ struct DoorModelUser: Identifiable, Codable {
         duration: String = "For 5 Second",
         devSn: String,
         devMac: String,
-        devType: Int32 = 20,
+        devType: Int32 = 14,
         doorID: Int32 ,
         eKey: String,
         cardno: String
