@@ -37,10 +37,39 @@ struct AdminProfileTabView: View {
 				.cornerRadius(14)
 			}
 			.padding(.horizontal, 20)
+            
+            
+            Button(action: {
+                
+                KeychainManager.shared.clearUserDefaultsAndKeychainData()
+                
+                resetToLogin()
+                
+            }) {
+                HStack {
+                    Text("Logout").font(.headline)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(.red)
+                .cornerRadius(14)
+            }
+            .padding(.horizontal, 20)
 		}
 		.padding(.horizontal, 20)
 		.fullScreenCover(isPresented: $showAddCard) {
 			AddCardView()
 		}
 	}
+    
+    func resetToLogin() {
+        DispatchQueue.main.async {
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = scene.windows.first {
+                window.rootViewController = UIHostingController(rootView: LoginView())
+                window.makeKeyAndVisible()
+            }
+        }
+    }
 }
