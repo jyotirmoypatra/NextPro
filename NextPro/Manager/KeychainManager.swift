@@ -55,4 +55,8 @@ class KeychainManager {
 
         SecItemDelete(query as CFDictionary)
     }
+    
+    func loadUsername() -> String?{
+        return UserDefaults.standard.string(forKey: "username") ?? "Unknown User"
+    }
 }

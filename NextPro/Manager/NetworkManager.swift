@@ -65,45 +65,6 @@ class NetworkManager: ObservableObject {
     //All API list
     
     // MARK: - LOGIN API
-//       func login(email: String, password: String) async throws -> LoginResponseModel {
-//
-//          let urlString = APIConfig.url(APIConfig.Endpoints.login)
-//
-//           print("Url:\(urlString)")
-//          guard let url = URL(string: urlString) else {
-//              throw URLError(.badURL)
-//          }
-//           
-//           
-//           var request = URLRequest(url: url)
-//           request.httpMethod = "POST"
-//
-//           let params = [
-//               "username": email,
-//               "password": password
-//           ]
-//
-//           print("request param:\(params)")
-//           request.httpBody = try JSONSerialization.data(withJSONObject: params)
-//           request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-//
-//           let (data, response) = try await URLSession.shared.data(for: request)
-//           
-//           if let jsonString = String(data: data, encoding: .utf8) {
-//                   print("📥Login Response JSON:\n\(jsonString)")
-//               }
-//
-//           guard let httpResponse = response as? HTTPURLResponse,
-//                 (200...299).contains(httpResponse.statusCode) else {
-//               throw URLError(.badServerResponse)
-//           }
-//
-//           let decoded = try JSONDecoder().decode(LoginResponseModel.self, from: data)
-//           return decoded
-//       }
-    
-    
-    
     func login(email: String, password: String) async throws -> LoginResponseModel {
 
         let urlString = APIConfig.url(APIConfig.Endpoints.login)
@@ -194,5 +155,61 @@ class NetworkManager: ObservableObject {
 
             return decoded
         }
+    
+    
+    
+       // MARK: - Device Details API
+    func deviceDetails(accessToken: String) async throws -> DeviceDetailsResponse {
+
+        let urlString = APIConfig.url(APIConfig.Endpoints.deviceDetails)
+        guard let url = URL(string: urlString) else {
+            throw URLError(.badURL)
+        }
+
+        print("Url:\(urlString)")
+        print("access token:\(accessToken)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("📥 Device Details Response:\n\(jsonString)")
+        }
+
+        let httpResponse = response as? HTTPURLResponse
+        let statusCode = httpResponse?.statusCode ?? 0
+
+        let decoder = JSONDecoder()
+
+       
+        if (200...299).contains(statusCode) {
+            if let success = try? decoder.decode(DeviceDetailsResponse.self, from: data) {
+                return success
+            }
+        }
+
+     
+        if let errorResponse = try? decoder.decode(deviceDetailsErrorResponse.self, from: data) {
+            throw NSError(
+                domain: "APIError",
+                code: statusCode,
+                userInfo: [NSLocalizedDescriptionKey: errorResponse.detail]
+            )
+        }
+
+
+        throw NSError(
+            domain: "UnknownError",
+            code: statusCode,
+            userInfo: [NSLocalizedDescriptionKey: "Something went wrong. Please try again."]
+        )
+    }
+
+
+
     
 }

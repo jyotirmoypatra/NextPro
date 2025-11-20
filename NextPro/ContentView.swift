@@ -19,7 +19,7 @@ struct ContentView: View {
                    
             } else {
                 NavigationStack {
-                 LoginView()
+               //  LoginView()
                    
                     //OnboardPageWiFiListView(selectedDeviceSN: "asswd3434545")
                     //SDKTestView()
@@ -27,7 +27,7 @@ struct ContentView: View {
                  // OnboardPageDeviceScanView()  // Uncomment to start directly at device scan
                     // OnboardPageWiFiListView(selectedDeviceSN: "jjhdjhjdhjdh83787837")
                  //  HomeViewAdmin()
-                  // HomeViewEndUser()
+                  HomeViewEndUser()
                    // OnboardPageWifiPasswordView(selectedDeviceSN: "99222", selectedWiFiNetwork: "2323")
                 }
                 .transition(.move(edge: .trailing))
