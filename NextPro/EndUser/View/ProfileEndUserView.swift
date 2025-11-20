@@ -8,7 +8,10 @@ import SwiftUI
 
 struct ProfileEndUserView: View {
     @State private var notificationsEnabled = true
+    @Environment(\.dismiss) var dismiss
+    @State private var goToLogin = false
 
+   
     var body: some View {
         ZStack {
            
@@ -111,7 +114,7 @@ struct ProfileEndUserView: View {
                                 // Handle support action
                                 KeychainManager.shared.clearUserDefaultsAndKeychainData()
                                 
-                                
+                                resetToLogin()
                                 
                             }
 
@@ -131,6 +134,21 @@ struct ProfileEndUserView: View {
         }
         .background(Color.black.opacity(0.4))
     }
+    func navigateToLogin() {
+        goToLogin = true
+    }
+    
+    // MARK: - Force Reset to Login
+       func resetToLogin() {
+           DispatchQueue.main.async {
+               if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let window = scene.windows.first {
+                   window.rootViewController = UIHostingController(rootView: LoginView())
+                   window.makeKeyAndVisible()
+               }
+           }
+       }
+
 }
 
 // MARK: - Uniform Profile Row

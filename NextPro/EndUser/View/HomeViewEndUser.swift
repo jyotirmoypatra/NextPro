@@ -30,14 +30,7 @@ struct HomeViewEndUser: View {
                         switch selectedTab {
                         case 0:
                            // OpenDoorEndUserView()
-                            let sampleCard = CardModelUser(
-                                userName: "John Doe",
-                                companyName: "NextPro Pvt Ltd",
-                                FacilityName: "Main Facility",
-                                duration: "1 Year",
-                                cardno: "1234567890"
-                            )
-
+                          
                             DoorOpenView()
                         case 1:
                             MembershipEndUserView()
