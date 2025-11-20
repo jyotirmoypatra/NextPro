@@ -11,7 +11,7 @@ import Combine
 import AVFoundation
 
 struct DoorOpenView: View {
-   // let Card: CardModelUser
+    // let Card: CardModelUser
     @Environment(\.scenePhase) private var scenePhase
     @State private var bluetoothManager = CBCentralManager()
     @StateObject private var mqttManager = MQTTManager.shared
@@ -29,125 +29,152 @@ struct DoorOpenView: View {
     @State private var ringColor: Color = .white
     @State private var lockIcon: String = "lock.fill"
     @State private var rssiTimer: Timer?
-
+    
     @State private var selectedCard: CardModelUser?
-
-
+    
+    
     
     var body: some View {
         ZStack {
-            // Background gradient
-            Image("backgroundimg")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .ignoresSafeArea()
-          
-
-            // Black translucent overlay
-            Color.black.opacity(0.9)
-                .ignoresSafeArea()
-            VStack(spacing: 40) {
-                // 🔒 Lock + Progress ring (placed above card)
-                ZStack {
-                    Circle()
-                        .fill(Color.black)
-                        .frame(width: 60, height: 60)
+            
+            VStack(spacing: 0) {
+                // MARK: - Header
+                HStack {
+                    Text("Welcome!")
+                        .font(.custom("Inter-SemiBold", size: 18))
+                        .foregroundColor(.white)
                     
-                    Circle()
-                        .trim(from: 0, to: progress)
-                        .stroke(
-                            ringColor,
-                            style: StrokeStyle(lineWidth: 3, lineCap: .round)
-                        )
-                        .frame(width: 60, height: 60)
-                        .rotationEffect(.degrees(-90))
-                        .animation(.easeInOut(duration: 1.0), value: progress)
+                    Spacer()
                     
-                    Image(systemName: lockIcon)
-                       // .foregroundColor(isOpening ? .green : .white.opacity(0.7))
-                        .foregroundColor(ringColor)
-                        .font(.system(size: 30, weight: .semibold))
-                        .scaleEffect(isOpening ? 1.1 : 1.0)
-                        .animation(.spring(), value: isOpening)
-                }
-                
-                // 🪪 Card (centered in the view)
-                VStack(spacing: 32) {
-                    HStack {
-                        Text(selectedCard?.FacilityName ?? "")
-                            .font(.custom("Inter-SemiBold", size: 16))
+                    Button(action: {
+                        // Notification action
+                    }) {
+                        Image(systemName: "bell")
+                            .font(.system(size: 18))
                             .foregroundColor(.white)
-                        Spacer()
-                        Text(selectedCard?.companyName ?? "")
-                            .font(.custom("Inter-Semibold", size: 16))
-                            .foregroundColor(.gray)
-                    }
-                    
-                    HStack {
-                        Image("dooricon")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 52, height: 48)
-                        
-                        Spacer()
-
-                        HotspotWaveExact()
-                            .frame(width: 60, height: 20)
-                    }
-                    
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(selectedCard?.userName ?? "")
-                                .font(.custom("Inter-Regular", size: 12))
-                                .foregroundColor(.gray)
-//                            Text(Card.cardno)
-//                                .font(.custom("Inter-Regular", size: 12))
-//                                .foregroundColor(.gray)
-                            
-                            
-                            Text(maskCardNumber(selectedCard?.cardno ?? ""))
-                                .font(.custom("Inter-Regular", size: 12))
-                                .foregroundColor(.gray)
-
-                        }
-                        
-                        Spacer()
-                        
-                        VStack(alignment: .trailing) {
-                            Text("Exp")
-                                .font(.custom("Inter-Regular", size: 12))
-                                .foregroundColor(.white)
-                            Text(selectedCard?.duration ?? "")
-                                .font(.custom("Inter-Regular", size: 12))
-                                .foregroundColor(.gray)
-                        }
+                            .padding(10)
+                            .background(Color.white.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                 }
-                .padding(20)
-                .frame(maxWidth: .infinity)
-                .background(Color.white.opacity(0.09))
-                .cornerRadius(14)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                )
-                .padding(.horizontal, 20)
+                .padding(.horizontal)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
                 
-                // “Hold to card reader” text (below card)
-                HStack(spacing: 6) {
-                    Image("bluetooth")
-                        .frame(width: 30,height: 30)
-                        
-                    Text("Hold to card reader")
-                        .font(.system(size: 13))
-                        .foregroundColor(.white.opacity(0.5))
-                }.padding(.top,-28)
+                
+                ScrollView{
+                    VStack{
+                        Spacer(minLength: 80)
+                        VStack(spacing: 40) {
+                            // 🔒 Lock + Progress ring (placed above card)
+                            
+                            ZStack {
+                                Circle()
+                                    .fill(Color.black)
+                                    .frame(width: 60, height: 60)
+                                
+                                Circle()
+                                    .trim(from: 0, to: progress)
+                                    .stroke(
+                                        ringColor,
+                                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                    )
+                                    .frame(width: 60, height: 60)
+                                    .rotationEffect(.degrees(-90))
+                                    .animation(.easeInOut(duration: 1.0), value: progress)
+                                
+                                Image(systemName: lockIcon)
+                                // .foregroundColor(isOpening ? .green : .white.opacity(0.7))
+                                    .foregroundColor(ringColor)
+                                    .font(.system(size: 30, weight: .semibold))
+                                    .scaleEffect(isOpening ? 1.1 : 1.0)
+                                    .animation(.spring(), value: isOpening)
+                            }
+                            
+                            // 🪪 Card (centered in the view)
+                            VStack(spacing: 32) {
+                                HStack {
+                                    Text(selectedCard?.FacilityName ?? "")
+                                        .font(.custom("Inter-SemiBold", size: 16))
+                                        .foregroundColor(.white)
+                                    Spacer()
+                                    Text(selectedCard?.companyName ?? "")
+                                        .font(.custom("Inter-Semibold", size: 16))
+                                        .foregroundColor(.gray)
+                                }
+                                
+                                HStack {
+                                    Image("dooricon")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 52, height: 48)
+                                    
+                                    Spacer()
+                                    
+                                    HotspotWaveExact()
+                                        .frame(width: 60, height: 20)
+                                }
+                                
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(selectedCard?.userName ?? "")
+                                            .font(.custom("Inter-Regular", size: 12))
+                                            .foregroundColor(.gray)
+                                        //                            Text(Card.cardno)
+                                        //                                .font(.custom("Inter-Regular", size: 12))
+                                        //                                .foregroundColor(.gray)
+                                        
+                                        
+                                        Text(maskCardNumber(selectedCard?.cardno ?? ""))
+                                            .font(.custom("Inter-Regular", size: 12))
+                                            .foregroundColor(.gray)
+                                        
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    VStack(alignment: .trailing) {
+                                        Text("Exp")
+                                            .font(.custom("Inter-Regular", size: 12))
+                                            .foregroundColor(.white)
+                                        Text(selectedCard?.duration ?? "")
+                                            .font(.custom("Inter-Regular", size: 12))
+                                            .foregroundColor(.gray)
+                                    }
+                                }
+                            }
+                            .padding(20)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.white.opacity(0.09))
+                            .cornerRadius(14)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                            )
+                            .padding(.horizontal, 20)
+                            
+                            // “Hold to card reader” text (below card)
+                            HStack(spacing: 6) {
+                                Image("bluetooth")
+                                    .frame(width: 30,height: 30)
+                                
+                                Text("Hold to card reader")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.white.opacity(0.5))
+                            }.padding(.top,-28)
+                            
+                            
+                        }
+                        Spacer(minLength: 80)
+                    }
+                    .padding(.bottom, 40)
+                    
+                }
                 
                 
             }
-            .frame(maxHeight: .infinity, alignment: .center)
-            .offset(y: -70)
         }
+        .background(Color.black.opacity(0.4))
         .task{
             
             //
@@ -157,14 +184,14 @@ struct DoorOpenView: View {
                 mqttManager.subscribeToDevice(door.devSn)
             }
             mqttManager.subscribeToDevice("4283847520")
-
+            
             await cardStorage.loadCards()
-        
+            
             if let card = cardStorage.card {
                 self.selectedCard = card
             }
-
-
+            
+            
             
             //
             
@@ -239,57 +266,57 @@ struct DoorOpenView: View {
                 break
             }
         }
-
+        
         .alert(isPresented: $showBluetoothAlert) {
-                Alert(
-                    title: Text("Bluetooth is Off"),
-                    message: Text("Please enable Bluetooth to use Auto Open."),
-                    primaryButton: .default(Text("Open Settings"), action: {
-                        if let url = URL(string: "App-Prefs:root=Bluetooth"),
-                           UIApplication.shared.canOpenURL(url) {
-                            UIApplication.shared.open(url)
-                        }
-                    }),
-                    secondaryButton: .cancel(Text("Cancel"))
-                )
+            Alert(
+                title: Text("Bluetooth is Off"),
+                message: Text("Please enable Bluetooth to use Auto Open."),
+                primaryButton: .default(Text("Open Settings"), action: {
+                    if let url = URL(string: "App-Prefs:root=Bluetooth"),
+                       UIApplication.shared.canOpenURL(url) {
+                        UIApplication.shared.open(url)
+                    }
+                }),
+                secondaryButton: .cancel(Text("Cancel"))
+            )
         }
         .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in
-                guard let info = notification.userInfo
-                       else { return }
-
-                let type = info["type"] as? Int
-                if type == 0 {
-                   animateSuccess()
-                    speakText("Door opened successfully.")
-                    print("succes event recievd")
-                   
-                } else {
-                  animateFailure()
-                    speakText("Access Denied.")
-                    print("succes event recievd")
-
-                }
+            guard let info = notification.userInfo
+            else { return }
+            
+            let type = info["type"] as? Int
+            if type == 0 {
+                animateSuccess()
+                speakText("Door opened successfully.")
+                print("succes event recievd")
                 
+            } else {
+                animateFailure()
+                speakText("Access Denied.")
+                print("succes event recievd")
+                
+            }
+            
+            doorManager.clearDoorEvent()
+        }
+        
+        
+        
+        .onReceive(doorManager.$doorEvent.compactMap({ $0 })) { event in
+            switch event.status {
+            case .starting:
+                animateOpeningStart()
+            case .success:
+                animateSuccess()
+            case .failure:
+                animateFailure()
+            }
+            
+            // Clear the event after processing to prevent re-triggering
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 doorManager.clearDoorEvent()
             }
-
-
-            
-            .onReceive(doorManager.$doorEvent.compactMap({ $0 })) { event in
-                switch event.status {
-                case .starting:
-                    animateOpeningStart()
-                case .success:
-                    animateSuccess()
-                case .failure:
-                    animateFailure()
-                }
-                
-                // Clear the event after processing to prevent re-triggering
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    doorManager.clearDoorEvent()
-                }
-            }
+        }
     }
     
     func animateOpeningStart() {
@@ -302,7 +329,7 @@ struct DoorOpenView: View {
         withAnimation(.linear(duration: 3.0)) {
             progress = 0.8
         }
-       // resetAnimationAfterDelay()
+        // resetAnimationAfterDelay()
     }
     func animateSuccess() {
         withAnimation(.easeInOut(duration: 0.3)) {
@@ -313,7 +340,7 @@ struct DoorOpenView: View {
         }
         resetAnimationAfterDelay()
     }
-
+    
     // ❌ Failure → red, then reset
     func animateFailure() {
         withAnimation(.easeInOut(duration: 0.3)) {
@@ -324,7 +351,7 @@ struct DoorOpenView: View {
         }
         resetAnimationAfterDelay()
     }
-
+    
     // ⏳ Common reset (3 seconds later)
     func resetAnimationAfterDelay() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
@@ -343,11 +370,11 @@ struct DoorOpenView: View {
         utterance.pitchMultiplier = 0.95     // a bit lower pitch, soft and natural
         utterance.volume = 0.9               // gentle loudness
         utterance.postUtteranceDelay = 0.1   // small pause after speaking
-
+        
         speechSynthesizer.speak(utterance)
     }
-
-
+    
+    
     func monitorAndAutoOpenNearbyDoor() {
         // Cancel any previous timer before starting a new one
         rssiTimer?.invalidate()
@@ -361,26 +388,26 @@ struct DoorOpenView: View {
                 // Example match logic
                 if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
                     print("📡 Found matching door \(door.name) (RSSI: \(rssi)dBm)")
-
+                    
                     if rssi > -40 && rssi < 0 {
                         print("🚪 Door nearby! Opening \(door.name)...")
                         doorManager.openSelectedDoor(door)
-
+                        
                         // Stop BLE scanning
                         bleManager.stopScanning()
                         bleManager.stopMonitoringDevice()
-
+                        
                         // Stop timer to avoid continuous opening
                         timer.invalidate()
                         rssiTimer = nil
-
+                        
                         // Restart monitoring after 5 seconds
                         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                             print("🔄 Restarting door monitoring after 5 seconds...")
                             bleManager.startContinuousScanning()
                             monitorAndAutoOpenNearbyDoor()
                         }
-
+                        
                         break
                     }
                 }
@@ -395,7 +422,7 @@ struct DoorOpenView: View {
         let suffix = cardNumber.suffix(cardNumber.count - 6)
         return "XXXXXX" + suffix
     }
-
+    
     
     
 }
