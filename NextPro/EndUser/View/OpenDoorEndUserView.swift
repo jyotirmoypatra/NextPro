@@ -267,7 +267,7 @@ struct HotspotWaveExact: View {
     @State private var animateWaves = false
     
     var waveColor: Color {
-        isActive ? Color(red: 0.0, green: 1.0, blue: 0.0) : .red
+        isActive ? .blue : .red
     }
     
     var body: some View {
@@ -276,8 +276,8 @@ struct HotspotWaveExact: View {
             ForEach(0..<3) { index in
                 WaveArc(side: .left, radius: 8 + CGFloat(index) * 5)
                     .stroke(waveColor, lineWidth: 2)
-                    .opacity(isActive && animateWaves ? 0.0 : 1.0)
-                    .scaleEffect(isActive && animateWaves ? 1.15 : 0.95)
+                    .opacity(isActive ? (animateWaves ? 0.0 : 1.0) : 1.0)
+                    .scaleEffect(isActive ? (animateWaves ? 1.15 : 0.95) : 1.0)
                     .animation(
                         isActive ? .easeOut(duration: 2)
                             .repeatForever(autoreverses: false)
@@ -295,8 +295,8 @@ struct HotspotWaveExact: View {
             ForEach(0..<3) { index in
                 WaveArc(side: .right, radius: 8 + CGFloat(index) * 5)
                     .stroke(waveColor, lineWidth: 2)
-                    .opacity(isActive && animateWaves ? 0.0 : 1.0)
-                    .scaleEffect(isActive && animateWaves ? 1.15 : 0.95)
+                    .opacity(isActive ? (animateWaves ? 0.0 : 1.0) : 1.0)
+                    .scaleEffect(isActive ? (animateWaves ? 1.15 : 0.95) : 1.0)
                     .animation(
                         isActive ? .easeOut(duration: 2)
                             .repeatForever(autoreverses: false)
@@ -309,7 +309,9 @@ struct HotspotWaveExact: View {
         .fixedSize()
         .rotationEffect(.degrees(0))
         .onAppear {
-            animateWaves = true
+            if isActive {
+                animateWaves = true
+            }
         }
         .onChange(of: isActive) { newValue in
             if newValue {

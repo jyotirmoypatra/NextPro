@@ -92,6 +92,17 @@ struct DoorOpenView: View {
                                     .animation(.spring(), value: isOpening)
                             }
                             
+                            
+                            // “Hold to card reader” text (below card)
+                            HStack(spacing: 6) {
+                               // Image("bluetooth")
+                                   // .frame(width: 30,height: 30)
+                                
+                                Text("Walk closer to the door")
+                                    .font(.custom("Inter-SemiBold", size: 16))
+                                    .foregroundColor(.white.opacity(0.5))
+                            }.padding(.top,-28)
+                            
                             // 🪪 Card (centered in the view)
                             VStack(spacing: 32) {
                                 HStack {
@@ -154,15 +165,7 @@ struct DoorOpenView: View {
                             )
                             .padding(.horizontal, 20)
                             
-                            // “Hold to card reader” text (below card)
-                            HStack(spacing: 6) {
-                                Image("bluetooth")
-                                    .frame(width: 30,height: 30)
-                                
-                                Text("Hold to card reader")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.white.opacity(0.5))
-                            }.padding(.top,-28)
+                           
                             
                             
                         }
