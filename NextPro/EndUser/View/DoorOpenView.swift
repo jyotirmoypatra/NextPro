@@ -12,6 +12,7 @@ import AVFoundation
 
 struct DoorOpenView: View {
    // let Card: CardModelUser
+    @Environment(\.scenePhase) private var scenePhase
     @State private var bluetoothManager = CBCentralManager()
     @StateObject private var mqttManager = MQTTManager.shared
     @StateObject private var doorStorage = DoorStorageManager.shared
@@ -198,6 +199,45 @@ struct DoorOpenView: View {
             // Stop RSSI monitoring timer
             rssiTimer?.invalidate()
             rssiTimer = nil
+        }
+        .onChange(of: scenePhase) { newPhase in
+            switch newPhase {
+            case .background:
+                print("🌙 App went to background — stopping BLE scanning and monitoring")
+                
+                // Stop all BLE activities
+                bleManager.stopContinuousScanning()
+                bleManager.stopMonitoringDevice()
+                bleManager.stopScanning()
+                
+                // Stop RSSI monitoring timer
+                rssiTimer?.invalidate()
+                rssiTimer = nil
+                
+            case .active:
+                print("☀️ App became active — restarting BLE scanning and monitoring")
+                
+                // Check if Bluetooth is available
+                if bluetoothManager.state != .poweredOn {
+                    print("⚠️ Bluetooth is OFF. Cannot restart auto-open.")
+                    showBluetoothAlert = true
+                    return
+                }
+                
+                // Restart BLE scanning with a small delay to ensure everything is ready
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    print("🔄 Restarting BLE scanning...")
+                    bleManager.startContinuousScanning()
+                    monitorAndAutoOpenNearbyDoor()
+                }
+                
+            case .inactive:
+                print("⏸️ App became inactive")
+                // Optional: You can handle inactive state if needed
+                
+            @unknown default:
+                break
+            }
         }
 
         .alert(isPresented: $showBluetoothAlert) {
