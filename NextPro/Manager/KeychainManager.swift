@@ -59,4 +59,20 @@ class KeychainManager {
     func loadUsername() -> String?{
         return UserDefaults.standard.string(forKey: "username") ?? "Unknown User"
     }
+    
+    func clearUserDefaultsAndKeychainData() {
+        
+        KeychainManager.shared.delete("access_token")
+        KeychainManager.shared.delete("refresh_token")
+        
+        
+        // Remove all stored keys for this app
+        if let bundleID = Bundle.main.bundleIdentifier {
+            UserDefaults.standard.removePersistentDomain(forName: bundleID)
+            UserDefaults.standard.synchronize()
+        }
+        
+        print("🧹 UserDefaults cleared successfully.")
+    }
+
 }

@@ -104,6 +104,16 @@ struct ProfileEndUserView: View {
                             UserProfileRow(title: "Add Card") {
                                 // Handle support action
                             }
+                            
+                            Divider().background(Color.white.opacity(0.15))
+                            
+                            UserProfileRow(title: "Logout") {
+                                // Handle support action
+                                KeychainManager.shared.clearUserDefaultsAndKeychainData()
+                                
+                                
+                                
+                            }
 
                            
                         }
