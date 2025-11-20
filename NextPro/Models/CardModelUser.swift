@@ -40,33 +40,26 @@ struct CardModelUser: Identifiable, Codable {
 class UserCardStorageManager: ObservableObject {
     static let shared = UserCardStorageManager()
     
-    @Published var card: [CardModelUser] = []
+    @Published var card: CardModelUser?
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
     
     private init() { }
     
-    // MARK: - Load Doors (Simulated API)
+    // MARK: - Load Card (Simulated API)
     func loadCards() async {
         isLoading = true
         defer { isLoading = false }
         
         do {
           
-            let fetchcard: [CardModelUser] = [
-                CardModelUser(id: UUID(), userName: "Peter Parker", companyName: "NextPro", FacilityName: "IRON HIVE GYM", duration: "09/26", cardno: "1557049426")
-             
-            ]
+            let fetchcard = CardModelUser(id: UUID(), userName: "Peter Parker", companyName: "NextPro", FacilityName: "IRON HIVE GYM", duration: "09/26", cardno: "1557049426")
             
             self.card = fetchcard
-            print("✅ Loaded \(fetchcard.count) doors from API/Mock.")
+            print("✅ Loaded card from API/Mock.")
         } catch {
             self.errorMessage = error.localizedDescription
-            print("❌ Failed to load doors: \(error)")
+            print("❌ Failed to load card: \(error)")
         }
-    }
-    
-    func getCard(bySN sn: String) -> CardModelUser? {
-        card.first(where: { $0.cardno == sn })
     }
 }

@@ -82,15 +82,12 @@ struct OpenDoorEndUserView: View {
                                Text("⚠️ \(error)")
                                    .foregroundColor(.red)
                                    .padding(.top, 40)
-                           } else if CardStorage.card.isEmpty {
-                               Text("No doors found.")
+                           } else if let card = CardStorage.card {
+                               UserCardView(Card: card, showBluetoothAlert: $showBluetoothAlert)
+                           } else {
+                               Text("No card found.")
                                    .foregroundColor(.gray)
                                    .padding(.top, 40)
-                           } else {
-                               ForEach(CardStorage.card) { card in
-                                   //DoorCardView(door: door)
-                                   UserCardView(Card: card, showBluetoothAlert: $showBluetoothAlert)
-                               }
                            }
                        }
                        .padding(.top, 10)
@@ -245,7 +242,7 @@ struct UserCardView: View {
         }
         }
         .navigationDestination(isPresented: $navigateToDoorOpenView) {
-            DoorOpenView(Card: Card)
+            DoorOpenView()
             
             
         }

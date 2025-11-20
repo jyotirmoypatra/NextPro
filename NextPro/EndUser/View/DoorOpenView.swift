@@ -11,11 +11,12 @@ import Combine
 import AVFoundation
 
 struct DoorOpenView: View {
-    let Card: CardModelUser
+   // let Card: CardModelUser
     @State private var bluetoothManager = CBCentralManager()
     @StateObject private var mqttManager = MQTTManager.shared
     @StateObject private var doorStorage = DoorStorageManager.shared
-    @StateObject private var CardStorage = UserCardStorageManager.shared
+    @ObservedObject private var cardStorage = UserCardStorageManager.shared
+    @StateObject private var deviceVM = DeviceDetailsViewModel()
     @StateObject private var doorManager = DoorManager.shared
     @StateObject private var bleManager = BLEManager()
     private let speechSynthesizer = AVSpeechSynthesizer()
@@ -27,6 +28,9 @@ struct DoorOpenView: View {
     @State private var ringColor: Color = .white
     @State private var lockIcon: String = "lock.fill"
     @State private var rssiTimer: Timer?
+
+    @State private var selectedCard: CardModelUser?
+
 
     
     var body: some View {
@@ -69,11 +73,11 @@ struct DoorOpenView: View {
                 // 🪪 Card (centered in the view)
                 VStack(spacing: 32) {
                     HStack {
-                        Text(Card.FacilityName)
+                        Text(selectedCard?.FacilityName ?? "")
                             .font(.custom("Inter-SemiBold", size: 16))
                             .foregroundColor(.white)
                         Spacer()
-                        Text(Card.companyName)
+                        Text(selectedCard?.companyName ?? "")
                             .font(.custom("Inter-Semibold", size: 16))
                             .foregroundColor(.gray)
                     }
@@ -92,7 +96,7 @@ struct DoorOpenView: View {
                     
                     HStack {
                         VStack(alignment: .leading) {
-                            Text(Card.userName)
+                            Text(selectedCard?.userName ?? "")
                                 .font(.custom("Inter-Regular", size: 12))
                                 .foregroundColor(.gray)
 //                            Text(Card.cardno)
@@ -100,7 +104,7 @@ struct DoorOpenView: View {
 //                                .foregroundColor(.gray)
                             
                             
-                            Text(maskCardNumber(Card.cardno))
+                            Text(maskCardNumber(selectedCard?.cardno ?? ""))
                                 .font(.custom("Inter-Regular", size: 12))
                                 .foregroundColor(.gray)
 
@@ -112,7 +116,7 @@ struct DoorOpenView: View {
                             Text("Exp")
                                 .font(.custom("Inter-Regular", size: 12))
                                 .foregroundColor(.white)
-                            Text(Card.duration)
+                            Text(selectedCard?.duration ?? "")
                                 .font(.custom("Inter-Regular", size: 12))
                                 .foregroundColor(.gray)
                         }
@@ -144,6 +148,26 @@ struct DoorOpenView: View {
             .offset(y: -70)
         }
         .task{
+            
+            //
+            mqttManager.connect()
+            
+            for door in doorStorage.doors {
+                mqttManager.subscribeToDevice(door.devSn)
+            }
+            mqttManager.subscribeToDevice("4283847520")
+
+            await cardStorage.loadCards()
+        
+            if let card = cardStorage.card {
+                self.selectedCard = card
+            }
+
+
+            
+            //
+            
+            
             
             await doorStorage.loadDoors()
             
