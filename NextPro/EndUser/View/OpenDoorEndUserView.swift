@@ -263,39 +263,44 @@ struct UserCardView: View {
 
 
 struct HotspotWaveExact: View {
+    @Binding var isActive: Bool
     @State private var animateWaves = false
+    
+    var waveColor: Color {
+        isActive ? Color(red: 0.0, green: 1.0, blue: 0.0) : .red
+    }
     
     var body: some View {
         ZStack {
             // Left waves
             ForEach(0..<3) { index in
                 WaveArc(side: .left, radius: 8 + CGFloat(index) * 5)
-                    .stroke(Color.green, lineWidth: 2)
-                    .opacity(animateWaves ? 0.0 : 0.7)
-                    .scaleEffect(animateWaves ? 1.15 : 0.95)
+                    .stroke(waveColor, lineWidth: 2)
+                    .opacity(isActive && animateWaves ? 0.0 : 1.0)
+                    .scaleEffect(isActive && animateWaves ? 1.15 : 0.95)
                     .animation(
-                        .easeOut(duration: 2)
+                        isActive ? .easeOut(duration: 2)
                             .repeatForever(autoreverses: false)
-                            .delay(Double(index) * 0.4),
+                            .delay(Double(index) * 0.4) : .default,
                         value: animateWaves
                     )
             }
 
             // Center dot
             Circle()
-                .fill(Color.green)
+                .fill(waveColor)
                 .frame(width: 6, height: 6)
 
             // Right waves
             ForEach(0..<3) { index in
                 WaveArc(side: .right, radius: 8 + CGFloat(index) * 5)
-                    .stroke(Color.green, lineWidth: 2)
-                    .opacity(animateWaves ? 0.0 : 0.7)
-                    .scaleEffect(animateWaves ? 1.15 : 0.95)
+                    .stroke(waveColor, lineWidth: 2)
+                    .opacity(isActive && animateWaves ? 0.0 : 1.0)
+                    .scaleEffect(isActive && animateWaves ? 1.15 : 0.95)
                     .animation(
-                        .easeOut(duration: 2)
+                        isActive ? .easeOut(duration: 2)
                             .repeatForever(autoreverses: false)
-                            .delay(Double(index) * 0.4),
+                            .delay(Double(index) * 0.4) : .default,
                         value: animateWaves
                     )
             }
@@ -305,6 +310,16 @@ struct HotspotWaveExact: View {
         .rotationEffect(.degrees(0))
         .onAppear {
             animateWaves = true
+        }
+        .onChange(of: isActive) { newValue in
+            if newValue {
+                animateWaves = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    animateWaves = true
+                }
+            } else {
+                animateWaves = false
+            }
         }
     }
 }

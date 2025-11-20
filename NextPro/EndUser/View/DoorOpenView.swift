@@ -29,6 +29,7 @@ struct DoorOpenView: View {
     @State private var ringColor: Color = .white
     @State private var lockIcon: String = "lock.fill"
     @State private var rssiTimer: Timer?
+    @State private var isScanningActive = false
     
     @State private var selectedCard: CardModelUser?
     
@@ -103,17 +104,17 @@ struct DoorOpenView: View {
                                         .foregroundColor(.gray)
                                 }
                                 
-                                HStack {
-                                    Image("dooricon")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 52, height: 48)
-                                    
-                                    Spacer()
-                                    
-                                    HotspotWaveExact()
-                                        .frame(width: 60, height: 20)
-                                }
+                                 HStack {
+                                     Image("dooricon")
+                                         .resizable()
+                                         .scaledToFit()
+                                         .frame(width: 52, height: 48)
+                                     
+                                     Spacer()
+                                     
+                                     HotspotWaveExact(isActive: $isScanningActive)
+                                         .frame(width: 60, height: 20)
+                                 }
                                 
                                 HStack {
                                     VStack(alignment: .leading) {
@@ -210,6 +211,7 @@ struct DoorOpenView: View {
                 if bluetoothManager.state != .poweredOn  {
                     print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
                     showBluetoothAlert = true
+                    isScanningActive = false
                     return
                 }
                 
@@ -217,6 +219,7 @@ struct DoorOpenView: View {
                 
                 // Start continuous scanning
                 bleManager.startContinuousScanning()
+                isScanningActive = true
                 
                 // Begin monitoring RSSI and auto-open logic
                 monitorAndAutoOpenNearbyDoor()
@@ -229,6 +232,7 @@ struct DoorOpenView: View {
             bleManager.stopContinuousScanning()
             bleManager.stopMonitoringDevice()
             bleManager.stopScanning()
+            isScanningActive = false
             
             // Stop RSSI monitoring timer
             rssiTimer?.invalidate()
@@ -243,6 +247,7 @@ struct DoorOpenView: View {
                 bleManager.stopContinuousScanning()
                 bleManager.stopMonitoringDevice()
                 bleManager.stopScanning()
+                isScanningActive = false
                 
                 // Stop RSSI monitoring timer
                 rssiTimer?.invalidate()
@@ -255,6 +260,7 @@ struct DoorOpenView: View {
                 if bluetoothManager.state != .poweredOn {
                     print("⚠️ Bluetooth is OFF. Cannot restart auto-open.")
                     showBluetoothAlert = true
+                    isScanningActive = false
                     return
                 }
                 
@@ -262,6 +268,7 @@ struct DoorOpenView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     print("🔄 Restarting BLE scanning...")
                     bleManager.startContinuousScanning()
+                    isScanningActive = true
                     monitorAndAutoOpenNearbyDoor()
                 }
                 
@@ -403,6 +410,7 @@ struct DoorOpenView: View {
                         // Stop BLE scanning
                         bleManager.stopScanning()
                         bleManager.stopMonitoringDevice()
+                       // isScanningActive = false
                         
                         // Stop timer to avoid continuous opening
                         timer.invalidate()
@@ -412,6 +420,7 @@ struct DoorOpenView: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                             print("🔄 Restarting door monitoring after 5 seconds...")
                             bleManager.startContinuousScanning()
+                            isScanningActive = true
                             monitorAndAutoOpenNearbyDoor()
                         }
                         
