@@ -11,7 +11,7 @@ import SwiftUI
 struct SubmitResetPassword: View {
     @State private var newPassword = ""
     @State private var confirmPassword = ""
-
+    @Environment(\.dismiss) private var dismiss
     var body: some View {
         ZStack {
             // Background image
@@ -106,6 +106,10 @@ struct SubmitResetPassword: View {
                     // Login Button
                     Button(action: {
                         print("SUBMIT")
+                        
+                        resetToLogin()
+                    
+                        
                     }) {
                         Text("SUBMIT")
                             .font(.custom("Inter-SemiBold", size: 16))
@@ -121,6 +125,7 @@ struct SubmitResetPassword: View {
                 Button(action: {
                     // 👉 Perform navigation or action here
                     print("Return to login tapped")
+                    dismiss()
                 }) {
                     HStack(spacing: 8) {
                         Image("undoicon")
@@ -139,6 +144,16 @@ struct SubmitResetPassword: View {
             }
             .padding(.horizontal, 30)
             .padding(.bottom, 30)
+        }
+    }
+    
+    func resetToLogin() {
+        DispatchQueue.main.async {
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = scene.windows.first {
+                window.rootViewController = UIHostingController(rootView: LoginView())
+                window.makeKeyAndVisible()
+            }
         }
     }
 }

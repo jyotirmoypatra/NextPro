@@ -8,13 +8,13 @@
 import SwiftUI
 
 
-struct VerifyAccount: View {
+struct VerifyOtpAccount: View {
     @State private var digit1 = ""
     @State private var digit2 = ""
     @State private var digit3 = ""
     @State private var digit4 = ""
-  
-
+    @State private var navigateToResetPassword = false
+    @Environment(\.dismiss) private var dismiss
     var body: some View {
         ZStack {
             // Background image
@@ -143,6 +143,7 @@ struct VerifyAccount: View {
                     // Login Button
                     Button(action: {
                         print("Verify tapped")
+                        navigateToResetPassword = true
                     }) {
                         Text("VERIFY CODE")
                             .font(.custom("Inter-SemiBold", size: 16))
@@ -157,6 +158,8 @@ struct VerifyAccount: View {
                     Button(action: {
                         // 👉 Perform navigation or action here
                         print("Return to login tapped")
+                        dismiss()
+                        
                     }) {
                         HStack(spacing: 8) {
                             Image("undoicon")
@@ -179,10 +182,16 @@ struct VerifyAccount: View {
             }
             .padding(.horizontal, 30)
         }
+        .navigationDestination(isPresented: $navigateToResetPassword) {
+           SubmitResetPassword()
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
+                .interactiveDismissDisabled(true)
+        }
     }
 }
 
 
 #Preview {
-    VerifyAccount()
+    VerifyOtpAccount()
 }

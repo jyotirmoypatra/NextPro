@@ -11,6 +11,7 @@ import SwiftUI
 struct ResetPassword: View {
     @State private var email = ""
     @Environment(\.dismiss) private var dismiss
+    @State private var navigateToVerifyOtp = false
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
@@ -83,6 +84,7 @@ struct ResetPassword: View {
                     // Confirm Button
                     Button(action: {
                         print("CONFIRM tapped")
+                        navigateToVerifyOtp = true
                     }) {
                         Text("CONFIRM")
                             .font(.custom("Inter-SemiBold", size: 16))
@@ -118,6 +120,12 @@ struct ResetPassword: View {
             }
             .onTapGesture {
                 UIApplication.shared.hideKeyboard()
+            }
+            .navigationDestination(isPresented: $navigateToVerifyOtp) {
+               VerifyOtpAccount()
+                    .navigationBarBackButtonHidden(true)
+                    .navigationBarHidden(true)
+                    .interactiveDismissDisabled(true)
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
