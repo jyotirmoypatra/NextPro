@@ -68,34 +68,9 @@ struct DoorOpenView: View {
                 
                 ScrollView(.vertical, showsIndicators: false){
                     VStack{
-                    
-                        VStack(spacing: 40) {
-                            // 🔒 Lock + Progress ring (placed above card)
-                            
-                            ZStack {
-                                Circle()
-                                    .fill(Color.black)
-                                    .frame(width: 60, height: 60)
-                                
-                                Circle()
-                                    .trim(from: 0, to: progress)
-                                    .stroke(
-                                        ringColor,
-                                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
-                                    )
-                                    .frame(width: 60, height: 60)
-                                    .rotationEffect(.degrees(-90))
-                                    .animation(.easeInOut(duration: 1.0), value: progress)
-                                
-                                Image(systemName: lockIcon)
-                                // .foregroundColor(isOpening ? .green : .white.opacity(0.7))
-                                    .foregroundColor(ringColor)
-                                    .font(.system(size: 30, weight: .semibold))
-                                    .scaleEffect(isOpening ? 1.1 : 1.0)
-                                    .animation(.spring(), value: isOpening)
-                            }
-                            
-                            
+                        Spacer().frame(height: 20)
+                        
+                        VStack(spacing: 30) {
                             
                             // 🪪 Card (centered in the view)
                             VStack(spacing: 32) {
@@ -167,7 +142,7 @@ struct DoorOpenView: View {
                                 Text(AceesMessage ?? "Walk closer to the door")
                                     .font(.custom("Inter-SemiBold", size: 16))
                                     .foregroundColor(.white.opacity(0.5))
-                            }.padding(.top,-28)
+                            }
                             
                             
                             HowItWorksView()
@@ -189,8 +164,52 @@ struct DoorOpenView: View {
                 
                 
             }
+            
+            // 🔒 Lock + Progress ring OVERLAY (positioned at center with full-screen background)
+            if isOpening || progress > 0 || ringColor != .white {
+                ZStack {
+                    // Full-screen black background
+                    Color.black.opacity(0.8)
+                        .ignoresSafeArea()
+                    
+                    // Lock icon and progress ring in the center
+                    VStack(spacing: 16) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.black)
+                                .frame(width: 80, height: 80)
+                            
+                            Circle()
+                                .trim(from: 0, to: progress)
+                                .stroke(
+                                    ringColor,
+                                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                                )
+                                .frame(width: 80, height: 80)
+                                .rotationEffect(.degrees(-90))
+                                .animation(.easeInOut(duration: 1.0), value: progress)
+                            
+                            Image(systemName: lockIcon)
+                                .foregroundColor(ringColor)
+                                .font(.system(size: 36, weight: .semibold))
+                                .scaleEffect(isOpening ? 1.15 : 1.0)
+                                .animation(.spring(), value: isOpening)
+                        }
+                        .shadow(color: ringColor.opacity(0.4), radius: 10, x: 0, y: 5)
+                        
+                        // Status Message
+                        Text(getStatusMessage())
+                            .font(.custom("Inter-SemiBold", size: 18))
+                            .foregroundColor(.white)
+                            .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 2)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .transition(.opacity)
+                .zIndex(10)
+            }
         }
-        .background(Color.black.opacity(0.4))
+        .background(Color.black.opacity(0.8))
         .task{
             
             //
@@ -361,6 +380,17 @@ struct DoorOpenView: View {
     
     func getUDID() -> String {
         return UIDevice.current.identifierForVendor?.uuidString ?? "unknown-device"
+    }
+    
+    func getStatusMessage() -> String {
+        if lockIcon == "checkmark" {
+            return "Access Granted"
+        } else if lockIcon == "xmark" {
+            return "Access Denied"
+        } else if ringColor == .yellow {
+            return "Opening..."
+        }
+        return "Processing..."
     }
     
     func animateOpeningStart() {
