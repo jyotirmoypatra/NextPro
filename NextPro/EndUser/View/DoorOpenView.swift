@@ -192,12 +192,14 @@ struct DoorOpenView: View {
         .task{
             
             //
-            mqttManager.connect()
+            let udid = getUDID()
+            mqttManager.connect(deviceSN: udid)
             
 //            for door in doorStorage.doors {
 //                mqttManager.subscribeToDevice(door.devSn)
 //            }
-            mqttManager.subscribeToDevice("4283847520")
+           // mqttManager.subscribeToDevice("4283847520")
+            mqttManager.subscribeToDevice("4282184653")
             
             await cardStorage.loadCards()
             
@@ -353,6 +355,10 @@ struct DoorOpenView: View {
                 doorManager.clearDoorEvent()
             }
         }
+    }
+    
+    func getUDID() -> String {
+        return UIDevice.current.identifierForVendor?.uuidString ?? "unknown-device"
     }
     
     func animateOpeningStart() {

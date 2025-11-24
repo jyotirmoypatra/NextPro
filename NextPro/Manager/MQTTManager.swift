@@ -102,6 +102,7 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
     // MARK: - CocoaMQTTDelegate
     func mqtt(_ mqtt: CocoaMQTT, didConnectAck ack: CocoaMQTTConnAck) {
         print("✅ MQTT Connected Successfully")
+        subscribeToDevice("4282184653")
     }
 
     
