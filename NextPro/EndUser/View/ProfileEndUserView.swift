@@ -86,7 +86,9 @@ struct ProfileEndUserView: View {
                             // Update Password
                             UserProfileRow(title: "Update Password") {
                                 // Handle password update
-                                navigateToUpdatePass = true
+                                if usertype != "" && username != "" {
+                                    navigateToUpdatePass = true
+                                }
                             }
 
                             Divider().background(Color.white.opacity(0.15))
@@ -167,12 +169,9 @@ struct ProfileEndUserView: View {
         .background(Color.black.opacity(0.4))
         
         .navigationDestination(isPresented: $navigateToUpdatePass) {
-            if usertype != "" && username != "" {
+         
                 CreateNewPasswordView(userType: usertype, userName: username)
-                    .navigationBarBackButtonHidden(true)
-                    .navigationBarHidden(true)
-                    .interactiveDismissDisabled(true)
-            }
+                    
            
         }
         

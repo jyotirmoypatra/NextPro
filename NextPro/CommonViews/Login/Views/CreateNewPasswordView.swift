@@ -222,7 +222,7 @@ struct CreateNewPasswordView: View {
             }
             
         }
-        .navigationBarBackButtonHidden(true)
+       // .navigationBarBackButtonHidden(true)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .toast()  // Add toast modifier
 

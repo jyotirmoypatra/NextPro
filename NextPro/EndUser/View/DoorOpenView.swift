@@ -171,7 +171,7 @@ struct DoorOpenView: View {
             if isOpening || progress > 0 || ringColor != .white {
                 ZStack {
                     // Full-screen black background
-                    Color.black.opacity(0.8)
+                    Color.black.opacity(0.9)
                         .ignoresSafeArea()
                     
                     // Lock icon and progress ring in the center
@@ -217,8 +217,8 @@ struct DoorOpenView: View {
             isViewVisible = true
             
             //
-            let udid = getUDID()
-            mqttManager.connect(deviceSN: udid)
+            
+            mqttManager.connect()
             
 //            for door in doorStorage.doors {
 //                mqttManager.subscribeToDevice(door.devSn)
@@ -413,9 +413,7 @@ struct DoorOpenView: View {
         }
     }
     
-    func getUDID() -> String {
-        return UIDevice.current.identifierForVendor?.uuidString ?? "unknown-device"
-    }
+   
     
     func getStatusMessage() -> String {
         if lockIcon == "checkmark" {
@@ -423,7 +421,7 @@ struct DoorOpenView: View {
         } else if lockIcon == "xmark" {
             return "Access Denied"
         } else if ringColor == .yellow {
-            return "Opening..."
+            return "Verifying Please Wait..."
         }
         return "Processing..."
     }

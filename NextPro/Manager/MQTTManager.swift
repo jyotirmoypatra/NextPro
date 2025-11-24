@@ -60,8 +60,13 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
 //        mqtt = mqttClient
 //    }
     
-    func connect(deviceSN: String = "4283847520") {
-        let clientID = "down/\(deviceSN)" // Required pattern
+    func getUDID() -> String {
+        return UIDevice.current.identifierForVendor?.uuidString ?? "unknown-device"
+    }
+    
+    func connect() {
+        
+        let clientID = getUDID()
         let mqttClient = CocoaMQTT(clientID: clientID, host: "13.223.139.54", port: 1883)
         mqttClient.username = "nexpromqtt"
         mqttClient.password = "neXpr02o25MqtT"
