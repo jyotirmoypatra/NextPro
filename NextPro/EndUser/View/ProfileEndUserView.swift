@@ -8,6 +8,10 @@ import SwiftUI
 
 struct ProfileEndUserView: View {
     @State private var notificationsEnabled = true
+    @State private var navigateToUpdatePass = false
+    @State private var username = ""
+    @State private var usertype = ""
+    
     @Environment(\.dismiss) var dismiss
     @State private var goToLogin = false
 
@@ -79,6 +83,7 @@ struct ProfileEndUserView: View {
                             // Update Password
                             UserProfileRow(title: "Update Password") {
                                 // Handle password update
+                                navigateToUpdatePass = true
                             }
 
                             Divider().background(Color.white.opacity(0.15))
@@ -108,6 +113,30 @@ struct ProfileEndUserView: View {
                                 // Handle support action
                             }
                             
+                            
+                            Divider().background(Color.white.opacity(0.15))
+                            
+                            UserProfileRow(title: "Privacy Policy") {
+                                // Handle support action
+                            }
+                            
+                            Divider().background(Color.white.opacity(0.15))
+                            
+                            UserProfileRow(title: "Terms and Conditon") {
+                                // Handle support action
+                            }
+
+                            
+                            
+                            Divider().background(Color.white.opacity(0.15))
+                            
+                            UserProfileRow(title: "Delete Account") {
+                                // Handle support action
+                            }
+
+                            
+                            
+                            
                             Divider().background(Color.white.opacity(0.15))
                             
                             UserProfileRow(title: "Logout") {
@@ -133,6 +162,23 @@ struct ProfileEndUserView: View {
             }
         }
         .background(Color.black.opacity(0.4))
+        
+        .navigationDestination(isPresented: $navigateToUpdatePass) {
+            if usertype != "" && username != "" {
+                CreateNewPasswordView(userType: usertype, userName: username)
+                    .navigationBarBackButtonHidden(true)
+                    .navigationBarHidden(true)
+                    .interactiveDismissDisabled(true)
+            }
+           
+        }
+        
+        .onAppear{
+            usertype = UserDefaults.standard.string(forKey: "user_type") ?? ""
+            username = UserDefaults.standard.string(forKey: "username") ?? ""
+            print("username:\(username)")
+            print("usertype:\(usertype)")
+        }
     }
     func navigateToLogin() {
         goToLogin = true
@@ -168,7 +214,7 @@ struct UserProfileRow: View {
                     .font(.system(size: 15, weight: .medium))
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 30) // ⬅️ consistent padding top/bottom
+            .padding(.vertical, 30) // 
             .contentShape(Rectangle()) // makes the entire row tappable
         }
     }
