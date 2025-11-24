@@ -140,6 +140,16 @@ struct OpenDoorEndUserView: View {
 
             await CardStorage.loadCards()
         }
+        .onDisappear {
+            // Stop BLE scanning and RSSI monitoring when leaving this view
+            print("🛑 OpenDoorEndUserView disappeared - stopping BLE operations")
+            bleManager.stopMonitoringDevice()
+            bleManager.stopContinuousScanning()
+            bleManager.stopScanning()
+            
+            // Optional: Disconnect MQTT if needed
+            // mqttManager.disconnect()
+        }
     }
 
 
