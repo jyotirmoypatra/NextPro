@@ -14,6 +14,9 @@ struct ProfileEndUserView: View {
     @State private var usertype = ""
     @State private var fullName = ""
     @State private var phoneNumber = ""
+    @State private var showWebView = false
+    @State private var webViewURL = ""
+    @State private var webViewTitle = ""
     
     @Environment(\.dismiss) var dismiss
     @State private var goToLogin = false
@@ -21,8 +24,6 @@ struct ProfileEndUserView: View {
    
     var body: some View {
         ZStack {
-           
-
             VStack(spacing: 0) {
                 // MARK: - Header
                 HStack {
@@ -122,13 +123,19 @@ struct ProfileEndUserView: View {
                             Divider().background(Color.white.opacity(0.15))
                             
                             UserProfileRow(title: "Privacy Policy") {
-                                // Handle support action
+                                openWebView(
+                                    url: "https://www.google.com/",
+                                    title: "Privacy Policy"
+                                )
                             }
                             
                             Divider().background(Color.white.opacity(0.15))
                             
                             UserProfileRow(title: "Terms and Conditon") {
-                                // Handle support action
+                                openWebView(
+                                    url: "https://www.google.com/",
+                                    title: "Terms and Conditions"
+                                )
                             }
 
                             
@@ -165,6 +172,17 @@ struct ProfileEndUserView: View {
                     .padding(.bottom, 40)
                 }
             }
+            
+            // WebView Modal Overlay
+            if showWebView {
+                WebViewModal(
+                    url: webViewURL,
+                    title: webViewTitle,
+                    isPresented: $showWebView
+                )
+                .transition(.opacity)
+                .zIndex(100)
+            }
         }
         .background(Color.black.opacity(0.4))
         
@@ -200,6 +218,15 @@ struct ProfileEndUserView: View {
         print("usertype:\(usertype)")
         print("fullName:\(fullName)")
         print("phoneNumber:\(phoneNumber)")
+    }
+    
+    // MARK: - Open WebView Function
+    func openWebView(url: String, title: String) {
+        webViewURL = url
+        webViewTitle = title
+        withAnimation {
+            showWebView = true
+        }
     }
     
     func navigateToLogin() {
