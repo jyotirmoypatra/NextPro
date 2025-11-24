@@ -9,8 +9,11 @@ import SwiftUI
 struct ProfileEndUserView: View {
     @State private var notificationsEnabled = true
     @State private var navigateToUpdatePass = false
+    @State private var navigateToEditProfile = false
     @State private var username = ""
     @State private var usertype = ""
+    @State private var fullName = ""
+    @State private var phoneNumber = ""
     
     @Environment(\.dismiss) var dismiss
     @State private var goToLogin = false
@@ -56,16 +59,16 @@ struct ProfileEndUserView: View {
                                 .clipShape(Circle())
                                 .shadow(radius: 6)
 
-                            Text("James Arthur")
+                            Text(fullName.isEmpty ? "User Name" : fullName)
                                 .font(.custom("Inter-Medium", size: 16))
                                 .foregroundColor(.white)
 
-                            Text("+8353753535")
+                            Text(phoneNumber.isEmpty ? "Phone Number" : phoneNumber)
                                 .font(.custom("Inter-Regular", size: 13))
                                 .foregroundColor(.gray)
 
                             Button(action: {
-                                // Edit profile action
+                                navigateToEditProfile = true
                             }) {
                                 Text("Edit Profile")
                                     .font(.system(size: 15, weight: .semibold))
@@ -173,28 +176,47 @@ struct ProfileEndUserView: View {
            
         }
         
+        .navigationDestination(isPresented: $navigateToEditProfile) {
+            EditProfileView()
+        }
+        
+        .onChange(of: navigateToEditProfile) { newValue in
+            // Refresh data when returning from Edit Profile
+            if !newValue {
+                loadUserData()
+            }
+        }
+        
         .onAppear{
-            usertype = UserDefaults.standard.string(forKey: "user_type") ?? ""
-            username = UserDefaults.standard.string(forKey: "username") ?? ""
-            print("username:\(username)")
-            print("usertype:\(usertype)")
+            loadUserData()
         }
     }
+    
+    func loadUserData() {
+        usertype = UserDefaults.standard.string(forKey: "user_type") ?? ""
+        username = UserDefaults.standard.string(forKey: "username") ?? ""
+        fullName = UserDefaults.standard.string(forKey: "user_full_name") ?? "James Arthur"
+        phoneNumber = UserDefaults.standard.string(forKey: "user_phone") ?? "+8353753535"
+        print("username:\(username)")
+        print("usertype:\(usertype)")
+        print("fullName:\(fullName)")
+        print("phoneNumber:\(phoneNumber)")
+    }
+    
     func navigateToLogin() {
         goToLogin = true
     }
     
     // MARK: - Force Reset to Login
-       func resetToLogin() {
-           DispatchQueue.main.async {
-               if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                  let window = scene.windows.first {
-                   window.rootViewController = UIHostingController(rootView: LoginView())
-                   window.makeKeyAndVisible()
-               }
-           }
-       }
-
+    func resetToLogin() {
+        DispatchQueue.main.async {
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = scene.windows.first {
+                window.rootViewController = UIHostingController(rootView: LoginView())
+                window.makeKeyAndVisible()
+            }
+        }
+    }
 }
 
 // MARK: - Uniform Profile Row
