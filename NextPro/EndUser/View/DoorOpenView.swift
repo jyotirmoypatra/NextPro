@@ -30,6 +30,8 @@ struct DoorOpenView: View {
     @State private var lockIcon: String = "lock.fill"
     @State private var rssiTimer: Timer?
     @State private var isScanningActive = false
+    @State private var isViewVisible = false
+    @State private var startMonitoringTask: DispatchWorkItem?
     
     @State private var selectedCard: CardModelUser?
     
@@ -211,6 +213,8 @@ struct DoorOpenView: View {
         }
         .background(Color.black.opacity(0.8))
         .task{
+            // Mark view as visible
+            isViewVisible = true
             
             //
             let udid = getUDID()
@@ -236,7 +240,14 @@ struct DoorOpenView: View {
             
             await doorStorage.loadDoors()
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            // Create a cancellable work item for delayed monitoring start
+            let workItem = DispatchWorkItem { [weak bleManager] in
+                // Only start monitoring if view is still visible
+                guard isViewVisible else {
+                    print("⚠️ View is no longer visible. Skipping monitoring start.")
+                    return
+                }
+                
                 if bluetoothManager.state != .poweredOn  {
                     print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
                     showBluetoothAlert = true
@@ -247,15 +258,28 @@ struct DoorOpenView: View {
                 print("🟢 Auto-open enabled — starting continuous BLE scanning...")
                 
                 // Start continuous scanning
-                bleManager.startContinuousScanning()
+                bleManager?.startContinuousScanning()
                 isScanningActive = true
                 
                 // Begin monitoring RSSI and auto-open logic
                 monitorAndAutoOpenNearbyDoor()
             }
+            
+            // Store the work item so it can be cancelled
+            startMonitoringTask = workItem
+            
+            // Schedule the work item with 2-second delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: workItem)
         }
         .onDisappear {
             print("🛑 DoorOpenView disappeared — stopping all BLE and timers")
+            
+            // Mark view as not visible
+            isViewVisible = false
+            
+            // Cancel any pending monitoring start task
+            startMonitoringTask?.cancel()
+            startMonitoringTask = nil
             
             // Stop continuous BLE scanning & monitoring
             bleManager.stopContinuousScanning()
@@ -285,6 +309,12 @@ struct DoorOpenView: View {
             case .active:
                 print("☀️ App became active — restarting BLE scanning and monitoring")
                 
+                // Only restart if view is still visible
+                guard isViewVisible else {
+                    print("⚠️ View is not visible. Skipping BLE restart.")
+                    return
+                }
+                
                 // Check if Bluetooth is available
                 if bluetoothManager.state != .poweredOn {
                     print("⚠️ Bluetooth is OFF. Cannot restart auto-open.")
@@ -295,6 +325,11 @@ struct DoorOpenView: View {
                 
                 // Restart BLE scanning with a small delay to ensure everything is ready
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    // Double-check view is still visible
+                    guard isViewVisible else {
+                        print("⚠️ View is no longer visible. Skipping BLE restart.")
+                        return
+                    }
                     print("🔄 Restarting BLE scanning...")
                     bleManager.startContinuousScanning()
                     isScanningActive = true

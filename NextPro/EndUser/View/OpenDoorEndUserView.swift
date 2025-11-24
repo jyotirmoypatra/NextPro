@@ -22,6 +22,8 @@ struct OpenDoorEndUserView: View {
     @State private var showBluetoothAlert = false
     @StateObject private var bleManager = BLEManager()
     @State private var lastDoorRSSI: [String: Int] = [:]
+    @State private var isViewVisible = false
+    @State private var startMonitoringTask: DispatchWorkItem?
     var body: some View {
         ZStack {
         
@@ -127,6 +129,8 @@ struct OpenDoorEndUserView: View {
                 )
             }
         .task {
+            // Mark view as visible
+            isViewVisible = true
             
             // CALL DEVICE DETAILS API
             await deviceVM.fetchDeviceDetails()
@@ -141,6 +145,13 @@ struct OpenDoorEndUserView: View {
             await CardStorage.loadCards()
         }
         .onDisappear {
+            // Mark view as not visible
+            isViewVisible = false
+            
+            // Cancel any pending monitoring start task
+            startMonitoringTask?.cancel()
+            startMonitoringTask = nil
+            
             // Stop BLE scanning and RSSI monitoring when leaving this view
             print("🛑 OpenDoorEndUserView disappeared - stopping BLE operations")
             bleManager.stopMonitoringDevice()
