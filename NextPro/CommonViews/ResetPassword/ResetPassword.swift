@@ -13,109 +13,114 @@ struct ResetPassword: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
+            ZStack(alignment: .top) {
                 // Background image
                 Image("backgroundimg")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
                     .ignoresSafeArea()
-                
                 
                 // Black translucent overlay
-                Color.black.opacity(0.8)
+                Color.black.opacity(0.9)
                     .ignoresSafeArea()
                 
-                VStack(spacing: 25) {
-                    Spacer().frame(height: 40)
-                    
-                    // Header Text
-                    VStack(spacing: 5) {
-                        Text("RESET YOUR PASSWORD")
-                            .font(.custom("Inter-SemiBold", size: 20))
-                            .foregroundColor(.white)
-                        Text("Enter the email associated with your account, and we'll send you a code to reset your password securely.")
-                            .font(.custom("Inter-Regular", size: 16))
-                            .foregroundColor(Color.gray.opacity(0.8))
-                            .multilineTextAlignment(.center)
-                    }
-                    
-                    .padding(.bottom, 40)
-                    
-                    // Email Field
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 0) {
-                            Text("Email Address")
-                                .font(.custom("Inter-Medium", size: 16))
-                                .foregroundColor(.white)
-                            Text(" *")
-                                .font(.system(size: 14))
-                                .foregroundColor(.red)
-                        }
+                // Scrollable Content
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 25) {
+                        Spacer().frame(height: 40)
                         
-                        ZStack(alignment: .leading) {
-                            if email.isEmpty {
-                                Text("Type..")
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .foregroundColor(Color.white.opacity(0.5)) // light placeholder
-                                    .padding(.leading, 12)
+                        // Header Text
+                        VStack(spacing: 5) {
+                            Text("RESET YOUR PASSWORD")
+                                .font(.custom("Inter-SemiBold", size: 20))
+                                .foregroundColor(.white)
+                            Text("Enter the email associated with your account, and we'll send you a code to reset your password securely.")
+                                .font(.custom("Inter-Regular", size: 16))
+                                .foregroundColor(Color.gray.opacity(0.8))
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding(.bottom, 40)
+                        
+                        // Email Field
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 0) {
+                                Text("Email Address")
+                                    .font(.custom("Inter-Medium", size: 16))
+                                    .foregroundColor(.white)
+                                Text(" *")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.red)
                             }
                             
-                            TextField("", text: $email)
-                                .padding()
-                                .background(Color.white.opacity(0.15))
-                                .cornerRadius(8)
-                                .foregroundColor(.white)
-                                .autocapitalization(.none)
-                                .disableAutocorrection(true)
-                        }
-                        
-                    }
-                    
-                    
-                    
-                    Spacer() // pushes content to bottom
-                    
-                    // Bottom section
-                    VStack(spacing: 16) {
-                        // Login Button
-                        Button(action: {
-                            print("CONFIRM tapped")
-                        }) {
-                            Text("CONFIRM")
-                                .font(.custom("Inter-SemiBold", size: 16))
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.white)
-                                .cornerRadius(10)
-                        }
-                        
-                        Button(action: {
-                            dismiss() 
-                        }) {
-                            HStack(spacing: 8) {
-                                Image("undoicon")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 20, height: 20)
-                                    .foregroundColor(.gray)
+                            ZStack(alignment: .leading) {
+                                if email.isEmpty {
+                                    Text("Enter Email")
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .foregroundColor(Color.white.opacity(0.5))
+                                        .padding(.leading, 14)
+                                }
                                 
-                                Text("Return to log in")
-                                    .foregroundColor(.gray)
+                                TextField("", text: $email)
+                                    .foregroundColor(.white)
                                     .font(.custom("Inter-Regular", size: 16))
+                                    .padding(.horizontal, 14)
+                                    .frame(height: 50)
+                                    .background(Color.white.opacity(0.15))
+                                    .cornerRadius(10)
+                                    .autocapitalization(.none)
+                                    .disableAutocorrection(true)
                             }
-                            .font(.system(size: 14))
                         }
-                        .buttonStyle(.plain) // prevents default blue tint + removes highlight
+                        
+                        Spacer().frame(height: 150)  // Prevent cut-off
                     }
-                    .padding(.bottom, 30)
+                    .padding(.horizontal, 30)
+                }
+                
+                // FOOTER - Fixed at Bottom
+                VStack(spacing: 16) {
+                    // Confirm Button
+                    Button(action: {
+                        print("CONFIRM tapped")
+                    }) {
+                        Text("CONFIRM")
+                            .font(.custom("Inter-SemiBold", size: 16))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(10)
+                    }
+                    
+                    Button(action: {
+                        dismiss() 
+                    }) {
+                        HStack(spacing: 8) {
+                            Image("undoicon")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
+                                .foregroundColor(.gray)
+                            
+                            Text("Return to log in")
+                                .foregroundColor(.gray)
+                                .font(.custom("Inter-Regular", size: 16))
+                        }
+                        .font(.system(size: 14))
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 30)
+                .padding(.bottom, 35)
+                .background(.black)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
             .onTapGesture {
                 UIApplication.shared.hideKeyboard()
             }
-        } .ignoresSafeArea(.keyboard, edges: .bottom)
+        }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 }
 
