@@ -13,11 +13,13 @@ struct LoginView: View {
     @StateObject private var vm = LoginViewModel()
     @StateObject private var toastManager = ToastManager.shared
     @State private var navigateToCreatePassword = false
+    @State private var navigateToResetPassword = false
     @State private var showNoInternetAlert = false
     @State private var showLoginFailedAlert = false
     @State private var showPassword = false
     @State private var navigateToHome = false
     @State private var isAdmin = false
+    @State private var isDeviceprov = false
     
     var body: some View {
         NavigationStack {
@@ -128,13 +130,13 @@ struct LoginView: View {
                                     .padding(.trailing, 14)
                                 }
 
-                                HStack {
-                                    Spacer()
-                                    Text("Forgot Password?")
-                                        .font(.custom("Inter-Regular", size: 14))
-                                        .foregroundColor(.white)
-                                        .padding(.top, 6)
-                                }
+//                                HStack {
+//                                    Spacer()
+//                                    Text("Forgot Password?")
+//                                        .font(.custom("Inter-Regular", size: 14))
+//                                        .foregroundColor(.white)
+//                                        .padding(.top, 6)
+//                                }
                             }
 
                             Spacer().frame(height: 150)  // Prevent cut-off
@@ -151,30 +153,43 @@ struct LoginView: View {
                                 return
                             }
 
-                            Task {
-                               
-                                await vm.login()
-                                if vm.loginSuccess {
-                                    
-                                    // Show success toast
-                                    toastManager.show(
-                                        message: "Login successfully!",
-                                        type: .success,
-                                        duration: 1.0
-                                    )
-                                    
-                                    // Navigate after a short delay to show the toast
-                                    try? await Task.sleep(nanoseconds: 1_000_000_000)
-                                    
-                                   // navigateToCreatePassword = true
-                                    
-                                    isAdmin = (vm.userType == "facility_manager")
-                                    navigateToHome = true
-                                    
-                                } else {
-                                    showLoginFailedAlert = true
+                            
+                            if vm.email == "admin" && vm.password == "admin"{
+                                navigateToHome = true
+                                isDeviceprov = true
+                            }else{
+                                Task {
+                                   
+                                    await vm.login()
+                                    if vm.loginSuccess {
+                                        
+                                        // Show success toast
+                                        toastManager.show(
+                                            message: "Login successfully!",
+                                            type: .success,
+                                            duration: 1.0
+                                        )
+                                        
+                                        // Navigate after a short delay to show the toast
+                                        try? await Task.sleep(nanoseconds: 1_000_000_000)
+                                        
+                                       // navigateToCreatePassword = true
+                                        
+                                        isAdmin = (vm.userType == "facility_manager")
+                                        if vm.isPasswordReset{
+                                            navigateToHome = true
+                                        }else{
+                                            navigateToCreatePassword = true
+                                        }
+                                        
+                                        
+                                    } else {
+                                        showLoginFailedAlert = true
+                                    }
                                 }
                             }
+                            
+                           
                         }) {
                             Text("LOG IN")
                                 .font(.custom("Inter-SemiBold", size: 16))
@@ -186,13 +201,25 @@ struct LoginView: View {
                         }
 
                         HStack {
-                            Text("Don't have an account yet?")
-                                .foregroundColor(.gray)
-                                .font(.custom("Inter-Regular", size: 16))
-
-                            Text("Sign Up")
-                                .foregroundColor(.white)
-                                .font(.custom("Inter-Bold", size: 16))
+//                            Text("Don't have an account yet?")
+//                                .foregroundColor(.gray)
+//                                .font(.custom("Inter-Regular", size: 16))
+//
+//                            Text("Sign Up")
+//                                .foregroundColor(.white)
+//                                .font(.custom("Inter-Bold", size: 16))
+                            
+                            
+                            Button(action: {
+                                
+                                navigateToResetPassword = true
+                                
+                            }) {
+                                Text("Forgot Password?")
+                                    .font(.custom("Inter-Regular", size: 14))
+                                    .foregroundColor(.white)
+                                    .padding(.top, 6)
+                            }
                         }
 
                     }
@@ -227,20 +254,37 @@ struct LoginView: View {
             }
             .navigationBarBackButtonHidden(true)
             .ignoresSafeArea(.keyboard, edges: .bottom) // The key to stop resize
-//            .navigationDestination(isPresented: $navigateToCreatePassword) {
-//                CreateNewPasswordView(userType: vm.userType, userName: vm.userName)
-//                    .navigationBarBackButtonHidden(true)
-//                    .navigationBarHidden(true)
-//                    .interactiveDismissDisabled(true)
-//            }
+            .navigationDestination(isPresented: $navigateToCreatePassword) {
+                CreateNewPasswordView(userType: vm.userType, userName: vm.userName)
+                    .navigationBarBackButtonHidden(true)
+                    .navigationBarHidden(true)
+                    .interactiveDismissDisabled(true)
+            }
+            
+            .navigationDestination(isPresented: $navigateToResetPassword) {
+              ResetPassword()
+                    .navigationBarBackButtonHidden(true)
+                    .navigationBarHidden(true)
+                    .interactiveDismissDisabled(true)
+            }
             
             .navigationDestination(isPresented: $navigateToHome) {
                 if isAdmin {
-                    HomeViewAdmin()
+                 //   HomeViewAdmin()
+                   // OnboardPageDeviceScanView()
+                    HomeViewEndUser()
+                    
                         .navigationBarBackButtonHidden(true)
                         .navigationBarHidden(true)
-                } else {
+                } else if isDeviceprov{
+                    OnboardPageDeviceScanView()
+                        .navigationBarBackButtonHidden(true)
+                        .navigationBarHidden(true)
+                }
+                else {
+                   
                     HomeViewEndUser()
+                    //OnboardPageDeviceScanView()
                         .navigationBarBackButtonHidden(true)
                         .navigationBarHidden(true)
                 }

@@ -33,6 +33,9 @@ struct DoorOpenView: View {
     
     @State private var selectedCard: CardModelUser?
     
+    @State private var doorId : Int?
+    @State private var AceesMessage : String?
+    
     
     
     var body: some View {
@@ -98,7 +101,7 @@ struct DoorOpenView: View {
                                // Image("bluetooth")
                                    // .frame(width: 30,height: 30)
                                 
-                                Text("Walk closer to the door")
+                                Text(AceesMessage ?? "Walk closer to the door")
                                     .font(.custom("Inter-SemiBold", size: 16))
                                     .foregroundColor(.white.opacity(0.5))
                             }.padding(.top,-28)
@@ -191,9 +194,9 @@ struct DoorOpenView: View {
             //
             mqttManager.connect()
             
-            for door in doorStorage.doors {
-                mqttManager.subscribeToDevice(door.devSn)
-            }
+//            for door in doorStorage.doors {
+//                mqttManager.subscribeToDevice(door.devSn)
+//            }
             mqttManager.subscribeToDevice("4283847520")
             
             await cardStorage.loadCards()
@@ -302,14 +305,30 @@ struct DoorOpenView: View {
             else { return }
             
             let type = info["type"] as? Int
+            doorId = info["doorID"] as? Int
             if type == 0 {
                 animateSuccess()
-                speakText("Door opened successfully.")
+                if doorId == 1{
+                    AceesMessage =  "Door 1 opened successfully."
+                    speakText("Door 1 opened successfully.")
+                }else{
+                    AceesMessage =  "Door 2 opened successfully."
+                    speakText("Door 2 opened successfully.")
+                }
+               
                 print("succes event recievd")
                 
             } else {
                 animateFailure()
-                speakText("Access Denied.")
+                if doorId == 1{
+                    AceesMessage =  "Door 1 Access Denied"
+                    speakText("Door 1 Access Denied.")
+                }else{
+                    AceesMessage =  "Door 2 Access Denied"
+                    speakText("Door 2 Access Denied.")
+                }
+                
+               // speakText("Access Denied.")
                 print("succes event recievd")
                 
             }
@@ -377,6 +396,8 @@ struct DoorOpenView: View {
                 lockIcon = "lock.fill"
                 isOpening = false
                 progress = 0.0
+                AceesMessage = "Walk closer to the door."
+                doorId = nil
             }
         }
     }

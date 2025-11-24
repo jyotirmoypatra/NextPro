@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var showSplash = true
     @State private var isLoggedIn = false
     @State private var isAdmin = false
+    @State private var isPasswordReset = false
     
     var body: some View {
         ZStack {
@@ -24,22 +25,44 @@ struct ContentView: View {
                    // LoginView()
                     
                     
-                    if isLoggedIn {
-                        if isAdmin {
-                            HomeViewAdmin()
-                                .navigationBarBackButtonHidden(true)
-                                .navigationBarHidden(true)
-                        } else {
-                            HomeViewEndUser()
-                                .navigationBarBackButtonHidden(true)
-                                .navigationBarHidden(true)
-                        }
-                    } else {
-                        LoginView()
-                            .navigationBarBackButtonHidden(true)
-                            .navigationBarHidden(true)
-                    }
+//                    if isLoggedIn {
+//                        if isAdmin {
+//                           // HomeViewAdmin()
+//                            
+//                            if isPasswordReset{
+//                                HomeViewEndUser()
+//                                      .navigationBarBackButtonHidden(true)
+//                                      .navigationBarHidden(true)
+//                            }else{
+//                                CreateNewPasswordView(userType: UserDefaults.standard.string(forKey: "user_type") ?? "", userName:  UserDefaults.standard.string(forKey: "username") ?? "")
+//                                    .navigationBarBackButtonHidden(true)
+//                                    .navigationBarHidden(true)
+//                            }
+//                            
+//                         
+//                        } else {
+//                            if isPasswordReset {
+//                                HomeViewEndUser()
+//                                    .navigationBarBackButtonHidden(true)
+//                                    .navigationBarHidden(true)
+//                            }else{
+//                                CreateNewPasswordView(userType: UserDefaults.standard.string(forKey: "user_type") ?? "", userName:  UserDefaults.standard.string(forKey: "username") ?? "")
+//                                    .navigationBarBackButtonHidden(true)
+//                                    .navigationBarHidden(true)
+//                            }
+//                            
+//                        }
+//                    } else {
+//                        LoginView()
+//                            .navigationBarBackButtonHidden(true)
+//                            .navigationBarHidden(true)
+//                    }
                     
+                    
+                    
+                    HomeViewEndUser()
+                        .navigationBarBackButtonHidden(true)
+                        .navigationBarHidden(true)
                     
                 }
                 .transition(.move(edge: .trailing))
@@ -67,6 +90,7 @@ struct ContentView: View {
             let access = KeychainManager.shared.get("access_token")
             let userId = UserDefaults.standard.string(forKey: "user_id")
             let userType = UserDefaults.standard.string(forKey: "user_type")
+            isPasswordReset = UserDefaults.standard.bool(forKey: "isPssswordReset")
 
             if access != nil, userId != nil {
                 isLoggedIn = true
@@ -74,6 +98,8 @@ struct ContentView: View {
             } else {
                 isLoggedIn = false
             }
+       
+        
         }
 }
 

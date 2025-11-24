@@ -32,18 +32,24 @@ class DeviceConfigManager {
             devMac: "d8:3b:da:36:53:62",
             eKey: "41f888c5017576eb80f030fe8730851d000000000000000000000000000000001000"
         ),
-//        DeviceConfig(
-//            name: "TC434(Access control machine)",
-//            devSn: "4286749203",
-//            devMac: "d8:3b:da:37:04:92",
-//            eKey: "b7becb164c2ed80ccb349cebc403c89f000000000000000000000000000000001000"
-//        ),
-//        DeviceConfig(
-//            name: "M230 (Access control machine)",
-//            devSn: "4282705968",
-//            devMac: "58:cf:79:1a:89:ce",
-//            eKey: "92fc410e8d125331c26faf21c7e77292000000000000000000000000000000001000"
-//        ),
+        DeviceConfig(
+            name: "BC220(Access control machine)",
+            devSn: "4282184653",
+            devMac: "a0:76:4e:5a:ae:a2",
+            eKey: "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000"
+        ),
+        DeviceConfig(
+            name: "TC434(Access control machine)",
+            devSn: "4286749203",
+            devMac: "d8:3b:da:37:04:92",
+            eKey: "b7becb164c2ed80ccb349cebc403c89f000000000000000000000000000000001000"
+        ),
+        DeviceConfig(
+            name: "M230 (Access control machine)",
+            devSn: "4282705968",
+            devMac: "58:cf:79:1a:89:ce",
+            eKey: "92fc410e8d125331c26faf21c7e77292000000000000000000000000000000001000"
+        ),
 //        DeviceConfig(
 //            name: "M230(Access control reader)",
 //            devSn: "4282894706",
@@ -56,18 +62,18 @@ class DeviceConfigManager {
 //            devMac: "58:cf:79:1b:0b:42",
 //            eKey: "27f9462cca787604a57494c98290b42b000000000000000000000000000000001000"
 //        ),
-//        DeviceConfig(
-//            name: "M230(Access control reader)",
-//            devSn: "4287123590",
-//            devMac: "58:cf:79:1a:c4:86",
-//            eKey: "d8829cf1e861620e2d42b2f4af4fd4db000000000000000000000000000000001000"
-//        ),
         DeviceConfig(
             name: "M230(Access control reader)",
-            devSn: "4280125893",
-            devMac: "58:cf:79:1a:8d:0e",
-            eKey: "3ca884ca4f8d16e28199c11df14cfbcf000000000000000000000000000000001000"
+            devSn: "4287123590",
+            devMac: "58:cf:79:1a:c4:86",
+            eKey: "d8829cf1e861620e2d42b2f4af4fd4db000000000000000000000000000000001000"
         ),
+//        DeviceConfig(
+//            name: "M230(Access control reader)",
+//            devSn: "4280125893",
+//            devMac: "58:cf:79:1a:8d:0e",
+//            eKey: "3ca884ca4f8d16e28199c11df14cfbcf000000000000000000000000000000001000"
+//        ),
         
 //        DeviceConfig(
 //            name: "BC220(Access control machine)",

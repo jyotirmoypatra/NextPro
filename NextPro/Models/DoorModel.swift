@@ -172,13 +172,14 @@ class DoorStorageManager: ObservableObject {
                     eKey: "97b4c368894a17be950800a8022b7a21000000000000000000000000000000001000",
                     cardno: "1557049426"
                 ),
-//                DoorModelUser(
-//                    name: "Iron Hive Gym: Door 2",
-//                    devSn: "4283847520",
-//                    devMac: "d8:3b:da:36:53:62",
-//                    eKey: "41f888c5017576eb80f030fe8730851d000000000000000000000000000000001000",
-//                    cardno: "1557198962"
-//                )
+                DoorModelUser(
+                    name: "Iron Hive Gym: Door 3",
+                    devSn: "4287123590",
+                    devMac: "58:cf:79:1a:c4:86",
+                    doorID: 3,
+                    eKey: "d8829cf1e861620e2d42b2f4af4fd4db000000000000000000000000000000001000",
+                    cardno: "2988462596"
+                )
             ]
             
             self.doors = fetchedDoors

@@ -53,7 +53,7 @@ class UserCardStorageManager: ObservableObject {
         
         do {
           
-            let fetchcard = CardModelUser(id: UUID(), userName: "Peter Parker", companyName: "NextPro", FacilityName: "IRON HIVE GYM", duration: "09/26", cardno: "1557049426")
+            let fetchcard = CardModelUser(id: UUID(), userName: "Peter Parker", companyName: "NextPro", FacilityName: "IRON HIVE GYM", duration: "09/26", cardno: "2988462596")
             
             self.card = fetchcard
             print("✅ Loaded card from API/Mock.")

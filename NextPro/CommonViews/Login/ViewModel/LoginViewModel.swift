@@ -21,6 +21,7 @@ class LoginViewModel: ObservableObject {
     @Published var loginSuccess = false
     @Published var userType = ""
     @Published var userName = ""
+    @Published var isPasswordReset = true
 
     let network = NetworkManager.shared
 
@@ -57,6 +58,7 @@ class LoginViewModel: ObservableObject {
                 // Update values
                 userType = response.user_type ?? ""
                 userName = response.username ?? ""
+                isPasswordReset = response.isResetPassword ?? false
                 loginSuccess = true
                 
                 // Save tokens
@@ -72,6 +74,7 @@ class LoginViewModel: ObservableObject {
                 UserDefaults.standard.set(response.user_id ?? "", forKey: "user_id")
                 UserDefaults.standard.set(response.username ?? "", forKey: "username")
                 UserDefaults.standard.set(response.user_type ?? "", forKey: "user_type")
+                UserDefaults.standard.set(response.isResetPassword ?? false, forKey: "isPssswordReset")
                 
             } else {
                 // Backend error message
