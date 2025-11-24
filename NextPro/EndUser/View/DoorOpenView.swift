@@ -68,7 +68,7 @@ struct DoorOpenView: View {
                 
                 ScrollView(.vertical, showsIndicators: false){
                     VStack{
-                       Spacer(minLength: 80)
+                    
                         VStack(spacing: 40) {
                             // 🔒 Lock + Progress ring (placed above card)
                             
@@ -96,15 +96,6 @@ struct DoorOpenView: View {
                             }
                             
                             
-                            // “Hold to card reader” text (below card)
-                            HStack(spacing: 6) {
-                               // Image("bluetooth")
-                                   // .frame(width: 30,height: 30)
-                                
-                                Text(AceesMessage ?? "Walk closer to the door")
-                                    .font(.custom("Inter-SemiBold", size: 16))
-                                    .foregroundColor(.white.opacity(0.5))
-                            }.padding(.top,-28)
                             
                             // 🪪 Card (centered in the view)
                             VStack(spacing: 32) {
@@ -169,10 +160,21 @@ struct DoorOpenView: View {
                             .padding(.horizontal, 20)
                             
                            
+                            HStack(spacing: 6) {
+                               // Image("bluetooth")
+                                   // .frame(width: 30,height: 30)
+                                
+                                Text(AceesMessage ?? "Walk closer to the door")
+                                    .font(.custom("Inter-SemiBold", size: 16))
+                                    .foregroundColor(.white.opacity(0.5))
+                            }.padding(.top,-28)
+                            
+                            
+                            HowItWorksView()
                             
                             
                         }
-                        Spacer(minLength: 80)
+              
                         
                         //animation here
 //                        LottieView(name: "Read_Sensor_NFC")
@@ -472,3 +474,33 @@ struct DoorOpenView: View {
     
     
 }
+
+
+struct HowItWorksView: View {
+    var body: some View {
+        VStack(spacing: 6) {
+            
+            // Centered Title
+            HStack {
+                Spacer()
+                Text("How does it work?")
+                    .font(.custom("Inter-SemiBold", size: 16))
+                    .foregroundColor(.white)
+                Spacer()
+            }
+            
+            // Left-Aligned Content
+            VStack(alignment: .leading, spacing: 8) {
+                Text("The 'Digital Card' will be activated automatically when you open the app.")
+                Text("When activated, walk very close to the door reader and tap your phone.")
+                Text("Door unlocks if you have valid access and vice versa.")
+                Text("The 'Digital Card' is deactivated when the app is minimized, closed, or screen is off.")
+                Text("Scanning resumes automatically when the app returns to the foreground.")
+            }
+            .font(.custom("Inter-Regular", size: 14))
+            .foregroundColor(.white)
+            .padding(.horizontal, 20)
+        }
+    }
+}
+
