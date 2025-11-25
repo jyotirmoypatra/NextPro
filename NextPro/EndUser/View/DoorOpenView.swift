@@ -553,7 +553,7 @@ struct HowItWorksView: View {
             }
             
             // Left-Aligned Content
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 15) {
                 Text("The 'Digital Card' will be activated automatically when you open the app.")
                 Text("When activated, walk very close to the door reader and tap your phone.")
                 Text("Door unlocks if you have valid access and vice versa.")
