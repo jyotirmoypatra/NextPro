@@ -92,12 +92,12 @@ struct ProfileEndUserView: View {
                                 }
                             }
 
-                            Divider().background(Color.white.opacity(0.15))
-
-                            // Support
-                            UserProfileRow(title: "Support") {
-                                // Handle support action
-                            }
+//                            Divider().background(Color.white.opacity(0.15))
+//
+//                            // Support
+//                            UserProfileRow(title: "Support") {
+//                                // Handle support action
+//                            }
 
                             Divider().background(Color.white.opacity(0.15))
 
@@ -188,7 +188,7 @@ struct ProfileEndUserView: View {
         
         .navigationDestination(isPresented: $navigateToUpdatePass) {
          
-                CreateNewPasswordView(userType: usertype, userName: username)
+            CreateNewPasswordView(userType: usertype, userName: username, comingFrom: "user_profile")
                     
            
         }

@@ -9,9 +9,10 @@ import SwiftUI
 
 
 struct ResetPassword: View {
-    @State private var email = ""
     @Environment(\.dismiss) private var dismiss
     @State private var navigateToVerifyOtp = false
+    @StateObject private var viewModel = ForgetPasswordRequestViewModel()
+
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
@@ -55,14 +56,14 @@ struct ResetPassword: View {
                             }
                             
                             ZStack(alignment: .leading) {
-                                if email.isEmpty {
+                                if viewModel.email.isEmpty {
                                     Text("Enter Email")
                                         .font(.custom("Inter-Regular", size: 16))
                                         .foregroundColor(Color.white.opacity(0.5))
                                         .padding(.leading, 14)
                                 }
                                 
-                                TextField("", text: $email)
+                                TextField("", text: $viewModel.email)
                                     .foregroundColor(.white)
                                     .font(.custom("Inter-Regular", size: 16))
                                     .padding(.horizontal, 14)
@@ -84,7 +85,13 @@ struct ResetPassword: View {
                     // Confirm Button
                     Button(action: {
                         print("CONFIRM tapped")
-                        navigateToVerifyOtp = true
+                      //  navigateToVerifyOtp = true
+                        Task {
+                                await viewModel.sendRequest()
+                                if viewModel.success {
+                                    navigateToVerifyOtp = true
+                                }
+                            }
                     }) {
                         Text("CONFIRM")
                             .font(.custom("Inter-SemiBold", size: 16))
@@ -117,6 +124,23 @@ struct ResetPassword: View {
                 .padding(.bottom, 35)
                 .background(.black)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                
+                
+                // LOADING OVERLAY
+                if viewModel.isLoading {
+                    ZStack {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.8)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                }
+                
+                
             }
             .onTapGesture {
                 UIApplication.shared.hideKeyboard()

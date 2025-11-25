@@ -11,6 +11,8 @@ import SwiftUI
 struct CreateNewPasswordView: View {
     var userType: String
     var userName: String
+    var comingFrom: String
+    @Environment(\.dismiss) private var dismiss
     @StateObject var network = NetworkManager.shared
     @StateObject private var viewModel = CreateNewPasswordViewModel()
     @StateObject private var toastManager = ToastManager.shared
@@ -19,7 +21,7 @@ struct CreateNewPasswordView: View {
     @State private var showUpdateFailedAlert = false
     @State private var navigateToHome = false
     @State private var isAdmin = false
-
+    @State private var showSuccessUpdateAlert = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -159,8 +161,15 @@ struct CreateNewPasswordView: View {
                                 // Navigate after a short delay to show the toast
                                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                                 
-                                isAdmin = (userType == "facility_manager")
-                                navigateToHome = true
+                                
+                                
+                                if comingFrom == "user_profile"{
+                                    showSuccessUpdateAlert = true
+                                }else{ //come from login
+                                    isAdmin = (userType == "facility_manager")
+                                    navigateToHome = true
+                                }
+                                
                             }else{
                                 showUpdateFailedAlert = true
                             }
@@ -219,6 +228,13 @@ struct CreateNewPasswordView: View {
                             Button("OK", role: .cancel) {}
             } message: {
                 Text(viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage)
+            }
+            .alert("Success", isPresented: $showSuccessUpdateAlert) {
+                Button("OK", role: .cancel) {
+                    dismiss()
+                }
+            } message: {
+                Text("Your Password updated successfully!")
             }
             
         }

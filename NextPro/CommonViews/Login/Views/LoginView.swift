@@ -255,7 +255,7 @@ struct LoginView: View {
             .navigationBarBackButtonHidden(true)
             .ignoresSafeArea(.keyboard, edges: .bottom) // The key to stop resize
             .navigationDestination(isPresented: $navigateToCreatePassword) {
-                CreateNewPasswordView(userType: vm.userType, userName: vm.userName)
+                CreateNewPasswordView(userType: vm.userType, userName: vm.userName, comingFrom: "login")
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)

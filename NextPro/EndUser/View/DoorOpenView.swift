@@ -223,8 +223,11 @@ struct DoorOpenView: View {
 //            for door in doorStorage.doors {
 //                mqttManager.subscribeToDevice(door.devSn)
 //            }
-            mqttManager.subscribeToDevice("4283847520")
-            mqttManager.subscribeToDevice("4282184653")
+//            mqttManager.subscribeToDevice("4283847520")
+//            mqttManager.subscribeToDevice("4282184653")
+            
+            subscribeToDevice("4283847520" ,  model: "tc434")
+            subscribeToDevice("4282184653", model: "bc220")
             
             await cardStorage.loadCards()
             
@@ -366,6 +369,8 @@ struct DoorOpenView: View {
             doorId = info["doorID"] as? Int
             if type == 0 {
                 animateSuccess()
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+
                 if doorId == 1{
                     AceesMessage =  "Door 1 opened successfully."
                     speakText("Door 1 opened successfully.")
@@ -378,6 +383,8 @@ struct DoorOpenView: View {
                 
             } else {
                 animateFailure()
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+
                 if doorId == 1{
                     AceesMessage =  "Door 1 Access Denied"
                     speakText("Door 1 Access Denied.")
@@ -502,6 +509,8 @@ struct DoorOpenView: View {
                         print("🚪 Door nearby! Opening \(door.name)...")
                         doorManager.openSelectedDoor(door)
                         
+                        let generator = UIImpactFeedbackGenerator(style: .medium)
+                        generator.impactOccurred()
                         // Stop BLE scanning
                         bleManager.stopScanning()
                         bleManager.stopMonitoringDevice()

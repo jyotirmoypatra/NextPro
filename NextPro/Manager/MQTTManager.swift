@@ -82,8 +82,14 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
 
 
     // Subscribe to device response topic (example: up/{SN}/rtdata)
-    func subscribeToDevice(_ sn: String) {
-        let topic = "up/\(sn)/rtdata"
+    func subscribeToDevice(_ sn: String, model:String) {
+        var topic = ""
+        if model == "tc434"{
+             topic = "up/\(sn)/data"
+        }else{
+            topic = "up/\(sn)/rtdata"
+        }
+        
         mqtt?.subscribe(topic, qos: .qos1)
         print("📡 Subscribed to topic: \(topic)")
     }
@@ -107,8 +113,8 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
     // MARK: - CocoaMQTTDelegate
     func mqtt(_ mqtt: CocoaMQTT, didConnectAck ack: CocoaMQTTConnAck) {
         print("✅ MQTT Connected Successfully")
-        subscribeToDevice("4283847520")
-        subscribeToDevice("4282184653")
+        subscribeToDevice("4283847520" ,  model: "tc434")
+        subscribeToDevice("4282184653", model: "bc220")
         
     }
 

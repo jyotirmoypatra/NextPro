@@ -11,7 +11,7 @@ struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var fullName: String = ""
     @State private var phoneNumber: String = ""
-    @State private var email: String = ""
+ //   @State private var email: String = ""
     @State private var address: String = ""
     @State private var showSuccessAlert = false
     @State private var isLoading = false
@@ -160,34 +160,34 @@ struct EditProfileView: View {
                                 }
                             }
                             
-                            // Email Field
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack(spacing: 0) {
-                                    Text("Email Address")
-                                        .font(.custom("Inter-Medium", size: 16))
-                                        .foregroundColor(.white)
-                                }
-                                
-                                ZStack(alignment: .leading) {
-                                    if email.isEmpty {
-                                        Text("Enter your email")
-                                            .foregroundColor(Color.white.opacity(0.5))
-                                            .font(.custom("Inter-Regular", size: 16))
-                                            .padding(.leading, 14)
-                                    }
-                                    
-                                    TextField("", text: $email)
-                                        .foregroundColor(.white)
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .padding(.horizontal, 14)
-                                        .frame(height: 50)
-                                        .background(Color.white.opacity(0.15))
-                                        .cornerRadius(10)
-                                        .autocapitalization(.none)
-                                        .keyboardType(.emailAddress)
-                                        .disableAutocorrection(true)
-                                }
-                            }
+//                            // Email Field
+//                            VStack(alignment: .leading, spacing: 6) {
+//                                HStack(spacing: 0) {
+//                                    Text("Email Address")
+//                                        .font(.custom("Inter-Medium", size: 16))
+//                                        .foregroundColor(.white)
+//                                }
+//                                
+//                                ZStack(alignment: .leading) {
+//                                    if email.isEmpty {
+//                                        Text("Enter your email")
+//                                            .foregroundColor(Color.white.opacity(0.5))
+//                                            .font(.custom("Inter-Regular", size: 16))
+//                                            .padding(.leading, 14)
+//                                    }
+//                                    
+//                                    TextField("", text: $email)
+//                                        .foregroundColor(.white)
+//                                        .font(.custom("Inter-Regular", size: 16))
+//                                        .padding(.horizontal, 14)
+//                                        .frame(height: 50)
+//                                        .background(Color.white.opacity(0.15))
+//                                        .cornerRadius(10)
+//                                        .autocapitalization(.none)
+//                                        .keyboardType(.emailAddress)
+//                                        .disableAutocorrection(true)
+//                                }
+//                            }
                             
                             // Address Field
                             VStack(alignment: .leading, spacing: 6) {
@@ -289,7 +289,7 @@ struct EditProfileView: View {
         // Load existing user data from UserDefaults or API
         fullName = UserDefaults.standard.string(forKey: "user_full_name") ?? "James Arthur"
         phoneNumber = UserDefaults.standard.string(forKey: "user_phone") ?? "+8353753535"
-        email = UserDefaults.standard.string(forKey: "user_email") ?? ""
+      //  email = UserDefaults.standard.string(forKey: "user_email") ?? ""
         address = UserDefaults.standard.string(forKey: "user_address") ?? ""
     }
     
@@ -310,11 +310,7 @@ struct EditProfileView: View {
         
         // Simulate API call
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            // Save to UserDefaults (you can replace this with API call)
-            UserDefaults.standard.set(fullName, forKey: "user_full_name")
-            UserDefaults.standard.set(phoneNumber, forKey: "user_phone")
-            UserDefaults.standard.set(email, forKey: "user_email")
-            UserDefaults.standard.set(address, forKey: "user_address")
+            
             
             isLoading = false
             showSuccessAlert = true
