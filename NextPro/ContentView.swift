@@ -25,44 +25,45 @@ struct ContentView: View {
                    // LoginView()
                     
                     
-//                    if isLoggedIn {
-//                        if isAdmin {
-//                           // HomeViewAdmin()
-//                            
-//                            if isPasswordReset{
-//                                HomeViewEndUser()
-//                                      .navigationBarBackButtonHidden(true)
-//                                      .navigationBarHidden(true)
-//                            }else{
-//                                CreateNewPasswordView(userType: UserDefaults.standard.string(forKey: "user_type") ?? "", userName:  UserDefaults.standard.string(forKey: "username") ?? "")
-//                                    .navigationBarBackButtonHidden(true)
-//                                    .navigationBarHidden(true)
-//                            }
-//                            
-//                         
-//                        } else {
-//                            if isPasswordReset {
-//                                HomeViewEndUser()
-//                                    .navigationBarBackButtonHidden(true)
-//                                    .navigationBarHidden(true)
-//                            }else{
-//                                CreateNewPasswordView(userType: UserDefaults.standard.string(forKey: "user_type") ?? "", userName:  UserDefaults.standard.string(forKey: "username") ?? "")
-//                                    .navigationBarBackButtonHidden(true)
-//                                    .navigationBarHidden(true)
-//                            }
-//                            
-//                        }
-//                    } else {
-//                        LoginView()
-//                            .navigationBarBackButtonHidden(true)
-//                            .navigationBarHidden(true)
-//                    }
+                    if isLoggedIn {
+                        if isAdmin {
+                           // HomeViewAdmin()
+                            
+                            if isPasswordReset{
+                              //  HomeViewAdmin()
+                                HomeViewEndUser()
+                                      .navigationBarBackButtonHidden(true)
+                                      .navigationBarHidden(true)
+                            }else{
+                                CreateNewPasswordView(userType: UserDefaults.standard.string(forKey: "user_type") ?? "", userName:  UserDefaults.standard.string(forKey: "username") ?? "", comingFrom: "login")
+                                    .navigationBarBackButtonHidden(true)
+                                    .navigationBarHidden(true)
+                            }
+                            
+                         
+                        } else {
+                            if isPasswordReset {
+                                HomeViewEndUser()
+                                    .navigationBarBackButtonHidden(true)
+                                    .navigationBarHidden(true)
+                            }else{
+                                CreateNewPasswordView(userType: UserDefaults.standard.string(forKey: "user_type") ?? "", userName:  UserDefaults.standard.string(forKey: "username") ?? "", comingFrom: "login")
+                                    .navigationBarBackButtonHidden(true)
+                                    .navigationBarHidden(true)
+                            }
+                            
+                        }
+                    } else {
+                        LoginView()
+                            .navigationBarBackButtonHidden(true)
+                            .navigationBarHidden(true)
+                    }
                     
                     
                     
-                    HomeViewEndUser()
-                        .navigationBarBackButtonHidden(true)
-                        .navigationBarHidden(true)
+//                    HomeViewEndUser()
+//                        .navigationBarBackButtonHidden(true)
+//                        .navigationBarHidden(true)
                     
                 }
                 .transition(.move(edge: .trailing))

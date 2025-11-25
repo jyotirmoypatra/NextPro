@@ -146,7 +146,7 @@ struct ResetPassword: View {
                 UIApplication.shared.hideKeyboard()
             }
             .navigationDestination(isPresented: $navigateToVerifyOtp) {
-               VerifyOtpAccount()
+                VerifyOtpAccount(email: viewModel.email)
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)

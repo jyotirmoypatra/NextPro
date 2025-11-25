@@ -256,4 +256,54 @@ class NetworkManager: ObservableObject {
             return decoded
         }
     
+    
+    
+    //verify otp
+    func requestVerifyOtp(email: String, otp: String) async throws -> ForgetPasswordOtpVerifyresponse {
+        let urlString = APIConfig.url(APIConfig.Endpoints.forgetPasswordOtpVerify)
+            print("🔗 URL: \(urlString)")
+
+            guard let url = URL(string: urlString) else {
+                throw URLError(.badURL)
+            }
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+
+            let params = [
+                "email": email,
+                "code" : otp
+            ]
+
+            print("📤 Params: \(params)")
+
+            request.httpBody = try JSONSerialization.data(withJSONObject: params)
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📥 Forget Password Response JSON:\n\(jsonString)")
+            }
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw URLError(.badServerResponse)
+            }
+
+            // Decode response
+            let decoded = try JSONDecoder().decode(ForgetPasswordOtpVerifyresponse.self, from: data)
+
+            // Backend returns status: false for errors
+            if decoded.status == false {
+                throw NSError(domain: "ForgetPasswordError", code: 400, userInfo: [
+                    NSLocalizedDescriptionKey: decoded.message
+                ])
+            }
+
+            return decoded
+        }
+    
 }
+
+
+

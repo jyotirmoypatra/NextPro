@@ -13,6 +13,11 @@ struct VerifyOtpAccount: View {
     @State private var digit2 = ""
     @State private var digit3 = ""
     @State private var digit4 = ""
+    @State private var digit5 = ""
+    
+    @StateObject var viewModel =  VerifyOtpViewModel()
+
+    var email : String
     @State private var navigateToResetPassword = false
     @Environment(\.dismiss) private var dismiss
     var body: some View {
@@ -49,14 +54,14 @@ struct VerifyOtpAccount: View {
                     VStack(alignment: .leading, spacing: 6) {
 
                         ZStack(alignment: .center) {
-                            if digit1.isEmpty {
+                            if viewModel.digit1.isEmpty {
                                 Text("0")
                                     .font(.custom("Inter-Regular", size: 16))
                                     .foregroundColor(Color.white.opacity(0.5)) // light placeholder
                                     .padding(.leading, 12)
                             }
                             
-                            TextField("", text: $digit1)
+                            TextField("", text: $viewModel.digit1)
                                 .padding()
                                 .background(Color.white.opacity(0.15))
                                 .cornerRadius(8)
@@ -70,14 +75,14 @@ struct VerifyOtpAccount: View {
                     VStack(alignment: .leading, spacing: 6) {
 
                         ZStack(alignment: .center) {
-                            if digit2.isEmpty {
+                            if viewModel.digit2.isEmpty {
                                 Text("0")
                                     .font(.custom("Inter-Regular", size: 16))
                                     .foregroundColor(Color.white.opacity(0.5)) // light placeholder
                                     .padding(.leading, 12)
                             }
                             
-                            TextField("", text: $digit2)
+                            TextField("", text: $viewModel.digit2)
                                 .padding()
                                 .background(Color.white.opacity(0.15))
                                 .cornerRadius(8)
@@ -91,14 +96,14 @@ struct VerifyOtpAccount: View {
                     VStack(alignment: .leading, spacing: 6) {
 
                         ZStack(alignment: .center) {
-                            if digit3.isEmpty {
+                            if viewModel.digit3.isEmpty {
                                 Text("0")
                                     .font(.custom("Inter-Regular", size: 16))
                                     .foregroundColor(Color.white.opacity(0.5)) // light placeholder
                                     .padding(.leading, 12)
                             }
                             
-                            TextField("", text: $digit3)
+                            TextField("", text: $viewModel.digit3)
                                 .padding()
                                 .background(Color.white.opacity(0.15))
                                 .cornerRadius(8)
@@ -112,14 +117,58 @@ struct VerifyOtpAccount: View {
                     VStack(alignment: .leading, spacing: 6) {
 
                         ZStack(alignment: .center) {
-                            if digit4.isEmpty {
+                            if viewModel.digit4.isEmpty {
                                 Text("0")
                                     .font(.custom("Inter-Regular", size: 16))
                                     .foregroundColor(Color.white.opacity(0.5)) // light placeholder
                                     .padding(.leading, 12)
                             }
                             
-                            TextField("", text: $digit4)
+                            TextField("", text: $viewModel.digit4)
+                                .padding()
+                                .background(Color.white.opacity(0.15))
+                                .cornerRadius(8)
+                                .foregroundColor(.white)
+                                .autocapitalization(.none)
+                                .multilineTextAlignment(.center)
+                                .disableAutocorrection(true)
+                        }
+
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+
+                        ZStack(alignment: .center) {
+                            if viewModel.digit5.isEmpty {
+                                Text("0")
+                                    .font(.custom("Inter-Regular", size: 16))
+                                    .foregroundColor(Color.white.opacity(0.5)) // light placeholder
+                                    .padding(.leading, 12)
+                            }
+                            
+                            TextField("", text: $viewModel.digit5)
+                                .padding()
+                                .background(Color.white.opacity(0.15))
+                                .cornerRadius(8)
+                                .foregroundColor(.white)
+                                .autocapitalization(.none)
+                                .multilineTextAlignment(.center)
+                                .disableAutocorrection(true)
+                        }
+
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+
+                        ZStack(alignment: .center) {
+                            if viewModel.digit6.isEmpty {
+                                Text("0")
+                                    .font(.custom("Inter-Regular", size: 16))
+                                    .foregroundColor(Color.white.opacity(0.5)) // light placeholder
+                                    .padding(.leading, 12)
+                            }
+                            
+                            TextField("", text: $viewModel.digit6)
                                 .padding()
                                 .background(Color.white.opacity(0.15))
                                 .cornerRadius(8)
@@ -142,8 +191,12 @@ struct VerifyOtpAccount: View {
                 VStack(spacing: 16) {
                     // Login Button
                     Button(action: {
-                        print("Verify tapped")
-                        navigateToResetPassword = true
+                        Task {
+                            await viewModel.verifyOtp(emailId: self.email)
+                                if viewModel.success {
+                                    navigateToResetPassword = true
+                                }
+                            }
                     }) {
                         Text("VERIFY CODE")
                             .font(.custom("Inter-SemiBold", size: 16))
@@ -181,6 +234,23 @@ struct VerifyOtpAccount: View {
                 .padding(.bottom, 30)
             }
             .padding(.horizontal, 30)
+            
+            
+            
+            // LOADING OVERLAY
+            if viewModel.isLoading {
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(1.8)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
+            }
+            
         }
         .navigationDestination(isPresented: $navigateToResetPassword) {
            SubmitResetPassword()
@@ -191,7 +261,3 @@ struct VerifyOtpAccount: View {
     }
 }
 
-
-#Preview {
-    VerifyOtpAccount()
-}

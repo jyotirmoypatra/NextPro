@@ -58,7 +58,7 @@ class LoginViewModel: ObservableObject {
                 // Update values
                 userType = response.user_type ?? ""
                 userName = response.username ?? ""
-                isPasswordReset = response.isResetPassword ?? false
+                isPasswordReset = response.is_reset_password ?? true
                 loginSuccess = true
                 
                 // Save tokens
@@ -74,7 +74,7 @@ class LoginViewModel: ObservableObject {
                 UserDefaults.standard.set(response.user_id ?? "", forKey: "user_id")
                 UserDefaults.standard.set(response.username ?? "", forKey: "username")
                 UserDefaults.standard.set(response.user_type ?? "", forKey: "user_type")
-                UserDefaults.standard.set(response.isResetPassword ?? false, forKey: "isPssswordReset")
+                UserDefaults.standard.set(response.is_reset_password ?? true, forKey: "isPssswordReset")
                 
             } else {
                 // Backend error message
