@@ -129,6 +129,13 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
 
         guard let data = msg.data(using: .utf8) else { return }
 
+        // Check which topic the message came from
+        let topic = message.topic
+        let isDataTopic = topic.contains("/data")
+        let isRtdataTopic = topic.contains("/rtdata")
+        
+        print("📍 Topic type - data: \(isDataTopic), rtdata: \(isRtdataTopic)")
+
         do {
             // Decode only the top-level structure first
             let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
@@ -148,29 +155,31 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
                         userInfo: [
                             "doorID": first.doorID,
                             "verified": first.verified,
-                            "type": first.type,          // ✅ Add this
-                            "sn": event.SN,              // ✅ Add SN for reference
-                            "time": first.time
+                            "type": first.type,
+                            "sn": event.SN,
+                            "time": first.time,
+                            "topicType": isDataTopic ? "data" : "rtdata"  // ✅ Track topic type
                         ]
                     )
-                    print("✅ Door event received (SN: \(event.SN), doorID: \(first.doorID), type: \(first.type), verified: \(first.verified))")
+                    print("✅ Door event received (Topic: \(topic), SN: \(event.SN), doorID: \(first.doorID), type: \(first.type), verified: \(first.verified))")
                 }
 
 
             case "commands/result":
                 if let status = json?["status"] as? [String: Any] {
-                    print("✅ Command Result: \(status)")
+                    print("✅ Command Result (Topic: \(topic)): \(status)")
                 }
 
             case "heartbeat":
-                print("💓 Heartbeat received.")
+                print("💓 Heartbeat received (Topic: \(topic))")
 
             default:
-                print("ℹ️ Unhandled resource type: \(resource)")
+                print("ℹ️ Unhandled resource type: \(resource) (Topic: \(topic))")
             }
 
         } catch {
-            print("⚠️ Failed to decode MQTT message: \(error)")
+            print("⚠️ Failed to decode MQTT message from \(topic): \(error)")
+            print("📄 Raw message: \(msg)")
         }
     }
 

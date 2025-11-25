@@ -226,8 +226,8 @@ struct DoorOpenView: View {
 //            mqttManager.subscribeToDevice("4283847520")
 //            mqttManager.subscribeToDevice("4282184653")
             
-            subscribeToDevice("4283847520" ,  model: "tc434")
-            subscribeToDevice("4282184653", model: "bc220")
+            mqttManager.subscribeToDevice("4283847520" ,  model: "tc434")
+            mqttManager.subscribeToDevice("4282184653", model: "bc220")
             
             await cardStorage.loadCards()
             

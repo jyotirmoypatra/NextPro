@@ -137,10 +137,10 @@ struct OpenDoorEndUserView: View {
             
             mqttManager.connect()
             
-            for door in doorStorage.doors {
-                mqttManager.subscribeToDevice(door.devSn)
-            }
-            mqttManager.subscribeToDevice("4283847520")
+//            for door in doorStorage.doors {
+//                mqttManager.subscribeToDevice(door.devSn)
+//            }
+//            mqttManager.subscribeToDevice("4283847520")
 
             await CardStorage.loadCards()
         }
