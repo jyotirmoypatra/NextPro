@@ -18,6 +18,9 @@ struct ProfileEndUserView: View {
     @State private var webViewURL = ""
     @State private var webViewTitle = ""
     
+    @StateObject private var viewModel = UserProfileDetailsViewModel()
+
+    
     @Environment(\.dismiss) var dismiss
     @State private var goToLogin = false
 
@@ -60,13 +63,16 @@ struct ProfileEndUserView: View {
                                 .clipShape(Circle())
                                 .shadow(radius: 6)
 
-                            Text(fullName.isEmpty ? "User Name" : fullName)
+                            // Full Name
+                            Text(viewModel.isLoading ? "Loading..." : viewModel.fullName)
                                 .font(.custom("Inter-Medium", size: 16))
                                 .foregroundColor(.white)
 
-                            Text(phoneNumber.isEmpty ? "Phone Number" : phoneNumber)
+                            // Phone Number
+                            Text(viewModel.isLoading ? "Loading..." : viewModel.phoneNumber)
                                 .font(.custom("Inter-Regular", size: 13))
                                 .foregroundColor(.gray)
+
 
                             Button(action: {
                                 navigateToEditProfile = true
@@ -183,6 +189,20 @@ struct ProfileEndUserView: View {
                 .transition(.opacity)
                 .zIndex(100)
             }
+            
+            
+            if viewModel.isLoading {
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(1.8)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
+            }
         }
         .background(Color.black.opacity(0.4))
         
@@ -204,20 +224,24 @@ struct ProfileEndUserView: View {
             }
         }
         
-        .onAppear{
-            loadUserData()
+//        .onAppear{
+//            loadUserData()
+//        }
+        .onAppear {
+            Task {
+                loadUserData()
+                await viewModel.fetchUserProfile()
+            }
         }
+
     }
     
     func loadUserData() {
         usertype = UserDefaults.standard.string(forKey: "user_type") ?? ""
         username = UserDefaults.standard.string(forKey: "username") ?? ""
-        fullName = UserDefaults.standard.string(forKey: "user_full_name") ?? "James Arthur"
-        phoneNumber = UserDefaults.standard.string(forKey: "user_phone") ?? "+8353753535"
-        print("username:\(username)")
-        print("usertype:\(usertype)")
-        print("fullName:\(fullName)")
-        print("phoneNumber:\(phoneNumber)")
+
+        
+        
     }
     
     // MARK: - Open WebView Function

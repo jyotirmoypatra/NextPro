@@ -72,10 +72,11 @@ class LoginViewModel: ObservableObject {
                 
                 // Save user details
                 UserDefaults.standard.set(response.user_id ?? "", forKey: "user_id")
+                UserDefaults.standard.set(response.facility_id ?? "", forKey: "facility_id")
                 UserDefaults.standard.set(response.username ?? "", forKey: "username")
                 UserDefaults.standard.set(response.user_type ?? "", forKey: "user_type")
                 UserDefaults.standard.set(response.is_reset_password ?? true, forKey: "isPssswordReset")
-                
+               
             } else {
                 // Backend error message
                 loginError = response.message

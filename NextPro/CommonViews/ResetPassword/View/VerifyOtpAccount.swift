@@ -28,244 +28,247 @@ struct VerifyOtpAccount: View {
         case digit1, digit2, digit3, digit4, digit5, digit6
     }
     var body: some View {
-        ZStack {
-            // Background image
-            Image("backgroundimg")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .ignoresSafeArea()
-          
-
-            // Black translucent overlay
-            Color.black.opacity(0.8)
-                .ignoresSafeArea()
-
-            VStack(spacing: 25) {
-                Spacer().frame(height: 40)
-
-                // Header Text
-                VStack(spacing: 5) {
-                    Text("VERIFY ACCOUNT")
-                        .font(.custom("Inter-SemiBold", size: 20))
-                        .foregroundColor(.white)
-                    Text("We sent a verification code to the email you entered.")
-                        .font(.custom("Inter-Regular", size: 16))
-                        .foregroundColor(Color.gray.opacity(0.8))
-                        .multilineTextAlignment(.center)
-                }
+        GeometryReader { geometry in
+            ZStack {
+                // Background image
+                Image("backgroundimg")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .ignoresSafeArea()
                 
-                .padding(.bottom, 30)
-
-                // OTP Fields
-                HStack(spacing: 10){
-                    // Digit 1
-                    VStack(alignment: .leading, spacing: 6) {
-                        ZStack(alignment: .center) {
-                            if viewModel.digit1.isEmpty {
-                                Text("0")
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .foregroundColor(Color.white.opacity(0.5))
-                                    .padding(.leading, 12)
-                            }
-                            
-                            TextField("", text: $viewModel.digit1)
-                                .padding()
-                                .background(Color.white.opacity(0.15))
-                                .cornerRadius(8)
-                                .foregroundColor(.white)
-                                .autocapitalization(.none)
-                                .multilineTextAlignment(.center)
-                                .disableAutocorrection(true)
-                                .keyboardType(.numberPad)
-                                .focused($focusedField, equals: .digit1)
-                                .onChange(of: viewModel.digit1) { newValue in
-                                    handleDigitChange(newValue: newValue, field: .digit1)
-                                }
-                        }
-                    }
-                    
-                    // Digit 2
-                    VStack(alignment: .leading, spacing: 6) {
-                        ZStack(alignment: .center) {
-                            if viewModel.digit2.isEmpty {
-                                Text("0")
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .foregroundColor(Color.white.opacity(0.5))
-                                    .padding(.leading, 12)
-                            }
-                            
-                            TextField("", text: $viewModel.digit2)
-                                .padding()
-                                .background(Color.white.opacity(0.15))
-                                .cornerRadius(8)
-                                .foregroundColor(.white)
-                                .autocapitalization(.none)
-                                .multilineTextAlignment(.center)
-                                .disableAutocorrection(true)
-                                .keyboardType(.numberPad)
-                                .focused($focusedField, equals: .digit2)
-                                .onChange(of: viewModel.digit2) { newValue in
-                                    handleDigitChange(newValue: newValue, field: .digit2)
-                                }
-                        }
-                    }
-                    
-                    // Digit 3
-                    VStack(alignment: .leading, spacing: 6) {
-                        ZStack(alignment: .center) {
-                            if viewModel.digit3.isEmpty {
-                                Text("0")
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .foregroundColor(Color.white.opacity(0.5))
-                                    .padding(.leading, 12)
-                            }
-                            
-                            TextField("", text: $viewModel.digit3)
-                                .padding()
-                                .background(Color.white.opacity(0.15))
-                                .cornerRadius(8)
-                                .foregroundColor(.white)
-                                .autocapitalization(.none)
-                                .multilineTextAlignment(.center)
-                                .disableAutocorrection(true)
-                                .keyboardType(.numberPad)
-                                .focused($focusedField, equals: .digit3)
-                                .onChange(of: viewModel.digit3) { newValue in
-                                    handleDigitChange(newValue: newValue, field: .digit3)
-                                }
-                        }
-                    }
-                    
-                    // Digit 4
-                    VStack(alignment: .leading, spacing: 6) {
-                        ZStack(alignment: .center) {
-                            if viewModel.digit4.isEmpty {
-                                Text("0")
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .foregroundColor(Color.white.opacity(0.5))
-                                    .padding(.leading, 12)
-                            }
-                            
-                            TextField("", text: $viewModel.digit4)
-                                .padding()
-                                .background(Color.white.opacity(0.15))
-                                .cornerRadius(8)
-                                .foregroundColor(.white)
-                                .autocapitalization(.none)
-                                .multilineTextAlignment(.center)
-                                .disableAutocorrection(true)
-                                .keyboardType(.numberPad)
-                                .focused($focusedField, equals: .digit4)
-                                .onChange(of: viewModel.digit4) { newValue in
-                                    handleDigitChange(newValue: newValue, field: .digit4)
-                                }
-                        }
-                    }
-                    
-                    // Digit 5
-                    VStack(alignment: .leading, spacing: 6) {
-                        ZStack(alignment: .center) {
-                            if viewModel.digit5.isEmpty {
-                                Text("0")
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .foregroundColor(Color.white.opacity(0.5))
-                                    .padding(.leading, 12)
-                            }
-                            
-                            TextField("", text: $viewModel.digit5)
-                                .padding()
-                                .background(Color.white.opacity(0.15))
-                                .cornerRadius(8)
-                                .foregroundColor(.white)
-                                .autocapitalization(.none)
-                                .multilineTextAlignment(.center)
-                                .disableAutocorrection(true)
-                                .keyboardType(.numberPad)
-                                .focused($focusedField, equals: .digit5)
-                                .onChange(of: viewModel.digit5) { newValue in
-                                    handleDigitChange(newValue: newValue, field: .digit5)
-                                }
-                        }
-                    }
-                    
-                    // Digit 6
-                    VStack(alignment: .leading, spacing: 6) {
-                        ZStack(alignment: .center) {
-                            if viewModel.digit6.isEmpty {
-                                Text("0")
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .foregroundColor(Color.white.opacity(0.5))
-                                    .padding(.leading, 12)
-                            }
-                            
-                            TextField("", text: $viewModel.digit6)
-                                .padding()
-                                .background(Color.white.opacity(0.15))
-                                .cornerRadius(8)
-                                .foregroundColor(.white)
-                                .autocapitalization(.none)
-                                .multilineTextAlignment(.center)
-                                .disableAutocorrection(true)
-                                .keyboardType(.numberPad)
-                                .focused($focusedField, equals: .digit6)
-                                .onChange(of: viewModel.digit6) { newValue in
-                                    handleDigitChange(newValue: newValue, field: .digit6)
-                                }
-                        }
-                    }
-                }
                 
-               
-
-           
-
-                Spacer() // pushes content to bottom
-
-                // Bottom section
-                VStack(spacing: 16) {
-                    // Login Button
-                    Button(action: {
-                        Task {
-                            await viewModel.verifyOtp(emailId: self.email)
+                // Black translucent overlay
+                Color.black.opacity(0.8)
+                    .ignoresSafeArea()
+                
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 25) {
+                    Spacer().frame(height: 40)
+                    
+                    // Header Text
+                    VStack(spacing: 5) {
+                        Text("VERIFY ACCOUNT")
+                            .font(.custom("Inter-SemiBold", size: 20))
+                            .foregroundColor(.white)
+                        Text("We sent a verification code to the email you entered.")
+                            .font(.custom("Inter-Regular", size: 16))
+                            .foregroundColor(Color.gray.opacity(0.8))
+                            .multilineTextAlignment(.center)
+                    }
+                    
+                    .padding(.bottom, 30)
+                    
+                    // OTP Fields
+                    HStack(spacing: 10){
+                        // Digit 1
+                        VStack(alignment: .leading, spacing: 6) {
+                            ZStack(alignment: .center) {
+                                if viewModel.digit1.isEmpty {
+                                    Text("0")
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .foregroundColor(Color.white.opacity(0.5))
+                                        .padding(.leading, 12)
+                                }
+                                
+                                TextField("", text: $viewModel.digit1)
+                                    .padding()
+                                    .background(Color.white.opacity(0.15))
+                                    .cornerRadius(8)
+                                    .foregroundColor(.white)
+                                    .autocapitalization(.none)
+                                    .multilineTextAlignment(.center)
+                                    .disableAutocorrection(true)
+                                    .keyboardType(.numberPad)
+                                    .focused($focusedField, equals: .digit1)
+                                    .onChange(of: viewModel.digit1) { newValue in
+                                        handleDigitChange(newValue: newValue, field: .digit1)
+                                    }
+                            }
+                        }
+                        
+                        // Digit 2
+                        VStack(alignment: .leading, spacing: 6) {
+                            ZStack(alignment: .center) {
+                                if viewModel.digit2.isEmpty {
+                                    Text("0")
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .foregroundColor(Color.white.opacity(0.5))
+                                        .padding(.leading, 12)
+                                }
+                                
+                                TextField("", text: $viewModel.digit2)
+                                    .padding()
+                                    .background(Color.white.opacity(0.15))
+                                    .cornerRadius(8)
+                                    .foregroundColor(.white)
+                                    .autocapitalization(.none)
+                                    .multilineTextAlignment(.center)
+                                    .disableAutocorrection(true)
+                                    .keyboardType(.numberPad)
+                                    .focused($focusedField, equals: .digit2)
+                                    .onChange(of: viewModel.digit2) { newValue in
+                                        handleDigitChange(newValue: newValue, field: .digit2)
+                                    }
+                            }
+                        }
+                        
+                        // Digit 3
+                        VStack(alignment: .leading, spacing: 6) {
+                            ZStack(alignment: .center) {
+                                if viewModel.digit3.isEmpty {
+                                    Text("0")
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .foregroundColor(Color.white.opacity(0.5))
+                                        .padding(.leading, 12)
+                                }
+                                
+                                TextField("", text: $viewModel.digit3)
+                                    .padding()
+                                    .background(Color.white.opacity(0.15))
+                                    .cornerRadius(8)
+                                    .foregroundColor(.white)
+                                    .autocapitalization(.none)
+                                    .multilineTextAlignment(.center)
+                                    .disableAutocorrection(true)
+                                    .keyboardType(.numberPad)
+                                    .focused($focusedField, equals: .digit3)
+                                    .onChange(of: viewModel.digit3) { newValue in
+                                        handleDigitChange(newValue: newValue, field: .digit3)
+                                    }
+                            }
+                        }
+                        
+                        // Digit 4
+                        VStack(alignment: .leading, spacing: 6) {
+                            ZStack(alignment: .center) {
+                                if viewModel.digit4.isEmpty {
+                                    Text("0")
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .foregroundColor(Color.white.opacity(0.5))
+                                        .padding(.leading, 12)
+                                }
+                                
+                                TextField("", text: $viewModel.digit4)
+                                    .padding()
+                                    .background(Color.white.opacity(0.15))
+                                    .cornerRadius(8)
+                                    .foregroundColor(.white)
+                                    .autocapitalization(.none)
+                                    .multilineTextAlignment(.center)
+                                    .disableAutocorrection(true)
+                                    .keyboardType(.numberPad)
+                                    .focused($focusedField, equals: .digit4)
+                                    .onChange(of: viewModel.digit4) { newValue in
+                                        handleDigitChange(newValue: newValue, field: .digit4)
+                                    }
+                            }
+                        }
+                        
+                        // Digit 5
+                        VStack(alignment: .leading, spacing: 6) {
+                            ZStack(alignment: .center) {
+                                if viewModel.digit5.isEmpty {
+                                    Text("0")
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .foregroundColor(Color.white.opacity(0.5))
+                                        .padding(.leading, 12)
+                                }
+                                
+                                TextField("", text: $viewModel.digit5)
+                                    .padding()
+                                    .background(Color.white.opacity(0.15))
+                                    .cornerRadius(8)
+                                    .foregroundColor(.white)
+                                    .autocapitalization(.none)
+                                    .multilineTextAlignment(.center)
+                                    .disableAutocorrection(true)
+                                    .keyboardType(.numberPad)
+                                    .focused($focusedField, equals: .digit5)
+                                    .onChange(of: viewModel.digit5) { newValue in
+                                        handleDigitChange(newValue: newValue, field: .digit5)
+                                    }
+                            }
+                        }
+                        
+                        // Digit 6
+                        VStack(alignment: .leading, spacing: 6) {
+                            ZStack(alignment: .center) {
+                                if viewModel.digit6.isEmpty {
+                                    Text("0")
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .foregroundColor(Color.white.opacity(0.5))
+                                        .padding(.leading, 12)
+                                }
+                                
+                                TextField("", text: $viewModel.digit6)
+                                    .padding()
+                                    .background(Color.white.opacity(0.15))
+                                    .cornerRadius(8)
+                                    .foregroundColor(.white)
+                                    .autocapitalization(.none)
+                                    .multilineTextAlignment(.center)
+                                    .disableAutocorrection(true)
+                                    .keyboardType(.numberPad)
+                                    .focused($focusedField, equals: .digit6)
+                                    .onChange(of: viewModel.digit6) { newValue in
+                                        handleDigitChange(newValue: newValue, field: .digit6)
+                                    }
+                            }
+                        }
+                    }
+                    
+                    
+                    
+                    
+                    
+                    Spacer() // pushes content to bottom
+                    
+                    // Bottom section
+                    VStack(spacing: 16) {
+                        // Login Button
+                        Button(action: {
+                            Task {
+                                await viewModel.verifyOtp(emailId: self.email)
                                 if viewModel.success {
                                     navigateToResetPassword = true
                                 }
                             }
-                    }) {
-                        Text("VERIFY CODE")
-                            .font(.custom("Inter-SemiBold", size: 16))
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.white)
-                            .cornerRadius(10)
-                    }
-
-                    // Sign Up Text
-                    Button(action: {
-                        // 👉 Perform navigation or action here
-                        print("Return to login tapped")
-                        dismiss()
-                        
-                    }) {
-                        HStack(spacing: 8) {
-                            Image("undoicon")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(.gray)
-
-                            Text("Return to log in")
-                                .foregroundColor(.gray)
-                                .font(.custom("Inter-Regular", size: 16))
+                        }) {
+                            Text("VERIFY CODE")
+                                .font(.custom("Inter-SemiBold", size: 16))
+                                .foregroundColor(.black)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.white)
+                                .cornerRadius(10)
                         }
-                        .font(.system(size: 14))
+                        
+                        // Sign Up Text
+                        Button(action: {
+                            // 👉 Perform navigation or action here
+                            print("Return to login tapped")
+                            dismiss()
+                            
+                        }) {
+                            HStack(spacing: 8) {
+                                Image("undoicon")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 20, height: 20)
+                                    .foregroundColor(.gray)
+                                
+                                Text("Return to log in")
+                                    .foregroundColor(.gray)
+                                    .font(.custom("Inter-Regular", size: 16))
+                            }
+                            .font(.system(size: 14))
+                        }
+                        .buttonStyle(.plain) // prevents default blue tint + removes highlight
+                        
+                        
                     }
-                   .buttonStyle(.plain) // prevents default blue tint + removes highlight
-
-                   
+                    .padding(.bottom, 30)
                 }
-                .padding(.bottom, 30)
             }
             .padding(.horizontal, 30)
             
@@ -276,7 +279,7 @@ struct VerifyOtpAccount: View {
                 ZStack {
                     Color.black.opacity(0.4)
                         .ignoresSafeArea()
-
+                    
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         .scaleEffect(1.8)
@@ -286,7 +289,11 @@ struct VerifyOtpAccount: View {
             }
             
         }
-        .ignoresSafeArea(.keyboard) // Prevents UI from moving when keyboard appears
+            .onTapGesture {
+                UIApplication.shared.hideKeyboard()
+            }
+    }
+        .ignoresSafeArea(.keyboard, edges: .bottom) // Prevents UI from moving when keyboard appears
         .navigationDestination(isPresented: $navigateToResetPassword) {
             SubmitResetPassword(userEmail: self.email)
                 .navigationBarBackButtonHidden(true)

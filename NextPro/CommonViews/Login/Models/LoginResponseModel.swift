@@ -12,6 +12,7 @@ struct LoginResponseModel: Decodable {
     let status: Bool
     let message: String
     let user_id: String?
+    let facility_id: String?
     let is_reset_password: Bool?
     let username: String?
     let user_type: String?

@@ -20,6 +20,7 @@ struct APIConfig {
         static let deviceDetails = "/api/facility-user/device/detail/"
         static let forgetPasswordRequest = "/api/facility-user/forgot-password/request/"
         static let forgetPasswordOtpVerify = "/api/facility-user/forgot-password/verify/"
+        static let getUserProfileData = "/api/facility-user/user/detail/"
     }
     
     
