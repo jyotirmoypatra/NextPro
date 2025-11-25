@@ -9,10 +9,13 @@
 import SwiftUI
 
 struct SubmitResetPassword: View {
-    @State private var newPassword = ""
-    @State private var confirmPassword = ""
+    var userEmail : String
+    @State private var navigateToLogin = false
     @State private var showNewPassword = false
     @State private var showConfirmPassword = false
+    @StateObject private var viewModel = CreateNewPasswordViewModel()
+    @StateObject private var toastManager = ToastManager.shared
+    @State private var showUpdateFailedAlert = false
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         GeometryReader { geometry in
@@ -58,7 +61,7 @@ struct SubmitResetPassword: View {
 
                             ZStack(alignment: .trailing) {
                                 ZStack(alignment: .leading) {
-                                    if newPassword.isEmpty {
+                                    if viewModel.newPassword.isEmpty {
                                         Text("Enter new password")
                                             .font(.custom("Inter-Regular", size: 16))
                                             .foregroundColor(Color.white.opacity(0.5))
@@ -66,7 +69,7 @@ struct SubmitResetPassword: View {
                                     }
                                     
                                     if showNewPassword {
-                                        TextField("", text: $newPassword)
+                                        TextField("", text: $viewModel.newPassword)
                                             .foregroundColor(.white)
                                             .font(.custom("Inter-Regular", size: 16))
                                             .padding(.horizontal, 14)
@@ -74,7 +77,7 @@ struct SubmitResetPassword: View {
                                             .autocapitalization(.none)
                                             .disableAutocorrection(true)
                                     } else {
-                                        SecureField("", text: $newPassword)
+                                        SecureField("", text: $viewModel.newPassword)
                                             .foregroundColor(.white)
                                             .font(.custom("Inter-Regular", size: 16))
                                             .padding(.horizontal, 14)
@@ -107,7 +110,7 @@ struct SubmitResetPassword: View {
 
                             ZStack(alignment: .trailing) {
                                 ZStack(alignment: .leading) {
-                                    if confirmPassword.isEmpty {
+                                    if viewModel.confirmPassword.isEmpty {
                                         Text("Confirm new password")
                                             .font(.custom("Inter-Regular", size: 16))
                                             .foregroundColor(Color.white.opacity(0.5))
@@ -115,7 +118,7 @@ struct SubmitResetPassword: View {
                                     }
                                     
                                     if showConfirmPassword {
-                                        TextField("", text: $confirmPassword)
+                                        TextField("", text: $viewModel.confirmPassword)
                                             .foregroundColor(.white)
                                             .font(.custom("Inter-Regular", size: 16))
                                             .padding(.horizontal, 14)
@@ -123,7 +126,7 @@ struct SubmitResetPassword: View {
                                             .autocapitalization(.none)
                                             .disableAutocorrection(true)
                                     } else {
-                                        SecureField("", text: $confirmPassword)
+                                        SecureField("", text: $viewModel.confirmPassword)
                                             .foregroundColor(.white)
                                             .font(.custom("Inter-Regular", size: 16))
                                             .padding(.horizontal, 14)
@@ -153,7 +156,31 @@ struct SubmitResetPassword: View {
                     // Submit Button
                     Button(action: {
                         print("SUBMIT")
-                        resetToLogin()
+                        //resetToLogin()
+                        
+                        Task {
+                            
+                            await viewModel.updatePassword(username: self.userEmail)
+
+                            if viewModel.updateSuccess {
+                                // Show success toast
+                                toastManager.show(
+                                    message: "Password updated successfully!",
+                                    type: .success,
+                                    duration: 1.0
+                                )
+                                
+                                // Navigate after a short delay to show the toast
+                                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                                
+                                
+                                resetToLogin()
+                                
+                            }else{
+                                showUpdateFailedAlert = true
+                            }
+                        }
+                        
                     }) {
                         Text("SUBMIT")
                             .font(.custom("Inter-SemiBold", size: 16))
@@ -165,8 +192,7 @@ struct SubmitResetPassword: View {
                     }
                     
                     Button(action: {
-                        print("Return to login tapped")
-                        dismiss()
+                        resetToLogin()
                     }) {
                         HStack(spacing: 8) {
                             Image("undoicon")
@@ -187,12 +213,32 @@ struct SubmitResetPassword: View {
                 .padding(.bottom, 35)
                 .background(.black)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                
+                
+                if viewModel.isLoading {
+                    ZStack {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.8)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                }
             }
             .onTapGesture {
                 UIApplication.shared.hideKeyboard()
             }
+            .alert("Update Failed", isPresented: $showUpdateFailedAlert) {
+                            Button("OK", role: .cancel) {}
+            } message: {
+                Text(viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage)
+            }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
+        .toast() 
     }
     
     func resetToLogin() {
@@ -206,6 +252,3 @@ struct SubmitResetPassword: View {
     }
 }
 
-#Preview {
-    SubmitResetPassword()
-}
