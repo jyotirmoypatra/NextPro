@@ -130,7 +130,7 @@ struct ProfileEndUserView: View {
                             
                             UserProfileRow(title: "Privacy Policy") {
                                 openWebView(
-                                    url: "https://www.google.com/",
+                                    url: "https://www.lipsum.com/feed/html",
                                     title: "Privacy Policy"
                                 )
                             }
@@ -139,7 +139,7 @@ struct ProfileEndUserView: View {
                             
                             UserProfileRow(title: "Terms and Conditon") {
                                 openWebView(
-                                    url: "https://www.google.com/",
+                                    url: "https://www.lipsum.com/feed/html",
                                     title: "Terms and Conditions"
                                 )
                             }

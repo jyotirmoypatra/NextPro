@@ -29,18 +29,20 @@ struct VerifyOtpAccount: View {
     }
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
+            ZStack(alignment: .top) {
                 // Background image
                 Image("backgroundimg")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
                     .ignoresSafeArea()
                 
                 
                 // Black translucent overlay
-                Color.black.opacity(0.8)
+                Color.black.opacity(0.9)
                     .ignoresSafeArea()
                 
+                // Scrollable Content
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 25) {
                     Spacer().frame(height: 40)
@@ -217,60 +219,54 @@ struct VerifyOtpAccount: View {
                         }
                     }
                     
-                    
-                    
-                    
-                    
-                    Spacer() // pushes content to bottom
-                    
-                    // Bottom section
-                    VStack(spacing: 16) {
-                        // Login Button
-                        Button(action: {
-                            Task {
-                                await viewModel.verifyOtp(emailId: self.email)
-                                if viewModel.success {
-                                    navigateToResetPassword = true
-                                }
-                            }
-                        }) {
-                            Text("VERIFY CODE")
-                                .font(.custom("Inter-SemiBold", size: 16))
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.white)
-                                .cornerRadius(10)
-                        }
-                        
-                        // Sign Up Text
-                        Button(action: {
-                            // 👉 Perform navigation or action here
-                            print("Return to login tapped")
-                            dismiss()
-                            
-                        }) {
-                            HStack(spacing: 8) {
-                                Image("undoicon")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 20, height: 20)
-                                    .foregroundColor(.gray)
-                                
-                                Text("Return to log in")
-                                    .foregroundColor(.gray)
-                                    .font(.custom("Inter-Regular", size: 16))
-                            }
-                            .font(.system(size: 14))
-                        }
-                        .buttonStyle(.plain) // prevents default blue tint + removes highlight
-                        
-                        
-                    }
-                    .padding(.bottom, 30)
+                    Spacer().frame(height: 150)  // Prevent cut-off by fixed footer
                 }
+                .padding(.horizontal, 30)
             }
-            .padding(.horizontal, 30)
+                
+                // FOOTER - Fixed at Bottom
+                VStack(spacing: 16) {
+                    // Verify Button
+                    Button(action: {
+                        Task {
+                            await viewModel.verifyOtp(emailId: self.email)
+                            if viewModel.success {
+                                navigateToResetPassword = true
+                            }
+                        }
+                    }) {
+                        Text("VERIFY CODE")
+                            .font(.custom("Inter-SemiBold", size: 16))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(10)
+                    }
+                    
+                    // Return to login
+                    Button(action: {
+                        print("Return to login tapped")
+                        dismiss()
+                    }) {
+                        HStack(spacing: 8) {
+                            Image("undoicon")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
+                                .foregroundColor(.gray)
+                            
+                            Text("Return to log in")
+                                .foregroundColor(.gray)
+                                .font(.custom("Inter-Regular", size: 16))
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 30)
+                .padding(.bottom, 35)
+                .background(.black)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             
             
             
