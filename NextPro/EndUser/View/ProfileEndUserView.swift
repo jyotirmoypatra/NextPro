@@ -119,11 +119,11 @@ struct ProfileEndUserView: View {
                             .padding(.horizontal, 20)
                             .padding(.vertical, 30) // consistent with other rows
                             
-                            Divider().background(Color.white.opacity(0.15))
-                            
-                            UserProfileRow(title: "Add Card") {
-                                // Handle support action
-                            }
+//                            Divider().background(Color.white.opacity(0.15))
+//                            
+//                            UserProfileRow(title: "Add Card") {
+//                                // Handle support action
+//                            }
                             
                             
                             Divider().background(Color.white.opacity(0.15))
