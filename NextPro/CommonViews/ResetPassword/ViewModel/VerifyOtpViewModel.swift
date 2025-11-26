@@ -1,5 +1,5 @@
 //
-//  forgetPasswordRequestViewModel.swift
+//  VerifyOtpViewModel.swift
 //  NextPro
 //
 //  Created by JYOTIRMOY PATRA on 25/11/25.

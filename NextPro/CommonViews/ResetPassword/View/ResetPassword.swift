@@ -12,7 +12,7 @@ struct ResetPassword: View {
     @Environment(\.dismiss) private var dismiss
     @State private var navigateToVerifyOtp = false
     @StateObject private var viewModel = ForgetPasswordRequestViewModel()
-
+    @State private var showFailedAlert = false
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
@@ -90,6 +90,8 @@ struct ResetPassword: View {
                                 await viewModel.sendRequest()
                                 if viewModel.success {
                                     navigateToVerifyOtp = true
+                                }else{
+                                    showFailedAlert = true
                                 }
                             }
                     }) {
@@ -150,6 +152,11 @@ struct ResetPassword: View {
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)
+            }
+            .alert("Failed", isPresented: $showFailedAlert) {
+                            Button("OK", role: .cancel) {}
+            } message: {
+                Text(viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage)
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)

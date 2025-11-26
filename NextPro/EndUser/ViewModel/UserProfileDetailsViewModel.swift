@@ -44,11 +44,11 @@ class UserProfileDetailsViewModel: ObservableObject {
             let response = try await networkManager.UserProfileDetails(id: userId)
 
             // Assign response to UI (no UserDefaults save)
-            fullName = response.data.full_name
-            phoneNumber = response.data.phone_number
-            email = response.data.email
+            fullName = response.data.full_name ?? ""
+            phoneNumber = response.data.phone_number ?? ""
+            email = response.data.email ?? ""
             accountStatus = response.data.status
-            organization = response.data.organization
+            organization = response.data.organization ?? ""
 
         } catch {
             errorMessage = error.localizedDescription

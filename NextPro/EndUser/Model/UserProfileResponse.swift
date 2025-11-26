@@ -7,11 +7,11 @@
 
 
 struct UserProfileData: Decodable {
-    let full_name: String
-    let phone_number: String
-    let email: String
+    let full_name: String?
+    let phone_number: String?
+    let email: String?
     let status: String
-    let organization: String
+    let organization: String?
     let created_at: String
     let updated_at: String
 }

@@ -13,7 +13,7 @@ import Combine
 class ForgetPasswordRequestViewModel: ObservableObject {
     @Published var email: String = ""
     @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
+    @Published var errorMessage: String = ""
     @Published var success: Bool = false
     let network = NetworkManager.shared
     private let networkManager = NetworkManager.shared
@@ -30,7 +30,7 @@ class ForgetPasswordRequestViewModel: ObservableObject {
         }
 
         isLoading = true
-        errorMessage = nil
+        errorMessage = ""
 
         do {
             let response = try await networkManager.requestForgetPassword(email: email)
