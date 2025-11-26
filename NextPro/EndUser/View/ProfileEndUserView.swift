@@ -23,6 +23,7 @@ struct ProfileEndUserView: View {
     
     @Environment(\.dismiss) var dismiss
     @State private var goToLogin = false
+    @State private var showLogoutAlert = false
 
    
     var body: some View {
@@ -158,11 +159,7 @@ struct ProfileEndUserView: View {
                             Divider().background(Color.white.opacity(0.15))
                             
                             UserProfileRow(title: "Logout") {
-                                // Handle support action
-                                KeychainManager.shared.clearUserDefaultsAndKeychainData()
-                                
-                                resetToLogin()
-                                
+                                showLogoutAlert = true
                             }
 
                            
@@ -232,6 +229,18 @@ struct ProfileEndUserView: View {
                 loadUserData()
                 await viewModel.fetchUserProfile()
             }
+        }
+        .alert("Logout", isPresented: $showLogoutAlert) {
+            Button("No", role: .cancel) {
+                // Do nothing, just dismiss the alert
+            }
+            Button("Yes", role: .destructive) {
+                // Proceed with logout
+                KeychainManager.shared.clearUserDefaultsAndKeychainData()
+                resetToLogin()
+            }
+        } message: {
+            Text("Are you sure you want to logout?")
         }
 
     }
