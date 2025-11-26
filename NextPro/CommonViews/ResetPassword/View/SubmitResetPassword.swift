@@ -149,7 +149,7 @@ struct SubmitResetPassword: View {
                         Spacer().frame(height: 150)  // Prevent cut-off
                     }
                     .padding(.horizontal, 30)
-                }
+                } .keyboardAware()
 
                 // FOOTER - Fixed at Bottom
                 VStack(spacing: 16) {

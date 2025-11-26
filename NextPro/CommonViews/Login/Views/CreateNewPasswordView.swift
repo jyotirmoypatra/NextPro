@@ -135,7 +135,7 @@ struct CreateNewPasswordView: View {
                         
                     }
                     .padding(.horizontal, 25) // ✅ Apply padding to entire VStack
-                }
+                } .keyboardAware()
                 
                 // Bottom Button
                 VStack(spacing: 16) {

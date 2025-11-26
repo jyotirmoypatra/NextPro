@@ -232,6 +232,7 @@ struct EditProfileView: View {
                         }
                         .padding(.horizontal, 30)
                     }
+                .keyboardAware()
                     
                     // FOOTER - Fixed at Bottom
                     VStack(spacing: 16) {
