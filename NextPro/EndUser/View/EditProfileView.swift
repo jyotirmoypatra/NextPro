@@ -16,6 +16,15 @@ struct EditProfileView: View {
     @State private var showSuccessAlert = false
     @State private var isLoading = false
     
+    // Parameters to receive data from ProfileEndUserView
+    let initialFullName: String
+    let initialPhoneNumber: String
+    
+    init(fullName: String = "", phoneNumber: String = "") {
+        self.initialFullName = fullName
+        self.initialPhoneNumber = phoneNumber
+    }
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
@@ -286,11 +295,11 @@ struct EditProfileView: View {
     }
     
     func loadUserData() {
-        // Load existing user data from UserDefaults or API
-        fullName = UserDefaults.standard.string(forKey: "user_full_name") ?? "James Arthur"
-        phoneNumber = UserDefaults.standard.string(forKey: "user_phone") ?? "+8353753535"
+        // Load data from passed parameters or UserDefaults as fallback
+        fullName = !initialFullName.isEmpty ? initialFullName :  ""
+        phoneNumber = !initialPhoneNumber.isEmpty ? initialPhoneNumber :  ""
       //  email = UserDefaults.standard.string(forKey: "user_email") ?? ""
-        address = UserDefaults.standard.string(forKey: "user_address") ?? ""
+        
     }
     
     func saveProfile() {
@@ -321,7 +330,7 @@ struct EditProfileView: View {
 }
 
 #Preview {
-    EditProfileView()
+    EditProfileView(fullName: "John Doe", phoneNumber: "+1234567890")
 }
 
 

@@ -211,7 +211,10 @@ struct ProfileEndUserView: View {
         }
         
         .navigationDestination(isPresented: $navigateToEditProfile) {
-            EditProfileView()
+            EditProfileView(
+                fullName: viewModel.fullName,
+                phoneNumber: viewModel.phoneNumber
+            )
         }
         
         .onChange(of: navigateToEditProfile) { newValue in
