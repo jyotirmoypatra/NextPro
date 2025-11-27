@@ -38,7 +38,13 @@ struct EditProfileView: View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
                 // Background
-                Color.black.opacity(0.4)
+                Image("backgroundimg")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .ignoresSafeArea()
+                
+                Color.black.opacity(0.9)
                     .ignoresSafeArea()
                 
                 // MARK: - Header (Fixed at top)
@@ -86,16 +92,7 @@ struct EditProfileView: View {
                             // Profile Image Section
                             VStack(spacing: 12) {
                                 ZStack(alignment: .bottomTrailing) {
-//                                    Image("person")
-//                                        .resizable()
-//                                        .scaledToFill()
-//                                        .frame(width: 100, height: 100)
-//                                        .clipShape(Circle())
-//                                        .overlay(
-//                                            Circle()
-//                                                .stroke(Color.white.opacity(0.2), lineWidth: 2)
-//                                        )
-                                    
+
                                     if let img = selectedImage {
                                         Image(uiImage: img)
                                             .resizable()
@@ -341,20 +338,83 @@ struct EditProfileView: View {
             Text("Please allow photo library access to select a profile picture.")
         }
 
-        .confirmationDialog("Select Option", isPresented: $showSourcePicker, titleVisibility: .visible) {
+//        .confirmationDialog("Select Option", isPresented: $showSourcePicker, titleVisibility: .visible) {
+//            
+//            Button("Camera") {
+//                pickerSource = .camera
+//                checkCameraPermission()
+//            }
+//            
+//            Button("Photo Library") {
+//                pickerSource = .gallery
+//                checkPhotoPermission()
+//            }
+//            
+//            Button("Cancel", role: .cancel) { }
+//        }
+
+        
+        
+        .sheet(isPresented: $showSourcePicker) {
+            VStack(spacing: 0) {
+                
+                // Drag indicator
+                Capsule()
+                    .fill(Color.white.opacity(0.6))
+                    .frame(width: 40, height: 5)
+                    .padding(.top, 12)
             
-            Button("Camera") {
-                pickerSource = .camera
-                checkCameraPermission()
+                
+                // Camera
+                Button {
+                    pickerSource = .camera
+                    checkCameraPermission()
+                    showSourcePicker = false
+                } label: {
+                    Text("Camera")
+                        .font(.custom("Inter-Bold", size: 17))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 17)
+                        .foregroundColor(.blue)
+                }
+                .padding(.vertical,20)
+                Divider().background(Color.white.opacity(0.3))
+                
+                // Gallery
+                Button {
+                    pickerSource = .gallery
+                    checkPhotoPermission()
+                    showSourcePicker = false
+                } label: {
+                    Text("Photo Library")
+                        .font(.custom("Inter-Bold", size: 17))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .foregroundColor(.blue)
+                }
+                .padding(.vertical,20)
+                Divider().background(Color.white.opacity(0.3))
+                
+                // Cancel
+                Button {
+                    showSourcePicker = false
+                } label: {
+                    Text("Cancel")
+                        .font(.custom("Inter-Bold", size: 17))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 18)
+                        .foregroundColor(.red)
+                }
+                .padding(.top, 10)
+                
             }
-            
-            Button("Photo Library") {
-                pickerSource = .gallery
-                checkPhotoPermission()
-            }
-            
-            Button("Cancel", role: .cancel) { }
+      
+            .cornerRadius(20)
+            .presentationDetents([.height(260)])
+            .presentationDragIndicator(.hidden)
         }
+
+
 
     }
     
