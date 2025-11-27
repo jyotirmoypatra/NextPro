@@ -9,44 +9,51 @@
 import SwiftUI
 import PhotosUI
 
+
+
 struct ImagePicker: UIViewControllerRepresentable {
-    @Binding var selectedImage: UIImage?
+    enum SourceType {
+        case camera, gallery
+    }
     
-    func makeUIViewController(context: Context) -> some UIViewController {
-        var config = PHPickerConfiguration(photoLibrary: .shared())
-        config.filter = .images
-        config.selectionLimit = 1
+    @Binding var selectedImage: UIImage?
+    var sourceType: SourceType
+    
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
         
-        let picker = PHPickerViewController(configuration: config)
+        switch sourceType {
+        case .camera:
+            picker.sourceType = .camera
+        case .gallery:
+            picker.sourceType = .photoLibrary
+        }
+        
         picker.delegate = context.coordinator
+        picker.allowsEditing = false
         return picker
     }
     
-    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
     
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
     
-    class Coordinator: NSObject, PHPickerViewControllerDelegate {
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
         let parent: ImagePicker
         
         init(_ parent: ImagePicker) {
             self.parent = parent
         }
         
-        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-            picker.dismiss(animated: true)
+        func imagePickerController(_ picker: UIImagePickerController,
+                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
             
-            guard let item = results.first else { return }
-            
-            if item.itemProvider.canLoadObject(ofClass: UIImage.self) {
-                item.itemProvider.loadObject(ofClass: UIImage.self) { image, _ in
-                    DispatchQueue.main.async {
-                        self.parent.selectedImage = image as? UIImage
-                    }
-                }
+            if let image = info[.originalImage] as? UIImage {
+                parent.selectedImage = image
             }
+            picker.dismiss(animated: true)
         }
     }
 }

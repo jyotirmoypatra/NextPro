@@ -20,6 +20,9 @@ struct EditProfileView: View {
     @State private var showImagePicker = false
     @State private var selectedImage: UIImage? = nil
     @State private var showPermissionAlert = false
+    @State private var showSourcePicker = false
+    @State private var pickerSource: ImagePicker.SourceType = .gallery
+
 
     
     // Parameters to receive data from ProfileEndUserView
@@ -119,7 +122,8 @@ struct EditProfileView: View {
                                     Button(action: {
                                         // Handle image picker
                                         print("Change profile picture")
-                                        checkPhotoPermission()
+                                        //checkPhotoPermission()
+                                        showSourcePicker = true
                                     }) {
                                         Image(systemName: "camera.fill")
                                             .font(.system(size: 14))
@@ -323,7 +327,7 @@ struct EditProfileView: View {
             Text("Your profile has been updated successfully!")
         }
         .sheet(isPresented: $showImagePicker) {
-            ImagePicker(selectedImage: $selectedImage)
+            ImagePicker(selectedImage: $selectedImage, sourceType: pickerSource)
         }
 
         .alert("Permission Needed", isPresented: $showPermissionAlert) {
@@ -335,6 +339,21 @@ struct EditProfileView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Please allow photo library access to select a profile picture.")
+        }
+
+        .confirmationDialog("Select Option", isPresented: $showSourcePicker, titleVisibility: .visible) {
+            
+            Button("Camera") {
+                pickerSource = .camera
+                checkCameraPermission()
+            }
+            
+            Button("Photo Library") {
+                pickerSource = .gallery
+                checkPhotoPermission()
+            }
+            
+            Button("Cancel", role: .cancel) { }
         }
 
     }
@@ -396,6 +415,28 @@ struct EditProfileView: View {
             showPermissionAlert = true
         }
     }
+    
+    func checkCameraPermission() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            showImagePicker = true
+            
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        showImagePicker = true
+                    } else {
+                        showPermissionAlert = true
+                    }
+                }
+            }
+            
+        default:
+            showPermissionAlert = true
+        }
+    }
+
 
 }
 
