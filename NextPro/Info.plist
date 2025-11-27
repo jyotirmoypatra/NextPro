@@ -43,6 +43,10 @@
     </array>
     <key>com.apple.developer.networking.wifi-info</key>
     <true/>
+    
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>We need access to your photo library to select your profile picture.</string>
+
   
 
 </dict>

@@ -272,7 +272,7 @@ struct DoorOpenView: View {
             startMonitoringTask = workItem
             
             // Schedule the work item with 2-second delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: workItem)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: workItem)
         }
         .onDisappear {
             print("🛑 DoorOpenView disappeared — stopping all BLE and timers")

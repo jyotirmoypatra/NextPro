@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Photos
 
 struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
@@ -15,6 +16,11 @@ struct EditProfileView: View {
     @State private var address: String = ""
     @State private var showSuccessAlert = false
     @State private var isLoading = false
+    
+    @State private var showImagePicker = false
+    @State private var selectedImage: UIImage? = nil
+    @State private var showPermissionAlert = false
+
     
     // Parameters to receive data from ProfileEndUserView
     let initialFullName: String
@@ -77,20 +83,43 @@ struct EditProfileView: View {
                             // Profile Image Section
                             VStack(spacing: 12) {
                                 ZStack(alignment: .bottomTrailing) {
-                                    Image("person")
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 100, height: 100)
-                                        .clipShape(Circle())
-                                        .overlay(
-                                            Circle()
-                                                .stroke(Color.white.opacity(0.2), lineWidth: 2)
-                                        )
+//                                    Image("person")
+//                                        .resizable()
+//                                        .scaledToFill()
+//                                        .frame(width: 100, height: 100)
+//                                        .clipShape(Circle())
+//                                        .overlay(
+//                                            Circle()
+//                                                .stroke(Color.white.opacity(0.2), lineWidth: 2)
+//                                        )
+                                    
+                                    if let img = selectedImage {
+                                        Image(uiImage: img)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 100, height: 100)
+                                            .clipShape(Circle())
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.white.opacity(0.2), lineWidth: 2)
+                                            )
+                                    } else {
+                                        Image("person")
+                                            .resizable()
+                                            .scaledToFill().frame(width: 100, height: 100)
+                                            .clipShape(Circle())
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.white.opacity(0.2), lineWidth: 2)
+                                            )
+                                    }
+
                                     
                                     // Edit icon
                                     Button(action: {
                                         // Handle image picker
                                         print("Change profile picture")
+                                        checkPhotoPermission()
                                     }) {
                                         Image(systemName: "camera.fill")
                                             .font(.system(size: 14))
@@ -293,6 +322,21 @@ struct EditProfileView: View {
         } message: {
             Text("Your profile has been updated successfully!")
         }
+        .sheet(isPresented: $showImagePicker) {
+            ImagePicker(selectedImage: $selectedImage)
+        }
+
+        .alert("Permission Needed", isPresented: $showPermissionAlert) {
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Please allow photo library access to select a profile picture.")
+        }
+
     }
     
     func loadUserData() {
@@ -328,6 +372,31 @@ struct EditProfileView: View {
             print("✅ Profile updated successfully")
         }
     }
+    
+    
+    func checkPhotoPermission() {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        
+        switch status {
+        case .authorized, .limited:
+            showImagePicker = true
+            
+        case .notDetermined:
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { newStatus in
+                DispatchQueue.main.async {
+                    if newStatus == .authorized || newStatus == .limited {
+                        showImagePicker = true
+                    } else {
+                        showPermissionAlert = true
+                    }
+                }
+            }
+            
+        default:
+            showPermissionAlert = true
+        }
+    }
+
 }
 
 #Preview {

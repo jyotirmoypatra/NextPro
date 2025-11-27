@@ -19,15 +19,18 @@ class ForgetPasswordRequestViewModel: ObservableObject {
     private let networkManager = NetworkManager.shared
 
     func sendRequest() async {
-        guard !email.isEmpty else {
-            errorMessage = "Email cannot be empty."
-            return
-        }
         
         guard network.hasInternet else {
             errorMessage = "No internet connection."
             return
         }
+        
+        guard !email.isEmpty else {
+            errorMessage = "Email cannot be empty."
+            return
+        }
+        
+        
 
         isLoading = true
         errorMessage = ""

@@ -21,7 +21,7 @@ class VerifyOtpViewModel: ObservableObject {
     @Published var digit6 = ""
     
     @Published var isLoading = false
-    @Published var errorMessage: String?
+    @Published var errorMessage: String = ""
     @Published var success = false
 
     
@@ -49,7 +49,7 @@ class VerifyOtpViewModel: ObservableObject {
         }
 
         isLoading = true
-        errorMessage = nil
+        errorMessage = ""
         
         print("email:\(emailId)")
         print("email:\(otpCode)")

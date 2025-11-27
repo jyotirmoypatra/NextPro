@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 
 struct VerifyOtpAccount: View {
@@ -15,7 +16,15 @@ struct VerifyOtpAccount: View {
     @State private var digit4 = ""
     @State private var digit5 = ""
     
+    @StateObject private var resendVM = ForgetPasswordRequestViewModel()
     @StateObject var viewModel =  VerifyOtpViewModel()
+    @StateObject private var toastManager = ToastManager.shared
+    @State private var counter: Int = 8
+    @State private var timerActive: Bool = true
+    @State private var showOtpVerifyFailedAlert = false
+   // @State private var showOtpResendFailedAlert = false
+
+    
 
     var email : String
     @State private var navigateToResetPassword = false
@@ -27,6 +36,9 @@ struct VerifyOtpAccount: View {
     enum OTPField: Int {
         case digit1, digit2, digit3, digit4, digit5, digit6
     }
+    
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
@@ -66,10 +78,10 @@ struct VerifyOtpAccount: View {
                         VStack(alignment: .leading, spacing: 6) {
                             ZStack(alignment: .center) {
                                 if viewModel.digit1.isEmpty {
-                                    Text("0")
+                                    Text("")
                                         .font(.custom("Inter-Regular", size: 16))
                                         .foregroundColor(Color.white.opacity(0.5))
-                                        .padding(.leading, 12)
+                                      
                                 }
                                 
                                 TextField("", text: $viewModel.digit1)
@@ -92,10 +104,10 @@ struct VerifyOtpAccount: View {
                         VStack(alignment: .leading, spacing: 6) {
                             ZStack(alignment: .center) {
                                 if viewModel.digit2.isEmpty {
-                                    Text("0")
+                                    Text("")
                                         .font(.custom("Inter-Regular", size: 16))
                                         .foregroundColor(Color.white.opacity(0.5))
-                                        .padding(.leading, 12)
+                                       
                                 }
                                 
                                 TextField("", text: $viewModel.digit2)
@@ -118,10 +130,10 @@ struct VerifyOtpAccount: View {
                         VStack(alignment: .leading, spacing: 6) {
                             ZStack(alignment: .center) {
                                 if viewModel.digit3.isEmpty {
-                                    Text("0")
+                                    Text("")
                                         .font(.custom("Inter-Regular", size: 16))
                                         .foregroundColor(Color.white.opacity(0.5))
-                                        .padding(.leading, 12)
+                                        
                                 }
                                 
                                 TextField("", text: $viewModel.digit3)
@@ -144,10 +156,10 @@ struct VerifyOtpAccount: View {
                         VStack(alignment: .leading, spacing: 6) {
                             ZStack(alignment: .center) {
                                 if viewModel.digit4.isEmpty {
-                                    Text("0")
+                                    Text("")
                                         .font(.custom("Inter-Regular", size: 16))
                                         .foregroundColor(Color.white.opacity(0.5))
-                                        .padding(.leading, 12)
+                                       
                                 }
                                 
                                 TextField("", text: $viewModel.digit4)
@@ -170,10 +182,10 @@ struct VerifyOtpAccount: View {
                         VStack(alignment: .leading, spacing: 6) {
                             ZStack(alignment: .center) {
                                 if viewModel.digit5.isEmpty {
-                                    Text("0")
+                                    Text("")
                                         .font(.custom("Inter-Regular", size: 16))
                                         .foregroundColor(Color.white.opacity(0.5))
-                                        .padding(.leading, 12)
+                                       
                                 }
                                 
                                 TextField("", text: $viewModel.digit5)
@@ -196,10 +208,10 @@ struct VerifyOtpAccount: View {
                         VStack(alignment: .leading, spacing: 6) {
                             ZStack(alignment: .center) {
                                 if viewModel.digit6.isEmpty {
-                                    Text("0")
+                                    Text("")
                                         .font(.custom("Inter-Regular", size: 16))
                                         .foregroundColor(Color.white.opacity(0.5))
-                                        .padding(.leading, 12)
+                                       
                                 }
                                 
                                 TextField("", text: $viewModel.digit6)
@@ -219,6 +231,38 @@ struct VerifyOtpAccount: View {
                         }
                     }
                     
+                        //otp resend
+                        HStack {
+                            if timerActive {
+                                Text("Resend OTP in \(counter)s")
+                                    .foregroundColor(.gray.opacity(0.8))
+                                    .font(.custom("Inter-Regular", size: 16))
+                            } else {
+                                Button(action: {
+                                  resendOtpNow()
+                                }) {
+                                    Text("RESEND OTP")
+                                        .font(.custom("Inter-SemiBold", size: 16))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .underline()
+                                        .cornerRadius(8)
+                                }
+                            }
+                        }
+                        .onReceive(timer) { _ in
+                            if timerActive {
+                                if counter > 0 {
+                                    counter -= 1
+                                } else {
+                                    timerActive = false
+                                }
+                            }
+                        }
+
+                        
+                        
                     Spacer().frame(height: 150)  // Prevent cut-off by fixed footer
                 }
                 .padding(.horizontal, 30)
@@ -232,6 +276,8 @@ struct VerifyOtpAccount: View {
                             await viewModel.verifyOtp(emailId: self.email)
                             if viewModel.success {
                                 navigateToResetPassword = true
+                            }else{
+                                showOtpVerifyFailedAlert = true
                             }
                         }
                     }) {
@@ -271,7 +317,7 @@ struct VerifyOtpAccount: View {
             
             
             // LOADING OVERLAY
-            if viewModel.isLoading {
+            if viewModel.isLoading || resendVM.isLoading {
                 ZStack {
                     Color.black.opacity(0.4)
                         .ignoresSafeArea()
@@ -284,6 +330,7 @@ struct VerifyOtpAccount: View {
                 .ignoresSafeArea()
             }
             
+        
         }
             .onTapGesture {
                 UIApplication.shared.hideKeyboard()
@@ -297,12 +344,53 @@ struct VerifyOtpAccount: View {
                 .interactiveDismissDisabled(true)
         }
         .onAppear {
+            
+           resendVM.email = self.email
             // Auto-focus first field when view appears
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 focusedField = .digit1
             }
         }
+        .alert("Failed", isPresented: $showOtpVerifyFailedAlert) {
+                        Button("OK", role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage)
+        }
+        
+//        .alert("Failed to resend OTP", isPresented: $showOtpResendFailedAlert) {
+//                        Button("OK", role: .cancel) {}
+//        } message: {
+//            Text(resendVM.errorMessage.isEmpty ? "Invalid credentials." : resendVM.errorMessage)
+//        }
+        .toast() 
     }
+    
+    
+    private func resendOtpNow() {
+       
+        focusedField = nil
+
+        Task {
+                await resendVM.sendRequest()
+                if resendVM.success {
+                    counter = 20
+                    timerActive = true
+                    toastManager.show(
+                        message: "Resend otp successfully!",
+                        type: .success,
+                        duration: 1.0
+                    )
+                }else{
+                    // showOtpResendFailedAlert = true
+                    toastManager.show(
+                        message: resendVM.errorMessage,
+                        type: .error,
+                        duration: 1.0
+                      )
+                }
+            }
+    }
+
     
     // MARK: - Helper Functions
     private func handleDigitChange(newValue: String, field: OTPField) {
