@@ -228,6 +228,7 @@ struct DoorOpenView: View {
             
             mqttManager.subscribeToDevice("4283847520" ,  model: "tc434")
             mqttManager.subscribeToDevice("4282184653", model: "bc220")
+            mqttManager.subscribeToDevice("4282705968", model: "M230")
             
             await cardStorage.loadCards()
             
@@ -370,14 +371,17 @@ struct DoorOpenView: View {
             if type == 0 {
                 animateSuccess()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
+                
+                AceesMessage =  "Door Access Granted"
+                speakText("Door Access Granted.")
 
-                if doorId == 1{
-                    AceesMessage =  "Door 1 opened successfully."
-                    speakText("Door 1 opened successfully.")
-                }else{
-                    AceesMessage =  "Door 2 opened successfully."
-                    speakText("Door 2 opened successfully.")
-                }
+//                if doorId == 1{
+//                    AceesMessage =  "Access Granted"
+//                    speakText("Access Granted.")
+//                }else{
+//                    AceesMessage =  "Door 2 opened successfully."
+//                    speakText("Door 2 opened successfully.")
+//                }
                
                 print("succes event recievd")
                 
@@ -385,13 +389,16 @@ struct DoorOpenView: View {
                 animateFailure()
                 UINotificationFeedbackGenerator().notificationOccurred(.error)
 
-                if doorId == 1{
-                    AceesMessage =  "Door 1 Access Denied"
-                    speakText("Door 1 Access Denied.")
-                }else{
-                    AceesMessage =  "Door 2 Access Denied"
-                    speakText("Door 2 Access Denied.")
-                }
+//                if doorId == 1{
+//                    AceesMessage =  "Door 1 Access Denied"
+//                    speakText("Door 1 Access Denied.")
+//                }else{
+//                    AceesMessage =  "Door 2 Access Denied"
+//                    speakText("Door 2 Access Denied.")
+//                }
+                
+                AceesMessage =  "Door Access Denied."
+                speakText("Door Access Denied.")
                 
                // speakText("Access Denied.")
                 print("succes event recievd")

@@ -179,6 +179,15 @@ class DoorStorageManager: ObservableObject {
                     doorID: 3,
                     eKey: "d8829cf1e861620e2d42b2f4af4fd4db000000000000000000000000000000001000",
                     cardno: "2988462596"
+                ),
+                DoorModelUser(
+                    name: "M230 (Access control machine)",
+                    devSn: "4282705968",
+                    devMac: "58:cf:79:1a:89:ce",
+                    doorID: 4,
+                    eKey: "92fc410e8d125331c26faf21c7e77292000000000000000000000000000000001000",
+                   // cardno: "1557049426"
+                    cardno: "1557047606"
                 )
             ]
             

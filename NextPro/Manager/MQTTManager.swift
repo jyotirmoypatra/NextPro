@@ -115,6 +115,7 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
         print("✅ MQTT Connected Successfully")
         subscribeToDevice("4283847520" ,  model: "tc434")
         subscribeToDevice("4282184653", model: "bc220")
+        subscribeToDevice("4282705968", model: "M230")
         
     }
 
