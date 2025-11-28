@@ -57,12 +57,16 @@ struct ProfileEndUserView: View {
                     VStack(spacing: 28) {
                         // MARK: - Profile Info Section
                         VStack(spacing: 12) {
-                            Image("person") // Replace with your actual asset name
+                            Image(systemName: "person.circle.fill")// Replace with your actual asset name
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width: 96, height: 96)
+                                .foregroundColor(.gray.opacity(0.6))
                                 .clipShape(Circle())
                                 .shadow(radius: 6)
+                                
+                            
+                            
 
                             // Full Name
                             Text(viewModel.isLoading ? "Loading..." : viewModel.fullName)
@@ -213,7 +217,9 @@ struct ProfileEndUserView: View {
         .navigationDestination(isPresented: $navigateToEditProfile) {
             EditProfileView(
                 fullName: viewModel.fullName,
-                phoneNumber: viewModel.phoneNumber
+                phoneNumber: viewModel.phoneNumber,
+                email : viewModel.email
+                
             )
         }
         
