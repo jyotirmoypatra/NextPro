@@ -21,7 +21,8 @@ struct EditProfileView: View {
     @State private var selectedImage: UIImage? = nil
     @State private var showPermissionAlert = false
     @State private var showSourcePicker = false
-    @State private var pickerSource: ImagePicker.SourceType = .gallery
+    @State private var pickerSource: ImagePicker.SourceType? = nil
+
     
     @StateObject private var viewModel = UploadProfileImgViewModel()
     
@@ -307,25 +308,26 @@ struct EditProfileView: View {
         } message: {
             Text("Your profile has been updated successfully!")
         }
+    
         
-        .sheet(isPresented: $showImagePicker) {
-            ImagePicker(selectedImage: $selectedImage,
-                        sourceType: pickerSource) { cropped in
+        .sheet(item: $pickerSource) { source in
+            ImagePicker(
+                selectedImage: $selectedImage,
+                sourceType: source
+            ) { cropped in
                 
-                // Convert to Base64
                 if let jpeg = cropped.jpegData(compressionQuality: 0.8) {
                     viewModel.ImgBase64 = jpeg.base64EncodedString()
                     
                     Task {
                         await viewModel.UploadImg()
                         if viewModel.uploadImgSuccess {
-                            // Show success toast
                             toastManager.show(
                                 message: viewModel.uploadSuccessMessage,
                                 type: .success,
                                 duration: 1.0
                             )
-                        }else{
+                        } else {
                             toastManager.show(
                                 message: viewModel.errorMessage,
                                 type: .error,
@@ -336,6 +338,8 @@ struct EditProfileView: View {
                 }
             }
         }
+
+        
         .alert("Permission Needed", isPresented: $showPermissionAlert) {
             Button("Open Settings") {
                 if let url = URL(string: UIApplication.openSettingsURLString) {
@@ -360,9 +364,11 @@ struct EditProfileView: View {
                 
                 // Camera
                 Button {
-                    pickerSource = .camera
-                    checkCameraPermission()
+
                     showSourcePicker = false
+                       DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                           checkCameraPermission()
+                       }
                 } label: {
                     Text("Camera")
                         .font(.custom("Inter-Bold", size: 17))
@@ -375,9 +381,10 @@ struct EditProfileView: View {
                 
                 // Gallery
                 Button {
-                    pickerSource = .gallery
-                    checkPhotoPermission()
                     showSourcePicker = false
+                       DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                           checkPhotoPermission()
+                       }
                 } label: {
                     Text("Photo Library")
                         .font(.custom("Inter-Bold", size: 17))
@@ -447,49 +454,47 @@ struct EditProfileView: View {
     }
     
     
+
+    
     func checkPhotoPermission() {
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-        
-        switch status {
-        case .authorized, .limited:
-            showImagePicker = true
-            
-        case .notDetermined:
+
+        if status == .authorized || status == .limited {
+            pickerSource = .gallery
+        }
+        else if status == .notDetermined {
             PHPhotoLibrary.requestAuthorization(for: .readWrite) { newStatus in
                 DispatchQueue.main.async {
-                    if newStatus == .authorized || newStatus == .limited {
-                        showImagePicker = true
-                    } else {
-                        showPermissionAlert = true
-                    }
+                    pickerSource = (newStatus == .authorized || newStatus == .limited) ? .gallery : nil
+                    showPermissionAlert = !(newStatus == .authorized || newStatus == .limited)
                 }
             }
-            
-        default:
+        }
+        else {
             showPermissionAlert = true
         }
     }
+
+    
     
     func checkCameraPermission() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
-            showImagePicker = true
-            
+            pickerSource = .camera
+
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { granted in
                 DispatchQueue.main.async {
-                    if granted {
-                        showImagePicker = true
-                    } else {
-                        showPermissionAlert = true
-                    }
+                    pickerSource = granted ? .camera : nil
+                    showPermissionAlert = !granted
                 }
             }
-            
+
         default:
             showPermissionAlert = true
         }
     }
+
     
     
 }

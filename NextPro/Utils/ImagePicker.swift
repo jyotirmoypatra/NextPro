@@ -11,9 +11,14 @@ import PhotosUI
 import CropViewController
 
 struct ImagePicker: UIViewControllerRepresentable {
-    enum SourceType {
-        case camera, gallery
+    enum SourceType: Identifiable {
+        case camera
+        case gallery
+        var id: Int {
+            hashValue
+        }
     }
+
     
     @Binding var selectedImage: UIImage?
     var sourceType: SourceType
