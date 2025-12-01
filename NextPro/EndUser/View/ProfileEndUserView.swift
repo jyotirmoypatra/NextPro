@@ -330,11 +330,11 @@ struct LogoutSheetView: View {
                     .frame(width: 40, height: 5)
                 
                 Text("Logout")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.custom("Inter-SemiBold", size: 18))
                     .foregroundColor(colorScheme == .dark ? .white : .black)
                 
                 Text("Are you sure you want to logout from your account?")
-                    .font(.system(size: 15))
+                    .font(.custom("Inter-Regular", size: 16))
                     .foregroundColor(colorScheme == .dark ? .white : .black)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -347,7 +347,7 @@ struct LogoutSheetView: View {
                     resetToLogin()
                 }) {
                     Text("YES, LOGOUT")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.custom("Inter-Bold", size: 16))
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(colorScheme == .dark ? .white : .black)
@@ -371,7 +371,7 @@ struct LogoutSheetView: View {
             .padding(.horizontal, 10)
             
         }
-        .presentationDetents([.height(260)])
+        .presentationDetents([.height(270)])
     }
     
     // MARK: - Force Reset to Login
@@ -408,11 +408,11 @@ struct  DeleteConfirmationSheet: View {
 
                 
                 Text("Delete Account")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.custom("Inter-SemiBold", size: 18))
                     .foregroundColor(colorScheme == .dark ? .white : .black)
                 
                 Text("Are you sure you want to delete  your account?.This action cannot be undone and all your data will be permanently removed.")
-                    .font(.system(size: 15))
+                    .font(.custom("Inter-Regular", size: 16))
                     .foregroundColor(colorScheme == .dark ? .white : .black)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -424,7 +424,7 @@ struct  DeleteConfirmationSheet: View {
                    
                 }) {
                     Text("YES, DELETE MY ACCOUNT")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.custom("Inter-Bold", size: 16))
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(colorScheme == .dark ? .white : .black)

@@ -10,6 +10,7 @@ import Photos
 import SDWebImageSwiftUI
 struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) var colorScheme
     @State private var fullName: String = ""
     @State private var phoneNumber: String = ""
     @State private var email: String = ""
@@ -121,12 +122,6 @@ struct EditProfileView: View {
                                     
                                     
                                     ProfileImageView(imageUrl: profileImgUrl)
-                                    
-                                    
-                                    
-                                           
-                                    
-                                    
                                     
                                 }
                                 
@@ -326,30 +321,7 @@ struct EditProfileView: View {
                 selectedImage: $selectedImage,
                 sourceType: source
             ) { cropped in
-                
-//                if let jpeg = cropped.jpegData(compressionQuality: 0.8) {
-//                    viewModel.ImgBase64 = jpeg.base64EncodedString()
-//                    
-//                    Task {
-//                        await viewModel.UploadImg()
-//                        if viewModel.uploadImgSuccess {
-//                            toastManager.show(
-//                                message: viewModel.uploadSuccessMessage,
-//                                type: .success,
-//                                duration: 1.0
-//                            )
-//                        } else {
-//                            toastManager.show(
-//                                message: viewModel.errorMessage,
-//                                type: .error,
-//                                duration: 1.0
-//                            )
-//                        }
-//                    }
-//                }
-                
-                
-                
+
                 if let compressed = cropped.compressTo(maxKB: 300) {
                     viewModel.ImgBase64 = compressed.base64EncodedString()
 
@@ -387,49 +359,69 @@ struct EditProfileView: View {
         } message: {
             Text("Please allow photo library access to select a profile picture.")
         }
-        
+
         
         .sheet(isPresented: $showSourcePicker) {
-            VStack(spacing: 0) {
+            VStack(spacing: 20) {
                 
                 // Drag indicator
                 Capsule()
                     .fill(Color.white.opacity(0.6))
                     .frame(width: 40, height: 5)
-                    .padding(.top, 12)
+                   
                 
+                Text("Choose Profile Picture")
+                    .font(.custom("Inter-SemiBold", size: 18))
+                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                
+                Divider().background(Color.white.opacity(0.3))
                 
                 // Camera
                 Button {
-
                     showSourcePicker = false
-                       DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                           checkCameraPermission()
-                       }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                        checkCameraPermission()
+                    }
                 } label: {
-                    Text("Camera")
-                        .font(.custom("Inter-Bold", size: 17))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 17)
-                        .foregroundColor(.blue)
+                    HStack(spacing: 12) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                        
+                        Text("Capture from camera")
+                            .font(.custom("Inter-Medium", size: 16))
+                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                        
+                        Spacer() // pushes content to leading
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 25)
                 }
-                .padding(.vertical,20)
-                Divider().background(Color.white.opacity(0.3))
+                
+            //    Divider().background(Color.white.opacity(0.3))
                 
                 // Gallery
                 Button {
                     showSourcePicker = false
-                       DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                           checkPhotoPermission()
-                       }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                        checkPhotoPermission()
+                    }
                 } label: {
-                    Text("Photo Library")
-                        .font(.custom("Inter-Bold", size: 17))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .foregroundColor(.blue)
+                    HStack(spacing: 12) {
+                        Image(systemName: "photo.on.rectangle")
+                            .font(.system(size: 20))
+                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                        
+                        Text("Select from photo library")
+                            .font(.custom("Inter-Medium", size: 16))
+                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                        
+                        Spacer() // pushes content to leading
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 20)
                 }
-                .padding(.vertical,20)
+                
                 Divider().background(Color.white.opacity(0.3))
                 
                 // Cancel
@@ -437,20 +429,19 @@ struct EditProfileView: View {
                     showSourcePicker = false
                 } label: {
                     Text("Cancel")
-                        .font(.custom("Inter-Bold", size: 17))
+                        .font(.custom("Inter-Bold", size: 14))
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 18)
-                        .foregroundColor(.red)
+                        .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.8))
+                        .padding(.top,10)
                 }
-                .padding(.top, 10)
                 
             }
-            
             .cornerRadius(20)
-            .presentationDetents([.height(260)])
+            .presentationDetents([.height(290)])
             .presentationDragIndicator(.hidden)
+            .padding(.horizontal,15)
         }
-        
+
         
         
     }
