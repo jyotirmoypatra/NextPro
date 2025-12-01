@@ -460,6 +460,7 @@ struct EditProfileView: View {
         fullName = !initialFullName.isEmpty ? initialFullName :  ""
         phoneNumber = !initialPhoneNumber.isEmpty ? initialPhoneNumber :  ""
         email = !initialemail.isEmpty ? initialemail : ""
+        profileImgUrl = !initialProfileImageUrl.isEmpty ? initialProfileImageUrl : ""
         //  email = UserDefaults.standard.string(forKey: "user_email") ?? ""
         
     }

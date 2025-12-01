@@ -50,7 +50,7 @@ class UserProfileDetailsViewModel: ObservableObject {
             email = response.data.email ?? ""
             accountStatus = response.data.status
             organization = response.data.organization ?? ""
-            image_url = response.data.image_url ?? "https://picsum.photos/536/354"
+            image_url = response.data.image_url ?? ""
 
         } catch {
             errorMessage = error.localizedDescription
