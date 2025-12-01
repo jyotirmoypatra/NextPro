@@ -356,11 +356,15 @@ struct LogoutSheetView: View {
                 }
                 .padding(.horizontal)
                 
-                Button("Cancel") {
-                   dismiss()
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Cancel")
+                        .font(.custom("Inter-Bold", size: 15))
+                        .frame(maxWidth: .infinity)
+                        .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.8))
+                        .padding(.top,10)
                 }
-                .foregroundColor(colorScheme == .dark ? .white : .black)
-                .padding(.top, 10)
                 
                 
             }
@@ -418,7 +422,7 @@ struct  DeleteConfirmationSheet: View {
                     .fixedSize(horizontal: false, vertical: true)
                 
                 
-                Divider().background(Color.white.opacity(0.2))
+                Divider().background(colorScheme == .dark ? .white.opacity(0.3) : .black.opacity(0.3))
                 
                 Button(action: {
                    
@@ -433,11 +437,15 @@ struct  DeleteConfirmationSheet: View {
                 }
                 .padding(.horizontal)
                 
-                Button("Cancel") {
-                   dismiss()
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Cancel")
+                        .font(.custom("Inter-Bold", size: 15))
+                        .frame(maxWidth: .infinity)
+                        .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.8))
+                        .padding(.top,10)
                 }
-                .foregroundColor(colorScheme == .dark ? .white : .black)
-                .padding(.top, 10)
                 
                 
             }

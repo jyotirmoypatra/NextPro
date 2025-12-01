@@ -369,7 +369,7 @@ struct EditProfileView: View {
                     .font(.custom("Inter-SemiBold", size: 18))
                     .foregroundColor(colorScheme == .dark ? .white : .black)
                 
-                Divider().background(Color.white.opacity(0.3))
+                Divider().background(colorScheme == .dark ? .white.opacity(0.3) : .black.opacity(0.3))
                 
                 // Camera
                 Button {
@@ -390,7 +390,7 @@ struct EditProfileView: View {
                         Spacer() // pushes content to leading
                     }
                     .padding(.vertical, 12)
-                    .padding(.horizontal, 25)
+                    .padding(.horizontal, 20)
                 }
                 
             //    Divider().background(Color.white.opacity(0.3))
@@ -417,14 +417,14 @@ struct EditProfileView: View {
                     .padding(.horizontal, 20)
                 }
                 
-                Divider().background(Color.white.opacity(0.3))
+                Divider().background(colorScheme == .dark ? .white.opacity(0.3) : .black.opacity(0.3))
                 
                 // Cancel
                 Button {
                     showSourcePicker = false
                 } label: {
                     Text("Cancel")
-                        .font(.custom("Inter-Bold", size: 14))
+                        .font(.custom("Inter-Bold", size: 15))
                         .frame(maxWidth: .infinity)
                         .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.8))
                         .padding(.top,10)
