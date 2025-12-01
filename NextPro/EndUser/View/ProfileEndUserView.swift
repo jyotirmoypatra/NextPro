@@ -96,21 +96,23 @@ struct ProfileEndUserView: View {
                         // MARK: - Settings Section
                         VStack(spacing: 0) {
                             // Update Password
-                            UserProfileRow(title: "Update Password") {
+                            UserProfileRow(title: "Update Password",textColor: .white) {
                                 // Handle password update
                                 if usertype != "" && username != "" {
                                     navigateToUpdatePass = true
                                 }
                             }
 
-//                            Divider().background(Color.white.opacity(0.15))
-//
-//                            // Support
-//                            UserProfileRow(title: "Support") {
-//                                // Handle support action
-//                            }
+                            Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
+
+                            // Support
+                            UserProfileRow(title: "Support",textColor: .white) {
+                                // Handle support action
+                            }
 
                             Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
 
                             // Notifications Toggle
                             HStack {
@@ -132,8 +134,9 @@ struct ProfileEndUserView: View {
                             
                             
                             Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
                             
-                            UserProfileRow(title: "Privacy Policy") {
+                            UserProfileRow(title: "Privacy Policy" , textColor: .white) {
                                 openWebView(
                                     url: "https://www.lipsum.com/feed/html",
                                     title: "Privacy Policy"
@@ -141,8 +144,9 @@ struct ProfileEndUserView: View {
                             }
                             
                             Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
                             
-                            UserProfileRow(title: "Terms and Conditon") {
+                            UserProfileRow(title: "Terms and Conditon" , textColor: .white) {
                                 openWebView(
                                     url: "https://www.lipsum.com/feed/html",
                                     title: "Terms and Conditions"
@@ -152,8 +156,9 @@ struct ProfileEndUserView: View {
                             
                             
                             Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
                             
-                            UserProfileRow(title: "Delete Account") {
+                            UserProfileRow(title: "Delete Account" , textColor: .red) {
                                 // Handle support action
                             }
 
@@ -161,8 +166,9 @@ struct ProfileEndUserView: View {
                             
                             
                             Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
                             
-                            UserProfileRow(title: "Logout") {
+                            UserProfileRow(title: "Logout" , textColor: .red) {
                                 showLogoutAlert = true
                             }
 
@@ -290,14 +296,16 @@ struct ProfileEndUserView: View {
 // MARK: - Uniform Profile Row
 struct UserProfileRow: View {
     let title: String
+    let textColor : Color
     let action: () -> Void
+    
 
     var body: some View {
         Button(action: action) {
             HStack {
                 Text(title)
                     .font(.custom("Inter-Medium", size: 16))
-                    .foregroundColor(.white)
+                    .foregroundColor(textColor)
                 Spacer()
                 Image(systemName: "chevron.right")
                     .foregroundColor(.gray)
