@@ -24,7 +24,10 @@ struct ProfileEndUserView: View {
     @Environment(\.dismiss) var dismiss
     @State private var goToLogin = false
     @State private var showLogoutAlert = false
+    @State private var showDeleteAccountAlert = false
+    @State private var navigate_Webview_PrivacyTerms = false
 
+    
    
     var body: some View {
         ZStack {
@@ -117,7 +120,7 @@ struct ProfileEndUserView: View {
                             // Notifications Toggle
                             HStack {
                                 Text("Notifications")
-                                    .font(.system(size: 16))
+                                    .font(.custom("Inter-Medium", size: 16))
                                     .foregroundColor(.white)
                                 Spacer()
                                 Toggle("", isOn: $notificationsEnabled)
@@ -137,34 +140,31 @@ struct ProfileEndUserView: View {
                                 .padding(.horizontal,20)
                             
                             UserProfileRow(title: "Privacy Policy" , textColor: .white) {
-                                openWebView(
-                                    url: "https://www.lipsum.com/feed/html",
-                                    title: "Privacy Policy"
-                                )
+                                
+                                navigate_Webview_PrivacyTerms = true
+                                webViewURL = "https://www.lipsum.com/feed/html"
+                                webViewTitle = "Privacy Policy"
+ 
                             }
                             
                             Divider().background(Color.white.opacity(0.15))
                                 .padding(.horizontal,20)
                             
                             UserProfileRow(title: "Terms and Conditon" , textColor: .white) {
-                                openWebView(
-                                    url: "https://www.lipsum.com/feed/html",
-                                    title: "Terms and Conditions"
-                                )
+                                
+                                navigate_Webview_PrivacyTerms = true
+                                webViewURL = "https://www.lipsum.com/feed/html"
+                                webViewTitle = "Terms and Conditions"
+
                             }
 
-                            
-                            
                             Divider().background(Color.white.opacity(0.15))
                                 .padding(.horizontal,20)
                             
                             UserProfileRow(title: "Delete Account" , textColor: .red) {
-                                // Handle support action
+                                showDeleteAccountAlert = true
                             }
 
-                            
-                            
-                            
                             Divider().background(Color.white.opacity(0.15))
                                 .padding(.horizontal,20)
                             
@@ -214,10 +214,11 @@ struct ProfileEndUserView: View {
         .background(Color.black.opacity(0.4))
         
         .navigationDestination(isPresented: $navigateToUpdatePass) {
-         
             CreateNewPasswordView(userType: usertype, userName: username, comingFrom: "user_profile")
-                    
-           
+        }
+        
+        .navigationDestination(isPresented: $navigate_Webview_PrivacyTerms) {
+            PrivacyAndTermsView(webViewURL: webViewURL, webViewTitle: webViewTitle)
         }
         
         .navigationDestination(isPresented: $navigateToEditProfile) {
@@ -228,34 +229,36 @@ struct ProfileEndUserView: View {
                 
             )
         }
-        
         .onChange(of: navigateToEditProfile) { newValue in
             // Refresh data when returning from Edit Profile
             if !newValue {
                 loadUserData()
             }
         }
-        
-//        .onAppear{
-//            loadUserData()
-//        }
         .onAppear {
             Task {
                 loadUserData()
                 await viewModel.fetchUserProfile()
             }
         }
-        .alert("Logout", isPresented: $showLogoutAlert) {
-            Button("No", role: .cancel) {
-                // Do nothing, just dismiss the alert
-            }
-            Button("Yes", role: .destructive) {
-                // Proceed with logout
-                KeychainManager.shared.clearUserDefaultsAndKeychainData()
-                resetToLogin()
-            }
-        } message: {
-            Text("Are you sure you want to logout?")
+//        .alert("Logout", isPresented: $showLogoutAlert) {
+//            Button("No", role: .cancel) {
+//                // Do nothing, just dismiss the alert
+//            }
+//            Button("Yes", role: .destructive) {
+//                // Proceed with logout
+//                KeychainManager.shared.clearUserDefaultsAndKeychainData()
+//                resetToLogin()
+//            }
+//        } message: {
+//            Text("Are you sure you want to logout?")
+//        }
+        
+        .sheet(isPresented: $showLogoutAlert) {
+            LogoutSheetView()
+        }
+        .sheet(isPresented: $showDeleteAccountAlert) {
+            DeleteConfirmationSheet()
         }
 
     }
@@ -264,33 +267,21 @@ struct ProfileEndUserView: View {
         usertype = UserDefaults.standard.string(forKey: "user_type") ?? ""
         username = UserDefaults.standard.string(forKey: "username") ?? ""
 
-        
-        
     }
     
     // MARK: - Open WebView Function
-    func openWebView(url: String, title: String) {
-        webViewURL = url
-        webViewTitle = title
-        withAnimation {
-            showWebView = true
-        }
-    }
+//    func openWebView(url: String, title: String) {
+//        webViewURL = url
+//        webViewTitle = title
+//        withAnimation {
+//            showWebView = true
+//        }
+//    }
     
     func navigateToLogin() {
         goToLogin = true
     }
     
-    // MARK: - Force Reset to Login
-    func resetToLogin() {
-        DispatchQueue.main.async {
-            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let window = scene.windows.first {
-                window.rootViewController = UIHostingController(rootView: LoginView())
-                window.makeKeyAndVisible()
-            }
-        }
-    }
 }
 
 // MARK: - Uniform Profile Row
@@ -314,6 +305,155 @@ struct UserProfileRow: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 30) // 
             .contentShape(Rectangle()) // makes the entire row tappable
+        }
+    }
+}
+
+
+
+struct LogoutSheetView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) var colorScheme
+    var body: some View {
+        
+        ZStack {
+            VStack(spacing: 20) {
+                
+                // Drag indicator
+                Capsule()
+                    .fill(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.3))
+                    .frame(width: 40, height: 5)
+                
+                Text("Logout")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                
+                Text("Are you sure you want to logout from your account?")
+                    .font(.system(size: 15))
+                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                
+                Divider().background(Color.white.opacity(0.2))
+                
+                Button(action: {
+                    KeychainManager.shared.clearUserDefaultsAndKeychainData()
+                    resetToLogin()
+                }) {
+                    Text("YES, LOGOUT")
+                        .font(.system(size: 16, weight: .bold))
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(colorScheme == .dark ? .white : .black)
+                        .foregroundColor(colorScheme == .dark ? .black : .white)
+                        .cornerRadius(10)
+                }
+                .padding(.horizontal)
+                
+                Button("Cancel") {
+                   dismiss()
+                }
+                .foregroundColor(colorScheme == .dark ? .white : .black)
+                .padding(.top, 10)
+                
+                
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 20)
+            .padding(.bottom, 30)
+            .cornerRadius(24)
+            .padding(.horizontal, 10)
+            
+        }
+        .presentationDetents([.height(260)])
+    }
+    
+    // MARK: - Force Reset to Login
+    func resetToLogin() {
+        DispatchQueue.main.async {
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = scene.windows.first {
+                window.rootViewController = UIHostingController(rootView: LoginView())
+                window.makeKeyAndVisible()
+            }
+        }
+    }
+}
+
+
+
+struct  DeleteConfirmationSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) var colorScheme
+    var body: some View {
+        
+        ZStack {
+            VStack(spacing: 20) {
+                
+                // Drag indicator
+                Capsule()
+                    .fill(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.3))
+                    .frame(width: 40, height: 5)
+                
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 36))
+                    .foregroundColor(colorScheme == .dark ? .red : .red)
+                    .padding(.top, 5)
+
+                
+                Text("Delete Account")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                
+                Text("Are you sure you want to delete  your account?.This action cannot be undone and all your data will be permanently removed.")
+                    .font(.system(size: 15))
+                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                
+                Divider().background(Color.white.opacity(0.2))
+                
+                Button(action: {
+                   
+                }) {
+                    Text("YES, DELETE MY ACCOUNT")
+                        .font(.system(size: 16, weight: .bold))
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(colorScheme == .dark ? .white : .black)
+                        .foregroundColor(colorScheme == .dark ? .black : .white)
+                        .cornerRadius(10)
+                }
+                .padding(.horizontal)
+                
+                Button("Cancel") {
+                   dismiss()
+                }
+                .foregroundColor(colorScheme == .dark ? .white : .black)
+                .padding(.top, 10)
+                
+                
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 20)
+            .padding(.bottom, 30)
+            .cornerRadius(24)
+            .padding(.horizontal, 10)
+            
+        }
+        .presentationDetents([.height(360)])
+    }
+    
+    // MARK: - Force Reset to Login
+    func resetToLogin() {
+        DispatchQueue.main.async {
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = scene.windows.first {
+                window.rootViewController = UIHostingController(rootView: LoginView())
+                window.makeKeyAndVisible()
+            }
         }
     }
 }

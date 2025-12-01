@@ -71,7 +71,8 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
         mqttClient.username = "nexpromqtt"
         mqttClient.password = "neXpr02o25MqtT"
         mqttClient.keepAlive = 120
-        mqttClient.cleanSession = false
+        mqttClient.cleanSession = true  // ✅ Don't store old messages
+        mqttClient.willMessage = nil
         mqttClient.autoReconnect = true
         mqttClient.enableSSL = false
         mqttClient.delegate = self

@@ -56,7 +56,7 @@ struct EditProfileView: View {
                     Button(action: {
                         dismiss()
                     }) {
-                        Image(systemName: "chevron.left")
+                        Image(systemName: "arrow.left")
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.white)
                             .padding(10)

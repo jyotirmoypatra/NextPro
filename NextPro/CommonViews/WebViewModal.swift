@@ -73,25 +73,102 @@ struct WebViewModal: View {
 }
 
 // MARK: - WebView Wrapper
+//struct WebView: UIViewRepresentable {
+//    let url: String
+//    @Binding var isLoading: Bool
+//    @Environment(\.colorScheme) var colorScheme
+//    
+//    func makeUIView(context: Context) -> WKWebView {
+//        let bg = colorScheme == .dark ? UIColor.black : UIColor.white
+//        let webView = WKWebView()
+//        webView.navigationDelegate = context.coordinator
+//        webView.backgroundColor = bg
+//        webView.scrollView.backgroundColor = bg
+//        
+//        return webView
+//    }
+//    
+//    func updateUIView(_ webView: WKWebView, context: Context) {
+//        // Only load if not already loaded
+//        if webView.url == nil {
+//            if let url = URL(string: url) {
+//                let request = URLRequest(url: url)
+//                webView.load(request)
+//            }
+//        }
+//    }
+//    
+//    func makeCoordinator() -> Coordinator {
+//        Coordinator(self)
+//    }
+//    
+//    class Coordinator: NSObject, WKNavigationDelegate {
+//        var parent: WebView
+//        
+//        init(_ parent: WebView) {
+//            self.parent = parent
+//        }
+//        
+//        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+//            print("🌐 WebView started loading")
+//            parent.isLoading = true
+//        }
+//        
+//        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+//            print("✅ WebView finished loading")
+//            parent.isLoading = false
+//        }
+//        
+//        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+//            parent.isLoading = false
+//            print("WebView failed to load: \(error.localizedDescription)")
+//        }
+//        
+//        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+//            parent.isLoading = false
+//            print("WebView failed provisional navigation: \(error.localizedDescription)")
+//        }
+//    }
+//}
+
+
+
+
+
 struct WebView: UIViewRepresentable {
     let url: String
     @Binding var isLoading: Bool
+    @Environment(\.colorScheme) var colorScheme
     
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
         webView.navigationDelegate = context.coordinator
-        webView.backgroundColor = .white
+        webView.isOpaque = false
+        webView.backgroundColor = .clear
+        webView.scrollView.backgroundColor = .clear
         return webView
     }
     
     func updateUIView(_ webView: WKWebView, context: Context) {
-        // Only load if not already loaded
+        applyBackground(to: webView)
+
         if webView.url == nil {
             if let url = URL(string: url) {
-                let request = URLRequest(url: url)
-                webView.load(request)
+                webView.load(URLRequest(url: url))
             }
         }
+    }
+    
+    func applyBackground(to webView: WKWebView) {
+        let isDark = colorScheme == .dark
+        
+        let js = """
+        document.documentElement.style.backgroundColor = "\(isDark ? "#000000" : "#FFFFFF")";
+        document.body.style.backgroundColor = "\(isDark ? "#000000" : "#FFFFFF")";
+        document.body.style.color = "\(isDark ? "white" : "black")";
+        """
+        
+        webView.evaluateJavaScript(js, completionHandler: nil)
     }
     
     func makeCoordinator() -> Coordinator {
@@ -105,24 +182,13 @@ struct WebView: UIViewRepresentable {
             self.parent = parent
         }
         
-        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-            print("🌐 WebView started loading")
-            parent.isLoading = true
-        }
-        
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            print("✅ WebView finished loading")
             parent.isLoading = false
+            parent.applyBackground(to: webView)   // Apply again when page finishes loading
         }
         
-        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-            parent.isLoading = false
-            print("WebView failed to load: \(error.localizedDescription)")
-        }
-        
-        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-            parent.isLoading = false
-            print("WebView failed provisional navigation: \(error.localizedDescription)")
+        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+            parent.isLoading = true
         }
     }
 }
