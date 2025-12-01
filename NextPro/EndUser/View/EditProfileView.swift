@@ -7,13 +7,14 @@
 
 import SwiftUI
 import Photos
-
+import SDWebImageSwiftUI
 struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var fullName: String = ""
     @State private var phoneNumber: String = ""
     @State private var email: String = ""
     @State private var address: String = ""
+    @State private var profileImgUrl: String = ""
     @State private var showSuccessAlert = false
     @State private var isLoading = false
     @StateObject private var toastManager = ToastManager.shared
@@ -31,11 +32,13 @@ struct EditProfileView: View {
     let initialFullName: String
     let initialPhoneNumber: String
     let initialemail: String
+    let initialProfileImageUrl: String
     
-    init(fullName: String = "", phoneNumber: String = "", email : String = "") {
+    init(fullName: String = "", phoneNumber: String = "", email : String = "", profileImgUrl : String = "") {
         self.initialFullName = fullName
         self.initialPhoneNumber = phoneNumber
         self.initialemail = email
+        self.initialProfileImageUrl = profileImgUrl
     }
     
     var body: some View {
@@ -109,12 +112,20 @@ struct EditProfileView: View {
                                         )
                                 } else {
                                     
-                                    Image(systemName: "person.circle.fill")
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 120, height: 120)
-                                        .foregroundColor(.gray.opacity(0.6))
-                                        .clipShape(Circle())
+//                                    Image(systemName: "person.circle.fill")
+//                                        .resizable()
+//                                        .scaledToFill()
+//                                        .frame(width: 120, height: 120)
+//                                        .foregroundColor(.gray.opacity(0.6))
+//                                        .clipShape(Circle())
+                                    
+                                    
+                                    ProfileImageView(imageUrl: profileImgUrl)
+                                    
+                                    
+                                    
+                                           
+                                    
                                     
                                     
                                 }

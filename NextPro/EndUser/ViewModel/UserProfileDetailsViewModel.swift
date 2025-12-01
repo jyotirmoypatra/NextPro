@@ -17,6 +17,7 @@ class UserProfileDetailsViewModel: ObservableObject {
     @Published var fullName = ""
     @Published var phoneNumber = ""
     @Published var email = ""
+    @Published var image_url = ""
     @Published var accountStatus = ""
     @Published var organization = ""
     @Published var isLoading = false
@@ -49,6 +50,7 @@ class UserProfileDetailsViewModel: ObservableObject {
             email = response.data.email ?? ""
             accountStatus = response.data.status
             organization = response.data.organization ?? ""
+            image_url = response.data.image_url ?? "https://picsum.photos/536/354"
 
         } catch {
             errorMessage = error.localizedDescription

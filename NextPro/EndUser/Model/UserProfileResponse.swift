@@ -14,6 +14,7 @@ struct UserProfileData: Decodable {
     let organization: String?
     let created_at: String
     let updated_at: String
+    let image_url: String?
 }
 
 struct UserProfileResponse: Decodable {

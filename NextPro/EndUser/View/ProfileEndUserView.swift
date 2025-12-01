@@ -5,6 +5,7 @@
 //  Created by JYOTIRMOY PATRA on 31/10/25.
 //
 import SwiftUI
+import SDWebImageSwiftUI
 
 struct ProfileEndUserView: View {
     @State private var notificationsEnabled = true
@@ -60,15 +61,18 @@ struct ProfileEndUserView: View {
                     VStack(spacing: 28) {
                         // MARK: - Profile Info Section
                         VStack(spacing: 12) {
-                            Image(systemName: "person.circle.fill")// Replace with your actual asset name
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 96, height: 96)
-                                .foregroundColor(.gray.opacity(0.6))
-                                .clipShape(Circle())
-                                .shadow(radius: 6)
+//                            Image(systemName: "person.circle.fill")// Replace with your actual asset name
+//                                .resizable()
+//                                .scaledToFill()
+//                                .frame(width: 96, height: 96)
+//                                .foregroundColor(.gray.opacity(0.6))
+//                                .clipShape(Circle())
+//                                .shadow(radius: 6)
                                 
                             
+                            ProfileImageView(imageUrl: viewModel.image_url)
+
+
                             
 
                             // Full Name
@@ -225,7 +229,8 @@ struct ProfileEndUserView: View {
             EditProfileView(
                 fullName: viewModel.fullName,
                 phoneNumber: viewModel.phoneNumber,
-                email : viewModel.email
+                email : viewModel.email,
+                profileImgUrl: viewModel.image_url
                 
             )
         }
@@ -455,5 +460,32 @@ struct  DeleteConfirmationSheet: View {
                 window.makeKeyAndVisible()
             }
         }
+    }
+}
+
+
+struct ProfileImageView: View {
+    let imageUrl: String?
+    let size: CGFloat = 96
+
+    var body: some View {
+        ZStack {
+            // Placeholder
+            Image(systemName: "person.circle.fill")
+                .resizable()
+                .scaledToFill()
+                .foregroundColor(.gray.opacity(0.6))
+                .frame(width: size, height: size)
+
+            // WebImage for remote URL
+            if let urlString = imageUrl, let url = URL(string: urlString) {
+                WebImage(url: url)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: size, height: size)
+            }
+        }
+        .clipShape(Circle())
+        .shadow(radius: 6)
     }
 }
