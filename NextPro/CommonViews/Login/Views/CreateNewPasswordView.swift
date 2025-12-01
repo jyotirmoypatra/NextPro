@@ -152,20 +152,20 @@ struct CreateNewPasswordView: View {
 
                             if viewModel.updateSuccess {
                                 // Show success toast
-                                toastManager.show(
-                                    message: "Password updated successfully!",
-                                    type: .success,
-                                    duration: 1.0
-                                )
-                                
-                                // Navigate after a short delay to show the toast
-                                try? await Task.sleep(nanoseconds: 1_000_000_000)
-                                
-                                
-                                
+                               
                                 if comingFrom == "user_profile"{
                                     showSuccessUpdateAlert = true
                                 }else{ //come from login
+                                    
+                                    toastManager.show(
+                                        message: "Password updated successfully!",
+                                        type: .success,
+                                        duration: 1.0
+                                    )
+                                    
+                                    // Navigate after a short delay to show the toast
+                                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                                    
                                     isAdmin = (userType == "facility_manager")
                                     navigateToHome = true
                                 }
