@@ -316,9 +316,32 @@ struct EditProfileView: View {
                 sourceType: source
             ) { cropped in
                 
-                if let jpeg = cropped.jpegData(compressionQuality: 0.8) {
-                    viewModel.ImgBase64 = jpeg.base64EncodedString()
-                    
+//                if let jpeg = cropped.jpegData(compressionQuality: 0.8) {
+//                    viewModel.ImgBase64 = jpeg.base64EncodedString()
+//                    
+//                    Task {
+//                        await viewModel.UploadImg()
+//                        if viewModel.uploadImgSuccess {
+//                            toastManager.show(
+//                                message: viewModel.uploadSuccessMessage,
+//                                type: .success,
+//                                duration: 1.0
+//                            )
+//                        } else {
+//                            toastManager.show(
+//                                message: viewModel.errorMessage,
+//                                type: .error,
+//                                duration: 1.0
+//                            )
+//                        }
+//                    }
+//                }
+                
+                
+                
+                if let compressed = cropped.compressTo(maxKB: 300) {
+                    viewModel.ImgBase64 = compressed.base64EncodedString()
+
                     Task {
                         await viewModel.UploadImg()
                         if viewModel.uploadImgSuccess {
@@ -336,6 +359,9 @@ struct EditProfileView: View {
                         }
                     }
                 }
+
+                
+                
             }
         }
 
