@@ -47,6 +47,8 @@ class UserProfileEditViewModel: ObservableObject {
             if response.status {
                 // Assign response to UI (no UserDefaults save)
                 editSuccess = true
+            }else{
+                errorMessage =  response.message
             }
 
         } catch {

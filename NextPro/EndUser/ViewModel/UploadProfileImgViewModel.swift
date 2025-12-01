@@ -44,6 +44,8 @@ class UploadProfileImgViewModel: ObservableObject {
             if response.status {
                 uploadImgSuccess = true
                 uploadSuccessMessage = response.message
+            }else{
+                errorMessage =  response.message
             }
            
             

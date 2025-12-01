@@ -27,7 +27,7 @@ struct ProfileEndUserView: View {
     @State private var showLogoutAlert = false
     @State private var showDeleteAccountAlert = false
     @State private var navigate_Webview_PrivacyTerms = false
-
+    @State private var showFailedAlert = false
     
    
     var body: some View {
@@ -244,8 +244,19 @@ struct ProfileEndUserView: View {
             Task {
                 loadUserData()
                 await viewModel.fetchUserProfile()
+                if !viewModel.isSuccess{
+                    showFailedAlert = true
+                }
             }
         }
+        .alert("Error!", isPresented: $showFailedAlert) {
+            Button("OK", role: .cancel) {
+                dismiss()
+            }
+        } message: {
+            Text(viewModel.errorMessage)
+        }
+        
 //        .alert("Logout", isPresented: $showLogoutAlert) {
 //            Button("No", role: .cancel) {
 //                // Do nothing, just dismiss the alert

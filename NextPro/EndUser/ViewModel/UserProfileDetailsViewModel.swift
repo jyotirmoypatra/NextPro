@@ -22,6 +22,7 @@ class UserProfileDetailsViewModel: ObservableObject {
     @Published var organization = ""
     @Published var isLoading = false
     @Published var errorMessage = ""
+    @Published var isSuccess = false
     private let networkManager = NetworkManager.shared
 
     let network = NetworkManager.shared
@@ -43,16 +44,23 @@ class UserProfileDetailsViewModel: ObservableObject {
             errorMessage = ""
 
             let response = try await networkManager.UserProfileDetails(id: userId)
-
-            // Assign response to UI (no UserDefaults save)
-            fullName = response.data.full_name ?? ""
-            phoneNumber = response.data.phone_number ?? ""
-            email = response.data.email ?? ""
-            accountStatus = response.data.status
-            organization = response.data.organization ?? ""
-            image_url = response.data.image_url ?? ""
+            
+            if response.status{
+                
+                isSuccess = true
+                // Assign response to UI (no UserDefaults save)
+                fullName = response.data.full_name ?? ""
+                phoneNumber = response.data.phone_number ?? ""
+                email = response.data.email ?? ""
+                accountStatus = response.data.status
+                organization = response.data.organization ?? ""
+                image_url = response.data.image_url ?? ""
+            }else{
+                errorMessage = response.message
+            }
 
         } catch {
+            
             errorMessage = error.localizedDescription
             print("❌ Fetch profile error:", error.localizedDescription)
         }
