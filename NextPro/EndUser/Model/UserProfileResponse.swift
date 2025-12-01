@@ -22,3 +22,13 @@ struct UserProfileResponse: Decodable {
     let message: String
     let data: UserProfileData
 }
+
+
+
+
+//UserEditProfileResponse
+
+struct UserEditProfileResponse: Decodable {
+    let status: Bool
+    let message: String
+}

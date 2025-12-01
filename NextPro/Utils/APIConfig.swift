@@ -22,6 +22,7 @@ struct APIConfig {
         static let forgetPasswordOtpVerify = "/api/facility-user/forgot-password/verify/"
         static let getUserProfileData = "/api/facility-user/user/detail/"
         static let uploadProfilePic = "/api/facility-user/upload-image/"
+        static let editUserProfile = "/api/facility-user/user/edit/"
     }
     
     

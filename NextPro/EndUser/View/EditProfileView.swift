@@ -17,16 +17,16 @@ struct EditProfileView: View {
     @State private var address: String = ""
     @State private var profileImgUrl: String = ""
     @State private var showSuccessAlert = false
-    @State private var isLoading = false
     @StateObject private var toastManager = ToastManager.shared
     @State private var showImagePicker = false
     @State private var selectedImage: UIImage? = nil
     @State private var showPermissionAlert = false
     @State private var showSourcePicker = false
     @State private var pickerSource: ImagePicker.SourceType? = nil
-
+    @State private var showErrorAlert = false
     
     @StateObject private var viewModel = UploadProfileImgViewModel()
+    @StateObject private var editVm = UserProfileEditViewModel()
     
     
     // Parameters to receive data from ProfileEndUserView
@@ -113,12 +113,6 @@ struct EditProfileView: View {
                                         )
                                 } else {
                                     
-//                                    Image(systemName: "person.circle.fill")
-//                                        .resizable()
-//                                        .scaledToFill()
-//                                        .frame(width: 120, height: 120)
-//                                        .foregroundColor(.gray.opacity(0.6))
-//                                        .clipShape(Circle())
                                     
                                     
                                     ProfileImageView(imageUrl: profileImgUrl)
@@ -277,7 +271,7 @@ struct EditProfileView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 
                 // LOADING OVERLAY
-                if isLoading  || viewModel.isLoading{
+                if editVm.isLoading  || viewModel.isLoading{
                     ZStack {
                         Color.black.opacity(0.4)
                             .ignoresSafeArea()
@@ -307,12 +301,13 @@ struct EditProfileView: View {
         } message: {
             Text("Your profile has been updated successfully!")
         }
-        .alert("Success", isPresented: $showSuccessAlert) {
+        
+        .alert("Error!", isPresented: $showErrorAlert) {
             Button("OK", role: .cancel) {
-                dismiss()
+               
             }
         } message: {
-            Text("Your profile has been updated successfully!")
+            Text(editVm.errorMessage)
         }
     
         
@@ -457,29 +452,18 @@ struct EditProfileView: View {
     }
     
     func saveProfile() {
-        // Validation
-        guard !fullName.isEmpty else {
-            print("⚠️ Full name is required")
-            return
+       
+        Task{
+            await editVm.editProfile(fullName: fullName, phoneNo: phoneNumber)
+            if editVm.editSuccess {
+                showSuccessAlert = true
+                
+            } else {
+                showErrorAlert = true
+            }
         }
         
-        guard !phoneNumber.isEmpty else {
-            print("⚠️ Phone number is required")
-            return
-        }
         
-        // Show loading
-        isLoading = true
-        
-        // Simulate API call
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            
-            
-            isLoading = false
-            showSuccessAlert = true
-            
-            print("✅ Profile updated successfully")
-        }
     }
     
     

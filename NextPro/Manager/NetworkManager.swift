@@ -771,6 +771,64 @@ class NetworkManager: ObservableObject {
             throw APIError.network(error.localizedDescription)
         }
     }
+    
+    
+    // MARK: - Edit profile
+    func EditUserProfileDetails(fullName: String, phone: String) async throws -> UserEditProfileResponse {
+
+        let urlString = APIConfig.url(APIConfig.Endpoints.editUserProfile)
+        print("🔗 URL: \(urlString)")
+
+        guard let url = URL(string: urlString) else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+
+        let params: [String: Any] = [
+            "full_name": fullName,
+            "phone_number": phone
+        ]
+
+        print("📤 Edit Profile Params: \(params)")
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: params)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📥 Upload Profile Image Response JSON:\n\(jsonString)")
+            }
+
+            guard let http = response as? HTTPURLResponse else {
+                throw APIError.invalidResponse
+            }
+
+            // Handle all HTTP errors
+            guard (200...299).contains(http.statusCode) else {
+                let message = extractErrorMessage(from: data) ?? "Something went wrong."
+                throw APIError.serverError(code: http.statusCode, message: message)
+            }
+
+            // Decode success response
+            let decoded = try JSONDecoder().decode(UserEditProfileResponse.self, from: data)
+
+            // Backend returns 200 with status=false
+            if decoded.status == false {
+                throw APIError.backend(message: decoded.message)
+            }
+
+            return decoded
+
+        } catch let apiError as APIError {
+            throw apiError
+        } catch {
+            throw APIError.network(error.localizedDescription)
+        }
+    }
 
 }
 
