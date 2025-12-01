@@ -140,10 +140,11 @@ struct DoorOpenView: View {
                             HStack(spacing: 6) {
                                // Image("bluetooth")
                                    // .frame(width: 30,height: 30)
+                               
+                                Text(AceesMessage ?? "")
+                                        .font(.custom("Inter-SemiBold", size: 16))
+                                        .foregroundColor(.white.opacity(0.5))
                                 
-                                Text(AceesMessage ?? "Walk closer to the door")
-                                    .font(.custom("Inter-SemiBold", size: 16))
-                                    .foregroundColor(.white.opacity(0.5))
                             }
                             
                             
@@ -244,6 +245,8 @@ struct DoorOpenView: View {
             
             await doorStorage.loadDoors()
             
+            AceesMessage = "Preparing Scan.."
+            
             // Create a cancellable work item for delayed monitoring start
             let workItem = DispatchWorkItem { [weak bleManager] in
                 // Only start monitoring if view is still visible
@@ -267,6 +270,7 @@ struct DoorOpenView: View {
                 
                 // Begin monitoring RSSI and auto-open logic
                 monitorAndAutoOpenNearbyDoor()
+                AceesMessage = "Walk closer to the door"
             }
             
             // Store the work item so it can be cancelled
