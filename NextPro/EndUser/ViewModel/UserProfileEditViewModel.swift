@@ -29,6 +29,11 @@ class UserProfileEditViewModel: ObservableObject {
         }
         
         
+        guard let userID = UserDefaults.standard.string(forKey: "user_id") else {
+            errorMessage = "User ID missing!"
+            return
+        }
+        
         guard !fullName.isEmpty else {
             errorMessage = "FullName Should not empty!"
             return
@@ -43,7 +48,7 @@ class UserProfileEditViewModel: ObservableObject {
             isLoading = true
             errorMessage = ""
 
-            let response = try await networkManager.EditUserProfileDetails(fullName: fullName, phone: phoneNo)
+            let response = try await networkManager.EditUserProfileDetails(fullName: fullName, phone: phoneNo, userId: userID)
             if response.status {
                 // Assign response to UI (no UserDefaults save)
                 editSuccess = true

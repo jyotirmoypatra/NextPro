@@ -28,7 +28,7 @@ class UserProfileDetailsViewModel: ObservableObject {
     let network = NetworkManager.shared
     
     func fetchUserProfile() async {
-        guard let userId = UserDefaults.standard.string(forKey: "facility_id") else {
+        guard let userId = UserDefaults.standard.string(forKey: "user_id") else {
             errorMessage = "User ID missing!"
             return
         }

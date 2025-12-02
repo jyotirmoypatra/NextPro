@@ -774,7 +774,7 @@ class NetworkManager: ObservableObject {
     
     
     // MARK: - Edit profile
-    func EditUserProfileDetails(fullName: String, phone: String) async throws -> UserEditProfileResponse {
+    func EditUserProfileDetails(fullName: String, phone: String ,userId: String) async throws -> UserEditProfileResponse {
 
         let urlString = APIConfig.url(APIConfig.Endpoints.editUserProfile)
         print("🔗 URL: \(urlString)")
@@ -784,9 +784,10 @@ class NetworkManager: ObservableObject {
         }
 
         var request = URLRequest(url: url)
-        request.httpMethod = "POST"
+        request.httpMethod = "PUT"
 
         let params: [String: Any] = [
+            "user_id" : userId,
             "full_name": fullName,
             "phone_number": phone
         ]
