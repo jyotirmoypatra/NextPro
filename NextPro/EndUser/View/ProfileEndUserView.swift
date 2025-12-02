@@ -505,6 +505,10 @@ struct ProfileImageView: View {
             }
         }
         .clipShape(Circle())
-        .shadow(radius: 6)
+                .overlay(
+                    Circle()
+                        .stroke(Color.white.opacity(0.7), lineWidth: 1) // <-- 1px border
+                )
+                .shadow(radius: 6)
     }
 }
