@@ -483,12 +483,46 @@ struct  DeleteConfirmationSheet: View {
 }
 
 
+//struct ProfileImageView: View {
+//    let imageUrl: String?
+//    let size: CGFloat = 96
+//
+//    var body: some View {
+//        ZStack {
+//            // Placeholder
+//            Image(systemName: "person.circle.fill")
+//                .resizable()
+//                .scaledToFill()
+//                .foregroundColor(.gray.opacity(0.6))
+//                .frame(width: size, height: size)
+//
+//            // WebImage for remote URL
+//            if let urlString = imageUrl, let url = URL(string: urlString) {
+//                WebImage(url: url)
+//                    .resizable()
+//                    .scaledToFill()
+//                    .frame(width: size, height: size)
+//            }
+//        }
+//        .clipShape(Circle())
+//                .overlay(
+//                    Circle()
+//                        .stroke(Color.white.opacity(0.7), lineWidth: 1) // <-- 1px border
+//                )
+//                .shadow(radius: 6)
+//    }
+//}
+
+
 struct ProfileImageView: View {
     let imageUrl: String?
     let size: CGFloat = 96
+    
+    @State private var isLoading: Bool = true
 
     var body: some View {
         ZStack {
+
             // Placeholder
             Image(systemName: "person.circle.fill")
                 .resizable()
@@ -496,19 +530,53 @@ struct ProfileImageView: View {
                 .foregroundColor(.gray.opacity(0.6))
                 .frame(width: size, height: size)
 
-            // WebImage for remote URL
-            if let urlString = imageUrl, let url = URL(string: urlString) {
+            // Remote image loader
+            if let urlString = imageUrl,
+               let url = URL(string: urlString) {
+
                 WebImage(url: url)
+                    .onSuccess { _, _, _ in
+                        DispatchQueue.main.async {
+                            withAnimation { isLoading = false }
+                        }
+
+                    }
+                    .onFailure { _ in
+                        DispatchQueue.main.async {
+                            withAnimation { isLoading = false }
+                        }
+
+                    }
                     .resizable()
                     .scaledToFill()
                     .frame(width: size, height: size)
             }
+
+            // Spinner overlay
+            if isLoading {
+                SpinnerView()
+                    .frame(width: 35, height: 35)
+                    .zIndex(10)
+            }
         }
         .clipShape(Circle())
-                .overlay(
-                    Circle()
-                        .stroke(Color.white.opacity(0.7), lineWidth: 1) // <-- 1px border
-                )
-                .shadow(radius: 6)
+        .overlay(
+            Circle().stroke(Color.white.opacity(0.7), lineWidth: 1)
+        )
+        .shadow(radius: 6)
+    }
+}
+
+struct SpinnerView: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        Circle()
+            .trim(from: 0, to: 0.7)
+            .stroke(Color.gray, lineWidth: 3)
+            .frame(width: 30, height: 30)
+            .rotationEffect(.degrees(isAnimating ? 360 : 0))
+            .animation(.linear(duration: 0.8).repeatForever(autoreverses: false), value: isAnimating)
+            .onAppear { isAnimating = true }
     }
 }
