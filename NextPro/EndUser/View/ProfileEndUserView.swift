@@ -251,7 +251,7 @@ struct ProfileEndUserView: View {
         }
         .alert("Error!", isPresented: $showFailedAlert) {
             Button("OK", role: .cancel) {
-                dismiss()
+               
             }
         } message: {
             Text(viewModel.errorMessage)

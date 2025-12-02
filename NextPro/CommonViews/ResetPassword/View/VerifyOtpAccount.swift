@@ -19,7 +19,7 @@ struct VerifyOtpAccount: View {
     @StateObject private var resendVM = ForgetPasswordRequestViewModel()
     @StateObject var viewModel =  VerifyOtpViewModel()
     @StateObject private var toastManager = ToastManager.shared
-    @State private var counter: Int = 8
+    @State private var counter: Int = 20
     @State private var timerActive: Bool = true
     @State private var showOtpVerifyFailedAlert = false
    // @State private var showOtpResendFailedAlert = false
