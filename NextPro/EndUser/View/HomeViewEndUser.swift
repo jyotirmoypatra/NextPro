@@ -29,8 +29,6 @@ struct HomeViewEndUser: View {
                     VStack {
                         switch selectedTab {
                         case 0:
-                           // OpenDoorEndUserView()
-                          
                             DoorOpenView()
                         case 1:
                             MembershipEndUserView()
