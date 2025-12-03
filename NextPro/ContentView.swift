@@ -15,13 +15,14 @@ struct ContentView: View {
     @State private var isPasswordReset = false
     
     var body: some View {
+        NavigationStack {
         ZStack {
             if showSplash {
                 SplashScreen()
                     .transition(.opacity)
                 
             } else {
-                NavigationStack {
+               
                    // LoginView()
                     
                     
@@ -58,24 +59,12 @@ struct ContentView: View {
                             .navigationBarBackButtonHidden(true)
                             .navigationBarHidden(true)
                     }
-                    
-                    
-                    
-//                    HomeViewEndUser()
-//                        .navigationBarBackButtonHidden(true)
-//                        .navigationBarHidden(true)
-                    
+               
                 }
-                .transition(.move(edge: .trailing))
+                
             }
-        }
-//        .onAppear {
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-//                withAnimation(.easeInOut(duration: 0.6)) {
-//                    showSplash = false
-//                }
-//            }
-//        }
+        }.transition(.move(edge: .trailing))
+
         .onAppear {
                     checkLoginStatus()
 

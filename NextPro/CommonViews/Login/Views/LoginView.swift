@@ -22,7 +22,7 @@ struct LoginView: View {
     @State private var isDeviceprov = false
     
     var body: some View {
-        NavigationStack {
+    
             GeometryReader { geometry in
                 ZStack(alignment: .top) {
                     Image("backgroundimg")
@@ -316,7 +316,7 @@ struct LoginView: View {
             
             .toast()
 
-    }
+    
     }
     
 }

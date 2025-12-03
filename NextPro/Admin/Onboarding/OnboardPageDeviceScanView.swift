@@ -285,9 +285,5 @@ struct OnboardPageDeviceScanView: View {
     }
 }
 
-#Preview {
-    NavigationStack {
-        OnboardPageDeviceScanView()
-    }
-}
+
 
