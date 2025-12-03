@@ -8,36 +8,61 @@
 import SwiftUI
 
 struct HomeTabContent: View {
+    
+    let gyms = [
+        "IRON HIVE GYM: LOCATION 1",
+        "IRON HIVE GYM: LOCATION 2"
+    ]
+    
     var body: some View {
-        VStack(spacing: 16) {
-            Text("WELCOME JAMES!")
-                .font(.headline)
-                .foregroundColor(.white)
+        ZStack{
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
 
-            Text("Looks like you do not have a facility yet.")
-                .font(.subheadline)
-                .foregroundColor(.gray)
+                    ForEach(gyms, id: \.self) { gym in
+                        GymCardView(title: gym)
+                    }
 
-            Button(action: {
-                // Add Facility Action
-            }) {
-                HStack {
-                    Image(systemName: "plus")
-                    Text("Add Facility")
+                    Spacer()
                 }
-                .font(.headline)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.white)
-                .foregroundColor(.black)
-                .cornerRadius(10)
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
             }
-            .padding(.horizontal, 30)
         }
-        .padding(.vertical, 30)
-        .padding(.horizontal)
-        .background(Color.black.opacity(0.4))
-        .cornerRadius(16)
-        .padding(.horizontal, 20)
+    }
+}
+
+
+
+struct GymCardView: View {
+    let title: String
+
+    var body: some View {
+        HStack(spacing: 16) {
+            
+            VStack(alignment: .leading){
+                Image("dooricon") // your blue gym logo
+                    .resizable()
+                    .frame(width: 50, height: 50)
+                    .cornerRadius(5)
+                
+                Text(title)
+                    .font(.custom("Inter-SemiBold", size: 16))
+                    .foregroundColor(.white)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            
+            Image(systemName: "chevron.right")
+                .foregroundColor(.gray)
+                .font(.system(size: 18, weight: .medium))
+        }
+        .padding(20)
+        .background(Color.white.opacity(0.08))
+        .cornerRadius(14)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+        )
     }
 }

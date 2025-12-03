@@ -69,7 +69,8 @@ struct HomeViewAdmin: View {
                     .animation(.easeInOut(duration: 0.25), value: selectedTab)
 
                     // MARK: - Custom Bottom Tab Bar
-                    
+                    Divider()
+                        .background(Color.white.opacity(0.15))
                     HStack {
                         TabBarItemUser(
                             title: "Home",
