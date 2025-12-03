@@ -144,7 +144,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
             }
         } else {
             // Device already in list, just update RSSI
-            print("📊 Updated RSSI for \(peripheral.name ?? "Unknown"): \(RSSI) dBm")
+            // print("📊 Updated RSSI for \(peripheral.name ?? "Unknown"): \(RSSI) dBm")
         }
     }
 

@@ -13,7 +13,7 @@ import AVFoundation
 struct DoorOpenView: View {
     // let Card: CardModelUser
     @Environment(\.scenePhase) private var scenePhase
-    @State private var bluetoothManager = CBCentralManager()
+  //  @State private var bluetoothManager = CBCentralManager()
     @StateObject private var mqttManager = MQTTManager.shared
     @StateObject private var doorStorage = DoorStorageManager.shared
     @ObservedObject private var cardStorage = UserCardStorageManager.shared
@@ -153,13 +153,6 @@ struct DoorOpenView: View {
                             
                         }
               
-                        
-                        //animation here
-//                        LottieView(name: "Read_Sensor_NFC")
-//                            .frame(height: 300)
-//                            .padding(.top, -20)
-
-                        
                     }
                     .padding(.bottom, 40)
                     
@@ -255,13 +248,13 @@ struct DoorOpenView: View {
                     return
                 }
                 
-                if bluetoothManager.state != .poweredOn  {
+                if let isOn = bleManager?.isBluetoothOn, !isOn {
                     print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
                     showBluetoothAlert = true
                     isScanningActive = false
                     return
                 }
-                
+
                 print("🟢 Auto-open enabled — starting continuous BLE scanning...")
                 
                 // Start continuous scanning
@@ -324,13 +317,20 @@ struct DoorOpenView: View {
                 }
                 
                 // Check if Bluetooth is available
-                if bluetoothManager.state != .poweredOn {
-                    print("⚠️ Bluetooth is OFF. Cannot restart auto-open.")
+//                if bluetoothManager.state != .poweredOn {
+//                    print("⚠️ Bluetooth is OFF. Cannot restart auto-open.")
+//                    showBluetoothAlert = true
+//                    isScanningActive = false
+//                    return
+//                }
+                if !bleManager.isBluetoothOn {
+                    print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
                     showBluetoothAlert = true
                     isScanningActive = false
                     return
                 }
-                
+
+
                 // Restart BLE scanning with a small delay to ensure everything is ready
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     // Double-check view is still visible
