@@ -38,6 +38,7 @@ struct DoorOpenView: View {
     @State private var doorId : Int?
     @State private var AceesMessage : String?
     
+    @State private var isUnauthorise = false
     
     
     var body: some View {
@@ -165,7 +166,7 @@ struct DoorOpenView: View {
             if isOpening || progress > 0 || ringColor != .white {
                 ZStack {
                     // Full-screen black background
-                    Color.black.opacity(0.9)
+                    Color.black.opacity(0.96)
                         .ignoresSafeArea()
                     
                     // Lock icon and progress ring in the center
@@ -190,6 +191,13 @@ struct DoorOpenView: View {
                                 .font(.system(size: 36, weight: .semibold))
                                 .scaleEffect(isOpening ? 1.15 : 1.0)
                                 .animation(.spring(), value: isOpening)
+                            
+                            if isUnauthorise {
+                                Rectangle()
+                                    .fill(Color.red)
+                                    .frame(width: 70, height: 6)   // thickness = 6
+                                    .rotationEffect(.degrees(45)) // diagonal slash
+                            }
                         }
                         .shadow(color: ringColor.opacity(0.4), radius: 10, x: 0, y: 5)
                         
@@ -438,8 +446,11 @@ struct DoorOpenView: View {
             return "Access Granted"
         } else if lockIcon == "xmark" {
             return "Access Denied"
-        } else if ringColor == .yellow {
+        } else if ringColor == .yellow && lockIcon == "lock.fill" && !isUnauthorise{
             return "Verifying Please Wait..."
+        }
+        else if lockIcon == "lock.fill" && isUnauthorise {
+            return "Unauthorized Door"
         }
         return "Processing..."
     }
@@ -477,6 +488,17 @@ struct DoorOpenView: View {
         resetAnimationAfterDelay()
     }
     
+    func unauthorised() {
+        isUnauthorise = true
+        withAnimation(.easeInOut(duration: 0.3)) {
+            ringColor = .yellow
+            lockIcon = "lock.fill"
+            isOpening = false
+            progress = 1.0
+        }
+        resetAnimationAfterDelay()
+    }
+    
     // ⏳ Common reset (3 seconds later)
     func resetAnimationAfterDelay() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
@@ -487,6 +509,7 @@ struct DoorOpenView: View {
                 progress = 0.0
                 AceesMessage = "Walk closer to the door."
                 doorId = nil
+                isUnauthorise = false
             }
         }
     }
@@ -502,49 +525,167 @@ struct DoorOpenView: View {
     }
     
     
+//    func monitorAndAutoOpenNearbyDoor() {
+//        // Cancel any previous timer before starting a new one
+//        rssiTimer?.invalidate()
+//        
+//        // Start a new timer
+//        rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+//            for peripheral in bleManager.devices {
+//                let name = peripheral.name ?? ""
+//                let rssi = bleManager.monitoredDeviceRSSI ?? bleManager.deviceLastRSSI[peripheral.identifier] ?? -100
+//                
+//                guard rssi > -40 && rssi < 0 else{  return }
+//                
+//                
+//                // Example match logic
+//                if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
+//                    print("📡 Found matching door \(door.name) (RSSI: \(rssi)dBm)")
+//                    
+//                  //  if rssi > -40 && rssi < 0 {
+//                        print("🚪 Door nearby! Opening \(door.name)...")
+//                        doorManager.openSelectedDoor(door)
+//                        
+//                        let generator = UIImpactFeedbackGenerator(style: .medium)
+//                        generator.impactOccurred()
+//                        // Stop BLE scanning
+//                        bleManager.stopScanning()
+//                        bleManager.stopMonitoringDevice()
+//                       // isScanningActive = false
+//                        
+//                        // Stop timer to avoid continuous opening
+//                        timer.invalidate()
+//                        rssiTimer = nil
+//                        
+//                        // Restart monitoring after 5 seconds
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+//                            print("🔄 Restarting door monitoring after 5 seconds...")
+//                            bleManager.startContinuousScanning()
+//                            isScanningActive = true
+//                            monitorAndAutoOpenNearbyDoor()
+//                        }
+//                        
+//                        break
+//                   // }
+//                }
+//                
+//                else {
+//                    // ⚠️ Unauthorized Thimmo
+//                    print("🚫 Unauthorized Thimmo device nearby: \(name)")
+//                    
+//                    bleManager.stopScanning()
+//                    bleManager.stopMonitoringDevice()
+//                    timer.invalidate()
+//                    rssiTimer = nil
+//                    isScanningActive = false
+//                    
+//                    DispatchQueue.main.async {
+//                        ringColor = .yellow
+//                        lockIcon = "lock.fill"
+//                        isOpening = true
+//                        progress = 1.0
+//                        AceesMessage = "Verifying..."
+//                    }
+//                    
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+//                        animateFailure()
+//                        AceesMessage = "Unauthorized Door"
+//                        UINotificationFeedbackGenerator().notificationOccurred(.error)
+//                        speakText("Unauthorized Door. bokachoda sala")
+//                    }
+//                    
+//                    // Restart scanning after 5 seconds
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+//                        bleManager.startContinuousScanning()
+//                        isScanningActive = true
+//                        monitorAndAutoOpenNearbyDoor()
+//                    }
+//                    
+//                    break
+//                }
+//            }
+//        }
+//    }
+    
     func monitorAndAutoOpenNearbyDoor() {
-        // Cancel any previous timer before starting a new one
-        rssiTimer?.invalidate()
-        
-        // Start a new timer
-        rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
-            for peripheral in bleManager.devices {
-                let name = peripheral.name ?? ""
-                let rssi = bleManager.monitoredDeviceRSSI ?? bleManager.deviceLastRSSI[peripheral.identifier] ?? -100
-                
-                // Example match logic
-                if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
-                    print("📡 Found matching door \(door.name) (RSSI: \(rssi)dBm)")
-                    
-                    if rssi > -40 && rssi < 0 {
-                        print("🚪 Door nearby! Opening \(door.name)...")
-                        doorManager.openSelectedDoor(door)
-                        
-                        let generator = UIImpactFeedbackGenerator(style: .medium)
-                        generator.impactOccurred()
-                        // Stop BLE scanning
-                        bleManager.stopScanning()
-                        bleManager.stopMonitoringDevice()
-                       // isScanningActive = false
-                        
-                        // Stop timer to avoid continuous opening
-                        timer.invalidate()
-                        rssiTimer = nil
-                        
-                        // Restart monitoring after 5 seconds
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-                            print("🔄 Restarting door monitoring after 5 seconds...")
-                            bleManager.startContinuousScanning()
-                            isScanningActive = true
-                            monitorAndAutoOpenNearbyDoor()
-                        }
-                        
-                        break
-                    }
-                }
-            }
-        }
-    }
+           rssiTimer?.invalidate()
+           
+           rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+               let validPrefixes = ["M2", "TC", "BC", "AC", "DM", "M23", "M22", "XM"]
+               
+               // 1️⃣ Find the closest Thimmo device
+               let nearbyThimmos = bleManager.devices.compactMap { peripheral -> (peripheral: CBPeripheral, rssi: Int)? in
+                   let name = (peripheral.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                   let rssi = bleManager.monitoredDeviceRSSI ?? bleManager.deviceLastRSSI[peripheral.identifier] ?? -100
+                   let isThimmo = validPrefixes.contains { prefix in name.uppercased().hasPrefix(prefix) }
+                   
+                   guard isThimmo else { return nil }
+                   return (peripheral, rssi)
+               }
+               
+               // Sort by strongest RSSI (closest)
+               guard let closest = nearbyThimmos.max(by: { $0.rssi < $1.rssi }) else { return }
+               
+               let name = closest.peripheral.name ?? ""
+               let rssi = closest.rssi
+               
+               // Only act if RSSI is strong
+               guard rssi > -40 && rssi < 0 else { return }
+               
+               if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
+                   // ✅ Authorized door
+                   print("🚪 Door nearby! Opening \(door.name)...")
+                   doorManager.openSelectedDoor(door)
+                   
+                   UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                   isScanningActive = false
+                   bleManager.stopScanning()
+                   bleManager.stopMonitoringDevice()
+                   timer.invalidate()
+                   rssiTimer = nil
+                   
+                   // Restart monitoring after 5 seconds
+                   DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                       bleManager.startContinuousScanning()
+                       isScanningActive = true
+                       monitorAndAutoOpenNearbyDoor()
+                   }
+               }
+               else {
+                   // ⚠️ Unauthorized Thimmo
+                   print("🚫 Unauthorized Thimmo device nearby: \(name)")
+                   
+                   bleManager.stopScanning()
+                   bleManager.stopMonitoringDevice()
+                   timer.invalidate()
+                   rssiTimer = nil
+                   isScanningActive = false
+                   
+                   DispatchQueue.main.async {
+                       ringColor = .yellow
+                       lockIcon = "lock.fill"
+                       isOpening = true
+                       progress = 1.0
+                       AceesMessage = "Verifying..."
+                   }
+                   
+                   DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                       unauthorised()
+                       AceesMessage = "Unauthorized Door. Access not permitted."
+                       UINotificationFeedbackGenerator().notificationOccurred(.error)
+                       speakText("Unauthorized Door. Access not permitted.")
+                   }
+                   
+                   // Restart scanning after 5 seconds
+                   DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                       bleManager.startContinuousScanning()
+                       isScanningActive = true
+                       monitorAndAutoOpenNearbyDoor()
+                   }
+               }
+           }
+       }
+
     
     func maskCardNumber(_ cardNumber: String) -> String {
         guard cardNumber.count > 6 else {
