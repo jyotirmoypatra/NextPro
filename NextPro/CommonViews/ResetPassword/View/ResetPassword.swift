@@ -153,10 +153,14 @@ struct ResetPassword: View {
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)
             }
-            .alert("Failed", isPresented: $showFailedAlert) {
-                            Button("OK", role: .cancel) {}
-            } message: {
-                Text(viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage)
+            
+            .modernAlert(isPresented: $showFailedAlert) {
+                  ModernAlertView(
+                      title: "Error!",
+                      message: viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage,
+                      isSuccess: false,
+                      buttonTitle: "OK"
+                  ) { showFailedAlert = false }
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)

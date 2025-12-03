@@ -38,15 +38,17 @@ class VerifyOtpViewModel: ObservableObject {
         
         print("email:\(emailId)")
         print("email:\(otpCode)")
-        guard otpCode.count == 6 else {
-            errorMessage = "Please enter a valid 6-digit code."
-            return
-        }
         
         guard network.hasInternet else {
             errorMessage = "No internet connection."
             return
         }
+        guard otpCode.count == 6 else {
+            errorMessage = "Please enter a valid 6-digit code."
+            return
+        }
+        
+       
 
         isLoading = true
         errorMessage = ""

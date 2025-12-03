@@ -231,10 +231,15 @@ struct SubmitResetPassword: View {
             .onTapGesture {
                 UIApplication.shared.hideKeyboard()
             }
-            .alert("Update Failed", isPresented: $showUpdateFailedAlert) {
-                            Button("OK", role: .cancel) {}
-            } message: {
-                Text(viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage)
+            
+            
+            .modernAlert(isPresented: $showUpdateFailedAlert) {
+                  ModernAlertView(
+                      title: "Error!",
+                      message: viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage,
+                      isSuccess: false,
+                      buttonTitle: "OK"
+                  ) { showUpdateFailedAlert = false }
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)

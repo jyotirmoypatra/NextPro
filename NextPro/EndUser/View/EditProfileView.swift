@@ -294,22 +294,28 @@ struct EditProfileView: View {
         .onAppear {
             loadUserData()
         }
-        .alert("Success", isPresented: $showSuccessAlert) {
-            Button("OK", role: .cancel) {
-                dismiss()
-            }
-        } message: {
-            Text("Your profile has been updated successfully!")
-        }
         
-        .alert("Error!", isPresented: $showErrorAlert) {
-            Button("OK", role: .cancel) {
-               
-            }
-        } message: {
-            Text(editVm.errorMessage)
+        .modernAlert(isPresented: $showSuccessAlert) {
+              ModernAlertView(
+                  title: "Success",
+                  message: "Your profile has been updated successfully!",
+                  isSuccess: true,
+                  buttonTitle: "OK"
+              ) { showSuccessAlert = false
+                  dismiss()
+              }
         }
     
+        .modernAlert(isPresented: $showErrorAlert) {
+              ModernAlertView(
+                  title: "Error!",
+                  message: editVm.errorMessage,
+                  isSuccess: false,
+                  buttonTitle: "OK"
+              ) { showErrorAlert = false
+                 
+              }
+        }
         
         .sheet(item: $pickerSource) { source in
             ImagePicker(

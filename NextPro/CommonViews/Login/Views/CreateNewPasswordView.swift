@@ -218,23 +218,42 @@ struct CreateNewPasswordView: View {
             .onTapGesture {
                 UIApplication.shared.hideKeyboard()
             }
-            .alert("No Internet Connection", isPresented: $showNoInternetAlert) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Please check your connection and try again.")
+
+            
+            
+            .modernAlert(isPresented: $showNoInternetAlert) {
+                  ModernAlertView(
+                      title: "Error!",
+                      message: "Please check your connection and try again.",
+                      isSuccess: false,
+                      buttonTitle: "OK"
+                  ) { showNoInternetAlert = false }
             }
             
-            .alert("Update Failed", isPresented: $showUpdateFailedAlert) {
-                            Button("OK", role: .cancel) {}
-            } message: {
-                Text(viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage)
+
+            
+            
+            .modernAlert(isPresented: $showUpdateFailedAlert) {
+                  ModernAlertView(
+                      title: "Error!",
+                      message: viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage,
+                      isSuccess: false,
+                      buttonTitle: "OK"
+                  ) { showUpdateFailedAlert = false }
             }
-            .alert("Success", isPresented: $showSuccessUpdateAlert) {
-                Button("OK", role: .cancel) {
-                    dismiss()
-                }
-            } message: {
-                Text("Your Password updated successfully!")
+            
+
+            
+            .modernAlert(isPresented: $showSuccessUpdateAlert) {
+                  ModernAlertView(
+                      title: "Success!",
+                      message: "Your Password updated successfully",
+                      isSuccess: true,
+                      buttonTitle: "OK"
+                  ) {
+                      showSuccessUpdateAlert = false
+                      dismiss()
+                  }
             }
             
         }

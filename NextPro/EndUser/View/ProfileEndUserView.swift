@@ -249,26 +249,17 @@ struct ProfileEndUserView: View {
                 }
             }
         }
-        .alert("Error!", isPresented: $showFailedAlert) {
-            Button("OK", role: .cancel) {
-               
-            }
-        } message: {
-            Text(viewModel.errorMessage)
-        }
         
-//        .alert("Logout", isPresented: $showLogoutAlert) {
-//            Button("No", role: .cancel) {
-//                // Do nothing, just dismiss the alert
-//            }
-//            Button("Yes", role: .destructive) {
-//                // Proceed with logout
-//                KeychainManager.shared.clearUserDefaultsAndKeychainData()
-//                resetToLogin()
-//            }
-//        } message: {
-//            Text("Are you sure you want to logout?")
-//        }
+        .modernAlert(isPresented: $showFailedAlert) {
+              ModernAlertView(
+                  title: "Error!",
+                  message: viewModel.errorMessage,
+                  isSuccess: false,
+                  buttonTitle: "OK"
+              ) { showFailedAlert = false
+                 
+              }
+        }
         
         .sheet(isPresented: $showLogoutAlert) {
             LogoutSheetView()

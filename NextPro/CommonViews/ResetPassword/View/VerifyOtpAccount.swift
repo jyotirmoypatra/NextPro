@@ -351,18 +351,17 @@ struct VerifyOtpAccount: View {
                 focusedField = .digit1
             }
         }
-        .alert("Failed", isPresented: $showOtpVerifyFailedAlert) {
-                        Button("OK", role: .cancel) {}
-        } message: {
-            Text(viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage)
-        }
+      
         
-//        .alert("Failed to resend OTP", isPresented: $showOtpResendFailedAlert) {
-//                        Button("OK", role: .cancel) {}
-//        } message: {
-//            Text(resendVM.errorMessage.isEmpty ? "Invalid credentials." : resendVM.errorMessage)
-//        }
-        .toast() 
+        .modernAlert(isPresented: $showOtpVerifyFailedAlert) {
+              ModernAlertView(
+                  title: "Error!",
+                  message: viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage,
+                  isSuccess: false,
+                  buttonTitle: "OK"
+              ) { showOtpVerifyFailedAlert = false }
+        }
+        .toast()
     }
     
     

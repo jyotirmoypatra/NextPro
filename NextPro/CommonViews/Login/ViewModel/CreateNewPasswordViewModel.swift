@@ -21,7 +21,12 @@ class CreateNewPasswordViewModel: ObservableObject {
 
     func updatePassword(username: String) async {
         
-        errorMessage = ""
+        
+        // Internet check
+        guard network.hasInternet else {
+            errorMessage = "No internet connection."
+            return
+        }
         
         guard !newPassword.isEmpty, !confirmPassword.isEmpty else {
             errorMessage = "Please fill all fields"
@@ -33,11 +38,7 @@ class CreateNewPasswordViewModel: ObservableObject {
             return
         }
 
-        // Internet check
-        guard network.hasInternet else {
-            errorMessage = "No internet connection."
-            return
-        }
+        errorMessage = ""
         
         
         isLoading = true

@@ -295,17 +295,26 @@ struct LoginView: View {
                     showNoInternetAlert = true
                 }
             }
-            .alert("No Internet Connection", isPresented: $showNoInternetAlert) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Please check your connection and try again.")
+            
+            .modernAlert(isPresented: $showNoInternetAlert) {
+                  ModernAlertView(
+                      title: "Error!",
+                      message: "Please check your connection and try again.",
+                      isSuccess: false,
+                      buttonTitle: "OK"
+                  ) { showNoInternetAlert = false }
             }
-            .alert("Login Failed", isPresented: $showLoginFailedAlert) {
-                            Button("OK", role: .cancel) {}
-            } message: {
-                Text(vm.loginError.isEmpty ? "Invalid credentials." : vm.loginError)
+            
+            .modernAlert(isPresented: $showLoginFailedAlert) {
+                  ModernAlertView(
+                      title: "Error!",
+                      message: vm.loginError.isEmpty ? "Invalid credentials." : vm.loginError,
+                      isSuccess: false,
+                      buttonTitle: "OK"
+                  ) { showLoginFailedAlert = false }
             }
-            .toast() 
+            
+            .toast()
 
     }
     }
