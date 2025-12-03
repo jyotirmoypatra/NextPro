@@ -30,7 +30,7 @@ struct AdminFacilityListView: View {
                     Spacer()
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 20)
+                .padding(.top, 10)
             }
         }
         .navigationBarHidden(true)
@@ -121,7 +121,8 @@ struct FacilityDetailView: View {
                         .frame(width: 26, height: 26)
                         .cornerRadius(5)
                 }
-                .padding()
+                .padding(.horizontal,5)
+                .padding(.top,5)
                 
                 ScrollView{
                     VStack(alignment: .leading, spacing: 20) {

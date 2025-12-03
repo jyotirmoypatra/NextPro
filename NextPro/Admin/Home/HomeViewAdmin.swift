@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HomeViewAdmin: View {
     @State private var selectedTab = 0
-    enum AdminHomeSubPage {
+    enum AdminHomeSubPage:Equatable {
         case facilityList
         case facilityDetail(facilityName: String)
     }
@@ -31,30 +31,30 @@ struct HomeViewAdmin: View {
 
                 VStack(spacing: 0) {
                     // MARK: - Top Bar
-                    // MARK: - Top Bar
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("UTL")
-                                .font(.title2.bold())
-                                .foregroundColor(.white)
-                            Text("UTL")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                        }
-                        Spacer()
-
-                        Button(action: {}) {
-                            Image(systemName: "bell")
-                                .foregroundColor(.white)
+                    if !(selectedTab == 0 && adminHomePage != .facilityList) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("UTL")
+                                    .font(.title2.bold())
+                                    .foregroundColor(.white)
+                                Text("UTL")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                            Spacer()
                             
-                                .background(Color.black.opacity(0.4))
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                            Button(action: {}) {
+                                Image(systemName: "bell")
+                                    .foregroundColor(.white)
+                                
+                                    .background(Color.black.opacity(0.4))
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                            }
                         }
+                        .padding(.horizontal)
+                        .padding(.top, 5) // ✅ fixed padding instead of safeAreaInsets.top
+                        
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 5) // ✅ fixed padding instead of safeAreaInsets.top
-
-
 
                     // MARK: - Dynamic Page Content
                     VStack {
@@ -126,6 +126,14 @@ struct HomeViewAdmin: View {
                     .ignoresSafeArea(edges: .bottom)
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
+                
+                //for reset tab again
+                .onChange(of: selectedTab) { newValue in
+                    if newValue == 0 {
+                        adminHomePage = .facilityList
+                    }
+                }
+
             }
         }
     }
