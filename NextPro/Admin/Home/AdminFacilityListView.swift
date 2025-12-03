@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-struct HomeTabContent: View {
+struct AdminFacilityListView: View {
     
-    let gyms = [
+    let facilitis = [
         "IRON HIVE GYM: LOCATION 1",
         "IRON HIVE GYM: LOCATION 2"
     ]
@@ -19,8 +19,8 @@ struct HomeTabContent: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
 
-                    ForEach(gyms, id: \.self) { gym in
-                        GymCardView(title: gym)
+                    ForEach(facilitis, id: \.self) { facility in
+                        FacilityCardView(title: facility)
                     }
 
                     Spacer()
@@ -34,7 +34,7 @@ struct HomeTabContent: View {
 
 
 
-struct GymCardView: View {
+struct FacilityCardView: View {
     let title: String
 
     var body: some View {

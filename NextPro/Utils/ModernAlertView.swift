@@ -16,23 +16,63 @@ struct ModernAlertView: View {
     let action: () -> Void
 
     var body: some View {
-        VStack(spacing: 12) {
-
-            // Icon
-            Image(systemName: isSuccess ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                .font(.system(size: 40))
-                .foregroundColor(isSuccess ? .green : .red)
-
-            // Title
-            Text(title)
-                .font(.custom("Inter-Bold", size: 18))
-
-            // Message
-            Text(message)
-                .font(.custom("Inter-Medium", size: 16))
-                .multilineTextAlignment(.center)
-                .foregroundColor(.gray)
-
+//        VStack(spacing: 12) {
+//
+//            // Icon
+//            Image(systemName: isSuccess ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+//                .font(.system(size: 40))
+//                .foregroundColor(isSuccess ? .green : .red)
+//
+//            // Title
+//            Text(title)
+//                .font(.custom("Inter-Bold", size: 18))
+//                .foregroundColor(.white)
+//            // Message
+//            Text(message)
+//                .font(.custom("Inter-Medium", size: 16))
+//                .multilineTextAlignment(.center)
+//                .foregroundColor(.white)
+//
+//            // Button
+//            Button(action: action) {
+//                Text(buttonTitle)
+//                    .font(.custom("Inter-Bold", size: 16))
+//                    .frame(maxWidth: .infinity)
+//                    .padding()
+//                    .foregroundColor(.black)
+//                    .background(isSuccess ? Color.green.opacity(0.8) : Color.red.opacity(0.8))
+//                    .clipShape(RoundedRectangle(cornerRadius: 12))
+//            }
+//        }
+//        .padding(20)
+//        .background(Color(hex: "#303030"))
+//        .clipShape(RoundedRectangle(cornerRadius: 20))
+//        .shadow(radius: 20)
+//        .padding(.horizontal, 50)
+        
+        VStack(spacing:15){
+            
+            HStack(alignment: .center, spacing: 12){
+                // Icon
+                Image(systemName: isSuccess ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                    .font(.system(size: 40))
+                    .foregroundColor(isSuccess ? .green : .red)
+                VStack(alignment: .leading,spacing: 10){
+                    // Title
+                    Text(title)
+                        .font(.custom("Inter-Bold", size: 18))
+                        .foregroundColor(isSuccess ? .green : .red)
+                    // Message
+                    Text(message)
+                        .font(.custom("Inter-Medium", size: 16))
+                        .multilineTextAlignment(.leading)
+                        .foregroundColor(.white)
+                    
+                   
+                }
+                Spacer()
+            }
+            
             // Button
             Button(action: action) {
                 Text(buttonTitle)
@@ -43,12 +83,13 @@ struct ModernAlertView: View {
                     .background(isSuccess ? Color.green.opacity(0.8) : Color.red.opacity(0.8))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             }
-        }
-        .padding(20)
-        .background(Color(hex: "#474747"))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(radius: 20)
-        .padding(.horizontal, 30)
+            
+        }.padding(20)
+            .background(Color(hex: "#303030"))
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .shadow(radius: 20)
+            .padding(.horizontal, 30)
+        
     }
 }
 

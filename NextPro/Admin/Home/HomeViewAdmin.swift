@@ -55,7 +55,7 @@ struct HomeViewAdmin: View {
                     VStack {
                         switch selectedTab {
                         case 0:
-                            HomeTabContent()
+                            AdminFacilityListView()
                         case 1:
                             DeviceAdminTabView()
                         case 2:
