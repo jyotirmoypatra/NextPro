@@ -1,5 +1,5 @@
 //
-//  ResetPassword.swift
+//  OnboardNewUser.swift
 //  NextPro
 //
 //  Created by JYOTIRMOY PATRA on 29/10/25.
@@ -8,11 +8,11 @@
 import SwiftUI
 
 
-struct ResetPassword: View {
-    @Environment(\.dismiss) private var dismiss
-    @State private var navigateToVerifyOtp = false
-    @StateObject private var viewModel = ForgetPasswordRequestViewModel()
-    @State private var showFailedAlert = false
+struct OnboardNewUser: View {
+   
+    @State private var email = ""
+    @State private var navigateToPasswordSet = false
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
@@ -34,10 +34,10 @@ struct ResetPassword: View {
                         
                         // Header Text
                         VStack(spacing: 5) {
-                            Text("RESET YOUR PASSWORD")
+                            Text("SETUP YOUR NEW ACCOUNT")
                                 .font(.custom("Inter-SemiBold", size: 20))
                                 .foregroundColor(.white)
-                            Text("Enter the email associated with your account, and we'll send you a code to reset your password securely.")
+                            Text("Enter the email associated with your account, and we'll verify your email in our system for setup new account")
                                 .font(.custom("Inter-Regular", size: 16))
                                 .foregroundColor(Color.gray.opacity(0.8))
                                 .multilineTextAlignment(.center)
@@ -56,14 +56,14 @@ struct ResetPassword: View {
                             }
                             
                             ZStack(alignment: .leading) {
-                                if viewModel.email.isEmpty {
+                                if email.isEmpty {
                                     Text("Enter Email")
                                         .font(.custom("Inter-Regular", size: 16))
                                         .foregroundColor(Color.white.opacity(0.5))
                                         .padding(.leading, 14)
                                 }
                                 
-                                TextField("", text: $viewModel.email)
+                                TextField("", text: $email)
                                     .foregroundColor(.white)
                                     .font(.custom("Inter-Regular", size: 16))
                                     .padding(.horizontal, 14)
@@ -85,15 +85,8 @@ struct ResetPassword: View {
                     // Confirm Button
                     Button(action: {
                         print("CONFIRM tapped")
-                      //  navigateToVerifyOtp = true
-                        Task {
-                                await viewModel.sendRequest()
-                                if viewModel.success {
-                                    navigateToVerifyOtp = true
-                                }else{
-                                    showFailedAlert = true
-                                }
-                            }
+                        navigateToPasswordSet = true
+                      
                     }) {
                         Text("CONFIRM")
                             .font(.custom("Inter-SemiBold", size: 16))
@@ -105,7 +98,7 @@ struct ResetPassword: View {
                     }
                     
                     Button(action: {
-                        dismiss() 
+                       
                     }) {
                         HStack(spacing: 8) {
                             Image("undoicon")
@@ -127,47 +120,20 @@ struct ResetPassword: View {
                 .background(.black)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 
-                
-                // LOADING OVERLAY
-                if viewModel.isLoading {
-                    ZStack {
-                        Color.black.opacity(0.4)
-                            .ignoresSafeArea()
-
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(1.8)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .ignoresSafeArea()
-                }
-                
-                
+               
             }
             .onTapGesture {
                 UIApplication.shared.hideKeyboard()
             }
-            .navigationDestination(isPresented: $navigateToVerifyOtp) {
-                VerifyOtpAccount(email: viewModel.email)
-                    .navigationBarBackButtonHidden(true)
-                    .navigationBarHidden(true)
-                    .interactiveDismissDisabled(true)
+            .navigationDestination(isPresented: $navigateToPasswordSet) {
+                    OnboardUserPasswordView()
+                        .navigationBarBackButtonHidden(true)
+                        .navigationBarHidden(true)
+               
             }
             
-            .modernAlert(isPresented: $showFailedAlert) {
-                  ModernAlertView(
-                      title: "Error!",
-                      message: viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage,
-                      isSuccess: false,
-                      buttonTitle: "OK"
-                  ) { showFailedAlert = false }
-            }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 }
 
-
-#Preview {
-    ResetPassword()
-}
