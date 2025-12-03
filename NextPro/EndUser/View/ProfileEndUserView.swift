@@ -214,6 +214,17 @@ struct ProfileEndUserView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
             }
+            
+            if viewModel.isFailedDueToNoInternet {
+                NoInternetOverlayView(retryAction: {
+                    Task {
+                        await viewModel.fetchUserProfile()
+                    }
+                })
+                .transition(.opacity)
+                .zIndex(200)
+            }
+
         }
         .background(Color.black.opacity(0.4))
         
@@ -244,22 +255,44 @@ struct ProfileEndUserView: View {
             Task {
                 loadUserData()
                 await viewModel.fetchUserProfile()
-                if !viewModel.isSuccess{
-                    showFailedAlert = true
-                }
+//                if !viewModel.isSuccess{
+//                    showFailedAlert = true
+//                }
+                
+                if !viewModel.isSuccess && !viewModel.isFailedDueToNoInternet {
+                            showFailedAlert = true
+                        }
             }
         }
         
-        .modernAlert(isPresented: $showFailedAlert) {
-              ModernAlertView(
-                  title: "Error!",
-                  message: viewModel.errorMessage,
-                  isSuccess: false,
-                  buttonTitle: "OK"
-              ) { showFailedAlert = false
-                 
-              }
-        }
+//        .modernAlert(isPresented: $showFailedAlert) {
+//              ModernAlertView(
+//                  title: "Error!",
+//                  message: viewModel.errorMessage,
+//                  isSuccess: false,
+//                  buttonTitle: "OK"
+//              ) { showFailedAlert = false
+//                 
+//              }
+//        }
+        
+        //Alert is visible only when: showFailedAlert == true ANd viewModel.isFailedDueToNoInternet == false
+
+        .modernAlert(
+                isPresented: Binding(
+                    get: { showFailedAlert && !viewModel.isFailedDueToNoInternet },
+                    set: { showFailedAlert = $0 }
+                )
+            ) {
+                ModernAlertView(
+                    title: "Error!",
+                    message: viewModel.errorMessage,
+                    isSuccess: false,
+                    buttonTitle: "OK"
+                ) {
+                    showFailedAlert = false
+                }
+            }
         
         .sheet(isPresented: $showLogoutAlert) {
             LogoutSheetView()
@@ -569,5 +602,46 @@ struct SpinnerView: View {
             .rotationEffect(.degrees(isAnimating ? 360 : 0))
             .animation(.linear(duration: 0.8).repeatForever(autoreverses: false), value: isAnimating)
             .onAppear { isAnimating = true }
+    }
+}
+
+
+
+struct NoInternetOverlayView: View {
+    var retryAction: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.98)
+                .ignoresSafeArea()
+
+            VStack(spacing: 16) {
+
+                Image(systemName: "wifi.exclamationmark")
+                    .font(.system(size: 40))
+                    .foregroundColor(.white)
+
+                Text("No Internet Connection")
+                    .font(.custom("Inter-SemiBold", size: 20))
+                    .foregroundColor(.white)
+
+                Text("Please check your internet and try again.")
+                    .font(.custom("Inter-Regular", size: 15))
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+
+                Button(action: retryAction) {
+                    Text("Retry")
+                        .font(.custom("Inter-Bold", size: 16))
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.white)
+                        .foregroundColor(.black)
+                        .cornerRadius(12)
+                }
+                .padding(.horizontal, 40)
+            }
+        }
     }
 }

@@ -24,25 +24,32 @@ class UserProfileDetailsViewModel: ObservableObject {
     @Published var errorMessage = ""
     @Published var isSuccess = false
     private let networkManager = NetworkManager.shared
+    @Published var isFailedDueToNoInternet = false
 
     let network = NetworkManager.shared
     
     func fetchUserProfile() async {
+        
+        guard network.hasInternet else {
+           errorMessage = ""
+            isFailedDueToNoInternet = true
+            return
+        }
+        
+        isFailedDueToNoInternet = false
+        
         guard let userId = UserDefaults.standard.string(forKey: "user_id") else {
             errorMessage = "User ID missing!"
             return
         }
 
-        guard network.hasInternet else {
-            errorMessage = "No internet connection."
-            return
-        }
+       
         
         
         do {
             isLoading = true
             errorMessage = ""
-
+            isFailedDueToNoInternet = false
             let response = try await networkManager.UserProfileDetails(id: userId)
             
             if response.status{
