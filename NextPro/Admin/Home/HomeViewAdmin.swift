@@ -9,6 +9,11 @@ import SwiftUI
 
 struct HomeViewAdmin: View {
     @State private var selectedTab = 0
+    enum AdminHomeSubPage {
+        case facilityList
+        case facilityDetail(facilityName: String)
+    }
+    @State private var adminHomePage: AdminHomeSubPage = .facilityList
 
     var body: some View {
         GeometryReader { geo in
@@ -54,8 +59,23 @@ struct HomeViewAdmin: View {
                     // MARK: - Dynamic Page Content
                     VStack {
                         switch selectedTab {
+//                        case 0:
+//                            AdminFacilityListView()
                         case 0:
-                            AdminFacilityListView()
+                            Group {
+                                switch adminHomePage {
+                                case .facilityList:
+                                    AdminFacilityListView { facilityName in
+                                        adminHomePage = .facilityDetail(facilityName: facilityName)
+                                    }
+
+                                case .facilityDetail(let name):
+                                    FacilityDetailView(facilityName: name) {
+                                        adminHomePage = .facilityList
+                                    }
+                                }
+                            }
+
                         case 1:
                             DeviceAdminTabView()
                         case 2:
