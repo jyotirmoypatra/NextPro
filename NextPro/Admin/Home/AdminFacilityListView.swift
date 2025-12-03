@@ -18,16 +18,21 @@ struct AdminFacilityListView: View {
         ZStack{
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-
+                    
                     ForEach(facilitis, id: \.self) { facility in
-                        FacilityCardView(title: facility)
+                        NavigationLink(value: facility) {
+                            FacilityCardView(title: facility)
+                        }
                     }
-
+                    
                     Spacer()
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
             }
+        }
+        .navigationDestination(for: String.self) { facilityName in
+            FacilityDetailView(facilityName: facilityName)
         }
     }
 }
@@ -36,7 +41,7 @@ struct AdminFacilityListView: View {
 
 struct FacilityCardView: View {
     let title: String
-
+    
     var body: some View {
         HStack(spacing: 16) {
             
@@ -64,5 +69,25 @@ struct FacilityCardView: View {
             RoundedRectangle(cornerRadius: 14)
                 .stroke(Color.white.opacity(0.15), lineWidth: 1)
         )
+    }
+}
+
+
+
+
+struct FacilityDetailView: View {
+    let facilityName: String
+    
+    var body: some View {
+        VStack {
+            Text(facilityName)
+                .font(.largeTitle.bold())
+                .foregroundColor(.white)
+            
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black)
+        .ignoresSafeArea()
     }
 }
