@@ -204,7 +204,7 @@ struct DoorOpenView: View {
                         // Status Message
                         Text(getStatusMessage())
                             .font(.custom("Inter-SemiBold", size: 18))
-                            .foregroundColor(.white)
+                            .foregroundColor(ringColor)
                             .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 2)
                     }
                 }
@@ -491,7 +491,7 @@ struct DoorOpenView: View {
     func unauthorised() {
         isUnauthorise = true
         withAnimation(.easeInOut(duration: 0.3)) {
-            ringColor = .yellow
+            ringColor = .orange
             lockIcon = "lock.fill"
             isOpening = false
             progress = 1.0
@@ -671,9 +671,9 @@ struct DoorOpenView: View {
                    
                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                        unauthorised()
-                       AceesMessage = "Unauthorized Door. Access not permitted."
+                       AceesMessage = "Unauthorized Door."
                        UINotificationFeedbackGenerator().notificationOccurred(.error)
-                       speakText("Unauthorized Door. Access not permitted.")
+                       speakText("Unauthorized Door")
                    }
                    
                    // Restart scanning after 5 seconds
