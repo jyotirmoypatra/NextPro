@@ -12,6 +12,7 @@ struct NextProApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+              //  .internetOverlay()   
         }
     }
 }

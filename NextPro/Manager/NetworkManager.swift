@@ -9,6 +9,7 @@ import Foundation
 import Network
 import Combine
 
+import SwiftUI
 class NetworkManager: ObservableObject {
     static let shared = NetworkManager()
     
@@ -98,49 +99,7 @@ class NetworkManager: ObservableObject {
     //All API list
     
     // MARK: - LOGIN API
-//    func login(email: String, password: String) async throws -> LoginResponseModel {
-//
-//        let urlString = APIConfig.url(APIConfig.Endpoints.login)
-//        print("Url:\(urlString)")
-//
-//        guard let url = URL(string: urlString) else {
-//            throw URLError(.badURL)
-//        }
-//           
-//        var request = URLRequest(url: url)
-//        request.httpMethod = "POST"
-//
-//        let params = [
-//            "username": email,
-//            "password": password
-//        ]
-//
-//        print("request param:\(params)")
-//        request.httpBody = try JSONSerialization.data(withJSONObject: params)
-//        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-//
-//        let (data, response) = try await URLSession.shared.data(for: request)
-//
-//        if let jsonString = String(data: data, encoding: .utf8) {
-//            print("📥Login Response JSON:\n\(jsonString)")
-//        }
-//
-//        guard let httpResponse = response as? HTTPURLResponse else {
-//            throw URLError(.badServerResponse)
-//        }
-//
-//        // Decode always
-//        let decoded = try JSONDecoder().decode(LoginResponseModel.self, from: data)
-//
-//        // Backend returns 200 even for invalid login, so catch failure here
-//        if decoded.status == false {
-//            throw NSError(domain: "LoginError", code: 401, userInfo: [
-//                NSLocalizedDescriptionKey: decoded.message
-//            ])
-//        }
-//
-//        return decoded
-//    }
+
     
     
     // MARK: - LOGIN API
@@ -205,51 +164,7 @@ class NetworkManager: ObservableObject {
     
 
     // MARK: - Update Password API
-//    func updatePassword(newPassword: String, confirmPassword: String , userName: String) async throws -> UpdatePasswordResponseModel {
-//
-//        let urlString = APIConfig.url(APIConfig.Endpoints.updatePassword)
-//
-//            print("Url:\(urlString)")
-//            guard let url = URL(string: urlString) else {
-//                throw URLError(.badURL)
-//            }
-//             
-//            var request = URLRequest(url: url)
-//            request.httpMethod = "POST"
-//
-//            let params: [String: Any] = [
-//                "username" : userName,
-//                "new_password": newPassword,
-//                "confirm_password": confirmPassword
-//            ]
-//            
-//            print("request param:\(params)")
-//            request.httpBody = try JSONSerialization.data(withJSONObject: params)
-//            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-//
-//            let (data, response) = try await URLSession.shared.data(for: request)
-//
-//            if let jsonString = String(data: data, encoding: .utf8) {
-//                print("📥UpdatePAssword Response JSON:\n\(jsonString)")
-//            }
-//
-//            guard let httpResponse = response as? HTTPURLResponse else {
-//                throw URLError(.badServerResponse)
-//            }
-//
-//            // Decode always
-//            let decoded = try JSONDecoder().decode(UpdatePasswordResponseModel.self, from: data)
-//
-//            // Backend returns 200 even for invalid login, so catch failure here
-//            if decoded.status == false {
-//                throw NSError(domain: "UpdatePasswordError", code: 401, userInfo: [
-//                    NSLocalizedDescriptionKey: decoded.message
-//                ])
-//            }
-//
-//            return decoded
-//        }
-    
+
     
     func updatePassword(newPassword: String,
                         confirmPassword: String,
@@ -366,50 +281,7 @@ class NetworkManager: ObservableObject {
 
 
     // MARK: - Forget password  API
-//    func requestForgetPassword(email: String) async throws -> ForgetPasswordResponseModel {
-//
-//        let urlString = APIConfig.url(APIConfig.Endpoints.forgetPasswordRequest)
-//            print("🔗 URL: \(urlString)")
-//
-//            guard let url = URL(string: urlString) else {
-//                throw URLError(.badURL)
-//            }
-//
-//            var request = URLRequest(url: url)
-//            request.httpMethod = "POST"
-//
-//            let params = [
-//                "email": email
-//            ]
-//
-//            print("📤 Params: \(params)")
-//
-//            request.httpBody = try JSONSerialization.data(withJSONObject: params)
-//            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-//
-//            let (data, response) = try await URLSession.shared.data(for: request)
-//
-//            if let jsonString = String(data: data, encoding: .utf8) {
-//                print("📥 Forget Password Response JSON:\n\(jsonString)")
-//            }
-//
-//            guard let httpResponse = response as? HTTPURLResponse else {
-//                throw URLError(.badServerResponse)
-//            }
-//
-//            // Decode response
-//            let decoded = try JSONDecoder().decode(ForgetPasswordResponseModel.self, from: data)
-//
-//            // Backend returns status: false for errors
-//            if decoded.status == false {
-//                throw NSError(domain: "ForgetPasswordError", code: 400, userInfo: [
-//                    NSLocalizedDescriptionKey: decoded.message
-//                ])
-//            }
-//
-//            return decoded
-//        }
-    
+
     func requestForgetPassword(email: String) async throws -> ForgetPasswordResponseModel {
 
         let urlString = APIConfig.url(APIConfig.Endpoints.forgetPasswordRequest)
@@ -468,51 +340,6 @@ class NetworkManager: ObservableObject {
     
     
     // // MARK: - verify otp
-//    func requestVerifyOtp(email: String, otp: String) async throws -> ForgetPasswordOtpVerifyresponse {
-//        let urlString = APIConfig.url(APIConfig.Endpoints.forgetPasswordOtpVerify)
-//            print("🔗 URL: \(urlString)")
-//
-//            guard let url = URL(string: urlString) else {
-//                throw URLError(.badURL)
-//            }
-//
-//            var request = URLRequest(url: url)
-//            request.httpMethod = "POST"
-//
-//            let params = [
-//                "email": email,
-//                "code" : otp
-//            ]
-//
-//            print("📤 Params: \(params)")
-//
-//            request.httpBody = try JSONSerialization.data(withJSONObject: params)
-//            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-//
-//            let (data, response) = try await URLSession.shared.data(for: request)
-//
-//            if let jsonString = String(data: data, encoding: .utf8) {
-//                print("📥 Verify otp Response JSON:\n\(jsonString)")
-//            }
-//
-//            guard let httpResponse = response as? HTTPURLResponse else {
-//                throw URLError(.badServerResponse)
-//            }
-//
-//            // Decode response
-//            let decoded = try JSONDecoder().decode(ForgetPasswordOtpVerifyresponse.self, from: data)
-//
-//            // Backend returns status: false for errors
-//            if decoded.status == false {
-//                throw NSError(domain: "VerifyOtpError", code: 400, userInfo: [
-//                    NSLocalizedDescriptionKey: decoded.message
-//                ])
-//            }
-//
-//            return decoded
-//        }
-    
-    
     func requestVerifyOtp(email: String, otp: String) async throws -> ForgetPasswordOtpVerifyresponse {
 
         let urlString = APIConfig.url(APIConfig.Endpoints.forgetPasswordOtpVerify)
@@ -571,51 +398,6 @@ class NetworkManager: ObservableObject {
 
     
     // MARK: - User PRofile Details
-//    func UserProfileDetails(id:String) async throws -> UserProfileResponse {
-//        let urlString = APIConfig.url(APIConfig.Endpoints.getUserProfileData)
-//            print("🔗 URL: \(urlString)")
-//
-//            guard let url = URL(string: urlString) else {
-//                throw URLError(.badURL)
-//            }
-//
-//            var request = URLRequest(url: url)
-//            request.httpMethod = "POST"
-//
-//            let params = [
-//                "id": id,
-//               
-//            ]
-//
-//            print("📤 Params: \(params)")
-//
-//            request.httpBody = try JSONSerialization.data(withJSONObject: params)
-//            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-//
-//            let (data, response) = try await URLSession.shared.data(for: request)
-//
-//            if let jsonString = String(data: data, encoding: .utf8) {
-//                print("📥 Profile details Response JSON:\n\(jsonString)")
-//            }
-//
-//            guard let httpResponse = response as? HTTPURLResponse else {
-//                throw URLError(.badServerResponse)
-//            }
-//
-//            // Decode response
-//            let decoded = try JSONDecoder().decode(UserProfileResponse.self, from: data)
-//
-//            // Backend returns status: false for errors
-//            if decoded.status == false {
-//                throw NSError(domain: "ProfileDetailsRequestError", code: 400, userInfo: [
-//                    NSLocalizedDescriptionKey: decoded.message
-//                ])
-//            }
-//
-//            return decoded
-//        }
-    
-    
     func UserProfileDetails(id: String) async throws -> UserProfileResponse {
 
         let urlString = APIConfig.url(APIConfig.Endpoints.getUserProfileData)
@@ -673,49 +455,6 @@ class NetworkManager: ObservableObject {
 
     
     // MARK: - profile img upload
-//    func UploadProfileImage(userId: String , base64: String) async throws -> UploadProfileImgResponseModel {
-//        let urlString = APIConfig.url(APIConfig.Endpoints.uploadProfilePic)
-//            print("🔗 URL: \(urlString)")
-//
-//            guard let url = URL(string: urlString) else {
-//                throw URLError(.badURL)
-//            }
-//
-//            var request = URLRequest(url: url)
-//            request.httpMethod = "POST"
-//
-//            let params = [
-//                "user_id": userId,
-//                "image": base64
-//            ]
-//
-//            print("📤Upload img Params: \(params)")
-//
-//            request.httpBody = try JSONSerialization.data(withJSONObject: params)
-//            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-//
-//            let (data, response) = try await URLSession.shared.data(for: request)
-//
-//            if let jsonString = String(data: data, encoding: .utf8) {
-//                print("📥 Upload Profile img Response JSON:\n\(jsonString)")
-//            }
-//
-//            guard let httpResponse = response as? HTTPURLResponse else {
-//                throw URLError(.badServerResponse)
-//            }
-//
-//            // Decode response
-//            let decoded = try JSONDecoder().decode(UploadProfileImgResponseModel.self, from: data)
-//
-//            // Backend returns status: false for errors
-//            if decoded.status == false {
-//                throw NSError(domain: "UploadProfileImageError", code: 400, userInfo: [
-//                    NSLocalizedDescriptionKey: decoded.message
-//                ])
-//            }
-//
-//            return decoded
-//        }
     func UploadProfileImage(userId: String, base64: String) async throws -> UploadProfileImgResponseModel {
 
         let urlString = APIConfig.url(APIConfig.Endpoints.uploadProfilePic)
@@ -833,5 +572,78 @@ class NetworkManager: ObservableObject {
 
 }
 
+
+
+struct InternetOverlayModifier: ViewModifier {
+    @ObservedObject var network = NetworkManager.shared
+
+    func body(content: Content) -> some View {
+        ZStack {
+            content
+
+            if network.didCheckInternet && !network.hasInternet {
+                NoInternetOverlayView(retryAction: {
+                    network.checkInternet()
+                })
+                .transition(.opacity)
+                .animation(.easeInOut, value: network.hasInternet)
+                .zIndex(9999)
+            }
+        }
+    }
+}
+
+
+struct NoInternetOverlayView: View {
+    var retryAction: () -> Void
+
+    var body: some View {
+        ZStack {
+            Image("backgroundimg")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                //.frame(width: geometry.size.width, height: geometry.size.height)
+                .ignoresSafeArea()
+            
+            Color.black.opacity(0.9)
+                .ignoresSafeArea()
+
+            VStack(spacing: 16) {
+
+                Image(systemName: "wifi.exclamationmark")
+                    .font(.system(size: 40))
+                    .foregroundColor(.white)
+
+                Text("No Internet Connection")
+                    .font(.custom("Inter-SemiBold", size: 20))
+                    .foregroundColor(.white)
+
+                Text("Please check your internet and try again.")
+                    .font(.custom("Inter-Regular", size: 15))
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+
+                Button(action: retryAction) {
+                    Text("Retry")
+                        .font(.custom("Inter-Bold", size: 16))
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.white)
+                        .foregroundColor(.black)
+                        .cornerRadius(12)
+                }
+                .padding(.horizontal, 40)
+            }
+        }
+    }
+}
+
+
+extension View {
+    func internetOverlay() -> some View {
+        self.modifier(InternetOverlayModifier())
+    }
+}
 
 
