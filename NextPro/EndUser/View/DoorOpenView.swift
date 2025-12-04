@@ -671,9 +671,9 @@ struct DoorOpenView: View {
                    
                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                        unauthorised()
-                       AceesMessage = "Unauthorized Door."
+                       AceesMessage = "Unauthorized Door.  Access Not permitted"
                        UINotificationFeedbackGenerator().notificationOccurred(.error)
-                       speakText("Unauthorized Door")
+                       speakText("Unauthorized Door. Access Not permitted")
                    }
                    
                    // Restart scanning after 5 seconds
