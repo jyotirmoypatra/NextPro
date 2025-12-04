@@ -214,18 +214,10 @@ struct ProfileEndUserView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
             }
-            
-            if viewModel.isFailedDueToNoInternet {
-                NoInternetOverlayView(retryAction: {
-                    Task {
-                        await viewModel.fetchUserProfile()
-                    }
-                })
-                .transition(.opacity)
-                .zIndex(200)
-            }
+        
 
         }
+        .internetOverlay() 
         .background(Color.black.opacity(0.4))
         
         .navigationDestination(isPresented: $navigateToUpdatePass) {
@@ -245,6 +237,14 @@ struct ProfileEndUserView: View {
                 
             )
         }
+        .onReceive(NetworkManager.shared.$hasInternet) { internet in
+            if internet == true {
+                Task {
+                    await viewModel.fetchUserProfile()
+                }
+            }
+        }
+
         .onChange(of: navigateToEditProfile) { newValue in
             // Refresh data when returning from Edit Profile
             if !newValue {
