@@ -156,7 +156,8 @@ struct LoginView: View {
                             
                             if vm.email == "admin" && vm.password == "admin"{
                                 navigateToHome = true
-                                isDeviceprov = true
+                               // isDeviceprov = true
+                                isAdmin = true
                             }else{
                                 Task {
                                    
@@ -270,17 +271,18 @@ struct LoginView: View {
             
             .navigationDestination(isPresented: $navigateToHome) {
                 if isAdmin {
-                 //   HomeViewAdmin()
+                   HomeViewAdmin()
                    // OnboardPageDeviceScanView()
-                    HomeViewEndUser()
+                  //  HomeViewEndUser()
                     
                         .navigationBarBackButtonHidden(true)
                         .navigationBarHidden(true)
-                } else if isDeviceprov{
-                    OnboardPageDeviceScanView()
-                        .navigationBarBackButtonHidden(true)
-                        .navigationBarHidden(true)
                 }
+//                else if isDeviceprov{
+//                    OnboardPageDeviceScanView()
+//                        .navigationBarBackButtonHidden(true)
+//                        .navigationBarHidden(true)
+//                }
                 else {
                    
                     HomeViewEndUser()

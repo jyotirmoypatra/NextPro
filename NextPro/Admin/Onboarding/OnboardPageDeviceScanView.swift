@@ -36,58 +36,38 @@ struct OnboardPageDeviceScanView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 25) {
-                Spacer()
-
-                // Header card
-               
-                VStack(spacing: 15) {
-                    HStack{
-                        Spacer()
-                        Button(action: {
-                            navigateToHome = true
-                        }) {
-                            Text("SKIP")
-                                .font(.custom("Inter-SemiBold", size: 15))
+                HStack {
+                    // LEFT: Back Button
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        HStack {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 18, weight: .semibold))
                                 .foregroundColor(.white)
+
+                            Text("Back")
+                                .foregroundColor(.white)
+                                .font(.custom("Inter-SemiBold", size: 16))
                         }
-                        .navigationDestination(isPresented: $navigateToHome) {
-                           HomeViewAdmin()
-                                .navigationBarBackButtonHidden(true)
-                                       .navigationBarHidden(true)
-                                       .interactiveDismissDisabled(true)
-                        }
-                        
                     }
-                  
-                    
-                    Image("computer")
+
+                    Spacer()
+
+                    // RIGHT: Info Icon
+                    Image(systemName: "info.circle")
                         .resizable()
-                        .scaledToFit()
-                        .frame(width: 48, height: 48)
-                        .foregroundColor(.white)
-                    
-                    
-
-                    Text("STEP 2 OF 3")
-                        .font(.custom("Inter-SemiBold", size: 16))
-                        .foregroundColor(.white)
-                    
-                    Text("Select your device from the list.")
-                        .font(.custom("Inter-Regular", size: 16))
-                        .foregroundColor(.white)
-
-
-                    Text("You’ll need to accept Bluetooth and location services in order to find and pair your device to the network.")
-                        .font(.custom("Inter-Regular", size: 15))
-                        .foregroundColor(Color.white.opacity(0.5))
-                        .multilineTextAlignment(.center)
+                        .frame(width: 24, height: 24)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 25)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.white.opacity(0.12))
+                .overlay(
+                    Text("Add Devices")
+                        .foregroundColor(.white)
+                        .font(.custom("Inter-Bold", size: 16))
                 )
+                .padding(.horizontal, 5)
+                .padding(.top, 5)
+
+
 
                 // Device list (scrollable)
                                 ScrollView(showsIndicators: false) {
@@ -213,34 +193,6 @@ struct OnboardPageDeviceScanView: View {
                 .padding(.horizontal, 10)
 
 
-
-                // Bottom controls
-                HStack {
-                    // Prev button
-                    Button(action: { dismiss() }) {
-                        Text("Prev")
-                            .font(.custom("Inter-SemiBold", size: 16))
-                            .foregroundColor(.white)
-                            .padding()
-                    }
-
-                    Spacer()
-
-                    // Page indicators
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 8, height: 8)
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 8, height: 8)
-                        Circle()
-                            .fill(Color.white.opacity(0.4))
-                            .frame(width: 8, height: 8)
-                    }
-
-                    Spacer()
-
                     // Next button
                     Button(action: {
                         guard selectedDeviceSN != nil else { return }
@@ -258,17 +210,21 @@ struct OnboardPageDeviceScanView: View {
                         navigateToWiFiListView = true
                     }) {
                         Text("Next")
-                            .font(.custom("Inter-SemiBold", size: 16))
-                            .foregroundColor(.white)
-                            .padding()
+                               .font(.custom("Inter-Bold", size: 16))
+                               .foregroundColor(.black)
+                               .frame(maxWidth: .infinity)
+                               .padding()
+                        
                     }
+                    .background(selectedDeviceSN == nil ? Color.gray : Color.white)
+                    .cornerRadius(12)           // ← APPLY HERE
                     .disabled(selectedDeviceSN == nil)
-      
+                    .padding(.horizontal, 10)    // ← Only side padding
+                    .padding(.bottom, 30)
+                
 
 
-
-                }
-                .padding(.bottom, 30)
+               
             }
             .padding(.horizontal, 20)
         }

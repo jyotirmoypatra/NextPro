@@ -32,22 +32,46 @@ struct OnboardPageWiFiListView: View {
             Color.black.opacity(0.8)
                 .ignoresSafeArea()
 
-            VStack(spacing: 25) {
-                Spacer()
+            VStack(spacing: 25,) {
 
-                // Header
+                HStack {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        HStack {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.white)
+
+                            Text("Back")
+                                .foregroundColor(.white)
+                                .font(.custom("Inter-SemiBold", size: 16))
+                        }
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "info.circle")
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                }
+                .overlay(
+                    Text("Add Devices")
+                        .foregroundColor(.white)
+                        .font(.custom("Inter-Bold", size: 16))
+                )
+                .padding(.horizontal, 5)
+                .padding(.top, 5)
+                
+               
                 VStack(spacing: 15) {
                     Image("wifi")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 48, height: 48)
 
-                    Text("STEP 3 of 3")
-                        .font(.custom("Inter-SemiBold", size: 16))
-                        .foregroundColor(.white)
-
                     Text("Connect to Wi-Fi, view available networks")
-                        .font(.custom("Inter-Regular", size: 16))
+                        .font(.custom("Inter-SemiBold", size: 16))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
 
@@ -121,42 +145,32 @@ struct OnboardPageWiFiListView: View {
 
                 Spacer()
 
-                // Bottom Buttons
-                HStack(spacing: 16) {
-                    Button("Prev") { dismiss() }
-                        .font(.custom("Inter-SemiBold", size: 16))
-                        .foregroundColor(.white)
+
+                
+                Button {
+                    navigateToWifiPassword = true
+                } label: {
+                    Text("Next")
+                        .font(.custom("Inter-Bold", size: 16))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
                         .padding()
-
-                    Spacer()
-
-                    HStack(spacing: 8) {
-                        ForEach(0..<3) { _ in
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 8, height: 8)
-                        }
-                    }
-
-                    Spacer()
-
-                    Button("Next") {
-                        navigateToWifiPassword = true
-                    }
-                    .font(.custom("Inter-SemiBold", size: 16))
-                    .foregroundColor(.white)
-                    .padding()
-                    .disabled(selectedWiFiIndex == nil)
-                    .navigationDestination(isPresented: $navigateToWifiPassword) {
-                        if let index = selectedWiFiIndex {
-                            OnboardPageWifiPasswordView(
-                                selectedDeviceSN: selectedDeviceSN,
-                                selectedWiFiNetwork: availableWiFiList[index]
-                            )
-                        }
+                }
+                .background(selectedWiFiIndex == nil ? Color.gray : Color.white)
+                .cornerRadius(12)   // ← APPLY AFTER background
+                .padding(.horizontal, 10)
+                .disabled(selectedWiFiIndex == nil)
+                .padding(.bottom, 30)
+                .navigationDestination(isPresented: $navigateToWifiPassword) {
+                    if let index = selectedWiFiIndex {
+                        OnboardPageWifiPasswordView(
+                            selectedDeviceSN: selectedDeviceSN,
+                            selectedWiFiNetwork: availableWiFiList[index]
+                        )
                     }
                 }
-                .padding(.bottom, 30)
+
+               
             }
             .padding(.horizontal, 20)
         }

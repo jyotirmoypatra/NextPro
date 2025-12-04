@@ -40,8 +40,39 @@ struct OnboardPageWifiPasswordView: View {
                 Color.black.opacity(0.8)
                     .ignoresSafeArea()
                 
-                // Content VStack (fixed at the top)
                 VStack(spacing: 25) {
+                    
+                    
+                    HStack {
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            HStack {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(.white)
+
+                                Text("Back")
+                                    .foregroundColor(.white)
+                                    .font(.custom("Inter-SemiBold", size: 16))
+                            }
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "info.circle")
+                            .resizable()
+                            .frame(width: 24, height: 24)
+                    }
+                    .overlay(
+                        Text("Add Devices")
+                            .foregroundColor(.white)
+                            .font(.custom("Inter-Bold", size: 16))
+                    )
+                    .padding(.horizontal, 5)
+                    .padding(.top, 5)
+                    
+                    
                     // Password section
                     VStack(alignment: .leading, spacing: 6) {
                         // ... (Your password input code here)
@@ -195,42 +226,31 @@ struct OnboardPageWifiPasswordView: View {
                     
                     Spacer() // Pushes everything above it to the top
                     
-                    // Bottom controls
-                    HStack(spacing: 16) {
-                        // ... (Your Prev/Next button code here)
-                        Button(action: { dismiss() }) {
-                            Text("Prev")
-                                .font(.custom("Inter-SemiBold", size: 16))
-                                .foregroundColor(.white)
-                                .padding()
-                        }
-                        
-                        Spacer()
-                        
-                        HStack(spacing: 8) {
-                            Circle().fill(Color.white).frame(width: 8, height: 8)
-                            Circle().fill(Color.white).frame(width: 8, height: 8)
-                            Circle().fill(Color.white).frame(width: 8, height: 8)
-                        }
-                        
-                        Spacer()
-                        
-                        Button(action: configureWiFi) {
-                            Text(isConfiguring ? "Configuring..." : "Next")
-                                .font(.custom("Inter-SemiBold", size: 16))
-                                .foregroundColor(.white)
-                                .padding()
-                        }
-                        .disabled(isConfiguring || password.isEmpty)
-                        .navigationDestination(isPresented: $navigateToSuccessView) {
-                             // Assuming SuccessConnctionView is defined elsewhere
-                              SuccessConnctionView()
-                             //Text("Success View Placeholder")
-                        }
+        
+                    Button {
+                        configureWiFi()
+                    } label: {
+                        Text("Next")
+                            .font(.custom("Inter-Bold", size: 16))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding()
                     }
+                    .background(isConfiguring || password.isEmpty ? Color.gray : Color.white)
+                    .cornerRadius(12)   // ← APPLY AFTER background
+                    .padding(.horizontal, 10)
                     .padding(.bottom, 30)
-                    .padding(.horizontal)
+                    .disabled(isConfiguring || password.isEmpty)
+                    .navigationDestination(isPresented: $navigateToSuccessView) {
+                         // Assuming SuccessConnctionView is defined elsewhere
+                          SuccessConnctionView()
+                         //Text("Success View Placeholder")
+                    }
+                    
                 }
+            }
+            .onTapGesture {
+                UIApplication.shared.hideKeyboard()
             }
             .onAppear{
                 print("WIFI-> \(selectedWiFiNetwork)")

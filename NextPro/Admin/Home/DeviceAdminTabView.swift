@@ -25,12 +25,15 @@ let sampledevices: [DeviceModel] = [
 
 struct DeviceAdminTabView: View {
     let devices =  sampledevices
-
+    
+    @State private var navigateToDeviceScanView = false
+    
     var body: some View {
         ZStack {
             VStack{
                 Button(action: {
                    print("add devices")
+                    navigateToDeviceScanView = true
                 }) {
                     HStack{
                         Image(systemName: "plus")
@@ -63,6 +66,9 @@ struct DeviceAdminTabView: View {
             .padding(.top,20)
         }
         .navigationBarHidden(true)
+        .navigationDestination(isPresented: $navigateToDeviceScanView) {
+            OnboardPageDeviceScanView()
+        }
     }
 }
 
