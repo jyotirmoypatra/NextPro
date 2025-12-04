@@ -32,7 +32,7 @@ struct DoorOpenView: View {
     @State private var isScanningActive = false
     @State private var isViewVisible = false
     @State private var startMonitoringTask: DispatchWorkItem?
-    
+    @ObservedObject var network = NetworkManager.shared
     @State private var selectedCard: CardModelUser?
     
     @State private var doorId : Int?
@@ -46,6 +46,22 @@ struct DoorOpenView: View {
             
             VStack(spacing: 0) {
                 // MARK: - Header
+                if network.didCheckInternet && !network.hasInternet {
+                    HStack{
+                        ZStack{
+                            Image(systemName: "wifi.slash")
+                                .foregroundColor(.white)
+                        }
+                        Text("No Internet Connection")
+                            .foregroundColor(.white)
+                            .font(.system(size: 15, weight: .semibold))
+                    }
+                    .padding(.bottom,8)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.red)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .animation(.spring(), value: network.hasInternet)
+                }
                 HStack {
                     Text("Welcome!")
                         .font(.custom("Inter-SemiBold", size: 18))
@@ -155,7 +171,7 @@ struct DoorOpenView: View {
                         }
               
                     }
-                    .padding(.bottom, 40)
+                    .padding(.bottom, 30)
                     
                 }
                 

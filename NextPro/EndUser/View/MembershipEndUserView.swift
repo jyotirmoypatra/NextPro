@@ -91,6 +91,7 @@ struct MembershipEndUserView: View {
             }
         }
         .background(Color.black.opacity(0.4))
+        .internetOverlay() 
     }
 }
 

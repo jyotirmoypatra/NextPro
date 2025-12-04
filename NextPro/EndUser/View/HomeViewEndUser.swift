@@ -77,9 +77,8 @@ struct HomeViewEndUser: View {
                         .onTapGesture { selectedTab = 2 }
                     }
 
-                    
+                    .padding(.top,10)
                     .padding(.horizontal, 30)
-                    .padding(.vertical, 20)
                     .background(Color.black.opacity(0.9))
                     .ignoresSafeArea(edges: .bottom)
                 }

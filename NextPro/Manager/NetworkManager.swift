@@ -610,7 +610,7 @@ struct NoInternetOverlayView: View {
 
             VStack(spacing: 16) {
 
-                Image(systemName: "wifi.exclamationmark")
+                Image(systemName: "wifi.slash")
                     .font(.system(size: 40))
                     .foregroundColor(.white)
 
@@ -625,15 +625,22 @@ struct NoInternetOverlayView: View {
                     .padding(.horizontal, 40)
 
                 Button(action: retryAction) {
-                    Text("Retry")
-                        .font(.custom("Inter-Bold", size: 16))
+                    HStack{
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 20))
+                            .foregroundColor(.black)
+                        Text("RETRY")
+                            .font(.custom("Inter-Bold", size: 16))
+                            
+                       }
                         .frame(maxWidth: .infinity)
-                        .padding()
+                        .padding(.vertical,12)
                         .background(Color.white)
                         .foregroundColor(.black)
-                        .cornerRadius(12)
+                        .cornerRadius(15)
+                    
                 }
-                .padding(.horizontal, 40)
+                .padding(.horizontal, 50)
             }
         }
     }
@@ -646,4 +653,38 @@ extension View {
     }
 }
 
+// add .internetOverlay to view for full screen no internet overaly
 
+
+struct GlobalNetworkBanner: ViewModifier {
+    @ObservedObject var network = NetworkManager.shared
+    
+    func body(content: Content) -> some View {
+        ZStack(alignment: .top) {
+            content
+            
+            if network.didCheckInternet && !network.hasInternet {
+                HStack {
+                    Image(systemName: "wifi.slash")
+                        .foregroundColor(.white)
+                    Text("No Internet Connection")
+                        .foregroundColor(.white)
+                        .font(.system(size: 15, weight: .semibold))
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.red)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .animation(.spring(), value: network.hasInternet)
+            }
+        }
+    }
+}
+
+extension View {
+    func networkBanner() -> some View {
+        self.modifier(GlobalNetworkBanner())
+    }
+}
+
+// add .networkBanner to view for banner no internet overaly
