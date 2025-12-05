@@ -221,7 +221,7 @@ struct ProfileEndUserView: View {
         .background(Color.black.opacity(0.4))
         
         .navigationDestination(isPresented: $navigateToUpdatePass) {
-            CreateNewPasswordView(userType: usertype, userName: username, comingFrom: "user_profile")
+            CreateNewPasswordView(userName: username, comingFrom: "user_profile")
         }
         
         .navigationDestination(isPresented: $navigate_Webview_PrivacyTerms) {

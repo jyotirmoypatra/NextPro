@@ -68,10 +68,24 @@ class KeychainManager {
         
         
         // Remove all stored keys for this app
+//        if let bundleID = Bundle.main.bundleIdentifier {
+//            UserDefaults.standard.removePersistentDomain(forName: bundleID)
+//            UserDefaults.standard.synchronize()
+//        }
+        
+        //Remove all stored keys for this app except isUserInitialSetupCompleted
         if let bundleID = Bundle.main.bundleIdentifier {
+            // Save the value you want to keep
+            let isSetupCompleted = UserDefaults.standard.bool(forKey: "isUserInitialSetupCompleted")
+            
+            // Clear all UserDefaults
             UserDefaults.standard.removePersistentDomain(forName: bundleID)
             UserDefaults.standard.synchronize()
+            
+            // Restore the value you want to keep
+            UserDefaults.standard.set(isSetupCompleted, forKey: "isUserInitialSetupCompleted")
         }
+
         
         print("🧹 UserDefaults cleared successfully.")
     }
@@ -86,16 +100,6 @@ class KeychainManager {
             }
         }
     }
-//    
-//  /  func resetToLogin() {
-//        DispatchQueue.main.async {
-//            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-//               let window = scene.windows.first {
-//                // skip splash on logout
-//                window.rootViewController = UIHostingController(rootView: ContentView(skipSplash: true))
-//                window.makeKeyAndVisible()
-//            }
-//        }
-//    }
+
 
 }

@@ -9,17 +9,28 @@ import SwiftUI
 
 
 struct LoginView: View {
+    var isUserInitialSetupCompleted : Bool
     @StateObject var network = NetworkManager.shared
     @StateObject private var vm = LoginViewModel()
+    @StateObject private var validateVM = ValidateEmailViewModel()
     @StateObject private var toastManager = ToastManager.shared
     @State private var navigateToCreatePassword = false
     @State private var navigateToResetPassword = false
     @State private var showNoInternetAlert = false
     @State private var showLoginFailedAlert = false
+    @State private var showValidateFailedAlert = false
     @State private var showPassword = false
     @State private var navigateToHome = false
     @State private var isAdmin = false
     @State private var isDeviceprov = false
+    
+    @State private var isUserInitialSetupDone = false
+    
+    
+    init(isUserInitialSetupCompleted: Bool) {
+            self.isUserInitialSetupCompleted = isUserInitialSetupCompleted
+            _isUserInitialSetupDone = State(initialValue: isUserInitialSetupCompleted)
+        }
     
     var body: some View {
     
@@ -42,12 +53,28 @@ struct LoginView: View {
 
                             // Header
                             VStack(spacing: 5) {
-                                Text("LOG IN TO YOUR ACCOUNT")
+                                
+                                if !isUserInitialSetupDone {
+                                    Text("WELCOME!")
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .foregroundColor(Color.gray.opacity(0.8))
+                                }
+                                Text(isUserInitialSetupDone ? "LOG IN TO YOUR ACCOUNT" : "Let’s get started")
                                     .font(.custom("Inter-SemiBold", size: 20))
                                     .foregroundColor(.white)
-                                Text("WELCOME!")
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .foregroundColor(Color.gray.opacity(0.8))
+                                
+                                if !isUserInitialSetupDone {
+                                    Text(" Enter your email to continue")
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .foregroundColor(Color.gray.opacity(0.8))
+                                }
+                               
+                                
+                                if isUserInitialSetupDone {
+                                    Text("WELCOME!")
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .foregroundColor(Color.gray.opacity(0.8))
+                                }
                             }
                             .padding(.bottom, 40)
 
@@ -63,80 +90,94 @@ struct LoginView: View {
                                 }
 
                                 ZStack(alignment: .leading) {
-                                    if vm.email.isEmpty {
-                                        Text("Enter Email")
-                                            .foregroundColor(Color.white.opacity(0.5))
-                                            .font(.custom("Inter-Regular", size: 16))
-                                            .padding(.leading, 14)
-                                    }
-
-                                    TextField("", text: $vm.email)
-                                        .foregroundColor(.white)
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .padding(.horizontal, 14)
-                                        .frame(height: 50)
-                                        .background(Color.white.opacity(0.15))
-                                        .cornerRadius(10)
-                                        .autocapitalization(.none)
-                                        .disableAutocorrection(true)
-                                }
-                            }
-
-                            // Password Field
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack(spacing: 0) {
-                                    Text("Password")
-                                        .font(.custom("Inter-Medium", size: 16))
-                                        .foregroundColor(.white)
-                                    Text(" *")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.red)
-                                }
-
-                                ZStack(alignment: .trailing) {
-                                    ZStack(alignment: .leading) {
-                                        if vm.password.isEmpty {
-                                            Text("Enter Password")
+                                    if isUserInitialSetupDone {
+                                        if vm.email.isEmpty {
+                                            Text("Enter Email")
                                                 .foregroundColor(Color.white.opacity(0.5))
                                                 .font(.custom("Inter-Regular", size: 16))
                                                 .padding(.leading, 14)
                                         }
-
-                                        if showPassword {
-                                            TextField("", text: $vm.password)
-                                                .foregroundColor(.white)
+                                        
+                                        TextField("", text: $vm.email)
+                                            .foregroundColor(.white)
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .padding(.horizontal, 14)
+                                            .frame(height: 50)
+                                            .background(Color.white.opacity(0.15))
+                                            .cornerRadius(10)
+                                            .autocapitalization(.none)
+                                            .disableAutocorrection(true)
+                                    }else{   // fresh account
+                                        if validateVM.email.isEmpty {
+                                            Text("Enter Email")
+                                                .foregroundColor(Color.white.opacity(0.5))
                                                 .font(.custom("Inter-Regular", size: 16))
-                                                .padding(.horizontal, 14)
-                                                .frame(height: 50)
-                                                .autocapitalization(.none)
-                                                .disableAutocorrection(true)
-                                        } else {
-                                            SecureField("", text: $vm.password)
-                                                .foregroundColor(.white)
-                                                .font(.custom("Inter-Regular", size: 16))
-                                                .padding(.horizontal, 14)
-                                                .frame(height: 50)
-                                                .autocapitalization(.none)
-                                                .disableAutocorrection(true)
+                                                .padding(.leading, 14)
                                         }
+                                        
+                                        TextField("", text: $validateVM.email)
+                                            .foregroundColor(.white)
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .padding(.horizontal, 14)
+                                            .frame(height: 50)
+                                            .background(Color.white.opacity(0.15))
+                                            .cornerRadius(10)
+                                            .autocapitalization(.none)
+                                            .disableAutocorrection(true)
                                     }
-                                    .background(Color.white.opacity(0.15))
-                                    .cornerRadius(10)
-
-                                    Button(action: { showPassword.toggle() }) {
-                                        Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                                            .foregroundColor(.white.opacity(0.8))
-                                    }
-                                    .padding(.trailing, 14)
                                 }
+                            }
 
-//                                HStack {
-//                                    Spacer()
-//                                    Text("Forgot Password?")
-//                                        .font(.custom("Inter-Regular", size: 14))
-//                                        .foregroundColor(.white)
-//                                        .padding(.top, 6)
-//                                }
+                            // Password Field
+                            if  isUserInitialSetupDone {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack(spacing: 0) {
+                                        Text("Password")
+                                            .font(.custom("Inter-Medium", size: 16))
+                                            .foregroundColor(.white)
+                                        Text(" *")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.red)
+                                    }
+                                    
+                                    ZStack(alignment: .trailing) {
+                                        ZStack(alignment: .leading) {
+                                            if vm.password.isEmpty {
+                                                Text("Enter Password")
+                                                    .foregroundColor(Color.white.opacity(0.5))
+                                                    .font(.custom("Inter-Regular", size: 16))
+                                                    .padding(.leading, 14)
+                                            }
+                                            
+                                            if showPassword {
+                                                TextField("", text: $vm.password)
+                                                    .foregroundColor(.white)
+                                                    .font(.custom("Inter-Regular", size: 16))
+                                                    .padding(.horizontal, 14)
+                                                    .frame(height: 50)
+                                                    .autocapitalization(.none)
+                                                    .disableAutocorrection(true)
+                                            } else {
+                                                SecureField("", text: $vm.password)
+                                                    .foregroundColor(.white)
+                                                    .font(.custom("Inter-Regular", size: 16))
+                                                    .padding(.horizontal, 14)
+                                                    .frame(height: 50)
+                                                    .autocapitalization(.none)
+                                                    .disableAutocorrection(true)
+                                            }
+                                        }
+                                        .background(Color.white.opacity(0.15))
+                                        .cornerRadius(10)
+                                        
+                                        Button(action: { showPassword.toggle() }) {
+                                            Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                                .foregroundColor(.white.opacity(0.8))
+                                        }
+                                        .padding(.trailing, 14)
+                                    }
+                                    
+                                }
                             }
 
                             Spacer().frame(height: 150)  // Prevent cut-off
@@ -146,80 +187,121 @@ struct LoginView: View {
 
                     // FOOTER - Fixed at Bottom
                     VStack(spacing: 16) {
-
-                        Button(action: {
-                            if !network.hasInternet {
-                                showNoInternetAlert = true
-                                return
-                            }
-
+                        if isUserInitialSetupDone {
                             
-                            if vm.email == "admin" && vm.password == "admin"{
-                                navigateToHome = true
-                               // isDeviceprov = true
-                                isAdmin = true
-                            }else{
+                            Button(action: {
+                                if !network.hasInternet {
+                                    showNoInternetAlert = true
+                                    return
+                                }
+                                
+                                
+                                if vm.email == "admin" && vm.password == "admin"{
+                                    navigateToHome = true
+                                    // isDeviceprov = true
+                                    isAdmin = true
+                                }else{
+                                    Task {
+                                        
+                                        await vm.login()
+                                        if vm.loginSuccess {
+                                            
+                                            // Show success toast
+                                            toastManager.show(
+                                                message: "Login successfully!",
+                                                type: .success,
+                                                duration: 1.0
+                                            )
+                                            
+                                            // Navigate after a short delay to show the toast
+                                            try? await Task.sleep(nanoseconds: 500_000_000)
+                                            
+                                            // navigateToCreatePassword = true
+                                            
+                                            isAdmin = (vm.userType == "facility_manager")
+                                            if vm.isPasswordReset{
+                                                navigateToHome = true
+                                            }
+//                                            else{
+//                                                navigateToCreatePassword = true
+//                                            }
+                                            
+                                            
+                                        } else {
+                                            showLoginFailedAlert = true
+                                        }
+                                    }
+                                }
+                                
+                                
+                            }) {
+                                Text("LOG IN")
+                                    .font(.custom("Inter-SemiBold", size: 16))
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.white)
+                                    .cornerRadius(10)
+                            }
+                            
+                        }else{
+                            Button(action: {
+                                print("continue account setup")
                                 Task {
-                                   
-                                    await vm.login()
-                                    if vm.loginSuccess {
+                                    
+                                    await validateVM.validate()
+                                    if validateVM.validateSuccess {
                                         
-                                        // Show success toast
-                                        toastManager.show(
-                                            message: "Login successfully!",
-                                            type: .success,
-                                            duration: 1.0
-                                        )
-                                        
-                                        // Navigate after a short delay to show the toast
-                                        try? await Task.sleep(nanoseconds: 1_000_000_000)
-                                        
-                                       // navigateToCreatePassword = true
-                                        
-                                        isAdmin = (vm.userType == "facility_manager")
-                                        if vm.isPasswordReset{
-                                            navigateToHome = true
+                                        if validateVM.isPasswordReset {
+                                            isUserInitialSetupDone = true
+                                            toastManager.show(
+                                                message: "This email is already set up. Please log in with your password",
+                                                type: .success,
+                                                duration: 3.0
+                                            )
+                                            vm.email = validateVM.email
+                                            
                                         }else{
+                                            toastManager.show(
+                                                message: "Email validation successfully!",
+                                                type: .success,
+                                                duration: 1.0
+                                            )
+                                            try? await Task.sleep(nanoseconds: 1_000_000_000)
+                                            
                                             navigateToCreatePassword = true
                                         }
                                         
                                         
-                                    } else {
-                                        showLoginFailedAlert = true
+                                    }else{
+                                        showValidateFailedAlert = true
                                     }
                                 }
+                                
+                            }){
+                                Text("Continue")
+                                    .font(.custom("Inter-SemiBold", size: 16))
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.white)
+                                    .cornerRadius(10)
                             }
-                            
-                           
-                        }) {
-                            Text("LOG IN")
-                                .font(.custom("Inter-SemiBold", size: 16))
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.white)
-                                .cornerRadius(10)
                         }
-
                         HStack {
-//                            Text("Don't have an account yet?")
-//                                .foregroundColor(.gray)
-//                                .font(.custom("Inter-Regular", size: 16))
-//
-//                            Text("Sign Up")
-//                                .foregroundColor(.white)
-//                                .font(.custom("Inter-Bold", size: 16))
-                            
-                            
-                            Button(action: {
+
+                            if isUserInitialSetupDone {
                                 
-                                navigateToResetPassword = true
-                                
-                            }) {
-                                Text("Forgot Password?")
-                                    .font(.custom("Inter-Regular", size: 14))
-                                    .foregroundColor(.white)
-                                    .padding(.top, 6)
+                                Button(action: {
+                                    
+                                    navigateToResetPassword = true
+                                    
+                                }) {
+                                    Text("Forgot Password?")
+                                        .font(.custom("Inter-Regular", size: 14))
+                                        .foregroundColor(.white)
+                                        .padding(.top, 6)
+                                }
                             }
                         }
 
@@ -231,7 +313,7 @@ struct LoginView: View {
 
                         
                     // LOADING OVERLAY
-                    if vm.isLoading {
+                    if vm.isLoading || validateVM.isLoading{
                         ZStack {
                             Color.black.opacity(0.4)
                                 .ignoresSafeArea()
@@ -256,13 +338,13 @@ struct LoginView: View {
             .navigationBarBackButtonHidden(true)
             .ignoresSafeArea(.keyboard, edges: .bottom) // The key to stop resize
             .navigationDestination(isPresented: $navigateToCreatePassword) {
-                CreateNewPasswordView(userType: vm.userType, userName: vm.userName, comingFrom: "login")
+                CreateNewPasswordView(userName: validateVM.email, comingFrom: "login")
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)
             }
             
-            .navigationDestination(isPresented: $navigateToResetPassword) {
+            .navigationDestination(isPresented: $navigateToResetPassword) { //forget password navigate
               ResetPassword()
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
@@ -278,11 +360,6 @@ struct LoginView: View {
                         .navigationBarBackButtonHidden(true)
                         .navigationBarHidden(true)
                 }
-//                else if isDeviceprov{
-//                    OnboardPageDeviceScanView()
-//                        .navigationBarBackButtonHidden(true)
-//                        .navigationBarHidden(true)
-//                }
                 else {
                    
                     HomeViewEndUser()
@@ -314,6 +391,15 @@ struct LoginView: View {
                       isSuccess: false,
                       buttonTitle: "OK"
                   ) { showLoginFailedAlert = false }
+            }
+        
+            .modernAlert(isPresented: $showValidateFailedAlert) {
+                  ModernAlertView(
+                      title: "Error!",
+                      message: validateVM.validateEmailError.isEmpty ? "Invalid credentials." : validateVM.validateEmailError,
+                      isSuccess: false,
+                      buttonTitle: "OK"
+                  ) { showValidateFailedAlert = false }
             }
             
             .toast()

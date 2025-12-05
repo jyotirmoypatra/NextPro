@@ -150,7 +150,7 @@ struct WebView: UIViewRepresentable {
     }
     
     func updateUIView(_ webView: WKWebView, context: Context) {
-        applyBackground(to: webView)
+      //  applyBackground(to: webView)
 
         if webView.url == nil {
             if let url = URL(string: url) {

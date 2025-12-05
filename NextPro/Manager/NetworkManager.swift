@@ -98,8 +98,125 @@ class NetworkManager: ObservableObject {
     
     //All API list
     
-    // MARK: - LOGIN API
+    // MARK: - Validate Email API
 
+    func ValidateEmail(email: String) async throws -> ValidateEmailResponseModel {
+
+        let urlString = APIConfig.url(APIConfig.Endpoints.validateEmail)
+        print("URL: \(urlString)")
+
+        guard let url = URL(string: urlString) else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+
+        let params = [
+            "email": email
+        ]
+
+        print("Request Params: \(params)")
+        request.httpBody = try JSONSerialization.data(withJSONObject: params)
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            // Debug print
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📥 Validate Email Response:\n\(jsonString)")
+            }
+
+            guard let http = response as? HTTPURLResponse else {
+                throw APIError.invalidResponse
+            }
+
+            // If server returns non-200 → throw useful error
+            guard (200...299).contains(http.statusCode) else {
+                let message = extractErrorMessage(from: data) ?? "Something went wrong."
+                throw APIError.serverError(code: http.statusCode, message: message)
+            }
+
+            // Decode normally
+            let decoded = try JSONDecoder().decode(ValidateEmailResponseModel.self, from: data)
+
+            // Backend returns 200 but status = false → manual error
+            if decoded.status == false {
+                throw APIError.backend(message: decoded.message)
+            }
+
+            return decoded
+
+        } catch let error as APIError {
+            throw error   // Our custom error
+        } catch {
+            // Other errors like no internet, timeout, etc.
+            throw APIError.network(error.localizedDescription)
+        }
+    }
+    
+    
+    
+    
+    // MARK: - Accept Aggremnt  API
+
+    func AggremntAccept(userEmail: String,isAccepted: Bool) async throws -> AggremntResponseModel {
+
+        let urlString = APIConfig.url(APIConfig.Endpoints.aggremntAccept)
+        print("URL: \(urlString)")
+
+        guard let url = URL(string: urlString) else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+
+        let params = [
+            "email": userEmail,
+            "is_aggrement_accepted": isAccepted
+        ] as [String : Any]
+
+        print("Request Params: \(params)")
+        request.httpBody = try JSONSerialization.data(withJSONObject: params)
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            // Debug print
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📥 Validate Email Response:\n\(jsonString)")
+            }
+
+            guard let http = response as? HTTPURLResponse else {
+                throw APIError.invalidResponse
+            }
+
+            // If server returns non-200 → throw useful error
+            guard (200...299).contains(http.statusCode) else {
+                let message = extractErrorMessage(from: data) ?? "Something went wrong."
+                throw APIError.serverError(code: http.statusCode, message: message)
+            }
+
+            // Decode normally
+            let decoded = try JSONDecoder().decode(AggremntResponseModel.self, from: data)
+
+            // Backend returns 200 but status = false → manual error
+            if decoded.status == false {
+                throw APIError.backend(message: decoded.message)
+            }
+
+            return decoded
+
+        } catch let error as APIError {
+            throw error   // Our custom error
+        } catch {
+            // Other errors like no internet, timeout, etc.
+            throw APIError.network(error.localizedDescription)
+        }
+    }
     
     
     // MARK: - LOGIN API

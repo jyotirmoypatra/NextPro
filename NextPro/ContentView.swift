@@ -12,11 +12,16 @@ struct ContentView: View {
     @State private var showSplash = true
     @State private var isLoggedIn = false
     @State private var isAdmin = false
-    @State private var isPasswordReset = false
+    @State private var isUserInitialSetupDone = false
     
     init(skipSplash: Bool = false) {
             _showSplash = State(initialValue: !skipSplash)
-        }
+        
+        let initialSetup = UserDefaults.standard.bool(forKey: "isUserInitialSetupCompleted")
+              _isUserInitialSetupDone = State(initialValue: initialSetup)
+        
+        print("isUserInitialSetupDone init =", initialSetup)
+    }
     
     var body: some View {
         NavigationStack {
@@ -32,34 +37,17 @@ struct ContentView: View {
                     
                     if isLoggedIn {
                         if isAdmin {
-                           // HomeViewAdmin()
-                            
-                            if isPasswordReset{
-                              //  HomeViewAdmin()
-                                HomeViewEndUser()
-                                      .navigationBarBackButtonHidden(true)
-                                      .navigationBarHidden(true)
-                            }else{
-                                CreateNewPasswordView(userType: UserDefaults.standard.string(forKey: "user_type") ?? "", userName:  UserDefaults.standard.string(forKey: "username") ?? "", comingFrom: "login")
-                                    .navigationBarBackButtonHidden(true)
-                                    .navigationBarHidden(true)
-                            }
-                            
+                           HomeViewAdmin()
+                                  .navigationBarBackButtonHidden(true)
+                                  .navigationBarHidden(true)
                          
                         } else {
-                            if isPasswordReset {
-                                HomeViewEndUser()
-                                    .navigationBarBackButtonHidden(true)
-                                    .navigationBarHidden(true)
-                            }else{
-                                CreateNewPasswordView(userType: UserDefaults.standard.string(forKey: "user_type") ?? "", userName:  UserDefaults.standard.string(forKey: "username") ?? "", comingFrom: "login")
-                                    .navigationBarBackButtonHidden(true)
-                                    .navigationBarHidden(true)
-                            }
-                            
+                            HomeViewEndUser()
+                                .navigationBarBackButtonHidden(true)
+                                .navigationBarHidden(true)
                         }
                     } else {
-                        LoginView()
+                        LoginView(isUserInitialSetupCompleted: isUserInitialSetupDone)
                             .navigationBarBackButtonHidden(true)
                             .navigationBarHidden(true)
                     }
@@ -84,8 +72,11 @@ struct ContentView: View {
             let access = KeychainManager.shared.get("access_token")
             let userId = UserDefaults.standard.string(forKey: "user_id")
             let userType = UserDefaults.standard.string(forKey: "user_type")
-            isPasswordReset = UserDefaults.standard.bool(forKey: "isPssswordReset")
+            isUserInitialSetupDone = UserDefaults.standard.bool(forKey: "isUserInitialSetupCompleted")
 
+            print("isUserInitialSetupDone onapear =", isUserInitialSetupDone)
+
+        
             if access != nil, userId != nil {
                 isLoggedIn = true
                 isAdmin = (userType == "facility_manager")

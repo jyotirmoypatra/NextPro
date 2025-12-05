@@ -76,6 +76,7 @@ class LoginViewModel: ObservableObject {
                 UserDefaults.standard.set(response.username ?? "", forKey: "username")
                 UserDefaults.standard.set(response.user_type ?? "", forKey: "user_type")
                 UserDefaults.standard.set(response.is_reset_password ?? true, forKey: "isPssswordReset")
+                UserDefaults.standard.set(true, forKey: "isUserInitialSetupCompleted")
                
             } else {
                 // Backend error message

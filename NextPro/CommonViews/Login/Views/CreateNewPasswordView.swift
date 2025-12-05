@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct CreateNewPasswordView: View {
-    var userType: String
+   // var userType: String
     var userName: String
     var comingFrom: String
     @Environment(\.dismiss) private var dismiss
@@ -19,7 +19,7 @@ struct CreateNewPasswordView: View {
     @State private var showNoInternetAlert = false
     @State private var showPassword = false
     @State private var showUpdateFailedAlert = false
-    @State private var navigateToHome = false
+    @State private var navigateToAggrement = false
     @State private var isAdmin = false
     @State private var showSuccessUpdateAlert = false
 
@@ -155,7 +155,7 @@ struct CreateNewPasswordView: View {
                                
                                 if comingFrom == "user_profile"{
                                     showSuccessUpdateAlert = true
-                                }else{ //come from login
+                                }else{ //come from setup user
                                     
                                     toastManager.show(
                                         message: "Password updated successfully!",
@@ -166,8 +166,8 @@ struct CreateNewPasswordView: View {
                                     // Navigate after a short delay to show the toast
                                     try? await Task.sleep(nanoseconds: 1_000_000_000)
                                     
-                                    isAdmin = (userType == "facility_manager")
-                                    navigateToHome = true
+                                   // isAdmin = (userType == "facility_manager")
+                                    navigateToAggrement = true
                                 }
                                 
                             }else{
@@ -184,17 +184,7 @@ struct CreateNewPasswordView: View {
                             .background(Color.white)
                             .cornerRadius(10)
                     }
-                    .navigationDestination(isPresented: $navigateToHome) {
-                        if isAdmin {
-                            HomeViewAdmin()
-                                .navigationBarBackButtonHidden(true)
-                                .navigationBarHidden(true)
-                        } else {
-                            HomeViewEndUser()
-                                .navigationBarBackButtonHidden(true)
-                                .navigationBarHidden(true)
-                        }
-                    }
+                   
                 }
                 .padding(.horizontal, 30)
                 .padding(.bottom, 30)
@@ -254,6 +244,11 @@ struct CreateNewPasswordView: View {
                       showSuccessUpdateAlert = false
                       dismiss()
                   }
+            }
+            .navigationDestination(isPresented: $navigateToAggrement) {
+                UserAggremntView()
+                    .navigationBarBackButtonHidden(true)
+                    .navigationBarHidden(true)
             }
             
         }
