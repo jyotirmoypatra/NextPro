@@ -1,5 +1,5 @@
 ////
-////  GetStartedView.swift
+////  OnboardPageWiFiListView.swift
 ////  NextPro
 ////
 ////  Created by JYOTIRMOY PATRA on 29/10/25.
@@ -21,6 +21,7 @@ struct OnboardPageWiFiListView: View {
     @State private var selectedWiFiIndex: Int? = nil
     @State private var isLoadingWiFi = true
     @State private var locationManager = CLLocationManager()
+    @State private var locationDelegate: CLLocationDelegateProxy?
 
     var body: some View {
         ZStack {
@@ -177,16 +178,47 @@ struct OnboardPageWiFiListView: View {
         .ignoresSafeArea(.keyboard, edges: .bottom)
 
         .onAppear {
+            // Create delegate
+            locationDelegate = CLLocationDelegateProxy { status in
+                handleLocationAuthStatus(status)
+            }
+
+            // Set delegate
+            locationManager.delegate = locationDelegate
+
+            // Check permission and load Wi-Fi if already authorized
             checkLocationPermissionAndFetchWiFi()
         }
+
         .navigationBarBackButtonHidden(true)
     }
 
-    // MARK: - Wi-Fi Access
+    private func handleLocationAuthStatus(_ status: CLAuthorizationStatus) {
+        switch status {
+        case .authorizedAlways, .authorizedWhenInUse:
+            loadConnectedWiFi() // ✅ Only called after user grants permission
+        default:
+            break
+        }
+    }
+
     private func checkLocationPermissionAndFetchWiFi() {
-        locationManager.requestWhenInUseAuthorization()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        let status = locationManager.authorizationStatus
+
+        switch status {
+        case .notDetermined:
+            // Ask user for permission
+            locationManager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse, .authorizedAlways:
+            // Permission granted → load Wi-Fi
             loadConnectedWiFi()
+        case .denied, .restricted:
+            // No permission → show empty or message
+            availableWiFiList = []
+            isLoadingWiFi = false
+        @unknown default:
+            availableWiFiList = []
+            isLoadingWiFi = false
         }
     }
 
@@ -214,4 +246,17 @@ struct OnboardPageWiFiListView: View {
 
 #Preview {
     OnboardPageWiFiListView(selectedDeviceSN: "TEST_DEVICE_001")
+}
+
+
+class CLLocationDelegateProxy: NSObject, CLLocationManagerDelegate {
+    var onChange: (CLAuthorizationStatus) -> Void
+
+    init(onChange: @escaping (CLAuthorizationStatus) -> Void) {
+        self.onChange = onChange
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        onChange(manager.authorizationStatus)
+    }
 }
