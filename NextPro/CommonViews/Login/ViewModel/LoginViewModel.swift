@@ -31,6 +31,13 @@ class LoginViewModel: ObservableObject {
 
         let trimmedEmail = email.lowercased().trimmingCharacters(in: .whitespaces)
         let trimmedPassword = password.trimmingCharacters(in: .whitespaces)
+        
+        
+        // Internet check
+        guard network.hasInternet else {
+            loginError = "No internet connection."
+            return
+        }
 
         // Basic validation
         guard !trimmedEmail.isEmpty, !trimmedPassword.isEmpty else {
@@ -38,11 +45,7 @@ class LoginViewModel: ObservableObject {
             return
         }
 
-        // Internet check
-        guard network.hasInternet else {
-            loginError = "No internet connection."
-            return
-        }
+        
 
         isLoading = true
 

@@ -16,9 +16,12 @@ struct UserAggremntView: View {
     @State private var webViewUrl = ""
     @State private var webViewTitle = ""
     @State private var showWebView = false
-    @State private var showError = false
+    @State private var showAggremntError = false
+    @State private var showLoginError = false
+    @State private var isAdmin = false
+    @State private var navigateToHome = false
     @StateObject private var viewModel = AggremntAcceptViewModel()
-    @StateObject private var vm = LoginViewModel()
+    @StateObject private var loginVM = LoginViewModel()
 
     var body: some View {
         GeometryReader { geometry in
@@ -168,13 +171,33 @@ struct UserAggremntView: View {
                 
             }
            
-            .modernAlert(isPresented: $showError) {
+            .modernAlert(isPresented: $showAggremntError) {
                   ModernAlertView(
                       title: "Error!",
                       message: viewModel.ErrorMessage.isEmpty ? "Invalid credentials." : viewModel.ErrorMessage,
                       isSuccess: false,
                       buttonTitle: "OK"
-                  ) { showError = false }
+                  ) { showAggremntError = false }
+            }
+            .modernAlert(isPresented: $showLoginError) {
+                  ModernAlertView(
+                      title: "Error!",
+                      message: loginVM.loginError.isEmpty ? "Invalid credentials." : loginVM.loginError,
+                      isSuccess: false,
+                      buttonTitle: "OK"
+                  ) { showLoginError = false }
+            }
+            .navigationDestination(isPresented: $navigateToHome) {
+                if isAdmin {
+                   HomeViewAdmin()
+                        .navigationBarBackButtonHidden(true)
+                        .navigationBarHidden(true)
+                }
+                else {
+                    HomeViewEndUser()
+                        .navigationBarBackButtonHidden(true)
+                        .navigationBarHidden(true)
+                }
             }
         }
         .internetOverlay()
@@ -186,9 +209,25 @@ struct UserAggremntView: View {
             viewModel.isAggrementAccepted = (acceptTerms && acceptPrivacy)
             await viewModel.accept()
             if viewModel.Successflag {
-                
+                LoginApiCall()
             }else{
-                showError = true
+                showAggremntError = true
+            }
+        }
+    }
+    // MARK: - Login Api Call 
+    func LoginApiCall() {
+        Task {
+        
+            loginVM.email = UserDefaults.standard.string(forKey: "email") ?? ""
+            loginVM.password = KeychainManager.shared.get("user_password") ?? ""
+            
+            await loginVM.login()
+            if loginVM.loginSuccess {
+                isAdmin = (loginVM.userType == "facility_manager")
+                navigateToHome = true
+            }else{
+                showLoginError = true
             }
         }
     }

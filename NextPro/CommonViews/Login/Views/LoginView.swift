@@ -219,9 +219,11 @@ struct LoginView: View {
                                             // navigateToCreatePassword = true
                                             
                                             isAdmin = (vm.userType == "facility_manager")
-                                            if vm.isPasswordReset{
-                                                navigateToHome = true
-                                            }
+                                            
+                                            navigateToHome = true
+//                                            if vm.isPasswordReset{
+//                                                navigateToHome = true
+//                                            }
 //                                            else{
 //                                                navigateToCreatePassword = true
 //                                            }
