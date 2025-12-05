@@ -9,65 +9,140 @@ import SwiftUI
 
 struct AdminProfileTabView: View {
 	@State private var showAddCard = false
-   // @State private var navigateToLogin = false
-	var body: some View {
-		VStack(spacing: 16) {
-			VStack(spacing: 10) {
-				Text("Profile")
-					.font(.headline)
-					.foregroundColor(.white)
-				Text("Your account details and settings go here.")
-					.font(.subheadline)
-					.foregroundColor(.gray)
-			}
-			.padding(.vertical, 40)
-			.padding(.horizontal, 20)
-			.background(Color.black.opacity(0.4))
-			.cornerRadius(16)
-			
-			Button(action: { showAddCard = true }) {
-				HStack {
-					Image(systemName: "plus.circle.fill").font(.system(size: 20))
-					Text("Add Card").font(.headline)
-				}
-				.foregroundColor(.white)
-				.frame(maxWidth: .infinity)
-				.frame(height: 52)
-				.background(LinearGradient(colors: [Color.blue, Color.purple], startPoint: .leading, endPoint: .trailing))
-				.cornerRadius(14)
-			}
-			.padding(.horizontal, 20)
-            
-            
-            Button(action: {
-                
-                KeychainManager.shared.clearUserDefaultsAndKeychainData()
-                KeychainManager.shared.resetToLogin()
-               // navigateToLogin = true
-                
-            }) {
-                HStack {
-                    Text("Logout").font(.headline)
+    @State private var notificationsEnabled = true
+
+    
+    
+    var body: some View {
+        ZStack {
+            VStack(spacing: 0) {
+               
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 28) {
+                       
+                        VStack(spacing: 12) {
+                            Image(systemName: "person.circle.fill")// Replace with your actual asset name
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 96, height: 96)
+                                .foregroundColor(.gray.opacity(0.6))
+                                .clipShape(Circle())
+                                .shadow(radius: 6)
+                                
+                            
+                            // Full Name
+                            Text("Jyotirmoy")
+                                .font(.custom("Inter-Medium", size: 16))
+                                .foregroundColor(.white)
+
+                            // Phone Number
+                            Text("9859844884")
+                                .font(.custom("Inter-Regular", size: 13))
+                                .foregroundColor(.gray)
+
+
+                            Button(action: {
+                               
+                            }) {
+                                Text("Edit Profile")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(.black)
+                                    .padding(.horizontal, 24)
+                                    .padding(.vertical, 8)
+                                    .background(Color.white)
+                                    .cornerRadius(8)
+                            }
+                        }
+                        .padding(.top, 20)
+
+                        // MARK: - Settings Section
+                        VStack(spacing: 0) {
+                            // Update Password
+//                            UserProfileRow(title: "Update Password",textColor: .white) {
+//                               
+//                            }
+
+//                            Divider().background(Color.white.opacity(0.15))
+//                                .padding(.horizontal,20)
+
+                            // Support
+                            UserProfileRow(title: "Support",textColor: .white) {
+                                // Handle support action
+                            }
+
+                            Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
+
+                            // Notifications Toggle
+                            HStack {
+                                Text("Notifications")
+                                    .font(.custom("Inter-Medium", size: 16))
+                                    .foregroundColor(.white)
+                                Spacer()
+                                Toggle("", isOn: $notificationsEnabled)
+                                    .labelsHidden()
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 30) // consistent with other rows
+                            
+//                            Divider().background(Color.white.opacity(0.15))
+//
+//                            UserProfileRow(title: "Add Card") {
+//                                // Handle support action
+//                            }
+                            
+                            
+//                            Divider().background(Color.white.opacity(0.15))
+//                                .padding(.horizontal,20)
+//                            
+//                            UserProfileRow(title: "Privacy Policy" , textColor: .white) {
+//                                
+// 
+//                            }
+//                            
+//                            Divider().background(Color.white.opacity(0.15))
+//                                .padding(.horizontal,20)
+//                            
+//                            UserProfileRow(title: "Terms and Conditon" , textColor: .white) {
+//                                
+//
+//                            }
+
+//                            Divider().background(Color.white.opacity(0.15))
+//                                .padding(.horizontal,20)
+//                            
+//                            UserProfileRow(title: "Delete Account" , textColor: .red) {
+//                               
+//                            }
+
+                            Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
+                            
+                            UserProfileRow(title: "Logout" , textColor: .red) {
+                                KeychainManager.shared.clearUserDefaultsAndKeychainData()
+                                KeychainManager.shared.resetToLogin()
+                            }
+
+                           
+                        }
+                        .background(Color.white.opacity(0.08))
+                        .cornerRadius(14)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        )
+                        .padding(.horizontal, 20)
+                    }
+                    .padding(.bottom, 30)
                 }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(.red)
-                .cornerRadius(14)
             }
-            .padding(.horizontal, 20)
-		}
-		.padding(.horizontal, 20)
-		.fullScreenCover(isPresented: $showAddCard) {
-			AddCardView()
-		}
-//        .navigationDestination(isPresented: $navigateToLogin) {
-//          LoginView()
-//                .navigationBarBackButtonHidden(true)
-//                .navigationBarHidden(true)
-//                .interactiveDismissDisabled(true)
-//        }
-	}
+        
+        
+
+        }
+       
+
+    }
     
   
 }
