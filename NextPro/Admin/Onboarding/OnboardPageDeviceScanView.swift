@@ -230,10 +230,36 @@ struct OnboardPageDeviceScanView: View {
         }
 
         .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                doorManager.initializeBluetoothForScanning()
-            }
+            doorManager.checkBluetoothPermissionOnAppear()
         }
+        // Settings alert when permission denied
+        .alert("Bluetooth Permission Required", isPresented: $doorManager.showBluetoothSettingsAlert) {
+            Button("Close", role: .cancel) {}
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+        } message: {
+            Text("Please enable Bluetooth permission for this app in Settings.")
+        }
+
+        // Turn ON Bluetooth alert
+        .alert("Bluetooth is OFF", isPresented: $doorManager.showBluetoothTurnOnAlert) {
+            Button("Close", role: .cancel) {}
+            Button("Open Bluetooth Settings") {
+                // "App-Prefs:root=Bluetooth" may work on some iOS versions; fallback to app settings
+                if let url = URL(string: "App-Prefs:root=Bluetooth"), UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                } else if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+        } message: {
+            Text("Please turn on Bluetooth to scan devices.")
+        }
+
+        
         .navigationDestination(isPresented: $navigateToWiFiListView) {
             OnboardPageWiFiListView(selectedDeviceSN: selectedDeviceSN ?? "")
         }

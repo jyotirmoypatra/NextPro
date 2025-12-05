@@ -9,8 +9,15 @@ import Foundation
 import CoreBluetooth
 import Combine
 
-class DoorManager: ObservableObject {
+class DoorManager: NSObject, ObservableObject, CBCentralManagerDelegate {
     static let shared = DoorManager()
+    
+    var centralManager: CBCentralManager?
+
+    @Published var showBluetoothSettingsAlert: Bool = false
+    @Published var showBluetoothTurnOnAlert: Bool = false
+
+    private var hasRequestedBluetoothPermissionThisSession = false
     
     // Door operation states
     @Published var isProcessing = false
@@ -28,8 +35,8 @@ class DoorManager: ObservableObject {
     
     private var resetTimer: DispatchWorkItem?
     private var isBackgroundModeActive = false
-    private var currentProcessingDoorSn: String?  // Track current door being processed
-    private var currentProcessingDoorID: Int32?  // Track current door being processed
+    private var currentProcessingDoorSn: String?
+    private var currentProcessingDoorID: Int32?
     
     @Published var doorEvent: DoorEvent?
 
@@ -53,19 +60,104 @@ class DoorManager: ObservableObject {
         static let startDate = "20240101000000" // Start date: YYYYMMDDHHmmss
         static let endDate = "20251231235959"   // End date: YYYYMMDDHHmmss
     }
-    
-    private init() {
-        // Initialize SDK without showing system Bluetooth alert
+ 
+    private override init() {
+        super.init()
+        centralManager = CBCentralManager(delegate: self, queue: .main)
+
+        // Initialize SDK (keep your original SDK init)
         print("🔧 Initializing DoorMasterSDK...")
         let result = LibDevModel.initBluetoothNotShowPower()
         print("📱 SDK Init result: \(result)")
-        
-        // Wait 0.5s to ensure internal BLE is fully ready before registering callbacks
+
+        // Register SDK callbacks shortly after init
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.setupCallbacks()
         }
     }
+
+    func checkBluetoothPermissionOnAppear() {
     
+        let auth = CBCentralManager.authorization
+
+        switch auth {
+        case .notDetermined:
+        
+            if centralManager == nil {
+                centralManager = CBCentralManager(delegate: self, queue: .main)
+            } else {
+                _ = centralManager?.state
+            }
+            hasRequestedBluetoothPermissionThisSession = true
+
+        case .denied, .restricted:
+            DispatchQueue.main.async {
+                self.showBluetoothSettingsAlert = true
+                self.bluetoothStateMessage = "Bluetooth permission denied"
+            }
+
+        case .allowedAlways:
+            if centralManager == nil {
+                centralManager = CBCentralManager(delegate: self, queue: .main)
+            } else {
+                startDeviceScanIfPossible()
+            }
+
+        @unknown default:
+            break
+        }
+    }
+
+    private func startDeviceScanIfPossible() {
+        // Only start if we have permission and Bluetooth is powered on and SDK callbacks registered
+        guard let central = centralManager, central.state == .poweredOn else {
+            print("🔍 startDeviceScanIfPossible: central not ready")
+            return
+        }
+
+        startDeviceScan()
+    }
+
+    // MARK: - CBCentralManagerDelegate
+    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        DispatchQueue.main.async {
+            switch central.state {
+            case .poweredOn:
+                print("📡 centralManagerDidUpdateState: poweredOn")
+                // hide any "turn on" alert
+                self.showBluetoothTurnOnAlert = false
+                // start scan only when fully powered on
+                self.bluetoothStateMessage = ""
+                // If we previously asked for permission and user allowed, start scan
+                self.startDeviceScanIfPossible()
+
+            case .poweredOff:
+                print("📡 centralManagerDidUpdateState: poweredOff")
+                self.bluetoothStateMessage = "Bluetooth: Powered Off"
+                self.showBluetoothTurnOnAlert = true
+
+            case .unauthorized:
+                print("📡 centralManagerDidUpdateState: unauthorized")
+                self.bluetoothStateMessage = "Bluetooth: Permission denied"
+                self.showBluetoothSettingsAlert = true
+
+            case .unsupported:
+                print("📡 centralManagerDidUpdateState: unsupported")
+                self.bluetoothStateMessage = "Bluetooth: Unsupported"
+
+            case .resetting:
+                print("📡 centralManagerDidUpdateState: resetting")
+                self.bluetoothStateMessage = "Bluetooth: Resetting"
+
+            case .unknown:
+                fallthrough
+            @unknown default:
+                print("📡 centralManagerDidUpdateState: unknown")
+                self.bluetoothStateMessage = "Bluetooth: Unknown"
+            }
+        }
+    }
+
     // MARK: - Setup Callbacks
     private func setupCallbacks() {
         print("🔧 Setting up SDK callbacks...")
@@ -243,10 +335,10 @@ class DoorManager: ObservableObject {
             devModel.devType = door.devType
             devModel.eKey = door.eKey
             devModel.cardno = door.cardno
-            devModel.privilege = SharedConfig.privilege
-            devModel.verified = SharedConfig.verified
-            devModel.startDate = SharedConfig.startDate
-            devModel.endDate = SharedConfig.endDate
+//            devModel.privilege = SharedConfig.privilege
+//            devModel.verified = SharedConfig.verified
+//            devModel.startDate = SharedConfig.startDate
+//            devModel.endDate = SharedConfig.endDate
             devList.append(devModel)
         }
         
@@ -275,7 +367,7 @@ class DoorManager: ObservableObject {
             }
         }
     }
-    ///// Scan for devices and open if a nearby one is detected
+  
     func scanAndOpenNearestDoorWithRSSI(threshold: Int = -60) {
         print("🔍 Scanning for nearest door with RSSI threshold \(threshold)dBm...")
 
@@ -593,61 +685,156 @@ class DoorManager: ObservableObject {
     }
     
     // MARK: - Device Scanning
+   
+
+//    func startDeviceScan() {
+//        // Prevent reentrant calls
+//        LibDevModel.stopBackgroundMode()
+//        usleep(250_000)
+//        
+//        if isScanning {
+//            print("⚠️ startDeviceScan: already scanning")
+//            return
+//        }
+//
+//        // Check iOS Bluetooth state first
+//        guard let central = centralManager else {
+//            print("⚠️ startDeviceScan: centralManager is nil -> initialize and wait")
+//            centralManager = CBCentralManager(delegate: self, queue: .main)
+//            bluetoothStateMessage = "Initializing Bluetooth..."
+//            return
+//        }
+//
+//        guard central.state == .poweredOn else {
+//            print("⚠️ startDeviceScan: central.state not poweredOn -> \(central.state.rawValue)")
+//            // Show appropriate UI
+//            if central.state == .poweredOff {
+//                bluetoothStateMessage = "Bluetooth: Powered Off"
+//                showBluetoothTurnOnAlert = true
+//            } else if central.state == .unauthorized {
+//                bluetoothStateMessage = "Bluetooth: Permission denied"
+//                showBluetoothSettingsAlert = true
+//            } else {
+//                bluetoothStateMessage = "Bluetooth not ready"
+//            }
+//            return
+//        }
+//
+//        // Now central is powered on — proceed with SDK scan
+//        print("🔍 Starting device scan (SDK)...")
+//        isScanning = true
+//        scannedDevices.removeAll()
+//        bluetoothStateMessage = "Scanning for devices..."
+//
+////        // If background mode active, stop it
+////        if isBackgroundModeActive {
+////            let stopRet = LibDevModel.stopBackgroundMode()
+////            if stopRet == 0 {
+////                isBackgroundModeActive = false
+////            } else {
+////                print("⚠️ Failed to stop background mode: \(stopRet)")
+////            }
+////            usleep(350_000)
+////        }
+//
+//        // Call SDK's scan; if it fails we try background scan fallback
+//        let ret = LibDevModel.scanDevice(8000)
+//        print("📡 LibDevModel.scanDevice returned \(ret)")
+//        if ret == 0 {
+//            // SDK will callback to onScanOver / onBGScanOver — keep a timeout guard
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) { [weak self] in
+//                guard let self = self else { return }
+//                if self.isScanning {
+//                    print("⏰ scan timeout — trying background scan fallback")
+//                 
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+//                        self.tryBackgroundScan()
+//                    }
+//                }
+//            }
+//        } else {
+//            print("❌ Regular scan failed (error: \(ret)), trying background scan...")
+//            tryBackgroundScan()
+//        }
+//    }
+    
     func startDeviceScan() {
-        guard !isScanning else {
-            print("⚠️ Scan already in progress - ignoring request")
+
+        print("🛑 Resetting SDK: stopping background mode…")
+        LibDevModel.stopBackgroundMode()
+        usleep(250_000)
+//
+//        if isBackgroundModeActive {
+//            let stopRet = LibDevModel.stopBackgroundMode()
+//            if stopRet == 0 {
+//                print("✅ Background mode stopped")
+//                isBackgroundModeActive = false
+//                usleep(250_000) // small pause, enough for SDK
+//            } else {
+//                print("⚠️ Failed to stop background mode: \(stopRet)")
+//            }
+//        }
+
+        
+        // Prevent reentry
+        if isScanning {
+            print("⚠️ startDeviceScan: already scanning")
             return
         }
-        
-        // Check if Bluetooth is ready
-        if bluetoothStateMessage.contains("Powered Off") ||
-           bluetoothStateMessage.contains("Unsupported") ||
-           bluetoothStateMessage.contains("Unauthorized") ||
-           bluetoothStateMessage.contains("Failed") {
-            print("❌ Cannot scan - Bluetooth not ready: \(bluetoothStateMessage)")
+
+        // Check Bluetooth state
+        guard let central = centralManager else {
+            print("⚠️ centralManager is nil, initializing…")
+            centralManager = CBCentralManager(delegate: self, queue: .main)
+            bluetoothStateMessage = "Initializing Bluetooth..."
             return
         }
-        
-        print("🔍 Starting device scan...")
+
+        guard central.state == .poweredOn else {
+            print("⚠️ Bluetooth not powered on")
+            if central.state == .poweredOff {
+                showBluetoothTurnOnAlert = true
+                bluetoothStateMessage = "Bluetooth: Powered Off"
+            } else if central.state == .unauthorized {
+                showBluetoothSettingsAlert = true
+                bluetoothStateMessage = "Bluetooth: Permission denied"
+            } else {
+                bluetoothStateMessage = "Bluetooth not ready"
+            }
+            return
+        }
+
+        // Scan start
+        print("🔍 Starting device scan (SDK)…")
         isScanning = true
         scannedDevices.removeAll()
         bluetoothStateMessage = "Scanning for devices..."
-        
-        // Stop background mode if active
-        if isBackgroundModeActive {
-            print("🔄 Stopping background mode before regular scan...")
-            let stopRet = LibDevModel.stopBackgroundMode()
-            if stopRet == 0 {
-                print("✅ Background mode stopped successfully")
-                isBackgroundModeActive = false
-            } else {
-                print("⚠️ Failed to stop background mode: \(stopRet)")
-            }
-            usleep(100_000) // 0.1 second delay
-        }
-        
-        print("📡 Calling LibDevModel.scanDevice(5000)")
-        let ret = LibDevModel.scanDevice(5000) // 5 second scan
-        print("📡 Scan device return code: \(ret)")
-        
+
+        // SDK scan for 8 sec
+        let ret = LibDevModel.scanDevice(8000)
+        print("📡 scanDevice returned \(ret)")
+
         if ret == 0 {
-            print("✅ Regular scan initiated successfully")
-            
-            // Timeout fallback
-            DispatchQueue.main.asyncAfter(deadline: .now() + 8) {
+
+   //
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) { [weak self] in
+                guard let self = self else { return }
                 if self.isScanning {
-                    print("⏰ Scan timeout - trying background scan as fallback...")
-                    self.completeScan()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    print("⏰ scan timeout — trying background scan fallback")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         self.tryBackgroundScan()
                     }
                 }
             }
+            
+            
+
         } else {
-            print("❌ Regular scan failed (error: \(ret)), trying background scan...")
+            print("❌ Regular scan failed, using background mode…")
             tryBackgroundScan()
         }
     }
+
     
     private func tryBackgroundScan() {
         print("🔄 Trying background scan as fallback...")
