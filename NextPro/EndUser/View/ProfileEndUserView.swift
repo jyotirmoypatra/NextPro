@@ -11,7 +11,6 @@ struct ProfileEndUserView: View {
     @State private var notificationsEnabled = true
     @State private var navigateToUpdatePass = false
     @State private var navigateToEditProfile = false
-    @State private var navigateToLogin = false
     @State private var username = ""
     @State private var usertype = ""
     @State private var fullName = ""
@@ -238,12 +237,6 @@ struct ProfileEndUserView: View {
                 
             )
         }
-        .navigationDestination(isPresented: $navigateToLogin) {
-          LoginView()
-                .navigationBarBackButtonHidden(true)
-                .navigationBarHidden(true)
-                .interactiveDismissDisabled(true)
-        }
         .onReceive(NetworkManager.shared.$hasInternet) { internet in
             if internet == true {
                 Task {
@@ -302,7 +295,7 @@ struct ProfileEndUserView: View {
             }
         
         .sheet(isPresented: $showLogoutAlert) {
-            LogoutSheetView(navigateToLogin: $navigateToLogin)
+            LogoutSheetView()
         }
         .sheet(isPresented: $showDeleteAccountAlert) {
             DeleteConfirmationSheet()
@@ -350,7 +343,6 @@ struct UserProfileRow: View {
 struct LogoutSheetView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) var colorScheme
-    @Binding var navigateToLogin: Bool
     var body: some View {
         
         ZStack {
@@ -376,9 +368,8 @@ struct LogoutSheetView: View {
                 
                 Button(action: {
                     KeychainManager.shared.clearUserDefaultsAndKeychainData()
-                    navigateToLogin = true
+                    KeychainManager.shared.resetToLogin()
                     dismiss()
-                    //resetToLogin()
                 }) {
                     Text("YES, LOGOUT")
                         .font(.custom("Inter-Bold", size: 16))
@@ -412,17 +403,7 @@ struct LogoutSheetView: View {
         .presentationDetents([.height(270)])
 
     }
-    
-    // MARK: - Force Reset to Login
-    func resetToLogin() {
-        DispatchQueue.main.async {
-            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let window = scene.windows.first {
-                window.rootViewController = UIHostingController(rootView: LoginView())
-                window.makeKeyAndVisible()
-            }
-        }
-    }
+
 }
 
 
@@ -474,6 +455,7 @@ struct  DeleteConfirmationSheet: View {
                 
                 Button {
                     dismiss()
+                   // resetToLogin()
                 } label: {
                     Text("Cancel")
                         .font(.custom("Inter-Bold", size: 15))
@@ -494,16 +476,7 @@ struct  DeleteConfirmationSheet: View {
         .presentationDetents([.height(360)])
     }
     
-    // MARK: - Force Reset to Login
-    func resetToLogin() {
-        DispatchQueue.main.async {
-            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let window = scene.windows.first {
-                window.rootViewController = UIHostingController(rootView: LoginView())
-                window.makeKeyAndVisible()
-            }
-        }
-    }
+   
 }
 
 

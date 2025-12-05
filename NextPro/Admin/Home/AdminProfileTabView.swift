@@ -9,7 +9,7 @@ import SwiftUI
 
 struct AdminProfileTabView: View {
 	@State private var showAddCard = false
-    @State private var navigateToLogin = false
+   // @State private var navigateToLogin = false
 	var body: some View {
 		VStack(spacing: 16) {
 			VStack(spacing: 10) {
@@ -42,8 +42,8 @@ struct AdminProfileTabView: View {
             Button(action: {
                 
                 KeychainManager.shared.clearUserDefaultsAndKeychainData()
-                
-                navigateToLogin = true
+                KeychainManager.shared.resetToLogin()
+               // navigateToLogin = true
                 
             }) {
                 HStack {
@@ -61,12 +61,12 @@ struct AdminProfileTabView: View {
 		.fullScreenCover(isPresented: $showAddCard) {
 			AddCardView()
 		}
-        .navigationDestination(isPresented: $navigateToLogin) {
-          LoginView()
-                .navigationBarBackButtonHidden(true)
-                .navigationBarHidden(true)
-                .interactiveDismissDisabled(true)
-        }
+//        .navigationDestination(isPresented: $navigateToLogin) {
+//          LoginView()
+//                .navigationBarBackButtonHidden(true)
+//                .navigationBarHidden(true)
+//                .interactiveDismissDisabled(true)
+//        }
 	}
     
   

@@ -8,6 +8,7 @@
 
 import Foundation
 import Security
+import SwiftUI
 
 class KeychainManager {
     
@@ -74,5 +75,27 @@ class KeychainManager {
         
         print("🧹 UserDefaults cleared successfully.")
     }
+
+    
+    func resetToLogin() {
+        DispatchQueue.main.async {
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = scene.windows.first {
+                window.rootViewController = UIHostingController(rootView: ContentView(skipSplash: true))
+                window.makeKeyAndVisible()
+            }
+        }
+    }
+//    
+//  /  func resetToLogin() {
+//        DispatchQueue.main.async {
+//            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+//               let window = scene.windows.first {
+//                // skip splash on logout
+//                window.rootViewController = UIHostingController(rootView: ContentView(skipSplash: true))
+//                window.makeKeyAndVisible()
+//            }
+//        }
+//    }
 
 }

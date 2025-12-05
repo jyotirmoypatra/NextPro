@@ -19,7 +19,6 @@ struct VerifyOtpAccount: View {
     @StateObject private var resendVM = ForgetPasswordRequestViewModel()
     @StateObject var viewModel =  VerifyOtpViewModel()
     @StateObject private var toastManager = ToastManager.shared
-    @State private var navigateToLogin = false
     @State private var counter: Int = 20
     @State private var timerActive: Bool = true
     @State private var showOtpVerifyFailedAlert = false
@@ -294,8 +293,7 @@ struct VerifyOtpAccount: View {
                     // Return to login
                     Button(action: {
                         print("Return to login tapped")
-                      //  dismiss()
-                        navigateToLogin = true
+                        KeychainManager.shared.resetToLogin()
                     }) {
                         HStack(spacing: 8) {
                             Image("undoicon")
@@ -345,12 +343,7 @@ struct VerifyOtpAccount: View {
                 .navigationBarHidden(true)
                 .interactiveDismissDisabled(true)
         }
-        .navigationDestination(isPresented: $navigateToLogin) {
-          LoginView()
-                .navigationBarBackButtonHidden(true)
-                .navigationBarHidden(true)
-                .interactiveDismissDisabled(true)
-        }
+       
         .onAppear {
             
            resendVM.email = self.email

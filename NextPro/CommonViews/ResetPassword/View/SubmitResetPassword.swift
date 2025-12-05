@@ -10,7 +10,6 @@ import SwiftUI
 
 struct SubmitResetPassword: View {
     var userEmail : String
-    @State private var navigateToLogin = false
     @State private var showNewPassword = false
     @State private var showConfirmPassword = false
     @StateObject private var viewModel = CreateNewPasswordViewModel()
@@ -174,7 +173,7 @@ struct SubmitResetPassword: View {
                                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                                 
                                 
-                              navigateToLogin = true
+                                KeychainManager.shared.resetToLogin()
                                 
                             }else{
                                 showUpdateFailedAlert = true
@@ -192,8 +191,7 @@ struct SubmitResetPassword: View {
                     }
                     
                     Button(action: {
-                       // resetToLogin()
-                        navigateToLogin  = true
+                        KeychainManager.shared.resetToLogin()
                     }) {
                         HStack(spacing: 8) {
                             Image("undoicon")
@@ -233,12 +231,6 @@ struct SubmitResetPassword: View {
                 UIApplication.shared.hideKeyboard()
             }
             
-            .navigationDestination(isPresented: $navigateToLogin) {
-              LoginView()
-                    .navigationBarBackButtonHidden(true)
-                    .navigationBarHidden(true)
-                    .interactiveDismissDisabled(true)
-            }
             
             .modernAlert(isPresented: $showUpdateFailedAlert) {
                   ModernAlertView(

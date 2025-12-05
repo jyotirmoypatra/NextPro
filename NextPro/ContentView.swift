@@ -14,6 +14,10 @@ struct ContentView: View {
     @State private var isAdmin = false
     @State private var isPasswordReset = false
     
+    init(skipSplash: Bool = false) {
+            _showSplash = State(initialValue: !skipSplash)
+        }
+    
     var body: some View {
         NavigationStack {
         ZStack {
