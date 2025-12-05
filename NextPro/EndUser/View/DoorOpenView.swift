@@ -627,23 +627,21 @@ struct DoorOpenView: View {
            rssiTimer?.invalidate()
            
            rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
-               let validPrefixes = ["M2", "TC", "BC", "AC", "DM", "M23", "M22", "XM"]
-               
-               // 1️⃣ Find the closest Thimmo device
-               let nearbyThimmos = bleManager.devices.compactMap { peripheral -> (peripheral: CBPeripheral, rssi: Int)? in
+               // 1️⃣ Find the closest device (BLEManager already filters for Thimmo devices only)
+               let nearbyDevices = bleManager.devices.compactMap { peripheral -> (peripheral: CBPeripheral, rssi: Int)? in
                    let name = (peripheral.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                    let rssi = bleManager.monitoredDeviceRSSI ?? bleManager.deviceLastRSSI[peripheral.identifier] ?? -100
-                   let isThimmo = validPrefixes.contains { prefix in name.uppercased().hasPrefix(prefix) }
                    
-                   guard isThimmo else { return nil }
                    return (peripheral, rssi)
                }
                
                // Sort by strongest RSSI (closest)
-               guard let closest = nearbyThimmos.max(by: { $0.rssi < $1.rssi }) else { return }
+               guard let closest = nearbyDevices.max(by: { $0.rssi < $1.rssi }) else { return }
                
                let name = closest.peripheral.name ?? ""
                let rssi = closest.rssi
+               
+               print("🎯 Closest device: \(name) with RSSI: \(rssi)")
                
                // Only act if RSSI is strong
                guard rssi > -40 && rssi < 0 else { return }
@@ -668,7 +666,7 @@ struct DoorOpenView: View {
                    }
                }
                else {
-                   // ⚠️ Unauthorized Thimmo
+                   // ⚠️ Unauthorized Thimmo device
                    print("🚫 Unauthorized Thimmo device nearby: \(name)")
                    
                    bleManager.stopScanning()

@@ -110,6 +110,18 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
+        // Filter: Only process Thimmo devices (same as DoorMasterSDK does)
+        let validPrefixes = ["M2", "TC", "BC", "AC", "DM", "M23", "M22", "XM"]
+        let deviceName = peripheral.name ?? ""
+        let isThimmoDevice = validPrefixes.contains { prefix in 
+            deviceName.uppercased().hasPrefix(prefix) 
+        }
+        
+        // Skip non-Thimmo devices
+        guard isThimmoDevice else { 
+            return 
+        }
+        
         // Store RSSI for this device
         deviceLastRSSI[peripheral.identifier] = RSSI.intValue
 
@@ -117,7 +129,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
             devices.append(peripheral)
 
             // Enhanced logging for debugging DoorMaster SDK compatibility
-            print("📱 Found device: \(peripheral.name ?? "Unknown")")
+            print("📱 Found Thimmo device: \(peripheral.name ?? "Unknown")")
             print("   UUID: \(peripheral.identifier.uuidString.prefix(8))...")
             print("   RSSI: \(RSSI)")
             print("   Services: \(advertisementData[CBAdvertisementDataServiceUUIDsKey] ?? "None")")
@@ -144,6 +156,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
             }
         } else {
             // Device already in list, just update RSSI
+            deviceLastRSSI[peripheral.identifier] = RSSI.intValue
             // print("📊 Updated RSSI for \(peripheral.name ?? "Unknown"): \(RSSI) dBm")
         }
     }
