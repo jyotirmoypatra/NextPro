@@ -11,6 +11,7 @@ struct ProfileEndUserView: View {
     @State private var notificationsEnabled = true
     @State private var navigateToUpdatePass = false
     @State private var navigateToEditProfile = false
+    @State private var navigateToLogin = false
     @State private var username = ""
     @State private var usertype = ""
     @State private var fullName = ""
@@ -237,6 +238,12 @@ struct ProfileEndUserView: View {
                 
             )
         }
+        .navigationDestination(isPresented: $navigateToLogin) {
+          LoginView()
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
+                .interactiveDismissDisabled(true)
+        }
         .onReceive(NetworkManager.shared.$hasInternet) { internet in
             if internet == true {
                 Task {
@@ -295,7 +302,7 @@ struct ProfileEndUserView: View {
             }
         
         .sheet(isPresented: $showLogoutAlert) {
-            LogoutSheetView()
+            LogoutSheetView(navigateToLogin: $navigateToLogin)
         }
         .sheet(isPresented: $showDeleteAccountAlert) {
             DeleteConfirmationSheet()
@@ -309,18 +316,7 @@ struct ProfileEndUserView: View {
 
     }
     
-    // MARK: - Open WebView Function
-//    func openWebView(url: String, title: String) {
-//        webViewURL = url
-//        webViewTitle = title
-//        withAnimation {
-//            showWebView = true
-//        }
-//    }
-    
-    func navigateToLogin() {
-        goToLogin = true
-    }
+
     
 }
 
@@ -354,6 +350,7 @@ struct UserProfileRow: View {
 struct LogoutSheetView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) var colorScheme
+    @Binding var navigateToLogin: Bool
     var body: some View {
         
         ZStack {
@@ -379,7 +376,9 @@ struct LogoutSheetView: View {
                 
                 Button(action: {
                     KeychainManager.shared.clearUserDefaultsAndKeychainData()
-                    resetToLogin()
+                    navigateToLogin = true
+                    dismiss()
+                    //resetToLogin()
                 }) {
                     Text("YES, LOGOUT")
                         .font(.custom("Inter-Bold", size: 16))
@@ -411,6 +410,7 @@ struct LogoutSheetView: View {
             
         }
         .presentationDetents([.height(270)])
+
     }
     
     // MARK: - Force Reset to Login
@@ -506,36 +506,6 @@ struct  DeleteConfirmationSheet: View {
     }
 }
 
-
-//struct ProfileImageView: View {
-//    let imageUrl: String?
-//    let size: CGFloat = 96
-//
-//    var body: some View {
-//        ZStack {
-//            // Placeholder
-//            Image(systemName: "person.circle.fill")
-//                .resizable()
-//                .scaledToFill()
-//                .foregroundColor(.gray.opacity(0.6))
-//                .frame(width: size, height: size)
-//
-//            // WebImage for remote URL
-//            if let urlString = imageUrl, let url = URL(string: urlString) {
-//                WebImage(url: url)
-//                    .resizable()
-//                    .scaledToFill()
-//                    .frame(width: size, height: size)
-//            }
-//        }
-//        .clipShape(Circle())
-//                .overlay(
-//                    Circle()
-//                        .stroke(Color.white.opacity(0.7), lineWidth: 1) // <-- 1px border
-//                )
-//                .shadow(radius: 6)
-//    }
-//}
 
 
 struct ProfileImageView: View {

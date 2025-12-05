@@ -174,7 +174,7 @@ struct SubmitResetPassword: View {
                                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                                 
                                 
-                                resetToLogin()
+                              navigateToLogin = true
                                 
                             }else{
                                 showUpdateFailedAlert = true
@@ -192,7 +192,8 @@ struct SubmitResetPassword: View {
                     }
                     
                     Button(action: {
-                        resetToLogin()
+                       // resetToLogin()
+                        navigateToLogin  = true
                     }) {
                         HStack(spacing: 8) {
                             Image("undoicon")
@@ -232,6 +233,12 @@ struct SubmitResetPassword: View {
                 UIApplication.shared.hideKeyboard()
             }
             
+            .navigationDestination(isPresented: $navigateToLogin) {
+              LoginView()
+                    .navigationBarBackButtonHidden(true)
+                    .navigationBarHidden(true)
+                    .interactiveDismissDisabled(true)
+            }
             
             .modernAlert(isPresented: $showUpdateFailedAlert) {
                   ModernAlertView(
@@ -246,14 +253,6 @@ struct SubmitResetPassword: View {
         .toast() 
     }
     
-    func resetToLogin() {
-        DispatchQueue.main.async {
-            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let window = scene.windows.first {
-                window.rootViewController = UIHostingController(rootView: LoginView())
-                window.makeKeyAndVisible()
-            }
-        }
-    }
+ 
 }
 
