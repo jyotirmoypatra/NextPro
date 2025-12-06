@@ -115,7 +115,7 @@ struct UserAggremntView: View {
                                 .padding()
                               }.padding(.vertical,10)
                             }
-                            .background(Color(hex: "#212121"))
+                            .background(Color(hex: "#171717"))
                             .cornerRadius(12)
                             .padding(.horizontal,20)
                             .padding(.vertical,10)
@@ -130,7 +130,7 @@ struct UserAggremntView: View {
                             HStack(alignment: .center) {
                                 Button { acceptTerms.toggle() } label: {
                                     Image(systemName: acceptTerms ? "checkmark.square.fill" : "square")
-                                        .foregroundColor(acceptTerms ? .blue : .gray)
+                                        .foregroundColor(acceptTerms ? .white : .gray)
                                         .font(.system(size: 26))
                                 }
                                 
@@ -151,7 +151,7 @@ struct UserAggremntView: View {
                             HStack(alignment: .center) {
                                 Button { acceptPrivacy.toggle() } label: {
                                     Image(systemName: acceptPrivacy ? "checkmark.square.fill" : "square")
-                                        .foregroundColor(acceptTerms ? .blue : .gray)
+                                        .foregroundColor(acceptPrivacy ? .white : .gray)
                                         .font(.system(size: 26))
                                 }
                                 

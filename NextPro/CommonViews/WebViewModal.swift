@@ -11,6 +11,7 @@ import WebKit
 struct WebViewModal: View {
     let url: String
     let title: String
+    @Environment(\.colorScheme) var colorScheme
     @Binding var isPresented: Bool
     @State private var isLoading = false
     
@@ -29,7 +30,7 @@ struct WebViewModal: View {
                 HStack {
                     Text(title)
                         .font(.custom("Inter-SemiBold", size: 18))
-                        .foregroundColor(.black)
+                        .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
                     
                     Spacer()
                     
@@ -38,11 +39,11 @@ struct WebViewModal: View {
                     }) {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 24))
-                            .foregroundColor(.gray)
+                            .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
                     }
                 }
                 .padding()
-                .background(Color.white)
+                .background(colorScheme == .dark ? Color.gray : Color.white)
                 
                 // WebView
                 ZStack {
@@ -144,13 +145,13 @@ struct WebView: UIViewRepresentable {
         let webView = WKWebView()
         webView.navigationDelegate = context.coordinator
         webView.isOpaque = false
-        webView.backgroundColor = .clear
-        webView.scrollView.backgroundColor = .clear
+        webView.backgroundColor = .white
+       webView.scrollView.backgroundColor = .white
         return webView
     }
     
     func updateUIView(_ webView: WKWebView, context: Context) {
-      //  applyBackground(to: webView)
+       applyBackground(to: webView)
 
         if webView.url == nil {
             if let url = URL(string: url) {
@@ -163,8 +164,8 @@ struct WebView: UIViewRepresentable {
         let isDark = colorScheme == .dark
         
         let js = """
-        document.documentElement.style.backgroundColor = "\(isDark ? "#000000" : "#FFFFFF")";
-        document.body.style.backgroundColor = "\(isDark ? "#000000" : "#FFFFFF")";
+        document.documentElement.style.backgroundColor = "\(isDark ? "#616161" : "#FFFFFF")";
+        document.body.style.backgroundColor = "\(isDark ? "#616161" : "#FFFFFF")";
         document.body.style.color = "\(isDark ? "white" : "black")";
         """
         
