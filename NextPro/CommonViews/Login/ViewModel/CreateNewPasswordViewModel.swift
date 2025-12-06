@@ -54,7 +54,7 @@ class CreateNewPasswordViewModel: ObservableObject {
             isLoading = false
 
             if response.status {
-                KeychainManager.shared.save(newPassword, forKey: "user_password")
+               // KeychainManager.shared.save(newPassword, forKey: "user_password")
                 updateSuccess = true
             } else {
                 errorMessage = response.message

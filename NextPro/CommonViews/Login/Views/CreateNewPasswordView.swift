@@ -246,12 +246,13 @@ struct CreateNewPasswordView: View {
                   }
             }
             .navigationDestination(isPresented: $navigateToAggrement) {
-                UserAggremntView()
+                UserAggremntView(password: viewModel.confirmPassword )
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
             }
             
         }
+        .internetOverlay()
        // .navigationBarBackButtonHidden(true)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .toast()  // Add toast modifier

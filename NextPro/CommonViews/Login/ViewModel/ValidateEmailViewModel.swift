@@ -19,6 +19,7 @@ class ValidateEmailViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var validateSuccess = false
     @Published var isPasswordReset = true
+    @Published var isAggrementAccept = false
 
     let network = NetworkManager.shared
 
@@ -55,8 +56,9 @@ class ValidateEmailViewModel: ObservableObject {
                 print("✅ Email Validate success")
                 
                 // Update values
-              //  isPasswordReset = response.is_reset_password
-                isPasswordReset = false
+                isPasswordReset = response.is_reset_password
+              //  isPasswordReset = false
+                isAggrementAccept = response.is_aggrement_accept
                 validateSuccess = true
                 
                // Save user details

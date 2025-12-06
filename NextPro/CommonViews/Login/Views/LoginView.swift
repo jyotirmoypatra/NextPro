@@ -10,11 +10,13 @@ import SwiftUI
 
 struct LoginView: View {
     var isUserInitialSetupCompleted : Bool
+    var prefilledEmail: String = ""
     @StateObject var network = NetworkManager.shared
     @StateObject private var vm = LoginViewModel()
     @StateObject private var validateVM = ValidateEmailViewModel()
     @StateObject private var toastManager = ToastManager.shared
     @State private var navigateToCreatePassword = false
+    @State private var navigateToAggremnt = false
     @State private var navigateToResetPassword = false
     @State private var showNoInternetAlert = false
     @State private var showLoginFailedAlert = false
@@ -27,9 +29,10 @@ struct LoginView: View {
     @State private var isUserInitialSetupDone = false
     
     
-    init(isUserInitialSetupCompleted: Bool) {
+    init(isUserInitialSetupCompleted: Bool,prefilledEmail: String = "") {
             self.isUserInitialSetupCompleted = isUserInitialSetupCompleted
             _isUserInitialSetupDone = State(initialValue: isUserInitialSetupCompleted)
+        self.prefilledEmail = prefilledEmail
         }
     
     var body: some View {
@@ -96,6 +99,11 @@ struct LoginView: View {
                                                 .foregroundColor(Color.white.opacity(0.5))
                                                 .font(.custom("Inter-Regular", size: 16))
                                                 .padding(.leading, 14)
+                                                .onAppear {
+                                                               if !prefilledEmail.isEmpty {
+                                                                   vm.email = prefilledEmail
+                                                               }
+                                                    }
                                         }
                                         
                                         TextField("", text: $vm.email)
@@ -254,7 +262,7 @@ struct LoginView: View {
                                     await validateVM.validate()
                                     if validateVM.validateSuccess {
                                         
-                                        if validateVM.isPasswordReset {
+                                        if validateVM.isPasswordReset && validateVM.isAggrementAccept{
                                             isUserInitialSetupDone = true
                                             toastManager.show(
                                                 message: "This email is already set up. Please log in with your password",
@@ -263,6 +271,14 @@ struct LoginView: View {
                                             )
                                             vm.email = validateVM.email
                                             
+                                        }else if !validateVM.isAggrementAccept && validateVM.isPasswordReset {
+                                            toastManager.show(
+                                                message: "Please Accept Aggrement!",
+                                                type: .success,
+                                                duration: 1.0
+                                            )
+                                            try? await Task.sleep(nanoseconds: 1_000_000_000)
+                                            navigateToAggremnt = true
                                         }else{
                                             toastManager.show(
                                                 message: "Email validation successfully!",
@@ -352,6 +368,12 @@ struct LoginView: View {
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)
             }
+            .navigationDestination(isPresented: $navigateToAggremnt) { //forget password navigate
+              UserAggremntView()
+                    .navigationBarBackButtonHidden(true)
+                    .navigationBarHidden(true)
+                    .interactiveDismissDisabled(true)
+            }
             
             .navigationDestination(isPresented: $navigateToHome) {
                 if isAdmin {
@@ -377,14 +399,14 @@ struct LoginView: View {
                 }
             }
             
-            .modernAlert(isPresented: $showNoInternetAlert) {
-                  ModernAlertView(
-                      title: "Error!",
-                      message: "Please check your connection and try again.",
-                      isSuccess: false,
-                      buttonTitle: "OK"
-                  ) { showNoInternetAlert = false }
-            }
+//            .modernAlert(isPresented: $showNoInternetAlert) {
+//                  ModernAlertView(
+//                      title: "Error!",
+//                      message: "Please check your connection and try again.",
+//                      isSuccess: false,
+//                      buttonTitle: "OK"
+//                  ) { showNoInternetAlert = false }
+//            }
             
             .modernAlert(isPresented: $showLoginFailedAlert) {
                   ModernAlertView(
@@ -403,7 +425,7 @@ struct LoginView: View {
                       buttonTitle: "OK"
                   ) { showValidateFailedAlert = false }
             }
-            
+            .internetOverlay()
             .toast()
 
     

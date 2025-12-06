@@ -10,7 +10,7 @@ import SwiftUI
 
 
 struct UserAggremntView: View {
-
+    var password : String?
     @State private var acceptTerms = false
     @State private var acceptPrivacy = false
     @State private var webViewUrl = ""
@@ -20,6 +20,8 @@ struct UserAggremntView: View {
     @State private var showLoginError = false
     @State private var isAdmin = false
     @State private var navigateToHome = false
+    @State private var navigateToLogin = false
+    @StateObject private var toastManager = ToastManager.shared
     @StateObject private var viewModel = AggremntAcceptViewModel()
     @StateObject private var loginVM = LoginViewModel()
 
@@ -199,8 +201,16 @@ struct UserAggremntView: View {
                         .navigationBarHidden(true)
                 }
             }
+            .navigationDestination(isPresented: $navigateToLogin) {
+                LoginView(isUserInitialSetupCompleted: true,prefilledEmail: UserDefaults.standard.string(forKey: "email") ?? "")
+                    .navigationBarBackButtonHidden(true)
+                    .navigationBarHidden(true)
+                    .interactiveDismissDisabled(true)
+            }
         }
+        .toast()
         .internetOverlay()
+        
     }
 
     // MARK: - Accept Api
@@ -208,19 +218,37 @@ struct UserAggremntView: View {
         Task {
             viewModel.isAggrementAccepted = (acceptTerms && acceptPrivacy)
             await viewModel.accept()
+
             if viewModel.Successflag {
-                LoginApiCall()
-            }else{
+
+                if let pwd = password,
+                   !pwd.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+
+                    LoginApiCall()   // password exists → call login
+
+                } else {
+                    toastManager.show(
+                        message: "Your account is ready.Please login your account",
+                        type: .success,
+                        duration: 1.0
+                    )
+                   // loginVM.email = UserDefaults.standard.string(forKey: "email") ?? ""
+                    navigateToLogin = true
+                }
+
+            } else {
                 showAggremntError = true
             }
         }
     }
-    // MARK: - Login Api Call 
+
+
+    // MARK: - Login Api Call
     func LoginApiCall() {
         Task {
         
             loginVM.email = UserDefaults.standard.string(forKey: "email") ?? ""
-            loginVM.password = KeychainManager.shared.get("user_password") ?? ""
+            loginVM.password = password ?? ""
             
             await loginVM.login()
             if loginVM.loginSuccess {
