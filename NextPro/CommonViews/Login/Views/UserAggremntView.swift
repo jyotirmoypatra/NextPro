@@ -41,93 +41,140 @@ struct UserAggremntView: View {
                     .ignoresSafeArea()
 
                 VStack {
-                    ScrollView(showsIndicators: false) {
-                        VStack(spacing: 20) {
+                  
+                        VStack(spacing: 10) {
 
                             // TITLE
                             Text("User Agreement")
-                                .font(.custom("Inter-Bold", size: 28))
+                                .font(.custom("Inter-Bold", size: 20))
                                 .foregroundColor(.white)
                                 .padding(.top, 20)
+                            
+                            Text("Please read and accept our terms and Privacy Policy to continue.")
+                                .font(.custom("Inter-Regular", size: 16))
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 24)
 
                             // DESCRIPTION (FULL PAGE COVER STYLE)
                             VStack(spacing: 12) {
-
-                                Text("To continue using the app, please read and accept our Terms & Conditions and Privacy Policy. These policies help ensure that your experience stays secure, transparent, and personalized.")
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .foregroundColor(.white.opacity(0.9))
-                                    .multilineTextAlignment(.center)
-                                    .padding(.horizontal, 24)
-
-                                Text("By accepting, you agree that:")
-                                    .font(.custom("Inter-SemiBold", size: 17))
-                                    .foregroundColor(.white)
-
+                                
+                              ScrollView(showsIndicators: false) {
+                                
                                 VStack(alignment: .leading, spacing: 12) {
-                                    bullet("Your personal data is encrypted and kept safe from unauthorized access.")
-                                    bullet("We only collect information required to improve your experience.")
-                                    bullet("You understand how your information is stored, processed, and used.")
-                                    bullet("You give permission for app functionality such as notifications and device-level access.")
-                                    bullet("You are aware of your rights regarding data sharing, export, and deletion.")
-                                    bullet("You acknowledge that misuse or violation may result in account restrictions.")
-                                    bullet("You allow us to contact you regarding security updates or important notices.")
+                                    Text("TERMS OF SERVICE AND USER AGREEMENT")
+                                        .foregroundColor(.gray)
+                                                        .font(.custom("Inter-Medium", size: 15))
+
+                                    Text("Last Updated: December 2024")
+                                        .foregroundColor(.gray)
+                                        .font(.custom("Inter-Regular", size: 14))
+                                    
+                                    Text("1. ACCEPTANCE OF TERMS")
+                                        .foregroundColor(.gray)
+                                                        .font(.custom("Inter-Medium", size: 15))
+                                    
+                                    Text("By downloading, installing, or using the NextPro application (App), you agree to be bound by these Terms of Service (Terms).If you do not agree to these Terms, please do not use the App.")
+                                        .foregroundColor(.gray)
+                                        .font(.custom("Inter-Regular", size: 14))
+                                    
+                                    Text("2. USE OF THE APP")
+                                        .foregroundColor(.gray)
+                                                        .font(.custom("Inter-Medium", size: 15))
+                                    
+                                    Text("The App provides access control and door management services.You agree to use the App only for lawful purposes and in accordance with these Terms.You are responsible for maintaining the confidentiality of your account credentials.")
+                                        .foregroundColor(.gray)
+                                        .font(.custom("Inter-Regular", size: 14))
+                                    
+                                    Text("3. USER RESPONSIBILITIES")
+                                        .foregroundColor(.gray)
+                                                        .font(.custom("Inter-Medium", size: 15))
+                                    
+                                    bullet("You agree not to misuse, reverse-engineer, or interfere with the App or any connected devices.")
+                                    bullet("You will ensure that all information you provide is accurate and up to date.")
+                                    bullet("You must immediately notify us of any unauthorized access or security breach.")
+                                    bullet("You shall not use the App in any way that may damage, disable, or impair its functionality.")
+
+                                    Text("4. DATA PRIVACY & SECURITY")
+                                        .foregroundColor(.gray)
+                                                        .font(.custom("Inter-Medium", size: 15))
+                                    bullet("Your data is encrypted and stored securely.")
+                                    bullet("We only collect information required for service functionality and improvement.")
+                                    bullet("We do not share your personal data with third parties without your consent, except where required by law.")
+                                    bullet("You may request data export or deletion at any time by contacting our support team.")
+                                    
+                                    Text("5. CONTACT & SUPPORT")
+                                        .foregroundColor(.gray)
+                                                        .font(.custom("Inter-Medium", size: 15))
+                                    bullet(" For questions, data requests, or support, please contact: support@nextproapp.com.")
+                                    
+                                   
+
+                                   
                                 }
-
-                                .padding(.horizontal, 32)
+                                .padding()
+                              }.padding(.vertical,10)
                             }
+                            .background(Color(hex: "#212121"))
+                            .cornerRadius(12)
+                            .padding(.horizontal,20)
+                            .padding(.vertical,10)
 
-                            Spacer(minLength: 40)
                         }
-                    }
+             
 
                     // CHECKBOXES SECTION (JUST ABOVE ACCEPT BUTTON)
-                    VStack(alignment: .leading, spacing: 24) {
-
-                        HStack(alignment: .center) {
-                            Button { acceptTerms.toggle() } label: {
-                                Image(systemName: acceptTerms ? "checkmark.square.fill" : "square")
-                                    .foregroundColor(acceptTerms ? .blue : .white)
-                                    .font(.system(size: 26))
+                    HStack{
+                        VStack(alignment: .leading, spacing: 24) {
+                            
+                            HStack(alignment: .center) {
+                                Button { acceptTerms.toggle() } label: {
+                                    Image(systemName: acceptTerms ? "checkmark.square.fill" : "square")
+                                        .foregroundColor(acceptTerms ? .blue : .gray)
+                                        .font(.system(size: 26))
+                                }
+                                
+                                Button {
+                                    webViewUrl = "https://www.utahtechlabs.com/terms-of-service"
+                                    webViewTitle = "Terms & Conditions"
+                                    showWebView = true
+                                } label: {
+                                    Text("I agree to the ")
+                                        .foregroundColor(.gray)
+                                    +
+                                    Text("Terms & Conditions")
+                                        .underline()
+                                        .foregroundColor(.blue)
+                                }
                             }
-
-                            Button {
-                                webViewUrl = "https://www.utahtechlabs.com/terms-of-service"
-                                webViewTitle = "Terms & Conditions"
-                                showWebView = true
-                            } label: {
-                                Text("I agree to the ")
-                                    .foregroundColor(.white)
-                                +
-                                Text("Terms & Conditions")
-                                    .underline()
-                                    .foregroundColor(.blue)
+                            
+                            HStack(alignment: .center) {
+                                Button { acceptPrivacy.toggle() } label: {
+                                    Image(systemName: acceptPrivacy ? "checkmark.square.fill" : "square")
+                                        .foregroundColor(acceptTerms ? .blue : .gray)
+                                        .font(.system(size: 26))
+                                }
+                                
+                                Button {
+                                    webViewUrl = "https://www.utahtechlabs.com/privacy-policy"
+                                    webViewTitle = "Privacy Policy"
+                                    showWebView = true
+                                } label: {
+                                    Text("I agree to the ")
+                                        .foregroundColor(.gray)
+                                    +
+                                    Text("Privacy Policy")
+                                        .underline()
+                                        .foregroundColor(.blue)
+                                }
                             }
+                            
                         }
-
-                        HStack(alignment: .center) {
-                            Button { acceptPrivacy.toggle() } label: {
-                                Image(systemName: acceptPrivacy ? "checkmark.square.fill" : "square")
-                                    .foregroundColor(acceptPrivacy ? .blue : .white)
-                                    .font(.system(size: 26))
-                            }
-
-                            Button {
-                                webViewUrl = "https://www.utahtechlabs.com/privacy-policy"
-                                webViewTitle = "Privacy Policy"
-                                showWebView = true
-                            } label: {
-                                Text("I agree to the ")
-                                    .foregroundColor(.white)
-                                +
-                                Text("Privacy Policy")
-                                    .underline()
-                                    .foregroundColor(.blue)
-                            }
-                        }
-
+                        .padding(.bottom, 20)
+                        .padding(.top, 5)
+                        Spacer()
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
+                    .padding(.horizontal,20)
 
                     // ACCEPT BUTTON
                     Button(action: {
@@ -264,11 +311,11 @@ struct UserAggremntView: View {
     private func bullet(_ text: String) -> some View {
         HStack(alignment: .top) {
             Text("•")
-                .foregroundColor(.white)
+                .foregroundColor(.gray)
                 .font(.custom("Inter-Regular", size: 18))
             Text(text)
-                .foregroundColor(.white.opacity(0.85))
-                .font(.custom("Inter-Regular", size: 15))
+                .foregroundColor(.gray)
+                .font(.custom("Inter-Regular", size: 14))
         }
     }
 }
