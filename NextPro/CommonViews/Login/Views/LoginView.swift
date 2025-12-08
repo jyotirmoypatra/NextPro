@@ -203,7 +203,7 @@ struct LoginView: View {
                                     return
                                 }
                                 
-                                
+                                ///------THIS Is for Testing Purpose - remove later
                                 if vm.email == "admin" && vm.password == "admin"{
                                     navigateToHome = true
                                     // isDeviceprov = true
@@ -258,6 +258,14 @@ struct LoginView: View {
                             Button(action: {
                                 print("continue account setup")
                                 Task {
+                                    
+                                    ///------THIS Is for Testing Purpose
+                                    if validateVM.email == "admin" {
+                                        isUserInitialSetupDone = true
+                                        vm.email = validateVM.email
+                                        return
+                                    }
+                                    ///-----THIS Is for Testing Purpose - remove later
                                     
                                     await validateVM.validate()
                                     if validateVM.validateSuccess {
