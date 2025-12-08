@@ -67,7 +67,7 @@ struct CreateNewPasswordView: View {
                                     Text("Enter new password")
                                         .font(.custom("Inter-Regular", size: 16))
                                         .foregroundColor(Color.white.opacity(0.5))
-                                        .padding(.leading, 12)
+                                        .padding(.leading, 14)
                                 }
                                 SecureField("", text: $viewModel.newPassword)
                                     .padding()

@@ -151,7 +151,7 @@ struct WebView: UIViewRepresentable {
     }
     
     func updateUIView(_ webView: WKWebView, context: Context) {
-       applyBackground(to: webView)
+      // applyBackground(to: webView)
 
         if webView.url == nil {
             if let url = URL(string: url) {
@@ -185,7 +185,7 @@ struct WebView: UIViewRepresentable {
         
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             parent.isLoading = false
-            parent.applyBackground(to: webView)   // Apply again when page finishes loading
+           // parent.applyBackground(to: webView)   // Apply again when page finishes loading
         }
         
         func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {

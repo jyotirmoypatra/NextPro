@@ -26,20 +26,16 @@ struct UserAggremntView: View {
     @StateObject private var loginVM = LoginViewModel()
 
     var body: some View {
-        GeometryReader { geometry in
+      //  GeometryReader { geometry in
             ZStack {
                 
-                // Background Image + Dark Overlay
                 Image("backgroundimg")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: geometry.size.width,
-                           height: geometry.size.height)
-                    .ignoresSafeArea()
+                            .resizable()
+                            .scaledToFill()
+                            .ignoresSafeArea()   // Full screen always
 
-                Color.black.opacity(0.78)
-                    .ignoresSafeArea()
-
+                        Color.black.opacity(0.78)
+                            .ignoresSafeArea()
                 VStack {
                   
                         VStack(spacing: 10) {
@@ -175,13 +171,14 @@ struct UserAggremntView: View {
                         Spacer()
                     }
                     .padding(.horizontal,20)
+                   
 
                     // ACCEPT BUTTON
                     Button(action: {
                         AcceptApiCall()
                     }) {
                         Text("ACCEPT & CONTINUE")
-                            .font(.custom("Inter-SemiBold", size: 18))
+                            .font(.custom("Inter-SemiBold", size: 16))
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -192,6 +189,7 @@ struct UserAggremntView: View {
                     .padding(.horizontal, 24)
                     .padding(.bottom, 24)
                 }
+                .padding(.horizontal,15)
                 
                 
                 // WEBVIEW POPUP
@@ -254,7 +252,7 @@ struct UserAggremntView: View {
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)
             }
-        }
+        //}
         .toast()
         .internetOverlay()
         
