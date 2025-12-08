@@ -131,9 +131,16 @@ struct UserAggremntView: View {
                                 }
                                 
                                 Button {
-                                    webViewUrl = "https://www.utahtechlabs.com/terms-of-service"
-                                    webViewTitle = "Terms & Conditions"
-                                    showWebView = true
+//                                    webViewUrl = "https://www.utahtechlabs.com/terms-of-service"
+//                                    webViewTitle = "Terms & Conditions"
+//                                    showWebView = true
+                                    
+                                    
+                                    if let url = URL(string: "https://www.utahtechlabs.com/terms-of-service") {
+                                        UIApplication.shared.open(url)
+                                    }
+
+                                    
                                 } label: {
                                     Text("I agree to the ")
                                         .foregroundColor(.gray)
@@ -152,9 +159,12 @@ struct UserAggremntView: View {
                                 }
                                 
                                 Button {
-                                    webViewUrl = "https://www.utahtechlabs.com/privacy-policy"
-                                    webViewTitle = "Privacy Policy"
-                                    showWebView = true
+//                                    webViewUrl = "https://www.utahtechlabs.com/privacy-policy"
+//                                    webViewTitle = "Privacy Policy"
+//                                    showWebView = true
+                                    if let url = URL(string: "https://www.utahtechlabs.com/privacy-policy") {
+                                            UIApplication.shared.open(url)
+                                        }
                                 } label: {
                                     Text("I agree to the ")
                                         .foregroundColor(.gray)

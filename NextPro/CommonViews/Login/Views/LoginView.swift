@@ -57,12 +57,12 @@ struct LoginView: View {
                             // Header
                             VStack(spacing: 5) {
                                 
-                                if !isUserInitialSetupDone {
-                                    Text("WELCOME!")
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .foregroundColor(Color.gray.opacity(0.8))
-                                }
-                                Text(isUserInitialSetupDone ? "LOG IN TO YOUR ACCOUNT" : "Let’s get started")
+//                                if !isUserInitialSetupDone {
+//                                    Text("WELCOME!")
+//                                        .font(.custom("Inter-Regular", size: 16))
+//                                        .foregroundColor(Color.gray.opacity(0.8))
+//                                }
+                                Text(isUserInitialSetupDone ? "LOG IN TO YOUR ACCOUNT" : "Setup Up Your Account")
                                     .font(.custom("Inter-SemiBold", size: 20))
                                     .foregroundColor(.white)
                                 
@@ -267,7 +267,7 @@ struct LoginView: View {
                                             toastManager.show(
                                                 message: "This email is already set up. Please log in with your password",
                                                 type: .success,
-                                                duration: 3.0
+                                                duration: 1.5
                                             )
                                             vm.email = validateVM.email
                                             
@@ -297,7 +297,7 @@ struct LoginView: View {
                                 }
                                 
                             }){
-                                Text("Continue")
+                                Text("Verify Email")
                                     .font(.custom("Inter-SemiBold", size: 16))
                                     .foregroundColor(.black)
                                     .frame(maxWidth: .infinity)

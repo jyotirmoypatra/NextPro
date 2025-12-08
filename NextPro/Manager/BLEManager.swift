@@ -12,6 +12,8 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     @Published var bluetoothStateMessage = ""
     @Published var connectedPeripheral: CBPeripheral?
     @Published var monitoredDeviceRSSI: Int? = nil
+    @Published var bleState: CBManagerState = .unknown
+
 
     // RSSI monitoring properties
     private var centralManager: CBCentralManager!
@@ -84,25 +86,68 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
 
     // MARK: - CBCentralManagerDelegate
+//    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+//        switch central.state {
+//        case .poweredOn:
+//            isBluetoothOn = true
+//            bluetoothStateMessage = "Bluetooth is ON."
+//        case .poweredOff:
+//            isBluetoothOn = false
+//            bluetoothStateMessage = "Bluetooth is OFF. Please turn it ON."
+//        case .unauthorized:
+//            bluetoothStateMessage = "App not authorized to use Bluetooth."
+//        case .unsupported:
+//            bluetoothStateMessage = "This device does not support Bluetooth."
+//        case .resetting:
+//            bluetoothStateMessage = "Bluetooth is resetting..."
+//        default:
+//            bluetoothStateMessage = "Bluetooth state unknown."
+//        }
+//        print("📡 State: \(bluetoothStateMessage)")
+//    }
+    
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        bleState = central.state  
         switch central.state {
-        case .poweredOn:
-            isBluetoothOn = true
-            bluetoothStateMessage = "Bluetooth is ON."
+
+        case .unknown:
+            // permission dialog shown → do NOT trigger any alert
+            bluetoothStateMessage = "Waiting for Bluetooth authorization…"
+            return
+
+        case .resetting:
+            bluetoothStateMessage = "Bluetooth resetting…"
+            return
+
         case .poweredOff:
             isBluetoothOn = false
-            bluetoothStateMessage = "Bluetooth is OFF. Please turn it ON."
+
+            // Only show alert AFTER permission is granted
+            if CBCentralManager.authorization == .allowedAlways {
+                bluetoothStateMessage = "Bluetooth is OFF. Please turn it ON."
+            }
+            return
+
         case .unauthorized:
-            bluetoothStateMessage = "App not authorized to use Bluetooth."
+            bluetoothStateMessage = "Bluetooth permission denied."
+            isBluetoothOn = false
+            return
+
         case .unsupported:
-            bluetoothStateMessage = "This device does not support Bluetooth."
-        case .resetting:
-            bluetoothStateMessage = "Bluetooth is resetting..."
-        default:
-            bluetoothStateMessage = "Bluetooth state unknown."
+            bluetoothStateMessage = "Device does not support Bluetooth."
+            isBluetoothOn = false
+            return
+
+        case .poweredOn:
+            bluetoothStateMessage = "Bluetooth is ON."
+            isBluetoothOn = true
+            return
+
+        @unknown default:
+            bluetoothStateMessage = "Unknown Bluetooth state."
         }
-        print("📡 State: \(bluetoothStateMessage)")
     }
+
 
     func centralManager(
         _ central: CBCentralManager,

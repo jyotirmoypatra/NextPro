@@ -24,7 +24,7 @@ struct APIConfig {
         static let uploadProfilePic = "/api/facility-user/upload-image/"
         static let editUserProfile = "/api/facility-user/user/update/"
         static let validateEmail = "/api/facility-user/validate-email/"
-        static let aggremntAccept = "/api/facility-user/update-aggrement/"
+        static let aggremntAccept = "/api/facility-user/update-agreement/"
     }
     
     

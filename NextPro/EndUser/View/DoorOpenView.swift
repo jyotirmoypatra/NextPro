@@ -160,7 +160,7 @@ struct DoorOpenView: View {
                                
                                 Text(AceesMessage ?? "")
                                         .font(.custom("Inter-SemiBold", size: 16))
-                                        .foregroundColor(.white.opacity(0.5))
+                                        .foregroundColor(isScanningActive ? .white.opacity(0.5) : .red.opacity(0.5))
                                 
                             }
                             
@@ -274,7 +274,7 @@ struct DoorOpenView: View {
                 
                 if let isOn = bleManager?.isBluetoothOn, !isOn {
                     print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
-                    showBluetoothAlert = true
+                   // showBluetoothAlert = true
                     isScanningActive = false
                     return
                 }
@@ -287,7 +287,7 @@ struct DoorOpenView: View {
                 
                 // Begin monitoring RSSI and auto-open logic
                 monitorAndAutoOpenNearbyDoor()
-                AceesMessage = "Walk closer to the door"
+               
             }
             
             // Store the work item so it can be cancelled
@@ -349,7 +349,7 @@ struct DoorOpenView: View {
 //                }
                 if !bleManager.isBluetoothOn {
                     print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
-                    showBluetoothAlert = true
+                  //  showBluetoothAlert = true
                     isScanningActive = false
                     return
                 }
@@ -390,6 +390,29 @@ struct DoorOpenView: View {
                 secondaryButton: .cancel(Text("Cancel"))
             )
         }
+//        .onReceive(bleManager.$isBluetoothOn) { isOn in
+//            if !isOn && CBCentralManager.authorization == .allowedAlways {
+//                showBluetoothAlert = true
+//                isScanningActive = true
+//            }
+//        }
+        .onReceive(bleManager.$bleState) { state in
+            if state == .poweredOff {
+                showBluetoothAlert = true
+                AceesMessage = "Bluetooth is turned OFF."
+                isScanningActive = false
+            } else {
+                showBluetoothAlert = false
+            }
+        }
+
+//        .onReceive(bleManager.$isBluetoothOn) { isOn in
+//            if !isOn {
+//                
+//            }
+//        }
+
+
         .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in
             guard let info = notification.userInfo
             else { return }
@@ -539,91 +562,10 @@ struct DoorOpenView: View {
         
         speechSynthesizer.speak(utterance)
     }
-    
-    
-//    func monitorAndAutoOpenNearbyDoor() {
-//        // Cancel any previous timer before starting a new one
-//        rssiTimer?.invalidate()
-//        
-//        // Start a new timer
-//        rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
-//            for peripheral in bleManager.devices {
-//                let name = peripheral.name ?? ""
-//                let rssi = bleManager.monitoredDeviceRSSI ?? bleManager.deviceLastRSSI[peripheral.identifier] ?? -100
-//                
-//                guard rssi > -40 && rssi < 0 else{  return }
-//                
-//                
-//                // Example match logic
-//                if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
-//                    print("📡 Found matching door \(door.name) (RSSI: \(rssi)dBm)")
-//                    
-//                  //  if rssi > -40 && rssi < 0 {
-//                        print("🚪 Door nearby! Opening \(door.name)...")
-//                        doorManager.openSelectedDoor(door)
-//                        
-//                        let generator = UIImpactFeedbackGenerator(style: .medium)
-//                        generator.impactOccurred()
-//                        // Stop BLE scanning
-//                        bleManager.stopScanning()
-//                        bleManager.stopMonitoringDevice()
-//                       // isScanningActive = false
-//                        
-//                        // Stop timer to avoid continuous opening
-//                        timer.invalidate()
-//                        rssiTimer = nil
-//                        
-//                        // Restart monitoring after 5 seconds
-//                        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-//                            print("🔄 Restarting door monitoring after 5 seconds...")
-//                            bleManager.startContinuousScanning()
-//                            isScanningActive = true
-//                            monitorAndAutoOpenNearbyDoor()
-//                        }
-//                        
-//                        break
-//                   // }
-//                }
-//                
-//                else {
-//                    // ⚠️ Unauthorized Thimmo
-//                    print("🚫 Unauthorized Thimmo device nearby: \(name)")
-//                    
-//                    bleManager.stopScanning()
-//                    bleManager.stopMonitoringDevice()
-//                    timer.invalidate()
-//                    rssiTimer = nil
-//                    isScanningActive = false
-//                    
-//                    DispatchQueue.main.async {
-//                        ringColor = .yellow
-//                        lockIcon = "lock.fill"
-//                        isOpening = true
-//                        progress = 1.0
-//                        AceesMessage = "Verifying..."
-//                    }
-//                    
-//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                        animateFailure()
-//                        AceesMessage = "Unauthorized Door"
-//                        UINotificationFeedbackGenerator().notificationOccurred(.error)
-//                        speakText("Unauthorized Door. bokachoda sala")
-//                    }
-//                    
-//                    // Restart scanning after 5 seconds
-//                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-//                        bleManager.startContinuousScanning()
-//                        isScanningActive = true
-//                        monitorAndAutoOpenNearbyDoor()
-//                    }
-//                    
-//                    break
-//                }
-//            }
-//        }
-//    }
+
     
     func monitorAndAutoOpenNearbyDoor() {
+        AceesMessage = "Walk closer to the door"
            rssiTimer?.invalidate()
            
            rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in

@@ -8,6 +8,70 @@
 
 import SwiftUI
 
+//struct HotspotWaveExact: View {
+//    @Binding var isActive: Bool
+//    @State private var animateWaves = false
+//    
+//    var waveColor: Color {
+//        isActive ? .blue : .red
+//    }
+//    
+//    var body: some View {
+//        ZStack {
+//            // Left waves
+//            ForEach(0..<3) { index in
+//                WaveArc(side: .left, radius: 8 + CGFloat(index) * 5)
+//                    .stroke(waveColor, lineWidth: 2)
+//                    .opacity(isActive ? (animateWaves ? 0.0 : 1.0) : 1.0)
+//                    .scaleEffect(isActive ? (animateWaves ? 1.15 : 0.95) : 1.0)
+//                    .animation(
+//                        isActive ? .easeOut(duration: 2)
+//                            .repeatForever(autoreverses: false)
+//                            .delay(Double(index) * 0.4) : .default,
+//                        value: animateWaves
+//                    )
+//            }
+//
+//            // Center dot
+//            Circle()
+//                .fill(waveColor)
+//                .frame(width: 6, height: 6)
+//
+//            // Right waves
+//            ForEach(0..<3) { index in
+//                WaveArc(side: .right, radius: 8 + CGFloat(index) * 5)
+//                    .stroke(waveColor, lineWidth: 2)
+//                    .opacity(isActive ? (animateWaves ? 0.0 : 1.0) : 1.0)
+//                    .scaleEffect(isActive ? (animateWaves ? 1.15 : 0.95) : 1.0)
+//                    .animation(
+//                        isActive ? .easeOut(duration: 2)
+//                            .repeatForever(autoreverses: false)
+//                            .delay(Double(index) * 0.4) : .default,
+//                        value: animateWaves
+//                    )
+//            }
+//        }
+//        .frame(width: 60, height: 24)
+//        .fixedSize()
+//        .rotationEffect(.degrees(0))
+//        .onAppear {
+//            if isActive {
+//                animateWaves = true
+//            }
+//        }
+//        .onChange(of: isActive) { newValue in
+//            if newValue {
+//                animateWaves = false
+//                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+//                    animateWaves = true
+//                }
+//            } else {
+//                animateWaves = false
+//            }
+//        }
+//    }
+//}
+//
 struct HotspotWaveExact: View {
     @Binding var isActive: Bool
     @State private var animateWaves = false
@@ -22,12 +86,14 @@ struct HotspotWaveExact: View {
             ForEach(0..<3) { index in
                 WaveArc(side: .left, radius: 8 + CGFloat(index) * 5)
                     .stroke(waveColor, lineWidth: 2)
-                    .opacity(isActive ? (animateWaves ? 0.0 : 1.0) : 1.0)
-                    .scaleEffect(isActive ? (animateWaves ? 1.15 : 0.95) : 1.0)
+                    .opacity(1.0)
+                    .scaleEffect(animateWaves ? 1.15 : 0.95)
                     .animation(
-                        isActive ? .easeOut(duration: 2)
+                        isActive
+                        ? Animation.easeOut(duration: 2)
                             .repeatForever(autoreverses: false)
-                            .delay(Double(index) * 0.4) : .default,
+                            .delay(Double(index) * 0.4)
+                        : .default,
                         value: animateWaves
                     )
             }
@@ -41,36 +107,38 @@ struct HotspotWaveExact: View {
             ForEach(0..<3) { index in
                 WaveArc(side: .right, radius: 8 + CGFloat(index) * 5)
                     .stroke(waveColor, lineWidth: 2)
-                    .opacity(isActive ? (animateWaves ? 0.0 : 1.0) : 1.0)
-                    .scaleEffect(isActive ? (animateWaves ? 1.15 : 0.95) : 1.0)
+                    .opacity(1.0)
+                    .scaleEffect(animateWaves ? 1.15 : 0.95)
                     .animation(
-                        isActive ? .easeOut(duration: 2)
+                        isActive
+                        ? Animation.easeOut(duration: 2)
                             .repeatForever(autoreverses: false)
-                            .delay(Double(index) * 0.4) : .default,
+                            .delay(Double(index) * 0.4)
+                        : .default,
                         value: animateWaves
                     )
             }
         }
         .frame(width: 60, height: 24)
         .fixedSize()
-        .rotationEffect(.degrees(0))
         .onAppear {
-            if isActive {
-                animateWaves = true
-            }
+            if isActive { animateWaves = true }
         }
         .onChange(of: isActive) { newValue in
             if newValue {
+                // start looping waves
                 animateWaves = false
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                     animateWaves = true
                 }
             } else {
+                // stop instantly and show red color
                 animateWaves = false
             }
         }
     }
 }
+
 
 
 // MARK: - Wave Arc Shape
