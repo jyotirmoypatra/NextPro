@@ -82,21 +82,40 @@ struct ProfileEndUserView: View {
                                 .onTapGesture {
                                     showFullImage = true
                                 }
-                                .fullScreenCover(isPresented: $showFullImage) {
-                                    FullScreenImageView(url: viewModel.image_url, isPresented: $showFullImage)
-                                }
 
 
+
+//                            // Full Name
+//                            Text(viewModel.isLoading ? "Loading..." : viewModel.fullName)
+//                                .font(.custom("Inter-Medium", size: 16))
+//                                .foregroundColor(.white)
+//
+//                            // Phone Number
+//                            Text(viewModel.isLoading ? "Loading..." : viewModel.phoneNumber)
+//                                .font(.custom("Inter-Regular", size: 13))
+//                                .foregroundColor(.gray)
+
+                            
+                            
                             // Full Name
-                            Text(viewModel.isLoading ? "Loading..." : viewModel.fullName)
-                                .font(.custom("Inter-Medium", size: 16))
-                                .foregroundColor(.white)
+                            if viewModel.isLoading {
+                                ShimmerTextView(width: 120, height: 16)
+                            } else {
+                                Text(viewModel.fullName)
+                                    .font(.custom("Inter-Medium", size: 16))
+                                    .foregroundColor(.white)
+                            }
 
                             // Phone Number
-                            Text(viewModel.isLoading ? "Loading..." : viewModel.phoneNumber)
-                                .font(.custom("Inter-Regular", size: 13))
-                                .foregroundColor(.gray)
+                            if viewModel.isLoading {
+                                ShimmerTextView(width: 90, height: 13)
+                            } else {
+                                Text(viewModel.phoneNumber)
+                                    .font(.custom("Inter-Regular", size: 13))
+                                    .foregroundColor(.gray)
+                            }
 
+                            
 
                             Button(action: {
                                 navigateToEditProfile = true
@@ -251,6 +270,12 @@ struct ProfileEndUserView: View {
                 profileImgUrl: viewModel.image_url
                 
             )
+        }
+        .navigationDestination(isPresented: $showFullImage) {
+            FullScreenImageView(url: viewModel.image_url, isPresented: $showFullImage)
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
+                .interactiveDismissDisabled(true)
         }
         .onReceive(NetworkManager.shared.$hasInternet) { internet in
             if internet == true {
@@ -496,6 +521,61 @@ struct  DeleteConfirmationSheet: View {
 
 
 
+//struct ProfileImageView: View {
+//    let imageUrl: String?
+//    let size: CGFloat = 96
+//    
+//    @State private var isLoading: Bool = true
+//
+//    var body: some View {
+//        ZStack {
+//
+//            // Placeholder
+//            Image(systemName: "person.circle.fill")
+//                .resizable()
+//                .scaledToFill()
+//                .foregroundColor(.gray.opacity(0.6))
+//                .frame(width: size, height: size)
+//
+//            // Remote image loader
+//            if let urlString = imageUrl,
+//               let url = URL(string: urlString) {
+//
+//                WebImage(url: url)
+//                    .onSuccess { _, _, _ in
+//                        DispatchQueue.main.async {
+//                            withAnimation { isLoading = false }
+//                        }
+//
+//                    }
+//                    .onFailure { _ in
+//                        DispatchQueue.main.async {
+//                            withAnimation { isLoading = false }
+//                        }
+//
+//                    }
+//                    .resizable()
+//                    .scaledToFill()
+//                    .frame(width: size, height: size)
+//            }
+//
+//            // Spinner overlay
+//            if isLoading {
+//                SpinnerView()
+//                    .frame(width: 35, height: 35)
+//                    .zIndex(10)
+//            }
+//        }
+//        .clipShape(Circle())
+//        .overlay(
+//            Circle().stroke(Color.white.opacity(0.7), lineWidth: 1)
+//        )
+//        .shadow(radius: 6)
+//    }
+//}
+
+
+
 struct ProfileImageView: View {
     let imageUrl: String?
     let size: CGFloat = 96
@@ -505,12 +585,24 @@ struct ProfileImageView: View {
     var body: some View {
         ZStack {
 
-            // Placeholder
-            Image(systemName: "person.circle.fill")
-                .resizable()
-                .scaledToFill()
-                .foregroundColor(.gray.opacity(0.6))
-                .frame(width: size, height: size)
+            // Shimmer placeholder while loading
+            if isLoading {
+                Circle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: size, height: size)
+                    .overlay(
+                        ShimmerView()
+                            .frame(width: size, height: size)
+                            .clipShape(Circle())
+                    )
+            } else {
+                // Fallback placeholder if image fails
+                Image(systemName: "person.circle.fill")
+                    .resizable()
+                    .scaledToFill()
+                    .foregroundColor(.gray.opacity(0.6))
+                    .frame(width: size, height: size)
+            }
 
             // Remote image loader
             if let urlString = imageUrl,
@@ -521,24 +613,16 @@ struct ProfileImageView: View {
                         DispatchQueue.main.async {
                             withAnimation { isLoading = false }
                         }
-
                     }
                     .onFailure { _ in
                         DispatchQueue.main.async {
                             withAnimation { isLoading = false }
                         }
-
                     }
                     .resizable()
                     .scaledToFill()
                     .frame(width: size, height: size)
-            }
-
-            // Spinner overlay
-            if isLoading {
-                SpinnerView()
-                    .frame(width: 35, height: 35)
-                    .zIndex(10)
+                    .clipShape(Circle())
             }
         }
         .clipShape(Circle())
@@ -548,6 +632,8 @@ struct ProfileImageView: View {
         .shadow(radius: 6)
     }
 }
+
+
 
 struct SpinnerView: View {
     @State private var isAnimating = false
@@ -604,3 +690,66 @@ struct FullScreenImageView: View {
         }
     }
 }
+
+
+
+struct ShimmerView: View {
+    @State private var phase: CGFloat = 0
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 48)
+            .fill(
+                LinearGradient(
+                    gradient: Gradient(colors: [.gray.opacity(0.3), .gray.opacity(0.1), .gray.opacity(0.3)]),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .mask(
+                Rectangle()
+                    .fill(Color.white)
+                    .rotationEffect(.degrees(30))
+                    .offset(x: phase)
+            )
+            .onAppear {
+                withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
+                    phase = 200
+                }
+            }
+    }
+}
+struct ShimmerTextView: View {
+    var width: CGFloat
+    var height: CGFloat
+
+    @State private var phase: CGFloat = -250
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: height / 2)
+            .fill(
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color.gray.opacity(0.3),
+                        Color.white.opacity(0.8),
+                        Color.gray.opacity(0.3)
+                    ]),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .frame(width: width, height: height)
+            .mask(
+                Rectangle()
+                    .fill(Color.white)
+                    .rotationEffect(.degrees(30))
+                    .offset(x: phase)
+            )
+            .onAppear {
+                withAnimation(.linear(duration: 0.8).repeatForever(autoreverses: false)) {
+                    phase = 250
+                }
+            }
+            .shadow(color: .white.opacity(0.2), radius: 2) // subtle glow
+    }
+}
+
