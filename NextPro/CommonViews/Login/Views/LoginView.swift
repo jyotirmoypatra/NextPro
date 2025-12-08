@@ -62,12 +62,12 @@ struct LoginView: View {
 //                                        .font(.custom("Inter-Regular", size: 16))
 //                                        .foregroundColor(Color.gray.opacity(0.8))
 //                                }
-                                Text(isUserInitialSetupDone ? "LOG IN TO YOUR ACCOUNT" : "Setup Up Your Account")
+                                Text(isUserInitialSetupDone ? "LOG IN TO YOUR ACCOUNT" : "SETUP YOUR ACCOUNT")
                                     .font(.custom("Inter-SemiBold", size: 20))
                                     .foregroundColor(.white)
                                 
                                 if !isUserInitialSetupDone {
-                                    Text(" Enter your email to continue")
+                                    Text("Enter your register email to continue")
                                         .font(.custom("Inter-Regular", size: 16))
                                         .foregroundColor(Color.gray.opacity(0.8))
                                 }
@@ -297,7 +297,7 @@ struct LoginView: View {
                                 }
                                 
                             }){
-                                Text("Verify Email")
+                                Text("VERIFY EMAIL")
                                     .font(.custom("Inter-SemiBold", size: 16))
                                     .foregroundColor(.black)
                                     .frame(maxWidth: .infinity)

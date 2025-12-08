@@ -61,10 +61,10 @@ struct EditProfileView: View {
                         dismiss()
                     }) {
                         Image(systemName: "arrow.left")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.system(size: 20, weight: .semibold))
                             .foregroundColor(.white)
                             .padding(10)
-                            .background(Color.white.opacity(0.1))
+                           // .background(Color.white.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                     

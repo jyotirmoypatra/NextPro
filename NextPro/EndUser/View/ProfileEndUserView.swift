@@ -222,6 +222,9 @@ struct ProfileEndUserView: View {
         
         .navigationDestination(isPresented: $navigateToUpdatePass) {
             CreateNewPasswordView(userName: username, comingFrom: "user_profile")
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
+                .interactiveDismissDisabled(true)
         }
         
         .navigationDestination(isPresented: $navigate_Webview_PrivacyTerms) {

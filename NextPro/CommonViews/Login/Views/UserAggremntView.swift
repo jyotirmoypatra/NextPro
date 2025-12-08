@@ -213,7 +213,7 @@ struct UserAggremntView: View {
                         .zIndex(10)
                 }
 
-                if viewModel.isLoading{
+                if viewModel.isLoading || loginVM.isLoading{
                     ZStack {
                         Color.black.opacity(0.4)
                             .ignoresSafeArea()

@@ -11,6 +11,7 @@ import SwiftUI
 struct ResetPassword: View {
     @Environment(\.dismiss) private var dismiss
     @State private var navigateToVerifyOtp = false
+    @StateObject private var toastManager = ToastManager.shared
     @StateObject private var viewModel = ForgetPasswordRequestViewModel()
     @State private var showFailedAlert = false
     var body: some View {
@@ -37,7 +38,7 @@ struct ResetPassword: View {
                             Text("RESET YOUR PASSWORD")
                                 .font(.custom("Inter-SemiBold", size: 20))
                                 .foregroundColor(.white)
-                            Text("Enter the email associated with your account, and we'll send you a code to reset your password securely.")
+                            Text("Enter a new password for your account. Make sure it's something secure and easy for you to remember")
                                 .font(.custom("Inter-Regular", size: 16))
                                 .foregroundColor(Color.gray.opacity(0.8))
                                 .multilineTextAlignment(.center)
@@ -89,6 +90,11 @@ struct ResetPassword: View {
                         Task {
                                 await viewModel.sendRequest()
                                 if viewModel.success {
+                                    toastManager.show(
+                                        message: "Otp sent to email successfully!",
+                                        type: .success,
+                                        duration: 0.5
+                                    )
                                     navigateToVerifyOtp = true
                                 }else{
                                     showFailedAlert = true
@@ -164,6 +170,7 @@ struct ResetPassword: View {
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
+        .toast()
     }
 }
 
