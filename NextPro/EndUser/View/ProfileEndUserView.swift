@@ -219,6 +219,12 @@ struct ProfileEndUserView: View {
                     }
                     .padding(.bottom, 30)
                 }
+                .refreshable{
+                    Task {
+                        loadUserData()
+                        await viewModel.fetchUserProfile()
+                    }
+                }
             }
             
             // WebView Modal Overlay
@@ -657,6 +663,9 @@ struct FullScreenImageView: View {
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
 
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -665,13 +674,40 @@ struct FullScreenImageView: View {
                 .resizable()
                 .scaledToFit()
                 .scaleEffect(scale)
+                .offset(offset)
                 .gesture(
-                    MagnificationGesture()
-                        .onChanged { scale = lastScale * $0 }
-                        .onEnded { _ in lastScale = scale }
+                    SimultaneousGesture(
+                        // Pinch Zoom
+                        MagnificationGesture()
+                            .onChanged { value in
+                                let newScale = lastScale * value
+                                scale = max(1.0, min(newScale, 4.0)) // limit zoom
+                            }
+                            .onEnded { _ in
+                                lastScale = scale
+                                adjustOffsetIfNeeded()
+                            },
+
+                        // Drag to move
+                        DragGesture()
+                            .onChanged { gesture in
+                                if scale > 1.0 {
+                                    offset = CGSize(
+                                        width: lastOffset.width + gesture.translation.width,
+                                        height: lastOffset.height + gesture.translation.height
+                                    )
+                                }
+                            }
+                            .onEnded { _ in
+                                adjustOffsetIfNeeded()
+                                lastOffset = offset
+                            }
+                    )
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .animation(.easeOut(duration: 0.25), value: offset)
 
+            // Close Button
             VStack {
                 HStack {
                     Button(action: { isPresented = false }) {
@@ -689,9 +725,21 @@ struct FullScreenImageView: View {
             }
         }
     }
+
+    // Prevent image from going too far out of screen
+    private func adjustOffsetIfNeeded() {
+        let maxX = (scale - 1) * 200   // adjust as needed
+        let maxY = (scale - 1) * 300
+
+        var newX = offset.width
+        var newY = offset.height
+
+        newX = min(max(newX, -maxX), maxX)
+        newY = min(max(newY, -maxY), maxY)
+
+        offset = CGSize(width: newX, height: newY)
+    }
 }
-
-
 
 struct ShimmerView: View {
     @State private var phase: CGFloat = 0
