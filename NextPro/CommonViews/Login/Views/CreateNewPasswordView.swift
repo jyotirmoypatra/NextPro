@@ -176,7 +176,7 @@ struct CreateNewPasswordView: View {
                         }
                         
                     }) {
-                        Text("UPDATE PASSWORD")
+                        Text(comingFrom == "login" ? "CREATE PASSWORD" :  "UPDATE PASSWORD")
                             .font(.custom("Inter-SemiBold", size: 16))
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
