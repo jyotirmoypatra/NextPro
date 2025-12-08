@@ -326,6 +326,7 @@ struct DoorOpenView: View {
                 bleManager.stopMonitoringDevice()
                 bleManager.stopScanning()
                 isScanningActive = false
+                AceesMessage = "Preparing Scan.."
                 
                 // Stop RSSI monitoring timer
                 rssiTimer?.invalidate()

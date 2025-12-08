@@ -29,6 +29,9 @@ struct ProfileEndUserView: View {
     @State private var navigate_Webview_PrivacyTerms = false
     @State private var showFailedAlert = false
     
+    
+    @State private var showFullImage = false
+    
    
     var body: some View {
         ZStack {
@@ -70,10 +73,19 @@ struct ProfileEndUserView: View {
 //                                .shadow(radius: 6)
                                 
                             
+                           // ProfileImageView(imageUrl: viewModel.image_url)
+
+
+                         
+
                             ProfileImageView(imageUrl: viewModel.image_url)
+                                .onTapGesture {
+                                    showFullImage = true
+                                }
+                                .fullScreenCover(isPresented: $showFullImage) {
+                                    FullScreenImageView(url: viewModel.image_url, isPresented: $showFullImage)
+                                }
 
-
-                            
 
                             // Full Name
                             Text(viewModel.isLoading ? "Loading..." : viewModel.fullName)
@@ -552,3 +564,43 @@ struct SpinnerView: View {
 }
 
 
+struct FullScreenImageView: View {
+    let url: String
+    @Binding var isPresented: Bool
+
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            WebImage(url: URL(string: url))
+                .resizable()
+                .scaledToFit()
+                .scaleEffect(scale)
+                .gesture(
+                    MagnificationGesture()
+                        .onChanged { scale = lastScale * $0 }
+                        .onEnded { _ in lastScale = scale }
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            VStack {
+                HStack {
+                    Button(action: { isPresented = false }) {
+                        Image(systemName: "arrow.left")
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(10)
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(Circle())
+                    }
+                    Spacer()
+                }
+                .padding()
+                Spacer()
+            }
+        }
+    }
+}
