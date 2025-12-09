@@ -24,6 +24,7 @@ struct UserAggremntView: View {
     @StateObject private var toastManager = ToastManager.shared
     @StateObject private var viewModel = AggremntAcceptViewModel()
     @StateObject private var loginVM = LoginViewModel()
+    @State private var navigate_Webview_PrivacyTerms = false
 
     var body: some View {
       //  GeometryReader { geometry in
@@ -136,10 +137,14 @@ struct UserAggremntView: View {
 //                                    showWebView = true
                                     
                                     
-                                    if let url = URL(string: "https://www.utahtechlabs.com/terms-of-service") {
-                                        UIApplication.shared.open(url)
-                                    }
+//                                    if let url = URL(string: "https://www.utahtechlabs.com/terms-of-service") {
+//                                        UIApplication.shared.open(url)
+//                                    }
 
+                                    
+                                    webViewUrl = "https://www.utahtechlabs.com/terms-of-service"
+                                    webViewTitle = "Terms & Conditions"
+                                    navigate_Webview_PrivacyTerms = true
                                     
                                 } label: {
                                     Text("I agree to the ")
@@ -162,9 +167,13 @@ struct UserAggremntView: View {
 //                                    webViewUrl = "https://www.utahtechlabs.com/privacy-policy"
 //                                    webViewTitle = "Privacy Policy"
 //                                    showWebView = true
-                                    if let url = URL(string: "https://www.utahtechlabs.com/privacy-policy") {
-                                            UIApplication.shared.open(url)
-                                        }
+
+                                    webViewUrl = "https://www.utahtechlabs.com/privacy-policy"
+                                    webViewTitle = "Privacy Policy"
+                                    navigate_Webview_PrivacyTerms = true
+//                                    if let url = URL(string: "https://www.utahtechlabs.com/privacy-policy") {
+//                                            UIApplication.shared.open(url)
+//                                        }
                                 } label: {
                                     Text("I agree to the ")
                                         .foregroundColor(.gray)
@@ -227,7 +236,9 @@ struct UserAggremntView: View {
                 }
                 
             }
-           
+            .navigationDestination(isPresented: $navigate_Webview_PrivacyTerms) {
+                PrivacyAndTermsView(webViewURL: webViewUrl, webViewTitle: webViewTitle)
+            }
             .modernAlert(isPresented: $showAggremntError) {
                   ModernAlertView(
                       title: "Error!",
