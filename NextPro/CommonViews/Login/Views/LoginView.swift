@@ -187,6 +187,24 @@ struct LoginView: View {
                                     
                                 }
                             }
+                            
+                            HStack {
+                                Spacer()
+
+                                if isUserInitialSetupDone {
+                                    
+                                    Button(action: {
+                                        
+                                        navigateToResetPassword = true
+                                        
+                                    }) {
+                                        Text("Forgot Password?")
+                                            .font(.custom("Inter-Regular", size: 14))
+                                            .foregroundColor(.white)
+                                            .padding(.top, 6)
+                                    }
+                                }
+                            }
 
                             Spacer().frame(height: 150)  // Prevent cut-off
                         }
@@ -314,22 +332,22 @@ struct LoginView: View {
                                     .cornerRadius(10)
                             }
                         }
-                        HStack {
-
-                            if isUserInitialSetupDone {
-                                
-                                Button(action: {
-                                    
-                                    navigateToResetPassword = true
-                                    
-                                }) {
-                                    Text("Forgot Password?")
-                                        .font(.custom("Inter-Regular", size: 14))
-                                        .foregroundColor(.white)
-                                        .padding(.top, 6)
-                                }
-                            }
-                        }
+//                        HStack {
+//
+//                            if isUserInitialSetupDone {
+//                                
+//                                Button(action: {
+//                                    
+//                                    navigateToResetPassword = true
+//                                    
+//                                }) {
+//                                    Text("Forgot Password?")
+//                                        .font(.custom("Inter-Regular", size: 14))
+//                                        .foregroundColor(.white)
+//                                        .padding(.top, 6)
+//                                }
+//                            }
+//                        }
 
                     }
                     .padding(.horizontal, 30)
