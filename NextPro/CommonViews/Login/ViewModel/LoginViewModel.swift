@@ -24,6 +24,14 @@ class LoginViewModel: ObservableObject {
     @Published var isPasswordReset = true
 
     let network = NetworkManager.shared
+    let fullPasswordPolicyMessage = """
+    Password must meet the following requirements:
+    • Minimum 8 characters
+    • At least 1 uppercase letter (A–Z)
+    • At least 1 lowercase letter (a–z)
+    • At least 1 number (0–9)
+    • At least 1 special character (!@#$%^&*)
+    """
 
     func login() async {
 
@@ -45,6 +53,14 @@ class LoginViewModel: ObservableObject {
             return
         }
 
+        // POLICY CHECK
+        guard isPasswordValid(trimmedPassword) else {
+            loginError = fullPasswordPolicyMessage
+            return
+        }
+        
+        
+        
         
 
         isLoading = true

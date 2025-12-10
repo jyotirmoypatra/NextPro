@@ -63,7 +63,7 @@ struct CreateNewPasswordView: View {
                             
                             // Header
                             VStack(spacing: 5) {
-                                Text(comingFrom == "login" ? "CREATE NEW PASSWORD" : "UPDATE YOUR PASSWORD")
+                                Text(comingFrom == "login" ? "CREATE YOUR ACCOUNT" : "UPDATE YOUR PASSWORD")
                                     .font(.custom("Inter-SemiBold", size: 20))
                                     .foregroundColor(.white)
                                 Text("Create a secure password for your account")
@@ -75,7 +75,7 @@ struct CreateNewPasswordView: View {
                             // New Password Field
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack(spacing: 0) {
-                                    Text("New Password")
+                                    Text(comingFrom == "login" ?   "Create Password" : "New Password")
                                         .font(.custom("Inter-Medium", size: 16))
                                         .foregroundColor(.white)
                                     Text(" *")
@@ -104,7 +104,7 @@ struct CreateNewPasswordView: View {
                             // Confirm Password Field
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack(spacing: 0) {
-                                    Text("Confirm Password")
+                                    Text(comingFrom == "login" ?  "Confirm Password" : "Confirm New Password")
                                         .font(.custom("Inter-Medium", size: 16))
                                         .foregroundColor(.white)
                                     Text(" *")
@@ -115,7 +115,7 @@ struct CreateNewPasswordView: View {
                                 ZStack(alignment: .trailing) {
                                     ZStack(alignment: .leading) {
                                         if viewModel.confirmPassword.isEmpty {
-                                            Text("Confirm new password")
+                                            Text("Enter confirm password")
                                                 .font(.custom("Inter-Regular", size: 16))
                                                 .foregroundColor(Color.white.opacity(0.5))
                                                 .padding(.leading, 12)

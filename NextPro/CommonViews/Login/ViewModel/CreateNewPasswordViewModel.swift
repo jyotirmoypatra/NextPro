@@ -18,6 +18,16 @@ class CreateNewPasswordViewModel: ObservableObject {
     @Published var errorMessage = ""
     @Published var updateSuccess = false
     let network = NetworkManager.shared
+    
+    let fullPasswordPolicyMessage = """
+    Password must meet the following requirements:
+    • Minimum 8 characters
+    • At least 1 uppercase letter (A–Z)
+    • At least 1 lowercase letter (a–z)
+    • At least 1 number (0–9)
+    • At least 1 special character (!@#$%^&*)
+    """
+
 
     func updatePassword(username: String) async {
         
@@ -28,15 +38,31 @@ class CreateNewPasswordViewModel: ObservableObject {
             return
         }
         
+        // Empty fields
         guard !newPassword.isEmpty, !confirmPassword.isEmpty else {
-            errorMessage = "Please fill all fields"
+            errorMessage = "Please fill all fields."
             return
         }
 
-        guard newPassword == confirmPassword else {
-            errorMessage = "Passwords do not match"
+        // POLICY CHECK
+        guard isPasswordValid(newPassword) else {
+            errorMessage = fullPasswordPolicyMessage
             return
         }
+
+        // Match check
+        guard newPassword == confirmPassword else {
+            errorMessage = "Passwords do not match."
+            return
+        }
+
+        
+        
+        
+        
+        
+        
+        
 
         errorMessage = ""
         

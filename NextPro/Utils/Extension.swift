@@ -117,3 +117,12 @@ extension UIImage {
 }
 
 
+func isPasswordValid(_ password: String) -> Bool {
+    let lengthOK = password.count >= 8
+    let upperOK  = password.range(of: "[A-Z]", options: .regularExpression) != nil
+    let lowerOK  = password.range(of: "[a-z]", options: .regularExpression) != nil
+    let numberOK = password.range(of: "[0-9]", options: .regularExpression) != nil
+    let specialOK = password.range(of: "[!@#$%^&*(),.?\":{}|<>]", options: .regularExpression) != nil
+
+    return lengthOK && upperOK && lowerOK && numberOK && specialOK
+}
