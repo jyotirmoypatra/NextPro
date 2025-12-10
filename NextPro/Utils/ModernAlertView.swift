@@ -16,60 +16,29 @@ struct ModernAlertView: View {
     let action: () -> Void
 
     var body: some View {
-//        VStack(spacing: 12) {
-//
-//            // Icon
-//            Image(systemName: isSuccess ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-//                .font(.system(size: 40))
-//                .foregroundColor(isSuccess ? .green : .red)
-//
-//            // Title
-//            Text(title)
-//                .font(.custom("Inter-Bold", size: 18))
-//                .foregroundColor(.white)
-//            // Message
-//            Text(message)
-//                .font(.custom("Inter-Medium", size: 16))
-//                .multilineTextAlignment(.center)
-//                .foregroundColor(.white)
-//
-//            // Button
-//            Button(action: action) {
-//                Text(buttonTitle)
-//                    .font(.custom("Inter-Bold", size: 16))
-//                    .frame(maxWidth: .infinity)
-//                    .padding()
-//                    .foregroundColor(.black)
-//                    .background(isSuccess ? Color.green.opacity(0.8) : Color.red.opacity(0.8))
-//                    .clipShape(RoundedRectangle(cornerRadius: 12))
-//            }
-//        }
-//        .padding(20)
-//        .background(Color(hex: "#303030"))
-//        .clipShape(RoundedRectangle(cornerRadius: 20))
-//        .shadow(radius: 20)
-//        .padding(.horizontal, 50)
-        
         VStack(spacing:15){
             
             HStack(alignment: .center, spacing: 12){
                 // Icon
                 Image(systemName: isSuccess ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                    .font(.system(size: 40))
+                    .font(.system(size: 25))
                     .foregroundColor(isSuccess ? .green : .red)
-                VStack(alignment: .leading,spacing: 10){
-                    // Title
-                    Text(title)
-                        .font(.custom("Inter-Bold", size: 18))
-                        .foregroundColor(isSuccess ? .green : .red)
-                    // Message
-                    Text(message)
-                        .font(.custom("Inter-Medium", size: 16))
-                        .multilineTextAlignment(.leading)
-                        .foregroundColor(.white)
-                    
-                   
-                }
+                
+                // Title
+                Text(title)
+                    .font(.custom("Inter-Bold", size: 18))
+                    .foregroundColor(isSuccess ? .green : .red)
+              
+                Spacer()
+            }
+            
+            HStack {
+                // Message
+                Text(message)
+                    .font(.custom("Inter-Medium", size: 16))
+                    .multilineTextAlignment(.leading)
+                    .foregroundColor(.white)
+             
                 Spacer()
             }
             
@@ -78,17 +47,18 @@ struct ModernAlertView: View {
                 Text(buttonTitle)
                     .font(.custom("Inter-Bold", size: 16))
                     .frame(maxWidth: .infinity)
-                    .padding()
+                    .padding(10)
                     .foregroundColor(.black)
                     .background(isSuccess ? Color.green.opacity(0.8) : Color.red.opacity(0.8))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             
-        }.padding(20)
-            .background(Color(hex: "#303030"))
-            .clipShape(RoundedRectangle(cornerRadius: 20))
-            .shadow(radius: 20)
-            .padding(.horizontal, 30)
+        }
+        .padding(15)
+        .background(Color(hex: "#303030"))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(radius: 20)
+        .padding(.horizontal, 40)
         
     }
 }
@@ -103,7 +73,7 @@ struct ModernAlertModifier: ViewModifier {
             content
 
             if isPresented {
-                Color.black.opacity(0.5)
+                Color.black.opacity(0.7)
                     .ignoresSafeArea()
                     .transition(.opacity)
 

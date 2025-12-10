@@ -17,7 +17,8 @@ struct CreateNewPasswordView: View {
     @StateObject private var viewModel = CreateNewPasswordViewModel()
     @StateObject private var toastManager = ToastManager.shared
     @State private var showNoInternetAlert = false
-    @State private var showPassword = false
+    @State private var showNewPassword = false
+    @State private var showConfirmPassword = false
     @State private var showUpdateFailedAlert = false
     @State private var navigateToAggrement = false
     @State private var isAdmin = false
@@ -73,82 +74,99 @@ struct CreateNewPasswordView: View {
                             .padding(.bottom, 40)
                             
                             // New Password Field
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack(spacing: 0) {
-                                    Text(comingFrom == "login" ?   "Create Password" : "New Password")
-                                        .font(.custom("Inter-Medium", size: 16))
-                                        .foregroundColor(.white)
-                                    Text(" *")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.red)
-                                }
-                                
-                                ZStack(alignment: .leading) {
-                                    if viewModel.newPassword.isEmpty {
-                                        Text("Enter new password")
-                                            .font(.custom("Inter-Regular", size: 16))
-                                            .foregroundColor(Color.white.opacity(0.5))
-                                            .padding(.leading, 14)
-                                    }
-                                    SecureField("", text: $viewModel.newPassword)
-                                        .padding()
-                                        .background(Color.white.opacity(0.15))
-                                        .cornerRadius(8)
-                                        .frame(height: 50)
-                                        .foregroundColor(.white)
-                                        .autocapitalization(.none)
-                                        .disableAutocorrection(true)
-                                }
-                            }
+//                            VStack(alignment: .leading, spacing: 6) {
+//                                HStack(spacing: 0) {
+//                                    Text(comingFrom == "login" ?   "Create Password" : "New Password")
+//                                        .font(.custom("Inter-Medium", size: 16))
+//                                        .foregroundColor(.white)
+//                                    Text(" *")
+//                                        .font(.system(size: 14))
+//                                        .foregroundColor(.red)
+//                                }
+//                                
+//                                ZStack(alignment: .leading) {
+//                                    if viewModel.newPassword.isEmpty {
+//                                        Text("Enter new password")
+//                                            .font(.custom("Inter-Regular", size: 16))
+//                                            .foregroundColor(Color.white.opacity(0.5))
+//                                            .padding(.leading, 14)
+//                                    }
+//                                    SecureField("", text: $viewModel.newPassword)
+//                                        .padding()
+//                                        .background(Color.white.opacity(0.15))
+//                                        .cornerRadius(8)
+//                                        .frame(height: 50)
+//                                        .foregroundColor(.white)
+//                                        .autocapitalization(.none)
+//                                        .disableAutocorrection(true)
+//                                }
+//                            }
                             
                             // Confirm Password Field
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack(spacing: 0) {
-                                    Text(comingFrom == "login" ?  "Confirm Password" : "Confirm New Password")
-                                        .font(.custom("Inter-Medium", size: 16))
-                                        .foregroundColor(.white)
-                                    Text(" *")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.red)
-                                }
-                                
-                                ZStack(alignment: .trailing) {
-                                    ZStack(alignment: .leading) {
-                                        if viewModel.confirmPassword.isEmpty {
-                                            Text("Enter confirm password")
-                                                .font(.custom("Inter-Regular", size: 16))
-                                                .foregroundColor(Color.white.opacity(0.5))
-                                                .padding(.leading, 12)
-                                        }
-                                        
-                                        if showPassword {
-                                            TextField("", text: $viewModel.confirmPassword)
-                                                .foregroundColor(.white)
-                                                .font(.custom("Inter-Regular", size: 16))
-                                                .padding(.horizontal, 14)
-                                                .frame(height: 50)
-                                                .autocapitalization(.none)
-                                                .disableAutocorrection(true)
-                                        } else {
-                                            SecureField("", text: $viewModel.confirmPassword)
-                                                .foregroundColor(.white)
-                                                .font(.custom("Inter-Regular", size: 16))
-                                                .padding(.horizontal, 14)
-                                                .frame(height: 50)
-                                                .autocapitalization(.none)
-                                                .disableAutocorrection(true)
-                                        }
-                                    }
-                                    .background(Color.white.opacity(0.15))
-                                    .cornerRadius(10)
-                                    
-                                    Button(action: { showPassword.toggle() }) {
-                                        Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                                            .foregroundColor(.white.opacity(0.8))
-                                    }
-                                    .padding(.trailing, 14)
-                                }
-                            }
+//                            VStack(alignment: .leading, spacing: 6) {
+//                                HStack(spacing: 0) {
+//                                    Text(comingFrom == "login" ?  "Confirm Password" : "Confirm New Password")
+//                                        .font(.custom("Inter-Medium", size: 16))
+//                                        .foregroundColor(.white)
+//                                    Text(" *")
+//                                        .font(.system(size: 14))
+//                                        .foregroundColor(.red)
+//                                }
+//                                
+//                                ZStack(alignment: .trailing) {
+//                                    ZStack(alignment: .leading) {
+//                                        if viewModel.confirmPassword.isEmpty {
+//                                            Text("Enter confirm password")
+//                                                .font(.custom("Inter-Regular", size: 16))
+//                                                .foregroundColor(Color.white.opacity(0.5))
+//                                                .padding(.leading, 12)
+//                                        }
+//                                        
+//                                        if showPassword {
+//                                            TextField("", text: $viewModel.confirmPassword)
+//                                                .foregroundColor(.white)
+//                                                .font(.custom("Inter-Regular", size: 16))
+//                                                .padding(.horizontal, 12)
+//                                                .frame(height: 50)
+//                                                .autocapitalization(.none)
+//                                                .disableAutocorrection(true)
+//                                        } else {
+//                                            SecureField("", text: $viewModel.confirmPassword)
+//                                                .padding()
+//                                                .background(Color.white.opacity(0.15))
+//                                                .cornerRadius(8)
+//                                                .frame(height: 50)
+//                                                .foregroundColor(.white)
+//                                                .autocapitalization(.none)
+//                                                .disableAutocorrection(true)
+//                                        }
+//                                    }
+//                                    .background(Color.white.opacity(0.15))
+//                                    .cornerRadius(10)
+//                                    
+//                                    Button(action: { showPassword.toggle() }) {
+//                                        Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+//                                            .foregroundColor(.white.opacity(0.8))
+//                                    }
+//                                    .padding(.trailing, 14)
+//                                }
+//                            }
+                            
+                            
+                            PasswordField(
+                                title: comingFrom == "login" ? "Create Password" : "New Password",
+                                placeholder: "Enter new password",
+                                text: $viewModel.newPassword,
+                                showText: $showNewPassword
+                            )
+
+                            PasswordField(
+                                title: comingFrom == "login" ? "Confirm Password" : "Confirm New Password",
+                                placeholder: "Enter confirm password",
+                                text: $viewModel.confirmPassword,
+                                showText: $showConfirmPassword
+                            )
+
                             
                             Spacer()
                             
@@ -283,3 +301,55 @@ struct CreateNewPasswordView: View {
     }
 }
 
+
+struct PasswordField: View {
+    var title: String
+    var placeholder: String
+    @Binding var text: String
+    @Binding var showText: Bool     // for eye button
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 0) {
+                Text(title)
+                    .font(.custom("Inter-Medium", size: 16))
+                    .foregroundColor(.white)
+                Text(" *")
+                    .foregroundColor(.red)
+            }
+
+            ZStack(alignment: .leading) {
+
+                if text.isEmpty {
+                    Text(placeholder)
+                        .font(.custom("Inter-Regular", size: 16))
+                        .foregroundColor(.white.opacity(0.5))
+                        .padding(.leading, 14)
+                }
+
+                HStack {
+                    if showText {
+                        TextField("", text: $text)
+                            .foregroundColor(.white)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                    } else {
+                        SecureField("", text: $text)
+                            .foregroundColor(.white)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                    }
+
+                    Button(action: { showText.toggle() }) {
+                        Image(systemName: showText ? "eye.slash.fill" : "eye.fill")
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
+                .padding(.horizontal, 14)
+                .frame(height: 50)
+            }
+            .background(Color.white.opacity(0.15))
+            .cornerRadius(10)
+        }
+    }
+}
