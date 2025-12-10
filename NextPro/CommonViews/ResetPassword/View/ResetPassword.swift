@@ -95,6 +95,8 @@ struct ResetPassword: View {
                                         type: .success,
                                         duration: 0.5
                                     )
+                                    // Navigate after a short delay to show the toast
+                                    try? await Task.sleep(nanoseconds: 500_000_000)
                                     navigateToVerifyOtp = true
                                 }else{
                                     showFailedAlert = true
