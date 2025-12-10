@@ -16,7 +16,7 @@ struct ModernAlertView: View {
     let action: () -> Void
 
     var body: some View {
-        VStack(spacing:15){
+        VStack(spacing:10){
             
             HStack(alignment: .center, spacing: 12){
                 // Icon
@@ -26,21 +26,18 @@ struct ModernAlertView: View {
                 
                 // Title
                 Text(title)
-                    .font(.custom("Inter-Bold", size: 18))
+                    .font(.custom("Inter-Bold", size: 16))
                     .foregroundColor(isSuccess ? .green : .red)
               
                 Spacer()
             }
             
-            HStack {
-                // Message
-                Text(message)
-                    .font(.custom("Inter-Medium", size: 16))
-                    .multilineTextAlignment(.leading)
-                    .foregroundColor(.white)
-             
-                Spacer()
-            }
+            Text(message)
+                .font(.custom("Inter-Medium", size: 14))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
             
             // Button
             Button(action: action) {
@@ -58,7 +55,7 @@ struct ModernAlertView: View {
         .background(Color(hex: "#303030"))
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(radius: 20)
-        .padding(.horizontal, 40)
+        .padding(.horizontal, 30)
         
     }
 }

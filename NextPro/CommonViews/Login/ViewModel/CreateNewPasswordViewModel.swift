@@ -40,7 +40,7 @@ class CreateNewPasswordViewModel: ObservableObject {
         
         // Empty fields
         guard !newPassword.isEmpty, !confirmPassword.isEmpty else {
-            errorMessage = "Please fill all fields."
+            errorMessage = "Please enter both password fields."
             return
         }
 
