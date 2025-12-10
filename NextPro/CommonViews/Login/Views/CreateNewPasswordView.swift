@@ -30,7 +30,7 @@ struct CreateNewPasswordView: View {
                 // Background
                 Image("backgroundimg")
                     .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .scaledToFill()
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .ignoresSafeArea()
                 
@@ -55,7 +55,7 @@ struct CreateNewPasswordView: View {
                         
                     }.frame(maxWidth: .infinity)
                     .padding(.top, 10)
-                    .background(Color.black)
+                   // .background(Color.black)
                     .zIndex(999999)
                     
                     ScrollView { // ✅ Add ScrollView to manage height & keyboard
@@ -228,7 +228,7 @@ struct CreateNewPasswordView: View {
                     }
                     .padding(.horizontal, 30)
                     .padding(.bottom, 30)
-                    .background(.black)
+                   // .background(.black)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                     
                     if viewModel.isLoading {

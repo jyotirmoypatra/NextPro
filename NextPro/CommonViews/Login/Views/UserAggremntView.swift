@@ -27,12 +27,13 @@ struct UserAggremntView: View {
     @State private var navigate_Webview_PrivacyTerms = false
 
     var body: some View {
-      //  GeometryReader { geometry in
+       GeometryReader { geometry in
             ZStack {
                 
                 Image("backgroundimg")
                             .resizable()
                             .scaledToFill()
+                            .frame(width: geometry.size.width, height: geometry.size.height)
                             .ignoresSafeArea()   // Full screen always
 
                         Color.black.opacity(0.78)
@@ -208,7 +209,7 @@ struct UserAggremntView: View {
                     .padding(.horizontal, 24)
                     .padding(.bottom, 24)
                 }
-                .padding(.horizontal,15)
+                .padding(.horizontal,10)
                 
                 
                 // WEBVIEW POPUP
@@ -273,7 +274,7 @@ struct UserAggremntView: View {
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)
             }
-        //}
+        }
         .toast()
         .internetOverlay()
         

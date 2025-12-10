@@ -45,7 +45,7 @@ struct VerifyOtpAccount: View {
                 // Background image
                 Image("backgroundimg")
                     .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .scaledToFill()
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .ignoresSafeArea()
                 
@@ -311,7 +311,7 @@ struct VerifyOtpAccount: View {
                 }
                 .padding(.horizontal, 30)
                 .padding(.bottom, 35)
-                .background(.black)
+               // .background(.black)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             
             

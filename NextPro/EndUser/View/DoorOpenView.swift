@@ -145,7 +145,17 @@ struct DoorOpenView: View {
                             }
                             .padding(20)
                             .frame(maxWidth: .infinity)
-                            .background(Color.white.opacity(0.09))
+                            .background(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        Color.white.opacity(0.09),
+                                        Color.white.opacity(0.06)
+                                    ]),
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+
                             .cornerRadius(14)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14)
@@ -229,7 +239,7 @@ struct DoorOpenView: View {
                 .zIndex(10)
             }
         }
-        .background(Color.black.opacity(0.8))
+        .background(Color.black.opacity(0.4))
         .task{
             // Mark view as visible
             isViewVisible = true
