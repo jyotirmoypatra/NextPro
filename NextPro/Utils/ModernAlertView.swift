@@ -52,7 +52,7 @@ struct ModernAlertView: View {
             
         }
         .padding(15)
-        .background(Color(hex: "#303030"))
+        .background(Color(hex: "#292929"))
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(radius: 20)
         .padding(.horizontal, 30)
