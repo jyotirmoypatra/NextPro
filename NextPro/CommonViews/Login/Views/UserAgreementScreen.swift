@@ -60,7 +60,7 @@ struct UserAgreementScreen: View {
                 // Title
                 VStack(spacing: 6) {
                     Text("User Agreement")
-                        .font(.custom("Inter-Bold", size: 18))
+                        .font(.custom("Inter-Bold", size: 20))
                         .foregroundColor(.white)
                     
                     Text("Please read and accept both documents to continue")
@@ -83,23 +83,7 @@ struct UserAgreementScreen: View {
                                     Color.clear
                                         .frame(height: 1)
                                         .id("TOP_ANCHOR")
-                                    
-//                                    WebContentView(
-//                                        htmlString: selectedTab == 0 ? termsHTML : privacyHTML,
-//                                        onContentHeightChange: { height in
-//                                            
-//                                            let clamped = max(200, height)
-//                                            if abs(clamped - webContentHeight) > 1 {
-//                                                withAnimation(.easeInOut(duration: 0.15)) {
-//                                                    webContentHeight = clamped
-//                                                }
-//                                            }
-//                                        }
-//                                    )
-//                                    .frame(height: webContentHeight)
-//                                    .clipped()
-                                    
-                                    
+
                                     if showWebContent {
                                         WebContentView(
                                             htmlString: selectedTab == 0 ? termsHTML : privacyHTML,
@@ -168,16 +152,17 @@ struct UserAgreementScreen: View {
                                                  "I have read and accept the Terms & Conditions" :
                                                     "I have read and accept the Privacy Policy")
                                             .foregroundColor(.white)
-                                            .font(.subheadline)
+                                            .font(.custom("Inter-Regular", size: 14))
                                             
                                             Spacer()
                                         }
                                         .padding()
                                         .transition(.move(edge: .bottom).combined(with: .opacity))
                                     }
-                                    
+                                       
+
                                     // extra spacing so the checkbox can scroll up and be hidden again
-                                    Spacer(minLength: 60)
+                                    Spacer(minLength: 10)
                                 }
                                 .padding(10)
                             }
@@ -363,23 +348,23 @@ struct UserAgreementScreen: View {
         HStack {
             // Terms & Conditions Tab
             Button { selectedTab = 0 } label: {
-                HStack(spacing: 6) {
-                    if termsAccepted {
-                        Image(systemName: "checkmark")
-                            .foregroundColor(.white)
-                            .font(.system(size: 12, weight: .bold))
-                    }
-                    
-                    VStack(spacing: 4) {
+                VStack(spacing: 4) {
+                    HStack(spacing: 6) {
+                        if termsAccepted {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(.white)
+                                .font(.system(size: 10, weight: .bold))
+                        }
+                        
+                        
                         Text("Terms & Conditions")
                             .foregroundColor(selectedTab == 0 ? .white : .gray)
-                            .font(.custom("Inter-Medium", size: 16))
+                            .font(.custom("Inter-Bold", size: 15))
                         
-                        Rectangle()
-                            .frame(height: 2)
-                            .foregroundColor(selectedTab == 0 ? .white : .clear)
                     }
-                    
+                    Rectangle()
+                        .frame(height: 2)
+                        .foregroundColor(selectedTab == 0 ? .white : .clear)
                     
                 }
             }
@@ -388,30 +373,32 @@ struct UserAgreementScreen: View {
             
             // Privacy Policy Tab
             Button { selectedTab = 1 } label: {
-                HStack(spacing: 6) {
-                    
-                    if privacyAccepted {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white)
-                    }
-                    
-                    VStack(spacing: 4) {
+                VStack(spacing: 4) {
+                    HStack(spacing: 6) {
+                        
+                        if privacyAccepted {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                        
+                        
                         Text("Privacy Policy")
                             .foregroundColor(selectedTab == 1 ? .white : .gray)
-                            .font(.custom("Inter-Medium", size: 16))
+                            .font(.custom("Inter-Bold", size: 15))
                         
-                        Rectangle()
-                            .frame(height: 2)
-                            .foregroundColor(selectedTab == 1 ? .white : .clear)
                     }
-                    
-                    
+                    Rectangle()
+                        .frame(height: 2)
+                        .foregroundColor(selectedTab == 1 ? .white : .clear)
                     
                 }
+                    
+                    
+                
             }
         }
-        .padding(.horizontal)
+        .padding(.horizontal,20)
         .padding(.top, 28)
     }
     
