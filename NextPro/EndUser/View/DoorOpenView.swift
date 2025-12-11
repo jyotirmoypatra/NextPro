@@ -170,7 +170,8 @@ struct DoorOpenView: View {
                                
                                 Text(AceesMessage ?? "")
                                         .font(.custom("Inter-SemiBold", size: 16))
-                                        .foregroundColor(isScanningActive ? .white.opacity(0.5) : .red.opacity(0.5))
+                                        .foregroundColor(isScanningActive ? .white.opacity(0.5) : .red.opacity(0.8))
+                                        .padding(.horizontal,15)
                                 
                             }
                             
@@ -402,18 +403,18 @@ struct DoorOpenView: View {
 //            )
 //        }
         
-        .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
-
-            BluetoothAlertView(
-                    onCancel: { showBluetoothAlert = false },
-                    openSettings: {
-                        if let url = URL(string: "App-Prefs:root=Bluetooth"),
-                           UIApplication.shared.canOpenURL(url) {
-                            UIApplication.shared.open(url)
-                        }
-                    }
-                )
-        }
+//        .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
+//
+//            BluetoothAlertView(
+//                    onCancel: { showBluetoothAlert = false },
+//                    openSettings: {
+//                        if let url = URL(string: "App-Prefs:root=Bluetooth"),
+//                           UIApplication.shared.canOpenURL(url) {
+//                            UIApplication.shared.open(url)
+//                        }
+//                    }
+//                )
+//        }
         
        
         
@@ -427,7 +428,7 @@ struct DoorOpenView: View {
         .onReceive(bleManager.$bleState) { state in
             if state == .poweredOff {
                 showBluetoothAlert = true
-                AceesMessage = "Bluetooth is turned OFF."
+                AceesMessage = "Bluetooth is Off. Please turn it on."
                 isScanningActive = false
             } else {
                 showBluetoothAlert = false
