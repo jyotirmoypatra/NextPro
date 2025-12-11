@@ -281,24 +281,16 @@ struct UserAgreementScreen: View {
    
     func AcceptAggrementCall() {
         if !termsAccepted && !privacyAccepted {
-           
-            DispatchQueue.main.async {
-                showAggremntAcceptMessage = "Please read and accept both.Go to each tab and scroll to the buttom and check the acceptance checkbox"
-                   showAggremntAcceptError = true
-               }
-        } else if !termsAccepted && privacyAccepted {
-            
-            DispatchQueue.main.async {
-                showAggremntAcceptMessage = "Please go to Terms & Conditions tab,scroll to the buttom and check the acceptance checkbox"
-                   showAggremntAcceptError = true
-               }
-        } else if !privacyAccepted && termsAccepted {
-            
-            DispatchQueue.main.async {
-                showAggremntAcceptMessage = "Please go to Privacy Policy tab,scroll to the buttom and check the acceptance checkbox"
-                   showAggremntAcceptError = true
-               }
-        }else{
+                showAggremntAcceptMessage = "Please read and accept both. Go to each tab and scroll to the bottom and check the acceptance checkbox"
+                showAggremntAcceptError = true
+            } else if !termsAccepted {
+                showAggremntAcceptMessage = "Please go to Terms & Conditions tab, scroll to the bottom and check the acceptance checkbox"
+                showAggremntAcceptError = true
+            } else if !privacyAccepted {
+                showAggremntAcceptMessage = "Please go to Privacy Policy tab, scroll to the bottom and check the acceptance checkbox"
+                showAggremntAcceptError = true
+            } 
+        else{
             Task {
                 viewModel.isAggrementAccepted =  true
                 await viewModel.accept()
