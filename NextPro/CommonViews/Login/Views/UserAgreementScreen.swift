@@ -217,10 +217,8 @@ struct UserAgreementScreen: View {
         .toast()
         .internetOverlay()
         .onAppear{
-            Task {
                 termsHTML = loadHTML("terms")
                 privacyHTML = loadHTML("privacy")
-            }
         }
         .modernAlert(isPresented: $showAggremntError) {
             ModernAlertView(
@@ -241,7 +239,7 @@ struct UserAgreementScreen: View {
         .modernAlert(isPresented: $showAggremntAcceptError) {
             ModernAlertView(
                 title: "Error!",
-                message: showAggremntAcceptMessage,
+                message: showAggremntAcceptMessage.isEmpty ? "Please read and accept both.Go to each tab and scroll to the buttom and check the acceptance checkbox" : showAggremntAcceptMessage,
                 isSuccess: false,
                 buttonTitle: "OK"
             ) { showAggremntAcceptError = false }
