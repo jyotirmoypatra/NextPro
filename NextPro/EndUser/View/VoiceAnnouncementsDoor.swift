@@ -11,6 +11,8 @@ import SwiftUI
 struct VoiceAnnouncementsDoor: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showSaved = false
+    @State private var openSection: Int? = nil
+
     @State private var grantedOptions = [
         MessageOption(text: "Access granted", isSelected: true),
         MessageOption(text: "Door unlocked", isSelected: false),
@@ -69,32 +71,51 @@ struct VoiceAnnouncementsDoor: View {
                     .frame(maxWidth: .infinity, alignment: .top)
                     .zIndex(111)
                     
+                    Text("Control and personalize the voice announcements that play during different door access scenarios.")
+                        .font(.custom("Inter-Regular", size: 14))
+                        .foregroundColor(.gray)
+                        .padding(.horizontal,10)
+                        .multilineTextAlignment(.center)
+                    
+                    
                     ScrollView {
                         VStack(spacing: 22) {
                             
                             
                             // MARK: 1 - Access Granted
                             MessageSection(
+                                id: 0,
                                 title: "Access Granted",
-                                options: $grantedOptions
+                                description: "This message plays when entry is successfully approved.",
+                                options: $grantedOptions,
+                                openSection: $openSection
                             )
                             
                             // MARK: 2 - Access Denied
                             MessageSection(
+                                id: 1,
                                 title: "Access Denied",
-                                options: $deniedOptions
+                                description: "This message plays when the door cannot approve the request.",
+                                options: $deniedOptions,
+                                openSection: $openSection
                             )
                             
                             // MARK: 3 - Unauthorized
                             MessageSection(
+                                id: 2,
                                 title: "Unauthorized",
-                                options: $unauthorizedOptions
+                                description: "This message plays when an unregistered user tries to open the door.",
+                                options: $unauthorizedOptions,
+                                openSection: $openSection
                             )
                             
                             Spacer().frame(height: 40)
                         }
                         .padding(.horizontal, 16)
+                        
                     }
+                    .padding(.top, 15)
+                    .scrollIndicators(.hidden)
                     
                     VStack {
                                       if showSaved {
@@ -112,7 +133,7 @@ struct VoiceAnnouncementsDoor: View {
                                               .foregroundColor(.black)
                                               .frame(maxWidth: .infinity)
                                               .padding()
-                                              .background(Color.green)
+                                              .background(Color.white)
                                               .clipShape(RoundedRectangle(cornerRadius: 14))
                                       }
                                       .padding(.horizontal, 16)
@@ -120,8 +141,37 @@ struct VoiceAnnouncementsDoor: View {
                                   }
                 }
             }
+            .onAppear {
+                loadSavedSelections()
+            }
+
         }
     }
+    
+    func loadSavedSelections() {
+        let savedGranted = UserDefaults.standard.string(forKey: "voice_granted")
+        let savedDenied = UserDefaults.standard.string(forKey: "voice_denied")
+        let savedUnauthorized = UserDefaults.standard.string(forKey: "voice_unauthorized")
+
+        if let savedGranted {
+            for i in grantedOptions.indices {
+                grantedOptions[i].isSelected = (grantedOptions[i].text == savedGranted)
+            }
+        }
+
+        if let savedDenied {
+            for i in deniedOptions.indices {
+                deniedOptions[i].isSelected = (deniedOptions[i].text == savedDenied)
+            }
+        }
+
+        if let savedUnauthorized {
+            for i in unauthorizedOptions.indices {
+                unauthorizedOptions[i].isSelected = (unauthorizedOptions[i].text == savedUnauthorized)
+            }
+        }
+    }
+
     func saveMessages() {
             let granted = grantedOptions.first(where: { $0.isSelected })?.text
             let denied = deniedOptions.first(where: { $0.isSelected })?.text
@@ -150,49 +200,109 @@ struct MessageOption: Identifiable {
     var isSelected: Bool
 }
 
-// MARK: - Reusable Section Component
+
+
+
 struct MessageSection: View {
+    let id: Int
     let title: String
+    let description: String
     @Binding var options: [MessageOption]
 
+    @Binding var openSection: Int?
+
+    private var isExpanded: Bool {
+        openSection == id
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            
-            Text(title)
-                .font(.custom("Inter-SemiBold", size: 17))
-            
-            VStack(spacing: 0) {
-                ForEach(options.indices, id: \.self) { index in
-                    Button {
-                        selectOption(at: index)
-                    } label: {
-                        HStack {
-                            Image(systemName: options[index].isSelected ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(options[index].isSelected ? .green : .white)
-                                .font(.system(size: 22))
+        VStack(alignment: .leading, spacing: 10) {
 
-                            Text(options[index].text)
-                                .font(.custom("Inter-Regular", size: 16))
-                                .foregroundColor(.white)
-
-                            Spacer()
-                        }
-                        .padding(.vertical, 10)
-                        .padding(.horizontal, 15)
-                    }
-
-                    if index != options.count - 1 {
-                        Divider()
-                            .padding(.leading, 35)
+            // HEADER
+            Button {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    // If already open → close it
+                    if openSection == id {
+                        openSection = nil
+                    } else {
+                        openSection = id
                     }
                 }
+            } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(title)
+                            .font(.custom("Inter-SemiBold", size: 16))
+                            .foregroundColor(.white)
+
+                        Text(description)
+                            .font(.custom("Inter-Regular", size: 13))
+                            .foregroundColor(.white.opacity(0.55))
+                            .multilineTextAlignment(.leading)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.7))
+                }
+                .padding(.vertical, 12)
             }
-            .background(Color(hex: "#171717"))
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .shadow(color: .black.opacity(0.06), radius: 3, y: 2)
+
+            Rectangle()
+                .fill(Color.white.opacity(0.08))
+                .frame(height: 1)
+
+            // CONTENT
+            if isExpanded {
+                VStack(spacing: 0) {
+                    ForEach(options.indices, id: \.self) { index in
+                        Button {
+                            selectOption(at: index)
+                        } label: {
+                            HStack(spacing: 12) {
+
+                                Image(systemName: options[index].isSelected ? "checkmark.circle.fill" : "circle")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(options[index].isSelected ? .green : .gray.opacity(0.6))
+                                    .animation(.spring(), value: options[index].isSelected)
+
+                                Text(options[index].text)
+                                    .font(.custom("Inter-Regular", size: 16))
+                                    .foregroundColor(.white)
+
+                                Spacer()
+                            }
+                            .padding(.vertical, 14)
+                            .padding(.horizontal, 18)
+                            .background(
+                                options[index].isSelected
+                                ? Color.white.opacity(0.06)
+                                : Color.clear
+                            )
+                        }
+                    }
+                }
+                .background(Color.white.opacity(0.05))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.25), radius: 5, y: 4)
+                // Replace your transition with this
+                .transition(.asymmetric(
+                    insertion: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)),
+                    removal: .opacity.combined(with: .scale(scale: 0.95, anchor: .top))
+                ))
+                .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isExpanded)
+
+            }
         }
+        .padding(.vertical, 4)
     }
-    
+
     private func selectOption(at index: Int) {
         for i in options.indices {
             options[i].isSelected = (i == index)

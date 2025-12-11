@@ -41,6 +41,10 @@ struct DoorOpenView: View {
     @State private var isUnauthorise = false
     
     
+    @State private var accessGrantedMessage = ""
+    @State private var accessDeniedMessage = ""
+    @State private var accessUnAuthorizedMessage = ""
+    
     var body: some View {
         ZStack {
             
@@ -242,7 +246,12 @@ struct DoorOpenView: View {
         }
         .background(Color.black.opacity(0.4))
         .task{
-            // Mark view as visible
+          
+            
+            accessGrantedMessage = UserDefaults.standard.string(forKey: "voice_granted") ?? "Access Granted"
+            accessDeniedMessage = UserDefaults.standard.string(forKey: "voice_denied") ?? "Access Denied"
+            accessUnAuthorizedMessage = UserDefaults.standard.string(forKey: "voice_unauthorized") ?? "Unauthorized Door"
+            
             isViewVisible = true
             
             //
@@ -452,8 +461,11 @@ struct DoorOpenView: View {
                 animateSuccess()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 
-                AceesMessage =  "Door Access Granted"
-                speakText("Door Access Granted.")
+//                AceesMessage =  "Door Access Granted"
+//                speakText("Door Access Granted.")
+                
+                AceesMessage =  accessGrantedMessage
+                speakText(accessGrantedMessage)
 
 //                if doorId == 1{
 //                    AceesMessage =  "Access Granted"
@@ -477,8 +489,11 @@ struct DoorOpenView: View {
 //                    speakText("Door 2 Access Denied.")
 //                }
                 
-                AceesMessage =  "Door Access Denied."
-                speakText("Door Access Denied.")
+//                AceesMessage =  "Door Access Denied."
+//                speakText("Door Access Denied.")
+                
+                AceesMessage =  accessDeniedMessage
+                speakText(accessDeniedMessage)
                 
                // speakText("Access Denied.")
                 print("succes event recievd")
@@ -511,14 +526,17 @@ struct DoorOpenView: View {
     
     func getStatusMessage() -> String {
         if lockIcon == "checkmark" {
-            return "Access Granted"
+           // return "Access Granted"
+            return accessGrantedMessage
         } else if lockIcon == "xmark" {
-            return "Access Denied"
+          //  return "Access Denied"
+        return accessDeniedMessage
         } else if ringColor == .yellow && lockIcon == "lock.fill" && !isUnauthorise{
             return "Verifying Please Wait..."
         }
         else if lockIcon == "lock.fill" && isUnauthorise {
-            return "Unauthorized Door"
+           // return "Unauthorized Door"
+            return accessUnAuthorizedMessage
         }
         return "Processing..."
     }
@@ -615,7 +633,7 @@ struct DoorOpenView: View {
                print("🎯 Closest device: \(name) with RSSI: \(rssi)")
                
                // Only act if RSSI is strong
-               guard rssi > -40 && rssi < 0 else { return }
+               guard rssi > -38 && rssi < 0 else { return }
                
                if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
                    // ✅ Authorized door
@@ -656,9 +674,10 @@ struct DoorOpenView: View {
                    
                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                        unauthorised()
-                       AceesMessage = "Unauthorized Door.  Access Not permitted"
+                      // AceesMessage = "Unauthorized Door.  Access Not permitted"
+                       AceesMessage = accessUnAuthorizedMessage
                        UINotificationFeedbackGenerator().notificationOccurred(.error)
-                       speakText("Unauthorized Door. Access Not permitted")
+                       speakText(accessUnAuthorizedMessage)
                    }
                    
                    // Restart scanning after 5 seconds
