@@ -388,19 +388,36 @@ struct DoorOpenView: View {
             }
         }
         
-        .alert(isPresented: $showBluetoothAlert) {
-            Alert(
-                title: Text("Bluetooth is Off"),
-                message: Text("Please enable Bluetooth to use Auto Open."),
-                primaryButton: .default(Text("Open Settings"), action: {
-                    if let url = URL(string: "App-Prefs:root=Bluetooth"),
-                       UIApplication.shared.canOpenURL(url) {
-                        UIApplication.shared.open(url)
+//        .alert(isPresented: $showBluetoothAlert) {
+//            Alert(
+//                title: Text("Bluetooth is Off"),
+//                message: Text("Please enable Bluetooth to use Auto Open."),
+//                primaryButton: .default(Text("Open Settings"), action: {
+//                    if let url = URL(string: "App-Prefs:root=Bluetooth"),
+//                       UIApplication.shared.canOpenURL(url) {
+//                        UIApplication.shared.open(url)
+//                    }
+//                }),
+//                secondaryButton: .cancel(Text("Cancel"))
+//            )
+//        }
+        
+        .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
+
+            BluetoothAlertView(
+                    onCancel: { showBluetoothAlert = false },
+                    openSettings: {
+                        if let url = URL(string: "App-Prefs:root=Bluetooth"),
+                           UIApplication.shared.canOpenURL(url) {
+                            UIApplication.shared.open(url)
+                        }
                     }
-                }),
-                secondaryButton: .cancel(Text("Cancel"))
-            )
+                )
         }
+        
+       
+        
+        
 //        .onReceive(bleManager.$isBluetoothOn) { isOn in
 //            if !isOn && CBCentralManager.authorization == .allowedAlways {
 //                showBluetoothAlert = true
