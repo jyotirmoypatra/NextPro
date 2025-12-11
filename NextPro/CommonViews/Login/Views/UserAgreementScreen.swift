@@ -40,7 +40,8 @@ struct UserAgreementScreen: View {
     
     @State private var  termsHTML: String = ""
     @State private var  privacyHTML: String = ""
-    
+    @State private var showWebContent = false
+
     
     private let scrollSpaceName = "AgreementScroll"
     
@@ -83,20 +84,39 @@ struct UserAgreementScreen: View {
                                         .frame(height: 1)
                                         .id("TOP_ANCHOR")
                                     
-                                    WebContentView(
-                                        htmlString: selectedTab == 0 ? termsHTML : privacyHTML,
-                                        onContentHeightChange: { height in
-                                            
-                                            let clamped = max(200, height)
-                                            if abs(clamped - webContentHeight) > 1 {
-                                                withAnimation(.easeInOut(duration: 0.15)) {
-                                                    webContentHeight = clamped
+//                                    WebContentView(
+//                                        htmlString: selectedTab == 0 ? termsHTML : privacyHTML,
+//                                        onContentHeightChange: { height in
+//                                            
+//                                            let clamped = max(200, height)
+//                                            if abs(clamped - webContentHeight) > 1 {
+//                                                withAnimation(.easeInOut(duration: 0.15)) {
+//                                                    webContentHeight = clamped
+//                                                }
+//                                            }
+//                                        }
+//                                    )
+//                                    .frame(height: webContentHeight)
+//                                    .clipped()
+                                    
+                                    
+                                    if showWebContent {
+                                        WebContentView(
+                                            htmlString: selectedTab == 0 ? termsHTML : privacyHTML,
+                                            onContentHeightChange: { height in
+                                                let clamped = max(200, height)
+                                                if abs(clamped - webContentHeight) > 1 {
+                                                    withAnimation(.easeInOut(duration: 0.15)) {
+                                                        webContentHeight = clamped
+                                                    }
                                                 }
                                             }
-                                        }
-                                    )
-                                    .frame(height: webContentHeight)
-                                    .clipped()
+                                        )
+                                        .frame(height: webContentHeight)
+                                        .clipped()
+                                        .transition(.opacity) // optional fade-in effect
+                                    }
+
                                     
                                     
                                     Color.clear
@@ -219,6 +239,13 @@ struct UserAgreementScreen: View {
         .onAppear{
                 termsHTML = loadHTML("terms")
                 privacyHTML = loadHTML("privacy")
+            
+            // Delay adding WebView so the screen appears first
+               DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                   withAnimation(.easeInOut(duration: 0.2)) {
+                       showWebContent = true
+                   }
+               }
         }
         .modernAlert(isPresented: $showAggremntError) {
             ModernAlertView(
@@ -266,14 +293,7 @@ struct UserAgreementScreen: View {
         
         
     }
-    
-    func loadHTML(_ fileName: String) -> String {
-        if let url = Bundle.main.url(forResource: fileName, withExtension: "html"),
-           let html = try? String(contentsOf: url) {
-            return html
-        }
-        return "<p>Failed to load \(fileName).html</p>"
-    }
+   
     func AcceptAggrementCall() {
         if !termsAccepted && !privacyAccepted {
            

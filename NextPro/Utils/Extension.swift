@@ -155,3 +155,12 @@ extension String {
         return self  // fallback if not 10/11 digits
     }
 }
+
+
+func loadHTML(_ fileName: String) -> String {
+    if let url = Bundle.main.url(forResource: fileName, withExtension: "html"),
+       let html = try? String(contentsOf: url) {
+        return html
+    }
+    return "<p>Failed to load \(fileName).html</p>"
+}
