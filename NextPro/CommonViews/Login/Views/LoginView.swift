@@ -25,7 +25,8 @@ struct LoginView: View {
     @State private var navigateToHome = false
     @State private var isAdmin = false
     @State private var isDeviceprov = false
-    
+    @State private var didPrefillEmail = false
+
     @State private var isUserInitialSetupDone = false
     
     
@@ -99,10 +100,17 @@ struct LoginView: View {
                                                 .foregroundColor(Color.white.opacity(0.5))
                                                 .font(.custom("Inter-Regular", size: 16))
                                                 .padding(.leading, 14)
+//                                                .onAppear {
+//                                                               if !prefilledEmail.isEmpty {
+//                                                                   vm.email = prefilledEmail
+//                                                               }
+//                                                    }
+                                            
                                                 .onAppear {
-                                                               if !prefilledEmail.isEmpty {
-                                                                   vm.email = prefilledEmail
-                                                               }
+                                                        if !didPrefillEmail, !prefilledEmail.isEmpty {
+                                                            vm.email = prefilledEmail
+                                                            didPrefillEmail = true
+                                                        }
                                                     }
                                         }
                                         

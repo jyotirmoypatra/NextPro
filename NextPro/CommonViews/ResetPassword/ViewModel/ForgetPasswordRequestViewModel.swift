@@ -42,6 +42,7 @@ class ForgetPasswordRequestViewModel: ObservableObject {
             let response = try await networkManager.requestForgetPassword(email: email)
             print("✅ Forget Password Success: \(response.message)")
             success = true
+            UserDefaults.standard.set(email, forKey: "email")
         } catch {
             errorMessage = error.localizedDescription
             print("❌ Error: \(error.localizedDescription)")

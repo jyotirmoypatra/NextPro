@@ -14,6 +14,7 @@ struct SubmitResetPassword: View {
     @State private var showConfirmPassword = false
     @StateObject private var viewModel = CreateNewPasswordViewModel()
     @StateObject private var toastManager = ToastManager.shared
+    @State private var navigateToLogin = false
     @State private var showUpdateFailedAlert = false
     @Environment(\.dismiss) private var dismiss
     var body: some View {
@@ -173,7 +174,8 @@ struct SubmitResetPassword: View {
                                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                                 
                                 
-                                KeychainManager.shared.resetToLogin()
+                               // KeychainManager.shared.resetToLogin()
+                                navigateToLogin = true
                                 
                             }else{
                                 showUpdateFailedAlert = true
@@ -191,7 +193,7 @@ struct SubmitResetPassword: View {
                     }
                     
                     Button(action: {
-                        KeychainManager.shared.resetToLogin()
+                        navigateToLogin = true 
                     }) {
                         HStack(spacing: 8) {
                             Image("undoicon")
@@ -231,7 +233,12 @@ struct SubmitResetPassword: View {
                 UIApplication.shared.hideKeyboard()
             }
             
-            
+            .navigationDestination(isPresented: $navigateToLogin) {
+                LoginView(isUserInitialSetupCompleted: true,prefilledEmail: UserDefaults.standard.string(forKey: "email") ?? "")
+                    .navigationBarBackButtonHidden(true)
+                    .navigationBarHidden(true)
+                    .interactiveDismissDisabled(true)
+            }
             .modernAlert(isPresented: $showUpdateFailedAlert) {
                   ModernAlertView(
                       title: "Error!",
