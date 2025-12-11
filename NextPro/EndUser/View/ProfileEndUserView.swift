@@ -27,6 +27,7 @@ struct ProfileEndUserView: View {
     @State private var showLogoutAlert = false
     @State private var showDeleteAccountAlert = false
     @State private var navigate_Webview_PrivacyTerms = false
+    @State private var navigate_voice_message = false
     @State private var showFailedAlert = false
     
     
@@ -164,11 +165,12 @@ struct ProfileEndUserView: View {
                             .padding(.horizontal, 20)
                             .padding(.vertical, 30) // consistent with other rows
                             
-//                            Divider().background(Color.white.opacity(0.15))
-//                            
-//                            UserProfileRow(title: "Add Card") {
-//                                // Handle support action
-//                            }
+                            Divider().background(Color.white.opacity(0.15))
+                            
+                            UserProfileRow(title: "Voice Announcements for Door Access" , textColor: .white) {
+                                // Handle support action
+                                navigate_voice_message = true
+                            }
                             
                             
                             Divider().background(Color.white.opacity(0.15))
@@ -283,6 +285,13 @@ struct ProfileEndUserView: View {
                 .navigationBarHidden(true)
                 .interactiveDismissDisabled(true)
         }
+        
+        .navigationDestination(isPresented: $navigate_voice_message) {
+            VoiceAnnouncementsDoor()
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
+                .interactiveDismissDisabled(true)
+        }
         .onReceive(NetworkManager.shared.$hasInternet) { internet in
             if internet == true {
                 Task {
@@ -372,6 +381,7 @@ struct UserProfileRow: View {
                 Text(title)
                     .font(.custom("Inter-Medium", size: 16))
                     .foregroundColor(textColor)
+                    .multilineTextAlignment(.leading)
                 Spacer()
                 Image(systemName: "chevron.right")
                     .foregroundColor(.gray)
