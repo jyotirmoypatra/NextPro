@@ -56,9 +56,11 @@ class ValidateEmailViewModel: ObservableObject {
                 print("✅ Email Validate success")
                 
                 // Update values
-                isPasswordReset = response.is_reset_password
-              //  isPasswordReset = false
-                isAggrementAccept = response.is_aggrement_accept
+ //              isPasswordReset = response.is_reset_password
+//                isAggrementAccept = response.is_aggrement_accept
+                
+                isPasswordReset = false
+                isAggrementAccept = false
                 validateSuccess = true
                 
                // Save user details

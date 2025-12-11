@@ -286,7 +286,11 @@ struct CreateNewPasswordView: View {
                   }
             }
             .navigationDestination(isPresented: $navigateToAggrement) {
-                UserAggremntView(password: viewModel.confirmPassword )
+//                UserAggremntView(password: viewModel.confirmPassword )
+//                    .navigationBarBackButtonHidden(true)
+//                    .navigationBarHidden(true)
+                
+                UserAgreementScreen(password:viewModel.confirmPassword)
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
             }

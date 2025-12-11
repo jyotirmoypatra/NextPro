@@ -395,10 +395,14 @@ struct LoginView: View {
                     .interactiveDismissDisabled(true)
             }
             .navigationDestination(isPresented: $navigateToAggremnt) { //forget password navigate
-              UserAggremntView()
+//              UserAggremntView()
+//                    .navigationBarBackButtonHidden(true)
+//                    .navigationBarHidden(true)
+//                    .interactiveDismissDisabled(true)
+                
+                UserAgreementScreen()
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
-                    .interactiveDismissDisabled(true)
             }
             
             .navigationDestination(isPresented: $navigateToHome) {
