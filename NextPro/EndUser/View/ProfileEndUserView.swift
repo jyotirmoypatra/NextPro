@@ -110,7 +110,7 @@ struct ProfileEndUserView: View {
                             if viewModel.isLoading {
                                 ShimmerTextView(width: 90, height: 13)
                             } else {
-                                Text(viewModel.phoneNumber)
+                                Text(viewModel.phoneNumber.formattedUSPhone())
                                     .font(.custom("Inter-Regular", size: 13))
                                     .foregroundColor(.gray)
                             }

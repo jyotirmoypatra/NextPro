@@ -193,7 +193,14 @@ struct EditProfileView: View {
                                         .padding(.leading, 14)
                                 }
                                 
-                                TextField("", text: $phoneNumber)
+                                TextField("", text: Binding(
+                                    get: {
+                                        phoneNumber.formattedUSPhone()   // show formatted
+                                    },
+                                    set: { newValue in
+                                        phoneNumber = newValue.filter { $0.isNumber } // store only digits
+                                    }
+                                ))
                                     .foregroundColor(.white)
                                     .font(.custom("Inter-Regular", size: 16))
                                     .padding(.horizontal, 14)
@@ -457,22 +464,34 @@ struct EditProfileView: View {
         
     }
     
+//    func saveProfile() {
+//       
+//        Task{
+//            await editVm.editProfile(fullName: fullName, phoneNo: phoneNumber)
+//            if editVm.editSuccess {
+//                showSuccessAlert = true
+//                
+//            } else {
+//                showErrorAlert = true
+//            }
+//        }
+//        
+//        
+//    }
+    
     func saveProfile() {
-       
-        Task{
-            await editVm.editProfile(fullName: fullName, phoneNo: phoneNumber)
+        let cleanNumber = phoneNumber.filter { $0.isNumber }
+
+        Task {
+            await editVm.editProfile(fullName: fullName, phoneNo: cleanNumber)
             if editVm.editSuccess {
                 showSuccessAlert = true
-                
             } else {
                 showErrorAlert = true
             }
         }
-        
-        
     }
-    
-    
+
 
     
     func checkPhotoPermission() {
