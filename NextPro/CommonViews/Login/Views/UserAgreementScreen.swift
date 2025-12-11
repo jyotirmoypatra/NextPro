@@ -441,14 +441,31 @@ struct WebContentView: UIViewRepresentable {
         return webview
     }
     
+//    func updateUIView(_ uiView: WKWebView, context: Context) {
+//        // nothing else needed; navigation delegate will catch load finish
+//        applyBackground(to: uiView)
+//        uiView.loadHTMLString(htmlString, baseURL: nil)
+//        DispatchQueue.main.async {
+//            uiView.scrollView.setContentOffset(.zero, animated: false)
+//        }
+//    }
+    
+    
     func updateUIView(_ uiView: WKWebView, context: Context) {
-        // nothing else needed; navigation delegate will catch load finish
+        // Only update the background (no reload)
         applyBackground(to: uiView)
-        uiView.loadHTMLString(htmlString, baseURL: nil)
+        
+        // Optionally scroll to top when htmlString changes
+        if context.coordinator.lastHTMLString != htmlString {
+            uiView.loadHTMLString(htmlString, baseURL: nil)
+            context.coordinator.lastHTMLString = htmlString
+        }
+        
         DispatchQueue.main.async {
             uiView.scrollView.setContentOffset(.zero, animated: false)
         }
     }
+
     
     func applyBackground(to webView: WKWebView) {
         
@@ -468,10 +485,12 @@ struct WebContentView: UIViewRepresentable {
     class Coordinator: NSObject, WKNavigationDelegate {
         var parent: WebContentView
         var onContentHeightChange: ((CGFloat) -> Void)?
+        var lastHTMLString: String?
         
         init(_ parent: WebContentView,onContentHeightChange: ((CGFloat) -> Void)?) {
             self.onContentHeightChange = onContentHeightChange
             self.parent = parent
+            self.lastHTMLString = nil
         }
         
         
