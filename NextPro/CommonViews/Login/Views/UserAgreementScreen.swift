@@ -166,6 +166,7 @@ struct UserAgreementScreen: View {
                                 }
                                 .padding(10)
                             }
+                            .scrollIndicators(.hidden)   
                             .onChange(of: selectedTab) { _ in
                                 withAnimation(.easeInOut) {
                                     proxy.scrollTo("TOP_ANCHOR", anchor: .top)
@@ -200,7 +201,7 @@ struct UserAgreementScreen: View {
                 }
                 //.disabled(!(termsAccepted && privacyAccepted))
                 .padding(.horizontal, 24)
-                .padding(.bottom, 24)
+                .padding(.bottom, 10)
                 .padding(.top,20)
             }
             
