@@ -7,14 +7,17 @@
 
 
 import SwiftUI
+import Foundation
 
-struct VoiceAnnouncementsDoor: View {
-    @Environment(\.dismiss) private var dismiss
-    @StateObject private var toastManager = ToastManager.shared
-    @State private var showSaved = false
-    @State private var openSection: Int? = nil
+struct MessageOption: Identifiable {
+    let id = UUID()
+    let text: String
+    var isSelected: Bool
+}
 
-    @State private var grantedOptions = [
+struct VoiceMessageDefaults {
+
+    static let granted: [MessageOption] = [
         MessageOption(text: "Access Granted", isSelected: true),
         MessageOption(text: "Entry Approved", isSelected: false),
         MessageOption(text: "Access successfully verified", isSelected: false),
@@ -22,7 +25,7 @@ struct VoiceAnnouncementsDoor: View {
         MessageOption(text: "Access Confirmed", isSelected: false)
     ]
     
-    @State private var deniedOptions = [
+    static let denied: [MessageOption] = [
         MessageOption(text: "Access Denied", isSelected: true),
         MessageOption(text: "Entry Rejected", isSelected: false),
         MessageOption(text: "Access Not Permitted", isSelected: false),
@@ -30,13 +33,36 @@ struct VoiceAnnouncementsDoor: View {
         MessageOption(text: "Authorization Failed", isSelected: false)
     ]
     
-    @State private var unauthorizedOptions = [
+    static let unauthorized: [MessageOption] = [
         MessageOption(text: "You do not have access to this door", isSelected: true),
         MessageOption(text: "Unauthorized door", isSelected: false),
         MessageOption(text: "This entry is restricted", isSelected: false),
         MessageOption(text: "Access not allowed at this location", isSelected: false),
         MessageOption(text: "Invalid door access attempt", isSelected: false)
     ]
+    
+    static let greetings: [MessageOption] = [
+        MessageOption(text: "Welcome! Have a great day", isSelected: true),
+        MessageOption(text: "Glad to have you here", isSelected: false),
+        MessageOption(text: "Welcome! Enjoy your time", isSelected: false),
+        MessageOption(text: "Welcome, wishing you a wonderful day ahead.", isSelected: false),
+        MessageOption(text: "Welcome! Your presence is appreciated", isSelected: false)
+    ]
+}
+
+
+struct VoiceAnnouncementsDoor: View {
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var toastManager = ToastManager.shared
+    @State private var showSaved = false
+    @State private var openSection: Int? = nil
+
+
+    @State private var grantedOptions = VoiceMessageDefaults.granted
+    @State private var deniedOptions = VoiceMessageDefaults.denied
+    @State private var unauthorizedOptions = VoiceMessageDefaults.unauthorized
+    @State private var greetingOptions = VoiceMessageDefaults.greetings
+
     
     var body: some View {
         GeometryReader { geometry in
@@ -115,17 +141,30 @@ struct VoiceAnnouncementsDoor: View {
                                 Divider()
                                     .overlay(Color.white.opacity(0.08))
                                 
-                                // MARK: 3 - Unauthorized
+                                // MARK: 3 - Friendly Welcome
                                 MessageSection(
-                                    id: 2,
-                                    title: "Unauthorized",
+                                    id: 4,
+                                    title: "Unauthorized Door",
                                     description: "This message plays when an unregistered user tries to open the door.",
                                     options: $unauthorizedOptions,
                                     openSection: $openSection
                                     
                                 )
                                 
-                                Spacer().frame(height: 40)
+                                Divider()
+                                    .overlay(Color.white.opacity(0.08))
+                                
+                                // MARK: 3 - Unauthorized
+                                MessageSection(
+                                    id: 2,
+                                    title: "Friendly Welcome",
+                                    description: "Greeting played after successfull access",
+                                    options: $greetingOptions,
+                                    openSection: $openSection
+                                    
+                                )
+                                
+                                Spacer().frame(height: 20)
                             }
                             .padding(.horizontal, 16)
                             
@@ -217,10 +256,12 @@ struct VoiceAnnouncementsDoor: View {
             let granted = grantedOptions.first(where: { $0.isSelected })?.text
             let denied = deniedOptions.first(where: { $0.isSelected })?.text
             let unauthorized = unauthorizedOptions.first(where: { $0.isSelected })?.text
+            let greeting = greetingOptions.first(where: { $0.isSelected })?.text
             
             UserDefaults.standard.set(granted, forKey: "voice_granted")
             UserDefaults.standard.set(denied, forKey: "voice_denied")
             UserDefaults.standard.set(unauthorized, forKey: "voice_unauthorized")
+            UserDefaults.standard.set(greeting, forKey: "voice_greeting")
             
         
         toastManager.show(
@@ -231,12 +272,7 @@ struct VoiceAnnouncementsDoor: View {
     }
 }
 
-// MARK: - Option Model
-struct MessageOption: Identifiable {
-    let id = UUID()
-    let text: String
-    var isSelected: Bool
-}
+
 
 
 struct MessageSection: View {
@@ -275,6 +311,7 @@ struct MessageSection: View {
                     Text(selectedText)
                         .foregroundColor(.white)
                         .font(.custom("Inter-Regular", size: 14))
+                        .multilineTextAlignment(.leading)
 
                     Spacer()
 
@@ -296,6 +333,7 @@ struct MessageSection: View {
                                 Text(options[idx].text)
                                     .foregroundColor(.white)
                                     .font(.custom("Inter-Regular", size: 14))
+                                    .multilineTextAlignment(.leading)
 
                                 Spacer()
 

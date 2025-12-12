@@ -167,7 +167,7 @@ struct ProfileEndUserView: View {
                             
                             Divider().background(Color.white.opacity(0.15))
                             
-                            UserProfileRow(title: "Voice Announcements for Door Access" , textColor: .white) {
+                            UserProfileRow(title: "Voice Message" , textColor: .white) {
                                 // Handle support action
                                 navigate_voice_message = true
                             }

@@ -44,6 +44,7 @@ struct DoorOpenView: View {
     @State private var accessGrantedMessage = ""
     @State private var accessDeniedMessage = ""
     @State private var accessUnAuthorizedMessage = ""
+    @State private var accessGreetingMessage = ""
     
     var body: some View {
         ZStack {
@@ -236,6 +237,7 @@ struct DoorOpenView: View {
                         Text(getStatusMessage())
                             .font(.custom("Inter-SemiBold", size: 18))
                             .foregroundColor(ringColor)
+                            .padding(.horizontal,10)
                             .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 2)
                     }
                 }
@@ -247,10 +249,13 @@ struct DoorOpenView: View {
         .background(Color.black.opacity(0.4))
         .task{
           
+            accessGreetingMessage = UserDefaults.standard.string(forKey: "voice_greeting") ?? VoiceMessageDefaults.greetings.first?.text ?? ""
             
-            accessGrantedMessage = UserDefaults.standard.string(forKey: "voice_granted") ?? "Access Granted"
-            accessDeniedMessage = UserDefaults.standard.string(forKey: "voice_denied") ?? "Access Denied"
-            accessUnAuthorizedMessage = UserDefaults.standard.string(forKey: "voice_unauthorized") ?? "Unauthorized Door"
+            accessGrantedMessage = (UserDefaults.standard.string(forKey: "voice_granted") ?? VoiceMessageDefaults.granted.first?.text ?? "" ) + " - " + accessGreetingMessage
+            accessDeniedMessage = UserDefaults.standard.string(forKey: "voice_denied") ??  VoiceMessageDefaults.denied.first?.text ?? ""
+            accessUnAuthorizedMessage = UserDefaults.standard.string(forKey: "voice_unauthorized") ?? VoiceMessageDefaults.unauthorized.first?.text ?? ""
+           
+           
             
             isViewVisible = true
             
