@@ -10,25 +10,32 @@ import SwiftUI
 
 struct VoiceAnnouncementsDoor: View {
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var toastManager = ToastManager.shared
     @State private var showSaved = false
     @State private var openSection: Int? = nil
 
     @State private var grantedOptions = [
-        MessageOption(text: "Access granted", isSelected: true),
-        MessageOption(text: "Door unlocked", isSelected: false),
-        MessageOption(text: "Welcome, entry approved", isSelected: false)
+        MessageOption(text: "Access Granted", isSelected: true),
+        MessageOption(text: "Entry Approved", isSelected: false),
+        MessageOption(text: "Access successfully verified", isSelected: false),
+        MessageOption(text: "Door Unlocked", isSelected: false),
+        MessageOption(text: "Access Confirmed", isSelected: false)
     ]
     
     @State private var deniedOptions = [
-        MessageOption(text: "Access denied", isSelected: true),
-        MessageOption(text: "Entry rejected", isSelected: false),
-        MessageOption(text: "Cannot unlock the door", isSelected: false)
+        MessageOption(text: "Access Denied", isSelected: true),
+        MessageOption(text: "Entry Rejected", isSelected: false),
+        MessageOption(text: "Access Not Permitted", isSelected: false),
+        MessageOption(text: "Door Locked", isSelected: false),
+        MessageOption(text: "Authorization Failed", isSelected: false)
     ]
     
     @State private var unauthorizedOptions = [
-        MessageOption(text: "Unauthorized door", isSelected: true),
-        MessageOption(text: "You are not allowed", isSelected: false),
-        MessageOption(text: "Access blocked", isSelected: false)
+        MessageOption(text: "You do not have access to this door", isSelected: true),
+        MessageOption(text: "Unauthorized door", isSelected: false),
+        MessageOption(text: "This entry is restricted", isSelected: false),
+        MessageOption(text: "Access not allowed at this location", isSelected: false),
+        MessageOption(text: "Invalid door access attempt", isSelected: false)
     ]
     
     var body: some View {
@@ -77,75 +84,109 @@ struct VoiceAnnouncementsDoor: View {
                         .padding(.horizontal,10)
                         .multilineTextAlignment(.center)
                     
-                    
-                    ScrollView {
-                        VStack(spacing: 22) {
-                            
-                            
-                            // MARK: 1 - Access Granted
-                            MessageSection(
-                                id: 0,
-                                title: "Access Granted",
-                                description: "This message plays when entry is successfully approved.",
-                                options: $grantedOptions,
-                                openSection: $openSection
-                            )
-                            
-                            // MARK: 2 - Access Denied
-                            MessageSection(
-                                id: 1,
-                                title: "Access Denied",
-                                description: "This message plays when the door cannot approve the request.",
-                                options: $deniedOptions,
-                                openSection: $openSection
-                            )
-                            
-                            // MARK: 3 - Unauthorized
-                            MessageSection(
-                                id: 2,
-                                title: "Unauthorized",
-                                description: "This message plays when an unregistered user tries to open the door.",
-                                options: $unauthorizedOptions,
-                                openSection: $openSection
-                            )
-                            
-                            Spacer().frame(height: 40)
-                        }
-                        .padding(.horizontal, 16)
-                        
-                    }
-                    .padding(.top, 15)
-                    .scrollIndicators(.hidden)
-                    
                     VStack {
-                                      if showSaved {
-                                          Text("Saved successfully")
-                                              .foregroundColor(.green)
-                                              .font(.custom("Inter-Medium", size: 18))
-                                              .transition(.opacity)
-                                      }
-                                      
-                                      Button(action: {
-                                          saveMessages()
-                                      }) {
-                                          Text("Save")
-                                              .font(.custom("Inter-SemiBold", size: 18))
-                                              .foregroundColor(.black)
-                                              .frame(maxWidth: .infinity)
-                                              .padding()
-                                              .background(Color.white)
-                                              .clipShape(RoundedRectangle(cornerRadius: 14))
-                                      }
-                                      .padding(.horizontal, 16)
-                                      .padding(.bottom, 25)
-                                  }
+                        
+                        ScrollView {
+                            VStack(spacing: 22) {
+                                
+                                
+                                // MARK: 1 - Access Granted
+                                MessageSection(
+                                    id: 0,
+                                    title: "Access Granted",
+                                    description: "This message plays when entry is successfully approved.",
+                                    options: $grantedOptions,
+                                    openSection: $openSection
+                                )
+                                
+                                Divider()
+                                    .overlay(Color.white.opacity(0.08))
+                                
+                                // MARK: 2 - Access Denied
+                                MessageSection(
+                                    id: 1,
+                                    title: "Access Denied",
+                                    description: "This message plays when the door cannot approve the request.",
+                                    options: $deniedOptions,
+                                    openSection: $openSection
+                                    
+                                )
+                                
+                                Divider()
+                                    .overlay(Color.white.opacity(0.08))
+                                
+                                // MARK: 3 - Unauthorized
+                                MessageSection(
+                                    id: 2,
+                                    title: "Unauthorized",
+                                    description: "This message plays when an unregistered user tries to open the door.",
+                                    options: $unauthorizedOptions,
+                                    openSection: $openSection
+                                    
+                                )
+                                
+                                Spacer().frame(height: 40)
+                            }
+                            .padding(.horizontal, 16)
+                            
+                            
+                        }
+                        .padding(.top, 15)
+                        
+                        .scrollIndicators(.hidden)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.white.opacity(0.8), lineWidth: 2)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        
+                        VStack {
+    
+                            Button(action: {
+                                saveMessages()
+                            }) {
+                                Text("SAVE")
+                                    .font(.custom("Inter-SemiBold", size: 16))
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                            }
+                         
+                            .padding(.top, 10)
+                            .padding(.bottom, 5)
+                            
+                            Button(action: {
+                                //saveMessages()
+                            }) {
+                                Text("RESET TO DEFAULTS")
+                                    .font(.custom("Inter-SemiBold", size: 16))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.black.opacity(0.5))
+                                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(Color.white.opacity(0.8), lineWidth: 1.0)
+                                    )
+                            }
+                       
+                            .padding(.bottom, 10)
+                        }
+                        
+                    }.padding(.horizontal, 20)
                 }
+                
             }
             .onAppear {
                 loadSavedSelections()
             }
+            .toast()
 
         }
+        
     }
     
     func loadSavedSelections() {
@@ -181,16 +222,13 @@ struct VoiceAnnouncementsDoor: View {
             UserDefaults.standard.set(denied, forKey: "voice_denied")
             UserDefaults.standard.set(unauthorized, forKey: "voice_unauthorized")
             
-            withAnimation {
-                showSaved = true
-            }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                withAnimation {
-                    showSaved = false
-                }
-            }
-        }
+        
+        toastManager.show(
+            message: "Saved successfully",
+            type: .success,
+            duration: 1.0
+        )
+    }
 }
 
 // MARK: - Option Model
@@ -201,111 +239,100 @@ struct MessageOption: Identifiable {
 }
 
 
-
-
 struct MessageSection: View {
     let id: Int
     let title: String
     let description: String
     @Binding var options: [MessageOption]
-
     @Binding var openSection: Int?
 
-    private var isExpanded: Bool {
+    private var isOpen: Bool {
         openSection == id
+    }
+
+    var selectedText: String {
+        options.first(where: { $0.isSelected })?.text ?? ""
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
 
-            // HEADER
+            Text(title)
+                .font(.custom("Inter-SemiBold", size: 16))
+                .foregroundColor(.white)
+
+            Text(description)
+                .font(.custom("Inter-Regular", size: 13))
+                .foregroundColor(.white.opacity(0.55))
+
+            // Dropdown button
             Button {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    // If already open → close it
-                    if openSection == id {
-                        openSection = nil
-                    } else {
-                        openSection = id
-                    }
+                    openSection = isOpen ? nil : id
                 }
             } label: {
                 HStack {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(title)
-                            .font(.custom("Inter-SemiBold", size: 16))
-                            .foregroundColor(.white)
-
-                        Text(description)
-                            .font(.custom("Inter-Regular", size: 13))
-                            .foregroundColor(.white.opacity(0.55))
-                            .multilineTextAlignment(.leading)
-                    }
+                    Text(selectedText)
+                        .foregroundColor(.white)
+                        .font(.custom("Inter-Regular", size: 14))
 
                     Spacer()
 
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.7))
+                    Image(systemName: isOpen ? "chevron.up" : "chevron.down")
+                        .foregroundColor(.white.opacity(0.8))
                 }
-                .padding(.vertical, 12)
+                .padding()
+                .background(Color.white.opacity(0.2))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
 
-            Rectangle()
-                .fill(Color.white.opacity(0.08))
-                .frame(height: 1)
-
-            // CONTENT
-            if isExpanded {
+            if isOpen {
                 VStack(spacing: 0) {
-                    ForEach(options.indices, id: \.self) { index in
+                    ForEach(options.indices, id: \.self) { idx in
                         Button {
-                            selectOption(at: index)
+                            select(idx)
                         } label: {
-                            HStack(spacing: 12) {
-
-                                Image(systemName: options[index].isSelected ? "checkmark.circle.fill" : "circle")
-                                    .font(.system(size: 22))
-                                    .foregroundColor(options[index].isSelected ? .green : .gray.opacity(0.6))
-                                    .animation(.spring(), value: options[index].isSelected)
-
-                                Text(options[index].text)
-                                    .font(.custom("Inter-Regular", size: 16))
+                            HStack {
+                                Text(options[idx].text)
                                     .foregroundColor(.white)
+                                    .font(.custom("Inter-Regular", size: 14))
 
                                 Spacer()
+
+                                if options[idx].isSelected {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.green)
+                                }
                             }
-                            .padding(.vertical, 14)
-                            .padding(.horizontal, 18)
-                            .background(
-                                options[index].isSelected
-                                ? Color.white.opacity(0.06)
-                                : Color.clear
-                            )
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 12)
+                        }
+                      //  .background(idx % 2 == 0 ? Color.white.opacity(0.03) : Color.white.opacity(0.05))
+
+                        if idx != options.count - 1 {
+                            Divider()
+                                .overlay(Color.white.opacity(0.08))
+                              //  .padding(.leading, 12)
                         }
                     }
                 }
-                .background(Color.white.opacity(0.05))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(0.25), radius: 5, y: 4)
-                // Replace your transition with this
-                .transition(.asymmetric(
-                    insertion: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)),
-                    removal: .opacity.combined(with: .scale(scale: 0.95, anchor: .top))
-                ))
-                .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isExpanded)
-
+                .background(Color.white.opacity(0.2))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .transition(.opacity)
+                .padding(.top,-9)
             }
+                
         }
-        .padding(.vertical, 4)
+        
     }
 
-    private func selectOption(at index: Int) {
+    private func select(_ index: Int) {
         for i in options.indices {
             options[i].isSelected = (i == index)
+        }
+
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            openSection = nil
         }
     }
 }
