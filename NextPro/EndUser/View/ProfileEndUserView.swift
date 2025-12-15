@@ -16,8 +16,10 @@ struct ProfileEndUserView: View {
     @State private var fullName = ""
     @State private var phoneNumber = ""
     @State private var showWebView = false
-    @State private var webViewURL = ""
-    @State private var webViewTitle = ""
+   
+    //@State private var webViewURL = ""
+    //@State private var webViewTitle = ""
+    @State private var webViewType = ""
     
     @StateObject private var viewModel = UserProfileDetailsViewModel()
 
@@ -179,8 +181,7 @@ struct ProfileEndUserView: View {
                             UserProfileRow(title: "Privacy Policy" , textColor: .white) {
                                 
                                 navigate_Webview_PrivacyTerms = true
-                                webViewURL = "https://www.lipsum.com/feed/html"
-                                webViewTitle = "Privacy Policy"
+                                webViewType = "privacy"
  
                             }
                             
@@ -190,8 +191,7 @@ struct ProfileEndUserView: View {
                             UserProfileRow(title: "Terms and Conditon" , textColor: .white) {
                                 
                                 navigate_Webview_PrivacyTerms = true
-                                webViewURL = "https://www.lipsum.com/feed/html"
-                                webViewTitle = "Terms and Conditions"
+                                webViewType = "terms"
 
                             }
 
@@ -230,15 +230,15 @@ struct ProfileEndUserView: View {
             }
             
             // WebView Modal Overlay
-            if showWebView {
-                WebViewModal(
-                    url: webViewURL,
-                    title: webViewTitle,
-                    isPresented: $showWebView
-                )
-                .transition(.opacity)
-                .zIndex(100)
-            }
+//            if showWebView {
+//                WebViewModal(
+//                    url: webViewURL,
+//                    title: webViewTitle,
+//                    isPresented: $showWebView
+//                )
+//                .transition(.opacity)
+//                .zIndex(100)
+//            }
             
             
             if viewModel.isLoading {
@@ -267,7 +267,7 @@ struct ProfileEndUserView: View {
         }
         
         .navigationDestination(isPresented: $navigate_Webview_PrivacyTerms) {
-            PrivacyAndTermsView(webViewURL: webViewURL, webViewTitle: webViewTitle)
+            PrivacyAndTermsView(WebViewType:webViewType)
         }
         
         .navigationDestination(isPresented: $navigateToEditProfile) {
