@@ -9,103 +9,120 @@
 import Foundation
 
 struct DeviceDetailsResponse: Codable {
-    let userId: String
-    let facilityName: String
+    let backendUserId: String
+    let deviceUserId: Int
+    let organizationName: String
     let userFullName: String
-    let buildingName: String
     let cardNumber: String
-    
-    let controllers: [Controller]
-    let standaloneDoors: [StandaloneDoor]
-    
-    
+    let cardExpiryDate: String
+    let facilities: [Facility]
+
     enum CodingKeys: String, CodingKey {
-        case userId = "user_id"
-        case facilityName = "facility_name"
+        case backendUserId = "backend_user_id"
+        case deviceUserId = "device_user_id"
+        case organizationName = "organization_name"
         case userFullName = "user_full_name"
-        case buildingName = "building_name"
         case cardNumber = "card_number"
+        case cardExpiryDate = "card_expiry_date"
+        case facilities
+    }
+}
+
+
+struct Facility: Codable {
+    let facilityId: String
+    let facilityName: String
+    let controllers: [Controller]
+    let standaloneDoors: [StandaloneDoor]?
+
+    enum CodingKeys: String, CodingKey {
+        case facilityId = "facility_id"
+        case facilityName = "facility_name"
         case controllers
         case standaloneDoors = "standalone_doors"
     }
 }
 
-// MARK: - Controller
+
 struct Controller: Codable {
     let controllerId: String
     let controllerName: String
-    let controllerSerialNumber: String
+    let controllerSerial: String
     let controllerMac: String
     let controllerKey: String
     let controllerModel: String
-    let devType: Int
-    let openType: Int
-    let controllerType: String
+    let controllerCommType: String
+    let controllerType: Int?
     let maxDoorsSupported: Int
-    
     let doors: [Door]
-    
+
     enum CodingKeys: String, CodingKey {
         case controllerId = "controller_id"
         case controllerName = "controller_name"
-        case controllerSerialNumber = "controller_serial_number"
+        case controllerSerial = "controller_serial"
         case controllerMac = "controller_mac"
         case controllerKey = "controller_key"
         case controllerModel = "controller_model"
-        case devType = "dev_type"
-        case openType = "open_type"
+        case controllerCommType = "controller_comm_type"
         case controllerType = "controller_type"
         case maxDoorsSupported = "max_doors_supported"
         case doors
     }
 }
 
-// MARK: - Door (Controller Based)
+
 struct Door: Codable {
     let doorId: String
     let doorName: String
     let doorNumber: Int
     let doorModel: String
-    let doorSerialNumber: String
+    let doorSerial: String
     let doorMac: String
     let doorKey: String
-    let isStandalone: Bool
-    
+    let devType: Int
+    let openType: Int
+    let doorCommType: String
+    let isStandalone: Bool?
+
     enum CodingKeys: String, CodingKey {
         case doorId = "door_id"
         case doorName = "door_name"
         case doorNumber = "door_number"
         case doorModel = "door_model"
-        case doorSerialNumber = "door_serial_number"
+        case doorSerial = "door_serial"
         case doorMac = "door_mac"
         case doorKey = "door_key"
+        case devType = "dev_type"
+        case openType = "open_type"
+        case doorCommType = "door_comm_type"
         case isStandalone = "is_standalone"
     }
 }
 
 
-// MARK: - Standalone Door (Single Level)
 struct StandaloneDoor: Codable {
     let doorId: String
     let doorName: String
+    let doorNumber: Int
     let doorModel: String
-    let doorSerialNumber: String
+    let doorSerial: String
     let doorMac: String
     let doorKey: String
+    let controllerCommType: String
     let controllerBased: Bool
-    let doorNumber: Int
     let devType: Int
     let openType: Int
-    
+
     enum CodingKeys: String, CodingKey {
         case doorId = "door_id"
         case doorName = "door_name"
+        case doorNumber = "door_number"
         case doorModel = "door_model"
-        case doorSerialNumber = "door_serial_number"
+        case doorSerial = "door_serial"
         case doorMac = "door_mac"
         case doorKey = "door_key"
+        case controllerCommType = "controller_comm_type"
         case controllerBased = "controller_based"
-        case doorNumber = "door_number"
         case devType = "dev_type"
         case openType = "open_type"
     }

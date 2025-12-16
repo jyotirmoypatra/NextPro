@@ -13,10 +13,8 @@ import AVFoundation
 struct DoorOpenView: View {
     // let Card: CardModelUser
     @Environment(\.scenePhase) private var scenePhase
-  //  @State private var bluetoothManager = CBCentralManager()
     @StateObject private var mqttManager = MQTTManager.shared
     @StateObject private var doorStorage = DoorStorageManager.shared
-    @ObservedObject private var cardStorage = UserCardStorageManager.shared
     @StateObject private var deviceVM = DeviceDetailsViewModel()
     @StateObject private var doorManager = DoorManager.shared
     @StateObject private var bleManager = BLEManager()
@@ -33,7 +31,6 @@ struct DoorOpenView: View {
     @State private var isViewVisible = false
     @State private var startMonitoringTask: DispatchWorkItem?
     @ObservedObject var network = NetworkManager.shared
-    @State private var selectedCard: CardModelUser?
     
     @State private var doorId : Int?
     @State private var AceesMessage : String?
@@ -68,9 +65,20 @@ struct DoorOpenView: View {
                     .animation(.spring(), value: network.hasInternet)
                 }
                 HStack {
-                    Text("Welcome!")
-                        .font(.custom("Inter-SemiBold", size: 18))
-                        .foregroundColor(.white)
+                    VStack(alignment: .leading,spacing: 5) {
+                        Text("Welcome!")
+                            .font(.custom("Inter-SemiBold", size: 18))
+                            .foregroundColor(.white)
+                       
+                        if deviceVM.isLoading {
+                            ShimmerTextView(width: 100, height: 16)
+                        } else {
+                            Text(deviceVM.deviceDetails?.userFullName ?? "")
+                                .font(.custom("Inter-Regular", size: 16))
+                                .foregroundColor(.gray)
+                        }
+                        
+                    }
                     
                     Spacer()
                     
@@ -99,11 +107,11 @@ struct DoorOpenView: View {
                             // 🪪 Card (centered in the view)
                             VStack(spacing: 32) {
                                 HStack {
-                                    Text(selectedCard?.FacilityName ?? "")
+                                    Text(deviceVM.deviceDetails?.organizationName ?? "")
                                         .font(.custom("Inter-SemiBold", size: 16))
                                         .foregroundColor(.white)
                                     Spacer()
-                                    Text(selectedCard?.companyName ?? "")
+                                    Text("NextPro")
                                         .font(.custom("Inter-Semibold", size: 16))
                                         .foregroundColor(.gray)
                                 }
@@ -122,15 +130,12 @@ struct DoorOpenView: View {
                                 
                                 HStack {
                                     VStack(alignment: .leading) {
-                                        Text(selectedCard?.userName ?? "")
+                                      //  Text(selectedCard?.userName ?? "")
+                                        Text(deviceVM.deviceDetails?.userFullName ?? "")
                                             .font(.custom("Inter-Regular", size: 12))
                                             .foregroundColor(.gray)
-                                        //                            Text(Card.cardno)
-                                        //                                .font(.custom("Inter-Regular", size: 12))
-                                        //                                .foregroundColor(.gray)
-                                        
-                                        
-                                        Text(maskCardNumber(selectedCard?.cardno ?? ""))
+
+                                        Text(maskCardNumber(deviceVM.deviceDetails?.cardNumber ?? ""))
                                             .font(.custom("Inter-Regular", size: 12))
                                             .foregroundColor(.gray)
                                         
@@ -142,7 +147,7 @@ struct DoorOpenView: View {
                                         Text("Exp")
                                             .font(.custom("Inter-Regular", size: 12))
                                             .foregroundColor(.white)
-                                        Text(selectedCard?.duration ?? "")
+                                        Text(deviceVM.deviceDetails?.cardExpiryDate ?? "")
                                             .font(.custom("Inter-Regular", size: 12))
                                             .foregroundColor(.gray)
                                     }
@@ -249,6 +254,12 @@ struct DoorOpenView: View {
         .background(Color.black.opacity(0.4))
         .task{
           
+            
+            await deviceVM.fetchDeviceDetailsIfNeeded()
+            // Make sure deviceDetails is not nil
+            print("Controller Serials:", deviceVM.allControllerSerials)
+
+            
             accessGreetingMessage = UserDefaults.standard.string(forKey: "voice_greeting") ?? VoiceMessageDefaults.greetings.first?.text ?? ""
             
             accessGrantedMessage = (UserDefaults.standard.string(forKey: "voice_granted") ?? VoiceMessageDefaults.granted.first?.text ?? "" ) + " - " + accessGreetingMessage
@@ -263,28 +274,7 @@ struct DoorOpenView: View {
             
             mqttManager.connect()
             
-//            for door in doorStorage.doors {
-//                mqttManager.subscribeToDevice(door.devSn)
-//            }
-//            mqttManager.subscribeToDevice("4283847520")
-//            mqttManager.subscribeToDevice("4282184653")
-            
-            mqttManager.subscribeToDevice("4283847520" ,  model: "tc434")
-            mqttManager.subscribeToDevice("4282184653", model: "bc220")
-            mqttManager.subscribeToDevice("4282705968", model: "M230")
-            
-            await cardStorage.loadCards()
-            
-            if let card = cardStorage.card {
-                self.selectedCard = card
-            }
-            
-            
-            
-            //
-            
-            
-            
+ 
             await doorStorage.loadDoors()
             
             AceesMessage = "Preparing Scan.."
@@ -403,19 +393,7 @@ struct DoorOpenView: View {
             }
         }
         
-//        .alert(isPresented: $showBluetoothAlert) {
-//            Alert(
-//                title: Text("Bluetooth is Off"),
-//                message: Text("Please enable Bluetooth to use Auto Open."),
-//                primaryButton: .default(Text("Open Settings"), action: {
-//                    if let url = URL(string: "App-Prefs:root=Bluetooth"),
-//                       UIApplication.shared.canOpenURL(url) {
-//                        UIApplication.shared.open(url)
-//                    }
-//                }),
-//                secondaryButton: .cancel(Text("Cancel"))
-//            )
-//        }
+
         
 //        .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
 //
@@ -430,15 +408,7 @@ struct DoorOpenView: View {
 //                )
 //        }
         
-       
-        
-        
-//        .onReceive(bleManager.$isBluetoothOn) { isOn in
-//            if !isOn && CBCentralManager.authorization == .allowedAlways {
-//                showBluetoothAlert = true
-//                isScanningActive = true
-//            }
-//        }
+
         .onReceive(bleManager.$bleState) { state in
             if state == .poweredOff {
                 showBluetoothAlert = true
@@ -448,12 +418,6 @@ struct DoorOpenView: View {
                 showBluetoothAlert = false
             }
         }
-
-//        .onReceive(bleManager.$isBluetoothOn) { isOn in
-//            if !isOn {
-//                
-//            }
-//        }
 
 
         .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in

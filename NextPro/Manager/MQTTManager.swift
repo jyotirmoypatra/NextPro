@@ -44,6 +44,7 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
 
     private var mqtt: CocoaMQTT?
     @Published var lastMessage: String = ""
+    private var subscribedTopics = Set<String>()
 
     private override init() {}
 
@@ -83,17 +84,39 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
 
 
     // Subscribe to device response topic (example: up/{SN}/rtdata)
-    func subscribeToDevice(_ sn: String, model:String) {
-        var topic = ""
-        if model == "tc434"{
-             topic = "up/\(sn)/data"
-        }else{
+//    func subscribeToDevice(_ sn: String, model:String) {
+//        var topic = ""
+//        if model == "TC434"{
+//             topic = "up/\(sn)/data"
+//        }else{
+//            topic = "up/\(sn)/rtdata"
+//        }
+//        
+//        mqtt?.subscribe(topic, qos: .qos1)
+//        print("📡 Subscribed to topic: \(topic)")
+//    }
+    
+    func subscribeToDevice(_ sn: String, model: String) {
+
+        let topic: String
+        if model.uppercased() == "TC434" {
+            topic = "up/\(sn)/data"
+        } else {
             topic = "up/\(sn)/rtdata"
         }
-        
+
+        // 🚫 Prevent duplicate subscription
+        guard !subscribedTopics.contains(topic) else {
+            print("⚠️ Already subscribed to:", topic)
+            return
+        }
+
+        subscribedTopics.insert(topic)
         mqtt?.subscribe(topic, qos: .qos1)
-        print("📡 Subscribed to topic: \(topic)")
+
+        print("📡 MQTT Subscribed:", topic)
     }
+
 
     // Publish open door command to the device
     func sendOpenDoorCommand(to deviceSN: String, doorID: Int = 1, duration: Int = 5) {
@@ -114,10 +137,17 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
     // MARK: - CocoaMQTTDelegate
     func mqtt(_ mqtt: CocoaMQTT, didConnectAck ack: CocoaMQTTConnAck) {
         print("✅ MQTT Connected Successfully")
-        subscribeToDevice("4283847520" ,  model: "tc434")
-        subscribeToDevice("4282184653", model: "bc220")
-        subscribeToDevice("4282705968", model: "M230")
-        
+//        subscribeToDevice("4283847520" ,  model: "tc434")
+//        subscribeToDevice("4282184653", model: "bc220")
+//        subscribeToDevice("4282705968", model: "M230")
+        resubscribeAllTopics()
+    }
+
+    private func resubscribeAllTopics() {
+        for topic in subscribedTopics {
+            mqtt?.subscribe(topic, qos: .qos1)
+            print("🔁 Re-subscribed:", topic)
+        }
     }
 
     
