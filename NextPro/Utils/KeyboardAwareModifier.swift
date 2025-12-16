@@ -9,15 +9,19 @@
 import SwiftUI
 import Combine
 
+
 struct KeyboardAwareModifier: ViewModifier {
     @StateObject private var keyboard = KeyboardHeightHelper()
 
     func body(content: Content) -> some View {
-        content
-            .padding(.bottom, keyboard.keyboardHeight)
-            .animation(.easeOut(duration: 0.25), value: keyboard.keyboardHeight)
+        GeometryReader { geo in
+            content
+                .padding(.bottom, max(0, keyboard.keyboardHeight - geo.safeAreaInsets.bottom))
+                .animation(.easeOut(duration: 0.25), value: keyboard.keyboardHeight)
+        }
     }
 }
+
 
 
 

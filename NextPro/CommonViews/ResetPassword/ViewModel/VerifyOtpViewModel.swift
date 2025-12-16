@@ -67,4 +67,16 @@ class VerifyOtpViewModel: ObservableObject {
         
         isLoading = false
     }
+    
+    func reset() {
+            digit1 = ""
+            digit2 = ""
+            digit3 = ""
+            digit4 = ""
+            digit5 = ""
+            digit6 = ""
+            isLoading = false
+            errorMessage = ""
+            success = false
+        }
 }

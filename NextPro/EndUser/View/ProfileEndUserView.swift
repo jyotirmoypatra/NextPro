@@ -548,6 +548,10 @@ struct ProfileImageView: View {
             Circle().stroke(Color.white.opacity(0.7), lineWidth: 1)
         )
         .shadow(radius: 6)
+        // Reset shimmer when URL changes
+                .onChange(of: imageUrl) { _ in
+                    isLoading = true
+                }
     }
 }
 
@@ -653,31 +657,36 @@ struct FullScreenImageView: View {
     }
 }
 
+
 struct ShimmerView: View {
-    @State private var phase: CGFloat = 0
+    @State private var move: CGFloat = -0.7
 
     var body: some View {
         RoundedRectangle(cornerRadius: 48)
-            .fill(
+            .fill(Color.gray.opacity(0.3))
+            .overlay(
+                // Moving shimmer overlay
                 LinearGradient(
-                    gradient: Gradient(colors: [.gray.opacity(0.3), .gray.opacity(0.1), .gray.opacity(0.3)]),
-                    startPoint: .leading,
-                    endPoint: .trailing
+                    gradient: Gradient(colors: [Color.gray.opacity(0.3), Color.gray.opacity(0.1), Color.gray.opacity(0.3)]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .mask(
+                    RoundedRectangle(cornerRadius: 48)
+                        .fill(Color.white)
+                        .rotationEffect(.degrees(20))
+                        .scaleEffect(3)
+                        .offset(x: move * 300)
                 )
             )
-            .mask(
-                Rectangle()
-                    .fill(Color.white)
-                    .rotationEffect(.degrees(30))
-                    .offset(x: phase)
-            )
             .onAppear {
-                withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
-                    phase = 200
+                withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+                    move = 0.7
                 }
             }
     }
 }
+
 struct ShimmerTextView: View {
     var width: CGFloat
     var height: CGFloat

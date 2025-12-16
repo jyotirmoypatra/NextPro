@@ -81,4 +81,14 @@ class ValidateEmailViewModel: ObservableObject {
 
         
     }
+    
+    
+    func reset() {
+            email = ""
+            validateEmailError = ""
+            isLoading = false
+            validateSuccess = false
+            isPasswordReset = true
+            isAggrementAccept = false
+        }
 }

@@ -26,6 +26,7 @@ struct LoginView: View {
     @State private var isAdmin = false
     @State private var isDeviceprov = false
     @State private var didPrefillEmail = false
+    @State private var emailToSend = ""
 
     @State private var isUserInitialSetupDone = false
     
@@ -321,6 +322,8 @@ struct LoginView: View {
                                             )
                                             try? await Task.sleep(nanoseconds: 1_000_000_000)
                                             
+                                            emailToSend = validateVM.email
+                                            
                                             navigateToCreatePassword = true
                                         }
                                         
@@ -390,10 +393,11 @@ struct LoginView: View {
             .navigationBarBackButtonHidden(true)
             .ignoresSafeArea(.keyboard, edges: .bottom) // The key to stop resize
             .navigationDestination(isPresented: $navigateToCreatePassword) {
-                CreateNewPasswordView(userName: validateVM.email, comingFrom: "login")
+                CreateNewPasswordView(userName: emailToSend, comingFrom: "validate_email")
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)
+                
             }
             
             .navigationDestination(isPresented: $navigateToResetPassword) { //forget password navigate
@@ -431,7 +435,9 @@ struct LoginView: View {
                     showNoInternetAlert = true
                 }
             }
-            
+            .onDisappear {
+                validateVM.reset()  // now safe to reset
+            }
 //            .modernAlert(isPresented: $showNoInternetAlert) {
 //                  ModernAlertView(
 //                      title: "Error!",

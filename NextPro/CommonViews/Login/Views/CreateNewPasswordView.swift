@@ -8,7 +8,16 @@
 
 import SwiftUI
 
+
+
 struct CreateNewPasswordView: View {
+    @FocusState private var focusedField: Field?
+
+    enum Field {
+        case newPassword
+        case confirmPassword
+    }
+
    // var userType: String
     var userName: String
     var comingFrom: String
@@ -16,6 +25,7 @@ struct CreateNewPasswordView: View {
     @StateObject var network = NetworkManager.shared
     @StateObject private var viewModel = CreateNewPasswordViewModel()
     @StateObject private var toastManager = ToastManager.shared
+    @State private var navigateToLogin = false
     @State private var showNoInternetAlert = false
     @State private var showNewPassword = false
     @State private var showConfirmPassword = false
@@ -30,33 +40,37 @@ struct CreateNewPasswordView: View {
                 // Background
                 Image("backgroundimg")
                     .resizable()
-                    .scaledToFill()
+                    .aspectRatio(contentMode: .fill)
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .ignoresSafeArea()
                 
-                Color.black.opacity(0.8)
+                Color.black.opacity(0.93)
                     .ignoresSafeArea()
                 
-          
-                    HStack {
-                        Button(action: {
-                            dismiss()
-                        }) {
-                            Image(systemName: "arrow.left")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(.white)
-                                .padding(10)
-                            // .background(Color.white.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                        }
-                        
-                        Spacer()
-                        
-                        
-                    }.frame(maxWidth: .infinity)
-                    .padding(.top, 10)
-                   // .background(Color.black)
-                    .zIndex(999999)
+                // MARK: - Header (Fixed at top)
+                HStack {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "arrow.left")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(10)
+                           // .background(Color.white.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                    
+                    Spacer()
+                    
+                   
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 10)
+                .background(Color.black)
+                .frame(maxWidth: .infinity, alignment: .top)
+                .zIndex(1)
+
+
                     
                     ScrollView { // ✅ Add ScrollView to manage height & keyboard
                         VStack(spacing: 25) {
@@ -64,7 +78,13 @@ struct CreateNewPasswordView: View {
                             
                             // Header
                             VStack(spacing: 5) {
-                                Text(comingFrom == "login" ? "CREATE YOUR ACCOUNT" : "UPDATE YOUR PASSWORD")
+                               // Text(comingFrom == "login" ? "CREATE YOUR ACCOUNT" : "UPDATE YOUR PASSWORD")
+                                Text(
+                                    comingFrom == "validate_email" ? "CREATE YOUR ACCOUNT" :
+                                    comingFrom == "user_profile" ? "UPDATE YOUR PASSWORD" :
+                                    comingFrom == "forgetPassword" ? "RESET YOUR PASSWORD" :
+                                    "" // fallback
+                                )
                                     .font(.custom("Inter-SemiBold", size: 20))
                                     .foregroundColor(.white)
                                 Text("Create a secure password for your account")
@@ -73,99 +93,58 @@ struct CreateNewPasswordView: View {
                             }
                             .padding(.bottom, 40)
                             
-                            // New Password Field
-//                            VStack(alignment: .leading, spacing: 6) {
-//                                HStack(spacing: 0) {
-//                                    Text(comingFrom == "login" ?   "Create Password" : "New Password")
-//                                        .font(.custom("Inter-Medium", size: 16))
-//                                        .foregroundColor(.white)
-//                                    Text(" *")
-//                                        .font(.system(size: 14))
-//                                        .foregroundColor(.red)
-//                                }
-//                                
-//                                ZStack(alignment: .leading) {
-//                                    if viewModel.newPassword.isEmpty {
-//                                        Text("Enter new password")
-//                                            .font(.custom("Inter-Regular", size: 16))
-//                                            .foregroundColor(Color.white.opacity(0.5))
-//                                            .padding(.leading, 14)
-//                                    }
-//                                    SecureField("", text: $viewModel.newPassword)
-//                                        .padding()
-//                                        .background(Color.white.opacity(0.15))
-//                                        .cornerRadius(8)
-//                                        .frame(height: 50)
-//                                        .foregroundColor(.white)
-//                                        .autocapitalization(.none)
-//                                        .disableAutocorrection(true)
-//                                }
-//                            }
-                            
-                            // Confirm Password Field
-//                            VStack(alignment: .leading, spacing: 6) {
-//                                HStack(spacing: 0) {
-//                                    Text(comingFrom == "login" ?  "Confirm Password" : "Confirm New Password")
-//                                        .font(.custom("Inter-Medium", size: 16))
-//                                        .foregroundColor(.white)
-//                                    Text(" *")
-//                                        .font(.system(size: 14))
-//                                        .foregroundColor(.red)
-//                                }
-//                                
-//                                ZStack(alignment: .trailing) {
-//                                    ZStack(alignment: .leading) {
-//                                        if viewModel.confirmPassword.isEmpty {
-//                                            Text("Enter confirm password")
-//                                                .font(.custom("Inter-Regular", size: 16))
-//                                                .foregroundColor(Color.white.opacity(0.5))
-//                                                .padding(.leading, 12)
-//                                        }
-//                                        
-//                                        if showPassword {
-//                                            TextField("", text: $viewModel.confirmPassword)
-//                                                .foregroundColor(.white)
-//                                                .font(.custom("Inter-Regular", size: 16))
-//                                                .padding(.horizontal, 12)
-//                                                .frame(height: 50)
-//                                                .autocapitalization(.none)
-//                                                .disableAutocorrection(true)
-//                                        } else {
-//                                            SecureField("", text: $viewModel.confirmPassword)
-//                                                .padding()
-//                                                .background(Color.white.opacity(0.15))
-//                                                .cornerRadius(8)
-//                                                .frame(height: 50)
-//                                                .foregroundColor(.white)
-//                                                .autocapitalization(.none)
-//                                                .disableAutocorrection(true)
-//                                        }
-//                                    }
-//                                    .background(Color.white.opacity(0.15))
-//                                    .cornerRadius(10)
-//                                    
-//                                    Button(action: { showPassword.toggle() }) {
-//                                        Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-//                                            .foregroundColor(.white.opacity(0.8))
-//                                    }
-//                                    .padding(.trailing, 14)
-//                                }
-//                            }
+//                            PasswordField(
+//                                title: comingFrom == "login" ? "Create Password" : "New Password",
+//                                placeholder: "Enter new password",
+//                                text: $viewModel.newPassword,
+//                                showText: $showNewPassword
+//                            )
+//
+//                            // validation pasword policy
+//                            
+//                            PasswordField(
+//                                title: comingFrom == "login" ? "Confirm Password" : "Confirm New Password",
+//                                placeholder: "Enter confirm password",
+//                                text: $viewModel.confirmPassword,
+//                                showText: $showConfirmPassword
+//                            )
                             
                             
                             PasswordField(
-                                title: comingFrom == "login" ? "Create Password" : "New Password",
+                                title: comingFrom == "validate_email" ? "Create Password" : "New Password",
                                 placeholder: "Enter new password",
                                 text: $viewModel.newPassword,
-                                showText: $showNewPassword
+                                showText: $showNewPassword,
+                                focused: $focusedField,
+                                field: .newPassword
                             )
 
+//                            if focusedField == .newPassword {
+//                                PasswordPolicyView(
+//                                    policy: passwordPolicy(for: viewModel.newPassword)
+//                                )
+//                            }
+
+                            
+                            if focusedField == .newPassword || !viewModel.newPassword.isEmpty {
+                                PasswordPolicyView(
+                                    policy: passwordPolicy(for: viewModel.newPassword)
+                                )
+                                
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                                .animation(.easeInOut(duration: 0.25), value: viewModel.newPassword)
+                            }
+
+                            
                             PasswordField(
-                                title: comingFrom == "login" ? "Confirm Password" : "Confirm New Password",
+                                title: "Confirm Password",
                                 placeholder: "Enter confirm password",
                                 text: $viewModel.confirmPassword,
-                                showText: $showConfirmPassword
+                                showText: $showConfirmPassword,
+                                focused: $focusedField,
+                                field: .confirmPassword
                             )
+
 
                             
                             Spacer()
@@ -176,6 +155,7 @@ struct CreateNewPasswordView: View {
                         .padding(.top,10)
                         .padding(.horizontal, 25) // ✅ Apply padding to entire VStack
                     } .keyboardAware()
+                    .scrollIndicators(.hidden)
                     
                     // Bottom Button
                     VStack(spacing: 16) {
@@ -195,7 +175,8 @@ struct CreateNewPasswordView: View {
                                     
                                     if comingFrom == "user_profile"{
                                         showSuccessUpdateAlert = true
-                                    }else{ //come from setup user
+                                    }
+                                    else if comingFrom == "validate_email" { //come from setup user
                                         
                                         toastManager.show(
                                             message: "Password updated successfully!",
@@ -208,6 +189,19 @@ struct CreateNewPasswordView: View {
                                         
                                         // isAdmin = (userType == "facility_manager")
                                         navigateToAggrement = true
+                                    } else { 
+                                        toastManager.show(
+                                            message: "Password updated successfully!",
+                                            type: .success,
+                                            duration: 1.0
+                                        )
+                                        
+                                        // Navigate after a short delay to show the toast
+                                        try? await Task.sleep(nanoseconds: 1_000_000_000)
+                                        
+                                        
+                                       // KeychainManager.shared.resetToLogin()
+                                        navigateToLogin = true
                                     }
                                     
                                 }else{
@@ -216,7 +210,13 @@ struct CreateNewPasswordView: View {
                             }
                             
                         }) {
-                            Text(comingFrom == "login" ? "CREATE PASSWORD" :  "UPDATE PASSWORD")
+                           // Text(comingFrom == "validate_email" ? "CREATE PASSWORD" :  "UPDATE PASSWORD")
+                            Text(
+                                comingFrom == "validate_email" ? "CREATE PASSWORD" :
+                                comingFrom == "user_profile" ? "UPDATE PASSWORD" :
+                                comingFrom == "forgetPassword" ? "RESET PASSWORD" :
+                                "" // fallback
+                            )
                                 .font(.custom("Inter-SemiBold", size: 16))
                                 .foregroundColor(.black)
                                 .frame(maxWidth: .infinity)
@@ -249,7 +249,12 @@ struct CreateNewPasswordView: View {
                 UIApplication.shared.hideKeyboard()
             }
 
-            
+            .navigationDestination(isPresented: $navigateToLogin) {
+                LoginView(isUserInitialSetupCompleted: true,prefilledEmail: UserDefaults.standard.string(forKey: "email") ?? "")
+                    .navigationBarBackButtonHidden(true)
+                    .navigationBarHidden(true)
+                    .interactiveDismissDisabled(true)
+            }
             
             .modernAlert(isPresented: $showNoInternetAlert) {
                   ModernAlertView(
@@ -302,17 +307,74 @@ struct CreateNewPasswordView: View {
 }
 
 
+//struct PasswordField: View {
+//    var title: String
+//    var placeholder: String
+//    @Binding var text: String
+//    @Binding var showText: Bool     // for eye button
+//    
+//    var body: some View {
+//        VStack(alignment: .leading, spacing: 6) {
+//            HStack(spacing: 0) {
+//                Text(title)
+//                    .font(.custom("Inter-Medium", size: 16))
+//                    .foregroundColor(.white)
+//                Text(" *")
+//                    .foregroundColor(.red)
+//            }
+//
+//            ZStack(alignment: .leading) {
+//
+//                if text.isEmpty {
+//                    Text(placeholder)
+//                        .font(.custom("Inter-Regular", size: 16))
+//                        .foregroundColor(.white.opacity(0.5))
+//                        .padding(.leading, 14)
+//                }
+//
+//                HStack {
+//                    if showText {
+//                        TextField("", text: $text)
+//                            .foregroundColor(.white)
+//                            .autocapitalization(.none)
+//                            .disableAutocorrection(true)
+//                    } else {
+//                        SecureField("", text: $text)
+//                            .foregroundColor(.white)
+//                            .autocapitalization(.none)
+//                            .disableAutocorrection(true)
+//                    }
+//
+//                    Button(action: { showText.toggle() }) {
+//                        Image(systemName: showText ? "eye.slash.fill" : "eye.fill")
+//                            .foregroundColor(.white.opacity(0.8))
+//                    }
+//                }
+//                .padding(.horizontal, 14)
+//                .frame(height: 50)
+//            }
+//            .background(Color.white.opacity(0.15))
+//            .cornerRadius(10)
+//        }
+//    }
+//}
+
+
+
+
 struct PasswordField: View {
     var title: String
     var placeholder: String
     @Binding var text: String
-    @Binding var showText: Bool     // for eye button
-    
+    @Binding var showText: Bool
+    var focused: FocusState<CreateNewPasswordView.Field?>.Binding
+    var field: CreateNewPasswordView.Field
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 0) {
+
+            HStack {
                 Text(title)
-                    .font(.custom("Inter-Medium", size: 16))
                     .foregroundColor(.white)
                 Text(" *")
                     .foregroundColor(.red)
@@ -320,9 +382,9 @@ struct PasswordField: View {
 
             ZStack(alignment: .leading) {
 
-                if text.isEmpty {
+                // ✅ Placeholder (only when not focused)
+                if text.isEmpty && focused.wrappedValue != field {
                     Text(placeholder)
-                        .font(.custom("Inter-Regular", size: 16))
                         .foregroundColor(.white.opacity(0.5))
                         .padding(.leading, 14)
                 }
@@ -330,26 +392,86 @@ struct PasswordField: View {
                 HStack {
                     if showText {
                         TextField("", text: $text)
+                            .focused(focused, equals: field)
                             .foregroundColor(.white)
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
                     } else {
                         SecureField("", text: $text)
+                            .focused(focused, equals: field)
                             .foregroundColor(.white)
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
                     }
 
-                    Button(action: { showText.toggle() }) {
+                    Button {
+                        showText.toggle()
+                    } label: {
                         Image(systemName: showText ? "eye.slash.fill" : "eye.fill")
                             .foregroundColor(.white.opacity(0.8))
                     }
                 }
                 .padding(.horizontal, 14)
-                .frame(height: 50)
             }
+            .frame(height: 50)
             .background(Color.white.opacity(0.15))
             .cornerRadius(10)
         }
     }
+}
+
+
+
+struct PasswordPolicyView: View {
+    let policy: PasswordPolicy
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            PolicyRow(text: "At least one uppercase letter (A-Z)", isValid: policy.hasUppercase)
+            PolicyRow(text: "At least one lowercase letter (a-z)", isValid: policy.hasLowercase)
+            PolicyRow(text: "At least one number (0-9)", isValid: policy.hasNumber)
+            PolicyRow(text: "At least one special character (@#$%^&+=!)", isValid: policy.hasSpecialChar)
+            PolicyRow(text: "8-15 characters", isValid: policy.validLength)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .transition(.opacity)
+        
+    }
+}
+
+struct PolicyRow: View {
+    let text: String
+    let isValid: Bool
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: isValid ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .foregroundColor(isValid ? .green : .red)
+                .font(.system(size: 13))
+            
+
+            Text(text)
+                .font(.custom("Inter-Regular", size: 13))
+                .foregroundColor(isValid ? .green : .gray)
+        }
+        
+    }
+}
+
+struct PasswordPolicy {
+    let hasUppercase: Bool
+    let hasLowercase: Bool
+    let hasNumber: Bool
+    let hasSpecialChar: Bool
+    let validLength: Bool
+}
+
+func passwordPolicy(for password: String) -> PasswordPolicy {
+    PasswordPolicy(
+        hasUppercase: password.range(of: "[A-Z]", options: .regularExpression) != nil,
+        hasLowercase: password.range(of: "[a-z]", options: .regularExpression) != nil,
+        hasNumber: password.range(of: "[0-9]", options: .regularExpression) != nil,
+        hasSpecialChar: password.range(of: "[@#$%^&+=!]", options: .regularExpression) != nil,
+        validLength: password.count >= 8 && password.count <= 15
+    )
 }
