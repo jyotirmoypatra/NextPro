@@ -11,13 +11,7 @@ import SwiftUI
 
 
 struct CreateNewPasswordView: View {
-    @FocusState private var focusedField: Field?
-
-    enum Field {
-        case newPassword
-        case confirmPassword
-    }
-
+  
    // var userType: String
     var userName: String
     var comingFrom: String
@@ -93,21 +87,7 @@ struct CreateNewPasswordView: View {
                             }
                             .padding(.bottom, 40)
                             
-//                            PasswordField(
-//                                title: comingFrom == "login" ? "Create Password" : "New Password",
-//                                placeholder: "Enter new password",
-//                                text: $viewModel.newPassword,
-//                                showText: $showNewPassword
-//                            )
-//
-//                            // validation pasword policy
-//                            
-//                            PasswordField(
-//                                title: comingFrom == "login" ? "Confirm Password" : "Confirm New Password",
-//                                placeholder: "Enter confirm password",
-//                                text: $viewModel.confirmPassword,
-//                                showText: $showConfirmPassword
-//                            )
+
                             
                             
                             PasswordField(
@@ -115,18 +95,11 @@ struct CreateNewPasswordView: View {
                                 placeholder: "Enter new password",
                                 text: $viewModel.newPassword,
                                 showText: $showNewPassword,
-                                focused: $focusedField,
-                                field: .newPassword
                             )
 
-//                            if focusedField == .newPassword {
-//                                PasswordPolicyView(
-//                                    policy: passwordPolicy(for: viewModel.newPassword)
-//                                )
-//                            }
 
                             
-                            if focusedField == .newPassword || !viewModel.newPassword.isEmpty {
+                            if !viewModel.newPassword.isEmpty {
                                 PasswordPolicyView(
                                     policy: passwordPolicy(for: viewModel.newPassword)
                                 )
@@ -141,8 +114,6 @@ struct CreateNewPasswordView: View {
                                 placeholder: "Enter confirm password",
                                 text: $viewModel.confirmPassword,
                                 showText: $showConfirmPassword,
-                                focused: $focusedField,
-                                field: .confirmPassword
                             )
 
 
@@ -307,74 +278,17 @@ struct CreateNewPasswordView: View {
 }
 
 
-//struct PasswordField: View {
-//    var title: String
-//    var placeholder: String
-//    @Binding var text: String
-//    @Binding var showText: Bool     // for eye button
-//    
-//    var body: some View {
-//        VStack(alignment: .leading, spacing: 6) {
-//            HStack(spacing: 0) {
-//                Text(title)
-//                    .font(.custom("Inter-Medium", size: 16))
-//                    .foregroundColor(.white)
-//                Text(" *")
-//                    .foregroundColor(.red)
-//            }
-//
-//            ZStack(alignment: .leading) {
-//
-//                if text.isEmpty {
-//                    Text(placeholder)
-//                        .font(.custom("Inter-Regular", size: 16))
-//                        .foregroundColor(.white.opacity(0.5))
-//                        .padding(.leading, 14)
-//                }
-//
-//                HStack {
-//                    if showText {
-//                        TextField("", text: $text)
-//                            .foregroundColor(.white)
-//                            .autocapitalization(.none)
-//                            .disableAutocorrection(true)
-//                    } else {
-//                        SecureField("", text: $text)
-//                            .foregroundColor(.white)
-//                            .autocapitalization(.none)
-//                            .disableAutocorrection(true)
-//                    }
-//
-//                    Button(action: { showText.toggle() }) {
-//                        Image(systemName: showText ? "eye.slash.fill" : "eye.fill")
-//                            .foregroundColor(.white.opacity(0.8))
-//                    }
-//                }
-//                .padding(.horizontal, 14)
-//                .frame(height: 50)
-//            }
-//            .background(Color.white.opacity(0.15))
-//            .cornerRadius(10)
-//        }
-//    }
-//}
-
-
-
-
 struct PasswordField: View {
     var title: String
     var placeholder: String
     @Binding var text: String
-    @Binding var showText: Bool
-    var focused: FocusState<CreateNewPasswordView.Field?>.Binding
-    var field: CreateNewPasswordView.Field
-
+    @Binding var showText: Bool     // for eye button
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-
-            HStack {
+            HStack(spacing: 0) {
                 Text(title)
+                    .font(.custom("Inter-Medium", size: 16))
                     .foregroundColor(.white)
                 Text(" *")
                     .foregroundColor(.red)
@@ -382,9 +296,9 @@ struct PasswordField: View {
 
             ZStack(alignment: .leading) {
 
-                // ✅ Placeholder (only when not focused)
-                if text.isEmpty && focused.wrappedValue != field {
+                if text.isEmpty {
                     Text(placeholder)
+                        .font(.custom("Inter-Regular", size: 16))
                         .foregroundColor(.white.opacity(0.5))
                         .padding(.leading, 14)
                 }
@@ -392,33 +306,30 @@ struct PasswordField: View {
                 HStack {
                     if showText {
                         TextField("", text: $text)
-                            .focused(focused, equals: field)
                             .foregroundColor(.white)
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
                     } else {
                         SecureField("", text: $text)
-                            .focused(focused, equals: field)
                             .foregroundColor(.white)
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
                     }
 
-                    Button {
-                        showText.toggle()
-                    } label: {
+                    Button(action: { showText.toggle() }) {
                         Image(systemName: showText ? "eye.slash.fill" : "eye.fill")
                             .foregroundColor(.white.opacity(0.8))
                     }
                 }
                 .padding(.horizontal, 14)
+                .frame(height: 50)
             }
-            .frame(height: 50)
             .background(Color.white.opacity(0.15))
             .cornerRadius(10)
         }
     }
 }
+
 
 
 

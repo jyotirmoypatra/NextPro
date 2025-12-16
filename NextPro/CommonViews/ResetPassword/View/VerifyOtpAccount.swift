@@ -340,7 +340,6 @@ struct VerifyOtpAccount: View {
     }
         .ignoresSafeArea(.keyboard, edges: .bottom) // Prevents UI from moving when keyboard appears
         .navigationDestination(isPresented: $navigateToResetPassword) {
-          //  SubmitResetPassword(userEmail: self.email)
             CreateNewPasswordView(userName: self.email, comingFrom: "forgetPassword")
                 .navigationBarBackButtonHidden(true)
                 .navigationBarHidden(true)
