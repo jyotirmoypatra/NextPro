@@ -53,6 +53,7 @@ struct HomeViewAdmin: View {
                         }
                         .padding(.horizontal)
                         .padding(.top, 5) // ✅ fixed padding instead of safeAreaInsets.top
+                        .padding(.bottom, 10) // ✅ fixed padding instead of safeAreaInsets.top
                         
                     }
 

@@ -67,38 +67,13 @@ struct ProfileEndUserView: View {
                     VStack(spacing: 28) {
                         // MARK: - Profile Info Section
                         VStack(spacing: 12) {
-//                            Image(systemName: "person.circle.fill")// Replace with your actual asset name
-//                                .resizable()
-//                                .scaledToFill()
-//                                .frame(width: 96, height: 96)
-//                                .foregroundColor(.gray.opacity(0.6))
-//                                .clipShape(Circle())
-//                                .shadow(radius: 6)
-                                
-                            
-                           // ProfileImageView(imageUrl: viewModel.image_url)
 
-
-                         
 
                             ProfileImageView(imageUrl: viewModel.image_url)
                                 .onTapGesture {
                                     showFullImage = true
                                 }
 
-
-
-//                            // Full Name
-//                            Text(viewModel.isLoading ? "Loading..." : viewModel.fullName)
-//                                .font(.custom("Inter-Medium", size: 16))
-//                                .foregroundColor(.white)
-//
-//                            // Phone Number
-//                            Text(viewModel.isLoading ? "Loading..." : viewModel.phoneNumber)
-//                                .font(.custom("Inter-Regular", size: 13))
-//                                .foregroundColor(.gray)
-
-                            
                             
                             // Full Name
                             if viewModel.isLoading {
@@ -143,14 +118,16 @@ struct ProfileEndUserView: View {
                                     navigateToUpdatePass = true
                                 }
                             }
-
+                            
                             Divider().background(Color.white.opacity(0.15))
                                 .padding(.horizontal,20)
-
-                            // Support
-                            UserProfileRow(title: "Support",textColor: .white) {
+                            
+                            UserProfileRow(title: "Voice Message" , textColor: .white) {
                                 // Handle support action
+                                navigate_voice_message = true
                             }
+
+                           
 
                             Divider().background(Color.white.opacity(0.15))
                                 .padding(.horizontal,20)
@@ -167,12 +144,7 @@ struct ProfileEndUserView: View {
                             .padding(.horizontal, 20)
                             .padding(.vertical, 30) // consistent with other rows
                             
-                            Divider().background(Color.white.opacity(0.15))
-                            
-                            UserProfileRow(title: "Voice Message" , textColor: .white) {
-                                // Handle support action
-                                navigate_voice_message = true
-                            }
+                           
                             
                             
                             Divider().background(Color.white.opacity(0.15))
@@ -195,6 +167,14 @@ struct ProfileEndUserView: View {
 
                             }
 
+                            Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
+
+                            // Support
+                            UserProfileRow(title: "Support",textColor: .white) {
+                                // Handle support action
+                            }
+                            
                             Divider().background(Color.white.opacity(0.15))
                                 .padding(.horizontal,20)
                             
@@ -228,18 +208,6 @@ struct ProfileEndUserView: View {
                     }
                 }
             }
-            
-            // WebView Modal Overlay
-//            if showWebView {
-//                WebViewModal(
-//                    url: webViewURL,
-//                    title: webViewTitle,
-//                    isPresented: $showWebView
-//                )
-//                .transition(.opacity)
-//                .zIndex(100)
-//            }
-            
             
             if viewModel.isLoading {
                 ZStack {
@@ -320,16 +288,6 @@ struct ProfileEndUserView: View {
             }
         }
         
-//        .modernAlert(isPresented: $showFailedAlert) {
-//              ModernAlertView(
-//                  title: "Error!",
-//                  message: viewModel.errorMessage,
-//                  isSuccess: false,
-//                  buttonTitle: "OK"
-//              ) { showFailedAlert = false
-//                 
-//              }
-//        }
         
         //Alert is visible only when: showFailedAlert == true ANd viewModel.isFailedDueToNoInternet == false
 
@@ -534,62 +492,6 @@ struct  DeleteConfirmationSheet: View {
     
    
 }
-
-
-
-//struct ProfileImageView: View {
-//    let imageUrl: String?
-//    let size: CGFloat = 96
-//    
-//    @State private var isLoading: Bool = true
-//
-//    var body: some View {
-//        ZStack {
-//
-//            // Placeholder
-//            Image(systemName: "person.circle.fill")
-//                .resizable()
-//                .scaledToFill()
-//                .foregroundColor(.gray.opacity(0.6))
-//                .frame(width: size, height: size)
-//
-//            // Remote image loader
-//            if let urlString = imageUrl,
-//               let url = URL(string: urlString) {
-//
-//                WebImage(url: url)
-//                    .onSuccess { _, _, _ in
-//                        DispatchQueue.main.async {
-//                            withAnimation { isLoading = false }
-//                        }
-//
-//                    }
-//                    .onFailure { _ in
-//                        DispatchQueue.main.async {
-//                            withAnimation { isLoading = false }
-//                        }
-//
-//                    }
-//                    .resizable()
-//                    .scaledToFill()
-//                    .frame(width: size, height: size)
-//            }
-//
-//            // Spinner overlay
-//            if isLoading {
-//                SpinnerView()
-//                    .frame(width: 35, height: 35)
-//                    .zIndex(10)
-//            }
-//        }
-//        .clipShape(Circle())
-//        .overlay(
-//            Circle().stroke(Color.white.opacity(0.7), lineWidth: 1)
-//        )
-//        .shadow(radius: 6)
-//    }
-//}
-
 
 
 struct ProfileImageView: View {
