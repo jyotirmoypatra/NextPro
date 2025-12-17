@@ -17,7 +17,8 @@ struct MembershipEndUserView: View {
         )
     ]
 
-    @State private var selectedTab = "Active"
+    
+    @State private var selectedTab = 0
     
     var body: some View {
         ZStack {
@@ -42,42 +43,10 @@ struct MembershipEndUserView: View {
                 }
                 .padding(.horizontal)
                 .padding(.top, 16)
-                .padding(.bottom, 30)
-
-                // MARK: - Tabs
-                HStack {
-                    VStack {
-                        Button(action: { selectedTab = "Active" }) {
-                            Text("Active")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(selectedTab == "Active" ? .white : .gray)
-                        }
-                        Rectangle()
-                            .frame(height: 2)
-                            .foregroundColor(selectedTab == "Active" ? .white : .clear)
-                    }
-
-                    Spacer()
-
-                    VStack {
-                        Button(action: { selectedTab = "Canceled" }) {
-                            Text("Canceled")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(selectedTab == "Canceled" ? .white : .gray)
-                        }
-                        Rectangle()
-                            .frame(height: 2)
-                            .foregroundColor(selectedTab == "Canceled" ? .white : .clear)
-                    }
-                }
-                .padding(.horizontal, 40)
                 .padding(.bottom, 12)
               
-
-                Divider()
-                    .background(Color.white.opacity(0.15))
-                    .padding(.bottom, 10)
-
+                MemberTabSection
+                
                 // MARK: - Membership Cards
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 16) {
@@ -92,6 +61,44 @@ struct MembershipEndUserView: View {
         }
         .background(Color.black.opacity(0.4))
         .internetOverlay() 
+    }
+    private var MemberTabSection: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button(action: { withAnimation { selectedTab = 0 } }) {
+                    Text("Active")
+                        .font(.custom("Inter-Bold", size: 15))
+                        .foregroundColor(selectedTab == 0 ? .white : .gray)
+                        .frame(maxWidth: .infinity)
+                }
+                
+                Button(action: { withAnimation { selectedTab = 1 } }) {
+                    Text("Canceled")
+                        .font(.custom("Inter-Bold", size: 15))
+                        .foregroundColor(selectedTab == 1 ? .white : .gray)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 15)
+            
+            // Full horizontal line
+            ZStack(alignment: selectedTab == 0 ? .leading : .trailing) {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(height: 1.0)
+                
+                // Highlight for active tab
+                Rectangle()
+                    .fill(Color.white)
+                    .frame(width: UIScreen.main.bounds.width / 2 - 20, height: 2) // slightly taller
+                    .animation(.easeInOut(duration: 0.1), value: selectedTab)
+                    .padding(.horizontal,20)
+            }
+           // .padding(.horizontal, 20)
+            .padding(.top, 10)
+            .padding(.bottom, 10)
+        }
     }
 }
 

@@ -43,6 +43,8 @@ struct DoorOpenView: View {
     @State private var accessUnAuthorizedMessage = ""
     @State private var accessGreetingMessage = ""
     
+    @State private var selectedTab = 0
+    
     var body: some View {
         ZStack {
             
@@ -98,11 +100,14 @@ struct DoorOpenView: View {
                 .padding(.bottom, 12)
                 
                 
+                DoorTabSection
+                
+                
                 ScrollView(.vertical, showsIndicators: false){
                     VStack{
                         Spacer().frame(height: 20)
                         
-                        VStack(spacing: 30) {
+                        VStack(spacing: 20) {
                             
                             // 🪪 Card (centered in the view)
                             VStack(spacing: 32) {
@@ -501,6 +506,48 @@ struct DoorOpenView: View {
     
    
     
+    private var DoorTabSection: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button(action: { withAnimation { selectedTab = 0 } }) {
+                    Text("Digital Key Access")
+                        .font(.custom("Inter-Bold", size: 15))
+                        .foregroundColor(selectedTab == 0 ? .white : .gray)
+                        .frame(maxWidth: .infinity)
+                }
+                
+            
+                
+                Button(action: { withAnimation { selectedTab = 1 } }) {
+                    Text("Remote Access")
+                        .font(.custom("Inter-Bold", size: 15))
+                        .foregroundColor(selectedTab == 1 ? .white : .gray)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.horizontal, 15)
+            .padding(.top, 15)
+            
+            // Full horizontal line
+            ZStack(alignment: selectedTab == 0 ? .leading : .trailing) {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(height: 1.0)
+                
+                // Highlight for active tab
+                Rectangle()
+                    .fill(Color.white)
+                    .frame(width: UIScreen.main.bounds.width / 2 - 20, height: 2) // slightly taller
+                    .animation(.easeInOut(duration: 0.1), value: selectedTab)
+                    .padding(.horizontal,20)
+                    
+            }
+           // .padding(.horizontal, 20)
+            .padding(.top, 10)
+            .padding(.bottom, 10)
+        }
+    }
+
     func getStatusMessage() -> String {
         if lockIcon == "checkmark" {
            // return "Access Granted"
@@ -610,7 +657,7 @@ struct DoorOpenView: View {
                print("🎯 Closest device: \(name) with RSSI: \(rssi)")
                
                // Only act if RSSI is strong
-               guard rssi > -38 && rssi < 0 else { return }
+               guard rssi > -40 && rssi < 0 else { return }
                
                if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
                    // ✅ Authorized door
