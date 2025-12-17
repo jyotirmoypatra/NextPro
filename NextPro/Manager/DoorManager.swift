@@ -305,6 +305,22 @@ class DoorManager: NSObject, ObservableObject, CBCentralManagerDelegate {
            }
     }
     
+
+    func shouldIgnoreMQTT(eventTime: Date) -> Bool {
+        let now = Date()
+        let age = now.timeIntervalSince(eventTime)
+
+        // ⛔ Ignore if event is older than 15 seconds
+        if age > 15 {
+            print("🕒 Ignoring stale MQTT event (age \(Int(age))s)")
+            return true
+        }
+
+        return false
+    }
+
+
+    
     // MARK: - Scan and Open Nearest Door
     func scanAndOpenNearestDoor() {
         print("🔍 Scanning for nearest door...")

@@ -164,3 +164,18 @@ func loadHTML(_ fileName: String) -> String {
     }
     return "<p>Failed to load \(fileName).html</p>"
 }
+
+func parseMQTTTime(_ value: Any?) -> Date? {
+    if let date = value as? Date {
+        return date
+    }
+
+    if let str = value as? String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter.date(from: str)
+    }
+
+    return nil
+}

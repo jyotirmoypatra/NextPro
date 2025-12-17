@@ -424,6 +424,14 @@ struct DoorOpenView: View {
             guard let info = notification.userInfo
             else { return }
             
+            
+            let eventTime = parseMQTTTime(info["time"]) ?? Date()
+
+               // ⛔ Drop old MQTT events
+               if DoorManager.shared.shouldIgnoreMQTT(eventTime: eventTime) {
+                   return
+               }
+            
             let type = info["type"] as? Int
             doorId = info["doorID"] as? Int
             if type == 0 {
