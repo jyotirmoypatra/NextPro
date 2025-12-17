@@ -44,6 +44,19 @@ struct DoorOpenView: View {
     @State private var accessGreetingMessage = ""
     
     @State private var selectedTab = 0
+    @State private var isRemoteUnlock = false
+    
+    
+    let doors: [DoorModelUser] = [
+        DoorModelUser(
+            name: "Iron Hive Gym: Main Gate",
+            devSn: "4282184653",
+            devMac: "a0:76:4e:5a:ae:a2",
+            doorID: 1,
+            eKey: "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
+            cardno: "2988462596"
+        )
+        ]
     
     var body: some View {
         ZStack {
@@ -210,10 +223,25 @@ struct DoorOpenView: View {
                     else {
                         
                         // Remote Access Tab
-                        ScrollView(.vertical, showsIndicators: false){
-                            VStack{
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(alignment: .leading, spacing: 20) {
+                                ForEach(doors) { door in
+                                    EntranceDoorCardView(
+                                        door: door,
+                                        onRemoteOpen: {
+                                            handleRemoteOpen(for: door)
+                                        },
+                                        onBLEOpen: {
+                                            handleBLEOpen(for: door)
+                                        }
+                                    )
+                                }
                             }
+                            .padding(.horizontal, 20)
+                            .padding(.top, 20)
                         }
+
+
                         .transition(.opacity)
                         // Remote Access Tab
                     }
@@ -442,27 +470,27 @@ struct DoorOpenView: View {
         
         
         
-//        .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
-//
-//            BluetoothAlertView(
-//                    onCancel: { showBluetoothAlert = false },
-//                    openSettings: {
-//                        if let url = URL(string: "App-Prefs:root=Bluetooth"),
-//                           UIApplication.shared.canOpenURL(url) {
-//                            UIApplication.shared.open(url)
-//                        }
-//                    }
-//                )
-//        }
+        .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
+
+            BluetoothAlertView(
+                    onCancel: { showBluetoothAlert = false },
+                    openSettings: {
+                        if let url = URL(string: "App-Prefs:root=Bluetooth"),
+                           UIApplication.shared.canOpenURL(url) {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                )
+        }
         
 
         .onReceive(bleManager.$bleState) { state in
             if state == .poweredOff {
-                showBluetoothAlert = true
+               // showBluetoothAlert = true
                 AceesMessage = "Bluetooth is Off. Please turn it on."
                 isScanningActive = false
             } else {
-                showBluetoothAlert = false
+                //showBluetoothAlert = false
             }
         }
 
@@ -501,7 +529,20 @@ struct DoorOpenView: View {
                
                 print("succes event recievd")
                 
-            } else {
+            }
+            else if type == 19 {
+                
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                speakText("Remote Open Door Successfully")
+                
+            }else if type == 8 {
+                
+               
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                speakText("Remote Open Door Successfully")
+                
+            }
+            else {
                 animateFailure()
                 UINotificationFeedbackGenerator().notificationOccurred(.error)
 
@@ -530,6 +571,13 @@ struct DoorOpenView: View {
         
         
         .onReceive(doorManager.$doorEvent.compactMap({ $0 })) { event in
+            
+            guard !isRemoteUnlock else {
+                   print("🌐 Remote unlock event — skipping local animations")
+                   doorManager.clearDoorEvent()
+                   return
+               }
+            
             switch event.status {
             case .starting:
                 animateOpeningStart()
@@ -546,7 +594,43 @@ struct DoorOpenView: View {
         }
     }
     
-   
+    private func handleRemoteOpen(for door: DoorModelUser) {
+        print("🌐 Remote open tapped for:", door.name)
+
+        // 1️⃣ Ensure MQTT is connected
+//        MQTTManager.shared.connect()
+//
+//        // 2️⃣ Subscribe to this device (optional but recommended)
+//        MQTTManager.shared.subscribeToDevice(
+//            door.devSn,
+//            model: "BC220" // or door.model if you have it
+//        )
+
+ 
+        MQTTManager.shared.sendOpenDoorCommand(
+            to: door.devSn,
+            doorID: door.doorID,
+            duration: 5
+        )
+
+        print("🚪 Remote open command sent for doorID:", door.doorID)
+    }
+
+
+    private func handleBLEOpen(for door: DoorModelUser) {
+        print("📡 BLE open tapped for:", door.name)
+
+        // Ensure BLE is on
+        guard bleManager.isBluetoothOn else {
+            showBluetoothAlert = true
+            return
+        }
+
+        isRemoteUnlock = true
+        // Open via BLE
+        doorManager.openSelectedDoor(door)
+    }
+
     
     private var DoorTabSection: some View {
         VStack(spacing: 0) {

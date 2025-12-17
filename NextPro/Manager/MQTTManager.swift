@@ -119,7 +119,7 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
 
 
     // Publish open door command to the device
-    func sendOpenDoorCommand(to deviceSN: String, doorID: Int = 1, duration: Int = 5) {
+    func sendOpenDoorCommand(to deviceSN: String, doorID: Int32 = 1, duration: Int = 5) {
         let topic = "down/\(deviceSN)"
         let payload: [String: Any] = [
             "commandid": 1,
