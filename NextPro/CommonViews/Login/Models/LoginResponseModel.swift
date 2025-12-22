@@ -18,7 +18,31 @@ struct LoginResponseModel: Decodable {
     let user_type: String?
     let refresh: String?
     let access: String?
+    let access_modes: AccessModes?
 }
+
+
+struct AccessModes: Decodable {
+    let digitalKeyAccess: Bool?
+    let remoteAccess: RemoteAccess?
+
+    enum CodingKeys: String, CodingKey {
+        case digitalKeyAccess = "digital_key_access"
+        case remoteAccess = "remote_access"
+    }
+}
+
+
+struct RemoteAccess: Decodable {
+    let remoteBLE: Bool?
+    let remoteWiFi: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case remoteBLE = "remote_ble"
+        case remoteWiFi = "remote_wifi"
+    }
+}
+
 
 
 struct ValidateEmailResponseModel: Decodable {

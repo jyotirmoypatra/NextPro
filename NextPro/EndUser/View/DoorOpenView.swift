@@ -42,9 +42,13 @@ struct DoorOpenView: View {
     @State private var accessDeniedMessage = ""
     @State private var accessUnAuthorizedMessage = ""
     @State private var accessGreetingMessage = ""
+    @State private var overlayMessage = ""
     
     @State private var selectedTab = 0
     @State private var isRemoteUnlock = false
+    
+    @State private var hasDigitalKeyAccess: Bool = false
+       @State private var hasRemoteAccess: Bool = false
     
     
     let doors: [DoorModelUser] = [
@@ -116,7 +120,7 @@ struct DoorOpenView: View {
                 DoorTabSection
                 Group {
                     
-                    if selectedTab == 0 {
+                    if selectedTab == 0 && hasDigitalKeyAccess{
                         // Digital Key Tab start
                         
                         ScrollView(.vertical, showsIndicators: false){
@@ -220,13 +224,14 @@ struct DoorOpenView: View {
                     
                     // Digital Key Tab end
                     
-                    else {
+                     else if selectedTab == 1 && hasRemoteAccess
+                    {
                         
                         // Remote Access Tab
                         ScrollView(.vertical, showsIndicators: false) {
                             VStack(alignment: .leading, spacing: 20) {
                                 ForEach(doors) { door in
-                                    EntranceDoorCardView(
+                                    RemoteDoorCardView(
                                         door: door,
                                         onRemoteOpen: {
                                             handleRemoteOpen(for: door)
@@ -248,7 +253,7 @@ struct DoorOpenView: View {
                     
                 }.animation(.easeInOut(duration: 0.6), value: selectedTab)
                 
-            }
+            }.frame(maxHeight: .infinity, alignment: .top)
             
             // 🔒 Lock + Progress ring OVERLAY (positioned at center with full-screen background)
             if isOpening || progress > 0 || ringColor != .white {
@@ -290,7 +295,8 @@ struct DoorOpenView: View {
                         .shadow(color: ringColor.opacity(0.4), radius: 10, x: 0, y: 5)
                         
                         // Status Message
-                        Text(getStatusMessage())
+                       // Text(getStatusMessage())
+                        Text(overlayMessage)
                             .font(.custom("Inter-SemiBold", size: 18))
                             .foregroundColor(ringColor)
                             .padding(.horizontal,10)
@@ -361,6 +367,21 @@ struct DoorOpenView: View {
             
             // Schedule the work item with 2-second delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: workItem)
+        }
+        .onAppear {
+                    // Load access flags from UserDefaults
+//                    hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_key_access")
+//                    hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
+            
+            hasDigitalKeyAccess = true
+            hasRemoteAccess = true
+            
+            // Automatically select first available tab
+                if hasDigitalKeyAccess {
+                    selectedTab = 0
+                } else if hasRemoteAccess {
+                    selectedTab = 1
+                }
         }
         .onDisappear {
             print("🛑 DoorOpenView disappeared — stopping all BLE and timers")
@@ -531,13 +552,13 @@ struct DoorOpenView: View {
                 
             }
             else if type == 19 {
-                
+                animateSuccess()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 speakText("Remote Open Door Successfully")
                 
             }else if type == 8 {
                 
-               
+                animateSuccess()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 speakText("Remote Open Door Successfully")
                 
@@ -572,11 +593,11 @@ struct DoorOpenView: View {
         
         .onReceive(doorManager.$doorEvent.compactMap({ $0 })) { event in
             
-            guard !isRemoteUnlock else {
-                   print("🌐 Remote unlock event — skipping local animations")
-                   doorManager.clearDoorEvent()
-                   return
-               }
+//            guard !isRemoteUnlock else {
+//                   print("🌐 Remote unlock event — skipping local animations")
+//                   doorManager.clearDoorEvent()
+//                   return
+//               }
             
             switch event.status {
             case .starting:
@@ -606,12 +627,14 @@ struct DoorOpenView: View {
 //            model: "BC220" // or door.model if you have it
 //        )
 
- 
+        isRemoteUnlock = true
+        animateOpeningStart()
         MQTTManager.shared.sendOpenDoorCommand(
             to: door.devSn,
             doorID: door.doorID,
             duration: 5
         )
+        
 
         print("🚪 Remote open command sent for doorID:", door.doorID)
     }
@@ -627,6 +650,7 @@ struct DoorOpenView: View {
         }
 
         isRemoteUnlock = true
+        animateOpeningStart()
         // Open via BLE
         doorManager.openSelectedDoor(door)
     }
@@ -635,40 +659,60 @@ struct DoorOpenView: View {
     private var DoorTabSection: some View {
         VStack(spacing: 0) {
             HStack {
-                Button(action: { withAnimation { selectedTab = 0 } }) {
-                    Text("Digital Key Access")
-                        .font(.custom("Inter-Bold", size: 15))
-                        .foregroundColor(selectedTab == 0 ? .white : .gray)
-                        .frame(maxWidth: .infinity)
+                if hasDigitalKeyAccess {
+                    Button(action: { withAnimation { selectedTab = 0 } }) {
+                        Text("Digital Key Access")
+                            .font(.custom("Inter-Bold", size: 15))
+                            .foregroundColor(selectedTab == 0 ? .white : .gray)
+                            .frame(maxWidth: .infinity)
+                    }
                 }
-                
             
-                
-                Button(action: { withAnimation { selectedTab = 1 } }) {
-                    Text("Remote Access")
-                        .font(.custom("Inter-Bold", size: 15))
-                        .foregroundColor(selectedTab == 1 ? .white : .gray)
-                        .frame(maxWidth: .infinity)
+                if hasRemoteAccess {
+                    Button(action: { withAnimation { selectedTab = 1 } }) {
+                        Text("Remote Access")
+                            .font(.custom("Inter-Bold", size: 15))
+                            .foregroundColor(selectedTab == 1 ? .white : .gray)
+                            .frame(maxWidth: .infinity)
+                    }
                 }
             }
             .padding(.horizontal, 15)
             .padding(.top, 15)
             
             // Full horizontal line
+//            ZStack(alignment: selectedTab == 0 ? .leading : .trailing) {
+//                Rectangle()
+//                    .fill(Color.gray.opacity(0.3))
+//                    .frame(height: 1.0)
+//                
+//                // Highlight for active tab
+//                Rectangle()
+//                    .fill(Color.white)
+//                    .frame(width: UIScreen.main.bounds.width / 2 - 20, height: 2) // slightly taller
+//                    .animation(.easeInOut(duration: 0.07), value: selectedTab)
+//                    .padding(.horizontal,20)
+//                    
+//            }
             ZStack(alignment: selectedTab == 0 ? .leading : .trailing) {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(height: 1.0)
-                
-                // Highlight for active tab
-                Rectangle()
-                    .fill(Color.white)
-                    .frame(width: UIScreen.main.bounds.width / 2 - 20, height: 2) // slightly taller
-                    .animation(.easeInOut(duration: 0.07), value: selectedTab)
-                    .padding(.horizontal,20)
-                    
-            }
-           // .padding(.horizontal, 20)
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 1.0)
+                        
+                        if hasDigitalKeyAccess && hasRemoteAccess {
+                            Rectangle()
+                                .fill(Color.white)
+                                .frame(width: UIScreen.main.bounds.width / 2 - 20, height: 2)
+                                .animation(.easeInOut(duration: 0.07), value: selectedTab)
+                                .padding(.horizontal,20)
+                        } else {
+                            Rectangle()
+                                .fill(Color.white)
+                                .frame(width: UIScreen.main.bounds.width - 40, height: 2)
+                                .animation(.easeInOut(duration: 0.07), value: selectedTab)
+                                .padding(.horizontal,20)
+                        }
+                    }
             .padding(.top, 10)
             .padding(.bottom, 10)
         }
@@ -692,31 +736,32 @@ struct DoorOpenView: View {
     }
 
     
-    func getStatusMessage() -> String {
-        if lockIcon == "checkmark" {
-           // return "Access Granted"
-            return accessGrantedMessage
-        } else if lockIcon == "xmark" {
-          //  return "Access Denied"
-        return accessDeniedMessage
-        } else if ringColor == .yellow && lockIcon == "lock.fill" && !isUnauthorise{
-            return "Verifying Please Wait..."
-        }
-        else if lockIcon == "lock.fill" && isUnauthorise {
-           // return "Unauthorized Door"
-            return accessUnAuthorizedMessage
-        }
-        return "Processing..."
-    }
+//    func getStatusMessage() -> String {
+//        if lockIcon == "checkmark" {
+//           // return "Access Granted"
+//            return accessGrantedMessage
+//        } else if lockIcon == "xmark" {
+//          //  return "Access Denied"
+//        return accessDeniedMessage
+//        } else if ringColor == .yellow && lockIcon == "lock.fill" && !isUnauthorise{
+//            return "Verifying Please Wait..."
+//        }
+//        else if lockIcon == "lock.fill" && isUnauthorise {
+//           // return "Unauthorized Door"
+//            return accessUnAuthorizedMessage
+//        }
+//        return "Processing..."
+//    }
     
     func animateOpeningStart() {
         withAnimation(.easeInOut(duration: 0.3)) {
             ringColor = .yellow
             lockIcon = "lock.fill"
             isOpening = true
+            overlayMessage = "Verifying Please Wait..."
             progress = 0.0
         }
-        withAnimation(.linear(duration: 2.0)) {
+        withAnimation(.linear(duration: 1.5)) {
             progress = 1.0
         }
         resetAnimationAfterDelay()
@@ -727,6 +772,12 @@ struct DoorOpenView: View {
             lockIcon = "checkmark"
             isOpening = true
             progress = 1.0
+            
+            if isRemoteUnlock{
+                overlayMessage = "Remote Open Door Successfully"
+            }else{
+                overlayMessage = accessGrantedMessage
+            }
         }
         resetAnimationAfterDelay()
     }
@@ -738,6 +789,13 @@ struct DoorOpenView: View {
             lockIcon = "xmark"
             isOpening = false
             progress = 1.0
+            
+            if isRemoteUnlock{
+                overlayMessage = "Remote Unlock Failed"
+            }else{
+                overlayMessage = accessDeniedMessage
+            }
+            
         }
         resetAnimationAfterDelay()
     }
@@ -749,13 +807,16 @@ struct DoorOpenView: View {
             lockIcon = "lock.fill"
             isOpening = false
             progress = 1.0
+            overlayMessage = accessUnAuthorizedMessage
+            
+            
         }
         resetAnimationAfterDelay()
     }
     
     // ⏳ Common reset (3 seconds later)
     func resetAnimationAfterDelay() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
             withAnimation(.easeInOut(duration: 0.3)) {
                 ringColor = .white
                 lockIcon = "lock.fill"
@@ -764,6 +825,7 @@ struct DoorOpenView: View {
                 AceesMessage = "Walk closer to the door."
                 doorId = nil
                 isUnauthorise = false
+                isRemoteUnlock = false
             }
         }
     }
@@ -816,7 +878,7 @@ struct DoorOpenView: View {
                    rssiTimer = nil
                    
                    // Restart monitoring after 5 seconds
-                   DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                   DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
                        bleManager.startContinuousScanning()
                        isScanningActive = true
                        monitorAndAutoOpenNearbyDoor()
@@ -849,7 +911,7 @@ struct DoorOpenView: View {
                    }
                    
                    // Restart scanning after 5 seconds
-                   DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                   DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
                        bleManager.startContinuousScanning()
                        isScanningActive = true
                        monitorAndAutoOpenNearbyDoor()
