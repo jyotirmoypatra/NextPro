@@ -98,19 +98,19 @@ class LoginViewModel: ObservableObject {
                 UserDefaults.standard.set(true, forKey: "isUserInitialSetupCompleted")
                
                 //digital key access
-                UserDefaults.standard.set(response.access_modes?.digitalKeyAccess ?? false, forKey: "digital_key_access")
+                UserDefaults.standard.set(response.access_modes?.digitalKeyAccess ?? true, forKey: "digital_key_access")
                
                 //remote access
-                let hasRemoteAccess = (response.access_modes?.remoteAccess?.remoteBLE ?? false) || (response.access_modes?.remoteAccess?.remoteWiFi ?? false)
+                let hasRemoteAccess = (response.access_modes?.remoteAccess?.remoteBLE ?? true) || (response.access_modes?.remoteAccess?.remoteWiFi ?? true)
                 UserDefaults.standard.set(hasRemoteAccess, forKey: "remote_access")
 
                 
                 // BLE access
-                let hasRemoteBLEAccess = response.access_modes?.remoteAccess?.remoteBLE ?? false
+                let hasRemoteBLEAccess = response.access_modes?.remoteAccess?.remoteBLE ?? true
                 UserDefaults.standard.set(hasRemoteBLEAccess, forKey: "remote_ble")
 
                 // Wi-Fi access
-                let hasRemoteWIFIAccess = response.access_modes?.remoteAccess?.remoteWiFi ?? false
+                let hasRemoteWIFIAccess = response.access_modes?.remoteAccess?.remoteWiFi ?? true
                 UserDefaults.standard.set(hasRemoteWIFIAccess, forKey: "remote_wifi")
 
                 

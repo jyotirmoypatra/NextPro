@@ -44,11 +44,14 @@ struct DoorOpenView: View {
     @State private var accessGreetingMessage = ""
     @State private var overlayMessage = ""
     
+    @State private var animationResetTask: DispatchWorkItem?
+
+    
     @State private var selectedTab = 0
     @State private var isRemoteUnlock = false
     
     @State private var hasDigitalKeyAccess: Bool = false
-       @State private var hasRemoteAccess: Bool = false
+    @State private var hasRemoteAccess: Bool = false
     
     
     let doors: [DoorModelUser] = [
@@ -427,14 +430,7 @@ struct DoorOpenView: View {
                     print("⚠️ View is not visible. Skipping BLE restart.")
                     return
                 }
-                
-                // Check if Bluetooth is available
-//                if bluetoothManager.state != .poweredOn {
-//                    print("⚠️ Bluetooth is OFF. Cannot restart auto-open.")
-//                    showBluetoothAlert = true
-//                    isScanningActive = false
-//                    return
-//                }
+
                 if !bleManager.isBluetoothOn {
                     print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
                   //  showBluetoothAlert = true
@@ -534,20 +530,8 @@ struct DoorOpenView: View {
                 animateSuccess()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 
-//                AceesMessage =  "Door Access Granted"
-//                speakText("Door Access Granted.")
-                
                 AceesMessage =  accessGrantedMessage
                 speakText(accessGrantedMessage)
-
-//                if doorId == 1{
-//                    AceesMessage =  "Access Granted"
-//                    speakText("Access Granted.")
-//                }else{
-//                    AceesMessage =  "Door 2 opened successfully."
-//                    speakText("Door 2 opened successfully.")
-//                }
-               
                 print("succes event recievd")
                 
             }
@@ -566,17 +550,6 @@ struct DoorOpenView: View {
             else {
                 animateFailure()
                 UINotificationFeedbackGenerator().notificationOccurred(.error)
-
-//                if doorId == 1{
-//                    AceesMessage =  "Door 1 Access Denied"
-//                    speakText("Door 1 Access Denied.")
-//                }else{
-//                    AceesMessage =  "Door 2 Access Denied"
-//                    speakText("Door 2 Access Denied.")
-//                }
-                
-//                AceesMessage =  "Door Access Denied."
-//                speakText("Door Access Denied.")
                 
                 AceesMessage =  accessDeniedMessage
                 speakText(accessDeniedMessage)
@@ -592,13 +565,7 @@ struct DoorOpenView: View {
         
         
         .onReceive(doorManager.$doorEvent.compactMap({ $0 })) { event in
-            
-//            guard !isRemoteUnlock else {
-//                   print("🌐 Remote unlock event — skipping local animations")
-//                   doorManager.clearDoorEvent()
-//                   return
-//               }
-            
+
             switch event.status {
             case .starting:
                 animateOpeningStart()
@@ -680,20 +647,6 @@ struct DoorOpenView: View {
             .padding(.horizontal, 15)
             .padding(.top, 15)
             
-            // Full horizontal line
-//            ZStack(alignment: selectedTab == 0 ? .leading : .trailing) {
-//                Rectangle()
-//                    .fill(Color.gray.opacity(0.3))
-//                    .frame(height: 1.0)
-//                
-//                // Highlight for active tab
-//                Rectangle()
-//                    .fill(Color.white)
-//                    .frame(width: UIScreen.main.bounds.width / 2 - 20, height: 2) // slightly taller
-//                    .animation(.easeInOut(duration: 0.07), value: selectedTab)
-//                    .padding(.horizontal,20)
-//                    
-//            }
             ZStack(alignment: selectedTab == 0 ? .leading : .trailing) {
                         Rectangle()
                             .fill(Color.gray.opacity(0.3))
@@ -735,25 +688,12 @@ struct DoorOpenView: View {
 
     }
 
-    
-//    func getStatusMessage() -> String {
-//        if lockIcon == "checkmark" {
-//           // return "Access Granted"
-//            return accessGrantedMessage
-//        } else if lockIcon == "xmark" {
-//          //  return "Access Denied"
-//        return accessDeniedMessage
-//        } else if ringColor == .yellow && lockIcon == "lock.fill" && !isUnauthorise{
-//            return "Verifying Please Wait..."
-//        }
-//        else if lockIcon == "lock.fill" && isUnauthorise {
-//           // return "Unauthorized Door"
-//            return accessUnAuthorizedMessage
-//        }
-//        return "Processing..."
-//    }
-    
     func animateOpeningStart() {
+        
+        // Cancel previous reset (important)
+            animationResetTask?.cancel()
+
+        
         withAnimation(.easeInOut(duration: 0.3)) {
             ringColor = .yellow
             lockIcon = "lock.fill"
@@ -764,9 +704,12 @@ struct DoorOpenView: View {
         withAnimation(.linear(duration: 1.5)) {
             progress = 1.0
         }
-        resetAnimationAfterDelay()
+        scheduleReset()
     }
     func animateSuccess() {
+        
+        animationResetTask?.cancel()
+        
         withAnimation(.easeInOut(duration: 0.3)) {
             ringColor = .green
             lockIcon = "checkmark"
@@ -779,28 +722,25 @@ struct DoorOpenView: View {
                 overlayMessage = accessGrantedMessage
             }
         }
-        resetAnimationAfterDelay()
+        scheduleReset()
     }
     
     // ❌ Failure → red, then reset
     func animateFailure() {
+        animationResetTask?.cancel()
         withAnimation(.easeInOut(duration: 0.3)) {
             ringColor = .red
             lockIcon = "xmark"
             isOpening = false
             progress = 1.0
-            
-            if isRemoteUnlock{
-                overlayMessage = "Remote Unlock Failed"
-            }else{
-                overlayMessage = accessDeniedMessage
-            }
+            overlayMessage = isRemoteUnlock ? "Remote Unlock Failed" : accessDeniedMessage
             
         }
-        resetAnimationAfterDelay()
+        scheduleReset()
     }
     
     func unauthorised() {
+        animationResetTask?.cancel()
         isUnauthorise = true
         withAnimation(.easeInOut(duration: 0.3)) {
             ringColor = .orange
@@ -811,12 +751,15 @@ struct DoorOpenView: View {
             
             
         }
-        resetAnimationAfterDelay()
+        scheduleReset()
     }
     
-    // ⏳ Common reset (3 seconds later)
-    func resetAnimationAfterDelay() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
+    
+    func scheduleReset() {
+        // Cancel any previous reset
+        animationResetTask?.cancel()
+
+        let task = DispatchWorkItem {
             withAnimation(.easeInOut(duration: 0.3)) {
                 ringColor = .white
                 lockIcon = "lock.fill"
@@ -826,9 +769,16 @@ struct DoorOpenView: View {
                 doorId = nil
                 isUnauthorise = false
                 isRemoteUnlock = false
+                overlayMessage = "Processing.."
+                
             }
         }
+
+        animationResetTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6.0, execute: task)
     }
+
+    
     func speakText(_ text: String) {
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
@@ -903,8 +853,8 @@ struct DoorOpenView: View {
                    }
                    
                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                       overlayMessage = accessUnAuthorizedMessage
                        unauthorised()
-                      // AceesMessage = "Unauthorized Door.  Access Not permitted"
                        AceesMessage = accessUnAuthorizedMessage
                        UINotificationFeedbackGenerator().notificationOccurred(.error)
                        speakText(accessUnAuthorizedMessage)
