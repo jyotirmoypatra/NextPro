@@ -775,7 +775,7 @@ struct DoorOpenView: View {
         }
 
         animationResetTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 6.0, execute: task)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0, execute: task)
     }
 
     
@@ -828,7 +828,7 @@ struct DoorOpenView: View {
                    rssiTimer = nil
                    
                    // Restart monitoring after 5 seconds
-                   DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
+                   DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                        bleManager.startContinuousScanning()
                        isScanningActive = true
                        monitorAndAutoOpenNearbyDoor()
@@ -861,7 +861,7 @@ struct DoorOpenView: View {
                    }
                    
                    // Restart scanning after 5 seconds
-                   DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
+                   DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                        bleManager.startContinuousScanning()
                        isScanningActive = true
                        monitorAndAutoOpenNearbyDoor()
