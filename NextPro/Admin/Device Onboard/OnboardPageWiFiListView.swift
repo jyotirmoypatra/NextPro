@@ -139,7 +139,7 @@ struct OnboardPageWiFiListView: View {
                                     )
                                 }
                             }
-                            .padding(.horizontal, 10)
+                           
                             .padding(.vertical, 10)
                         }
                         .refreshable {
@@ -161,8 +161,7 @@ struct OnboardPageWiFiListView: View {
                             .padding()
                     }
                     .background(selectedWiFiIndex == nil ? Color.gray : Color.white)
-                    .cornerRadius(12)   // ← APPLY AFTER background
-                    .padding(.horizontal, 10)
+                    .cornerRadius(12)
                     .disabled(selectedWiFiIndex == nil)
                     .padding(.bottom, 30)
                     .navigationDestination(isPresented: $navigateToWifiPassword) {
@@ -176,7 +175,7 @@ struct OnboardPageWiFiListView: View {
                     
                     
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 10)
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)

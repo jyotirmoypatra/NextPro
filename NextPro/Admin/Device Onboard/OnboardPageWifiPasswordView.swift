@@ -117,7 +117,7 @@ struct OnboardPageWifiPasswordView: View {
                             }
                     }
                     .padding(.top, 30)
-                    .padding(.horizontal, 30)
+                    .padding(.horizontal, 10)
                     
                     // Advanced Settings dropdown
                     VStack(spacing: 12) {
@@ -156,7 +156,7 @@ struct OnboardPageWifiPasswordView: View {
                                         .padding(.horizontal, 20)
                                 }
                                 .padding(.vertical, 16)
-                                .padding(.horizontal, 35)
+                                .padding(.horizontal, 10)
                                 
                                 .background(
                                     RoundedRectangle(cornerRadius: 10)
@@ -199,7 +199,7 @@ struct OnboardPageWifiPasswordView: View {
                                         }
                                     }
                                 }
-                                .padding(.horizontal, 10)
+                                
                             }
                             .transition(.asymmetric(
                                 insertion: .scale(scale: 0.97).combined(with: .opacity).animation(.easeOut(duration: 0.18)),
@@ -207,7 +207,7 @@ struct OnboardPageWifiPasswordView: View {
                             ))
                         }
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 10)
                     
                     // Loading / Status Message
                     if isConfiguring {

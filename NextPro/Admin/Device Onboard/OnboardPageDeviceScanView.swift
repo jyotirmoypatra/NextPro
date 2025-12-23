@@ -68,7 +68,28 @@ struct OnboardPageDeviceScanView: View {
                     .padding(.horizontal, 5)
                     .padding(.top, 5)
                     
-                    
+                    VStack(spacing: 15) {
+                        Image("socket-plug")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 48, height: 48)
+                        
+                        Text("Power on your device")
+                            .font(.custom("Inter-Medium", size: 14))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                        
+                        Text("Ensure the device is turned on before selecting it and tapping Next.")
+                            .font(.custom("Inter-Regular", size: 16))
+                            .foregroundColor(Color(hex: "#6D717F"))
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)   
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.white.opacity(0.11))
+                    )
                     
                     // Device list (scrollable)
                     ScrollView(showsIndicators: false) {
@@ -166,7 +187,7 @@ struct OnboardPageDeviceScanView: View {
                                 }
                             }
                         }
-                        .padding(.horizontal, 10)
+                       // .padding(.horizontal, 10)
                         .padding(.vertical, 10)
                     }
                     
@@ -191,7 +212,7 @@ struct OnboardPageDeviceScanView: View {
                     }
                     .disabled(doorManager.isScanning || doorManager.bluetoothStateMessage.contains("Failed") || doorManager.bluetoothStateMessage.contains("Unsupported") || doorManager.bluetoothStateMessage.contains("Unauthorized") || doorManager.bluetoothStateMessage.contains("Powered Off"))
                     .padding(.top, 5)
-                    .padding(.horizontal, 10)
+                   
                     
                     
                     // Next button
@@ -220,14 +241,13 @@ struct OnboardPageDeviceScanView: View {
                     .background(selectedDeviceSN == nil ? Color.gray : Color.white)
                     .cornerRadius(12)           // ← APPLY HERE
                     .disabled(selectedDeviceSN == nil)
-                    .padding(.horizontal, 10)    // ← Only side padding
                     .padding(.bottom, 30)
                     
                     
                     
                     
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 10)
             }
         }
 
