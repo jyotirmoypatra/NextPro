@@ -197,7 +197,7 @@ struct ProfileEndUserView: View {
                             RoundedRectangle(cornerRadius: 14)
                                 .stroke(Color.white.opacity(0.1), lineWidth: 1)
                         )
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, 10)
                     }
                     .padding(.bottom, 30)
                 }

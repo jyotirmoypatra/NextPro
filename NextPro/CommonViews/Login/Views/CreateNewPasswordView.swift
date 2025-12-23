@@ -124,7 +124,7 @@ struct CreateNewPasswordView: View {
                             
                         }
                         .padding(.top,10)
-                        .padding(.horizontal, 25) // ✅ Apply padding to entire VStack
+                        .padding(.horizontal, 10) // ✅ Apply padding to entire VStack
                     } .keyboardAware()
                     .scrollIndicators(.hidden)
                     
@@ -197,7 +197,7 @@ struct CreateNewPasswordView: View {
                         }
                         
                     }
-                    .padding(.horizontal, 30)
+                    .padding(.horizontal, 10)
                     .padding(.bottom, 30)
                    // .background(.black)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)

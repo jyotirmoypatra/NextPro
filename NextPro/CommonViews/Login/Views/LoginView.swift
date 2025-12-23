@@ -217,7 +217,7 @@ struct LoginView: View {
 
                             Spacer().frame(height: 150)  // Prevent cut-off
                         }
-                        .padding(.horizontal, 30)
+                        .padding(.horizontal, 10)
                     } .keyboardAware()
 
                     // FOOTER - Fixed at Bottom
@@ -361,7 +361,7 @@ struct LoginView: View {
 //                        }
 
                     }
-                    .padding(.horizontal, 30)
+                    .padding(.horizontal, 10)
                     .padding(.bottom, 35)
                    // .background(.black)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)

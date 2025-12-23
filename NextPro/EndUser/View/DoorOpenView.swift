@@ -199,7 +199,7 @@ struct DoorOpenView: View {
                                         RoundedRectangle(cornerRadius: 14)
                                             .stroke(Color.white.opacity(0.1), lineWidth: 1)
                                     )
-                                    .padding(.horizontal, 20)
+                                    .padding(.horizontal, 10)
                                     
                                     
                                     HStack(spacing: 6) {
@@ -245,7 +245,7 @@ struct DoorOpenView: View {
                                     )
                                 }
                             }
-                            .padding(.horizontal, 20)
+                            .padding(.horizontal, 10)
                             .padding(.top, 20)
                         }
 
@@ -914,7 +914,7 @@ struct HowItWorksView: View {
             }
             .font(.custom("Inter-Regular", size: 14))
             .foregroundColor(.white)
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 10)
         }
     }
 }

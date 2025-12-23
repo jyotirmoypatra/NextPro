@@ -54,7 +54,7 @@ struct MembershipEndUserView: View {
                             UserMembershipCardView(membership: membership)
                         }
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 10)
                     .padding(.bottom, 20)
                 }
             }

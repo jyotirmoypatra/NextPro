@@ -266,7 +266,7 @@ struct VerifyOtpAccount: View {
                         
                     Spacer().frame(height: 150)  // Prevent cut-off by fixed footer
                 }
-                .padding(.horizontal, 30)
+                .padding(.horizontal, 10)
             }
                 
                 // FOOTER - Fixed at Bottom
@@ -311,7 +311,7 @@ struct VerifyOtpAccount: View {
                     }
                     .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 30)
+                .padding(.horizontal, 10)
                 .padding(.bottom, 35)
                // .background(.black)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
