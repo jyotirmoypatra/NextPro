@@ -105,8 +105,8 @@ struct HomeViewAdmin: View {
 
                         TabBarItemUser(
                             title: "Devices",
-                            activeIcon: "user-star-active",
-                            inactiveIcon: "user-star-inactive",
+                            activeIcon: "multi-window-active",
+                            inactiveIcon: "multi-window-inactive",
                             isSelected: selectedTab == 1
                         )
                         .onTapGesture { selectedTab = 1 }

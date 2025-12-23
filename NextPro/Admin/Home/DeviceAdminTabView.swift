@@ -32,16 +32,15 @@ struct DeviceAdminTabView: View {
         ZStack {
             VStack{
                 Button(action: {
-                   print("add devices")
                     navigateToDeviceScanView = true
                 }) {
                     HStack{
                         Image(systemName: "plus")
-                            .font(.system(size: 18))
+                            .font(.system(size: 16))
                             .foregroundColor(.white)
                             .fontWeight(.bold)
                           
-                        Text("Add Devices")
+                        Text("Provision device")
                             .font(.custom("Inter-SemiBold", size: 16))
                             .foregroundColor(.white)
                     }
@@ -59,11 +58,11 @@ struct DeviceAdminTabView: View {
                         }
                         Spacer()
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 10)
                     .padding(.top, 10)
                 }
             }
-            .padding(.top,20)
+            .padding(.top,10)
         }
         .navigationBarHidden(true)
         .navigationDestination(isPresented: $navigateToDeviceScanView) {

@@ -29,7 +29,7 @@ struct AdminFacilityListView: View {
                     
                     Spacer()
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 10)
                 .padding(.top, 10)
             }
         }
@@ -143,7 +143,7 @@ struct FacilityDetailView: View {
                             )
                         }
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 10)
                     .padding(.top, 20)
                 }
 

@@ -58,10 +58,10 @@ struct OnboardPageDeviceScanView: View {
                         // RIGHT: Info Icon
                         Image(systemName: "info.circle")
                             .resizable()
-                            .frame(width: 24, height: 24)
+                            .frame(width: 20, height: 20)
                     }
                     .overlay(
-                        Text("Add Devices")
+                        Text("Provision Device")
                             .foregroundColor(.white)
                             .font(.custom("Inter-Bold", size: 16))
                     )
