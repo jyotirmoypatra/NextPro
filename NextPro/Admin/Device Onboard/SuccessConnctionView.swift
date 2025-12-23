@@ -62,6 +62,7 @@ struct SuccessConnctionView: View {
                     }
                     .navigationDestination(isPresented: $navigateToHome) {
                         HomeViewAdmin()
+                        
                     }
                 }
                 .padding(.vertical, 40)
@@ -75,6 +76,7 @@ struct SuccessConnctionView: View {
             }
             .padding(.horizontal, 30)
         }
+        .navigationBarBackButtonHidden(true)
     }
 }
 

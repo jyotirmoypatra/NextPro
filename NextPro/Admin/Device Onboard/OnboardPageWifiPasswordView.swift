@@ -244,7 +244,9 @@ struct OnboardPageWifiPasswordView: View {
                     .navigationDestination(isPresented: $navigateToSuccessView) {
                          // Assuming SuccessConnctionView is defined elsewhere
                           SuccessConnctionView()
-                         //Text("Success View Placeholder")
+                            .navigationBarBackButtonHidden(true)
+                            .navigationBarHidden(true)
+                            .interactiveDismissDisabled(true)
                     }
                     
                 }

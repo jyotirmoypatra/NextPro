@@ -79,8 +79,14 @@ struct HomeViewAdmin: View {
 
                         case 1:
                             DeviceAdminTabView()
+                                .navigationBarBackButtonHidden(true)
+                                .navigationBarHidden(true)
+                                .interactiveDismissDisabled(true)
                         case 2:
                             AdminProfileTabView()
+                                .navigationBarBackButtonHidden(true)
+                                .navigationBarHidden(true)
+                                .interactiveDismissDisabled(true)
                         default:
                             EmptyView()
                         }
