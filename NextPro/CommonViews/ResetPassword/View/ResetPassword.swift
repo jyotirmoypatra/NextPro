@@ -38,7 +38,7 @@ struct ResetPassword: View {
                             Text("RESET YOUR PASSWORD")
                                 .font(.custom("Inter-SemiBold", size: 20))
                                 .foregroundColor(.white)
-                            Text("Enter a new password for your account. Make sure it's something secure and easy for you to remember")
+                            Text("Enter the email associated with your account, and we'll send you a code to reset your password securely.")
                                 .font(.custom("Inter-Regular", size: 16))
                                 .foregroundColor(Color.gray.opacity(0.8))
                                 .multilineTextAlignment(.center)

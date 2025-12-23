@@ -92,7 +92,7 @@ struct CreateNewPasswordView: View {
                             
                             PasswordField(
                                 title: comingFrom == "validate_email" ? "Create Password" : "New Password",
-                                placeholder: "Enter new password",
+                                placeholder: "Enter New Password",
                                 text: $viewModel.newPassword,
                                 showText: $showNewPassword,
                             )
@@ -111,7 +111,7 @@ struct CreateNewPasswordView: View {
                             
                             PasswordField(
                                 title: "Confirm Password",
-                                placeholder: "Enter confirm password",
+                                placeholder: "Confirm New Password",
                                 text: $viewModel.confirmPassword,
                                 showText: $showConfirmPassword,
                             )
