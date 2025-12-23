@@ -97,7 +97,7 @@ struct LoginView: View {
                                 ZStack(alignment: .leading) {
                                     if isUserInitialSetupDone {
                                         if vm.email.isEmpty {
-                                            Text("Enter Email")
+                                            Text("Enter Email Address")
                                                 .foregroundColor(Color.white.opacity(0.5))
                                                 .font(.custom("Inter-Regular", size: 16))
                                                 .padding(.leading, 14)
@@ -126,7 +126,7 @@ struct LoginView: View {
                                             .disableAutocorrection(true)
                                     }else{   // fresh account
                                         if validateVM.email.isEmpty {
-                                            Text("Enter Email")
+                                            Text("Enter Email Address")
                                                 .foregroundColor(Color.white.opacity(0.5))
                                                 .font(.custom("Inter-Regular", size: 16))
                                                 .padding(.leading, 14)
@@ -207,7 +207,7 @@ struct LoginView: View {
                                         navigateToResetPassword = true
                                         
                                     }) {
-                                        Text("Forgot Password?")
+                                        Text("Forgot Password ?")
                                             .font(.custom("Inter-Regular", size: 14))
                                             .foregroundColor(.white)
                                             .padding(.top, 6)

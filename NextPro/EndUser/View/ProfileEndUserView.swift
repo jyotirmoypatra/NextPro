@@ -185,7 +185,7 @@ struct ProfileEndUserView: View {
                             Divider().background(Color.white.opacity(0.15))
                                 .padding(.horizontal,20)
                             
-                            UserProfileRow(title: "Logout" , textColor: .red) {
+                            UserProfileRow(title: "Logout" , textColor: .orange) {
                                 showLogoutAlert = true
                             }
 
@@ -342,7 +342,7 @@ struct UserProfileRow: View {
                     .multilineTextAlignment(.leading)
                 Spacer()
                 Image(systemName: "chevron.right")
-                    .foregroundColor(.gray)
+                    .foregroundColor(textColor)
                     .font(.system(size: 15, weight: .medium))
             }
             .padding(.horizontal, 20)
@@ -496,7 +496,7 @@ struct  DeleteConfirmationSheet: View {
 
 struct ProfileImageView: View {
     let imageUrl: String?
-    let size: CGFloat = 96
+    let size: CGFloat = 100
     
     @State private var isLoading: Bool = true
 

@@ -105,7 +105,7 @@ struct EditProfileView: View {
                                     Image(uiImage: img)
                                         .resizable()
                                         .scaledToFill()
-                                        .frame(width: 100, height: 100)
+                                        .frame(width: 110, height: 110)
                                         .clipShape(Circle())
                                         .overlay(
                                             Circle()
@@ -127,7 +127,7 @@ struct EditProfileView: View {
                                     //checkPhotoPermission()
                                     showSourcePicker = true
                                 }) {
-                                    Image(systemName: "camera.fill")
+                                    Image(systemName: "camera")
                                         .font(.system(size: 14))
                                         .foregroundColor(.black)
                                         .padding(8)
@@ -138,7 +138,7 @@ struct EditProfileView: View {
                                                 .stroke(Color.black.opacity(0.4), lineWidth: 2)
                                         )
                                 }
-                                .offset(x: -5, y: -5)
+                                //.offset(x: -5, y: -5)
                             }
                         }
                         .padding(.bottom, 20)

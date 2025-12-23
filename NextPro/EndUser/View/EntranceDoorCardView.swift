@@ -1,67 +1,80 @@
 //
-//  EntranceDoorCardView.swift
+//  RemoteDoorCardView.swift
 //  NextPro
 //
 //  Created by JYOTIRMOY PATRA on 22/12/25.
 //
 import SwiftUI
 
+
 struct RemoteDoorCardView: View {
     let door: DoorModelUser
     let onRemoteOpen: () -> Void
     let onBLEOpen: () -> Void
-    
+
     private var hasRemoteBLEAccess: Bool {
-            UserDefaults.standard.bool(forKey: "remote_ble")
-        }
-        private var hasRemoteWIFIAccess: Bool {
-            UserDefaults.standard.bool(forKey: "remote_wifi")
+        UserDefaults.standard.bool(forKey: "remote_ble")
+    }
+
+    private var hasRemoteWIFIAccess: Bool {
+        UserDefaults.standard.bool(forKey: "remote_wifi")
     }
 
     var body: some View {
         HStack(spacing: 16) {
 
-            // Door name
+            // LEFT : Door name
             Text(door.name)
                 .font(.custom("Inter-SemiBold", size: 14))
                 .foregroundColor(.white)
-                .lineLimit(2)
+                .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            if hasRemoteWIFIAccess {
-                // Remote Open
-                Button(action: onRemoteOpen) {
-                    VStack(spacing: 4) {
-                        Image("antenna-signal")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 24, height: 24)
-                        
-                        Text("Remote Open")
-                            .font(.custom("Inter-SemiBold", size: 13))
-                            .foregroundColor(.white)
+            // RIGHT : Action buttons
+            HStack(spacing: 18) {
+
+                if hasRemoteWIFIAccess {
+                    Button(action: onRemoteOpen) {
+                        VStack(spacing: 6) {
+                            Image("antenna-signal")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 22, height: 22)
+
+                            Text("Open Door")
+                                .font(.custom("Inter-Regular", size: 10))
+                                .foregroundColor(.white)
+                        }
+                        .frame(width: 68, height: 58) // ✅ fixed size
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                        )
                     }
                 }
-            }
-            
-            // BLE Open
-            if hasRemoteBLEAccess {
-                Button(action: onBLEOpen) {
-                    VStack(spacing: 4) {
-                        Image("bluetooth-white")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 24, height: 24)
-                        
-                        Text("BLE Open")
-                            .font(.custom("Inter-SemiBold", size: 13))
-                            .foregroundColor(.white)
+
+                if hasRemoteBLEAccess {
+                    Button(action: onBLEOpen) {
+                        VStack(spacing: 6) {
+                            Image("bluetooth-white")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 22, height: 22)
+
+                            Text("Open Door")
+                                .font(.custom("Inter-Regular", size: 10))
+                                .foregroundColor(.white)
+                        }
+                        .frame(width: 68, height: 58) // ✅ same size
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                        )
                     }
                 }
-                
             }
         }
-        .padding(20)
+        .padding(16)
         .background(Color.white.opacity(0.08))
         .cornerRadius(14)
         .overlay(

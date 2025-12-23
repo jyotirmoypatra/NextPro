@@ -56,7 +56,7 @@ struct DoorOpenView: View {
     
     let doors: [DoorModelUser] = [
         DoorModelUser(
-            name: "Iron Hive Gym: Main Gate",
+            name: "Iron Hive Gym : Main Gate",
             devSn: "4282184653",
             devMac: "a0:76:4e:5a:ae:a2",
             doorID: 1,
@@ -635,7 +635,7 @@ struct DoorOpenView: View {
             HStack {
                 if hasDigitalKeyAccess {
                     Button(action: { withAnimation { selectedTab = 0 } }) {
-                        Text("Digital Key Access")
+                        Text("Digital Access")
                             .font(.custom("Inter-Bold", size: 15))
                             .foregroundColor(selectedTab == 0 ? .white : .gray)
                             .frame(maxWidth: .infinity)
