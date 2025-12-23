@@ -540,7 +540,14 @@ struct DoorOpenView: View {
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 speakText("Remote Open Door Successfully")
                 
-            }else if type == 8 {
+            }
+            else if type == 126 {
+                print("Ignore event-device startup")
+                return
+                
+            }
+            
+            else if type == 8 {
                 
                 animateSuccess()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
