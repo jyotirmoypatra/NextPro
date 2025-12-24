@@ -23,14 +23,14 @@ struct  PrivacyAndTermsView: View {
             ZStack(alignment: .top) {
                 
                 
-                // Full-screen semi-transparent background
-//                Image("backgroundimg")
-//                    .resizable()
-//                    .aspectRatio(contentMode: .fill)
-//                    .frame(width: geometry.size.width, height: geometry.size.height)
-//                    .ignoresSafeArea()
+               //  Full-screen semi-transparent background
+                Image("backgroundimg")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .ignoresSafeArea()
                 
-                Color(hex: "#242424")
+                Color.black.opacity(0.9)
                     .ignoresSafeArea()
                 
                 VStack{
@@ -65,7 +65,6 @@ struct  PrivacyAndTermsView: View {
                     }
                     .padding(.horizontal)
                     .padding(.top, 16)
-                    .background(Color.black)
                     .frame(maxWidth: .infinity, alignment: .top)
                     .zIndex(1)
                     
@@ -86,6 +85,7 @@ struct  PrivacyAndTermsView: View {
                                 }
                             }
                         )
+                        .background(.clear)
                         .frame(height: webContentHeight)
                         .clipped()
                     }
@@ -99,7 +99,6 @@ struct  PrivacyAndTermsView: View {
                 
             }
             .navigationBarBackButtonHidden()
-            .background(Color(hex: "#242424"))
             
         }
         .onAppear{

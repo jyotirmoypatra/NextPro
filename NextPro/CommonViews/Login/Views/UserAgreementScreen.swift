@@ -433,7 +433,7 @@ struct WebContentView: UIViewRepresentable {
     
     func updateUIView(_ uiView: WKWebView, context: Context) {
         // Only update the background (no reload)
-        applyBackground(to: uiView)
+      //  applyBackground(to: uiView)
         
         // Optionally scroll to top when htmlString changes
         if context.coordinator.lastHTMLString != htmlString {
@@ -478,7 +478,7 @@ struct WebContentView: UIViewRepresentable {
         
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             // Query content height from the page
-            parent.applyBackground(to: webView)
+           // parent.applyBackground(to: webView)
             webView.evaluateJavaScript("document.body.scrollHeight") { result, error in
                 if let h = result as? CGFloat {
                     DispatchQueue.main.async {

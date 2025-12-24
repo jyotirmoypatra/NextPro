@@ -69,7 +69,7 @@ struct CreateNewPasswordView: View {
                     
                     ScrollView { // ✅ Add ScrollView to manage height & keyboard
                         VStack(spacing: 25) {
-                            Spacer().frame(height: 40)
+                            Spacer()
                             
                             // Header
                             VStack(spacing: 5) {
