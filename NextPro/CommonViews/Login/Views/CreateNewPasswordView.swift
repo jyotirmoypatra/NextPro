@@ -11,8 +11,8 @@ import SwiftUI
 
 
 struct CreateNewPasswordView: View {
-  
-   // var userType: String
+    
+    // var userType: String
     var userName: String
     var comingFrom: String
     @Environment(\.dismiss) private var dismiss
@@ -27,7 +27,7 @@ struct CreateNewPasswordView: View {
     @State private var navigateToAggrement = false
     @State private var isAdmin = false
     @State private var showSuccessUpdateAlert = false
-
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top){
@@ -42,29 +42,30 @@ struct CreateNewPasswordView: View {
                     .ignoresSafeArea()
                 
                 // MARK: - Header (Fixed at top)
-                HStack {
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        Image(systemName: "arrow.left")
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundColor(.white)
-                            .padding(10)
-                           // .background(Color.white.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                VStack{
+                    HStack {
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            Image(systemName: "arrow.left")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(10)
+                            // .background(Color.white.opacity(0.1))
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                        }
+                        
+                        Spacer()
+                        
+                        
                     }
+                    .padding(.horizontal)
+                    .padding(.bottom, 10)
+                    // .background(Color.black)
+                    .frame(maxWidth: .infinity, alignment: .top)
+                    .zIndex(1)
                     
-                    Spacer()
                     
-                   
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 10)
-                .background(Color.black)
-                .frame(maxWidth: .infinity, alignment: .top)
-                .zIndex(1)
-
-
                     
                     ScrollView { // ✅ Add ScrollView to manage height & keyboard
                         VStack(spacing: 25) {
@@ -72,22 +73,22 @@ struct CreateNewPasswordView: View {
                             
                             // Header
                             VStack(spacing: 5) {
-                               // Text(comingFrom == "login" ? "CREATE YOUR ACCOUNT" : "UPDATE YOUR PASSWORD")
+                                // Text(comingFrom == "login" ? "CREATE YOUR ACCOUNT" : "UPDATE YOUR PASSWORD")
                                 Text(
                                     comingFrom == "validate_email" ? "CREATE YOUR ACCOUNT" :
-                                    comingFrom == "user_profile" ? "UPDATE YOUR PASSWORD" :
-                                    comingFrom == "forgetPassword" ? "RESET YOUR PASSWORD" :
-                                    "" // fallback
+                                        comingFrom == "user_profile" ? "UPDATE YOUR PASSWORD" :
+                                        comingFrom == "forgetPassword" ? "RESET YOUR PASSWORD" :
+                                        "" // fallback
                                 )
-                                    .font(.custom("Inter-SemiBold", size: 20))
-                                    .foregroundColor(.white)
+                                .font(.custom("Inter-SemiBold", size: 20))
+                                .foregroundColor(.white)
                                 Text("Create a secure password for your account")
                                     .font(.custom("Inter-Regular", size: 16))
                                     .foregroundColor(Color.gray.opacity(0.8))
                             }
                             .padding(.bottom, 40)
                             
-
+                            
                             
                             
                             PasswordField(
@@ -96,8 +97,8 @@ struct CreateNewPasswordView: View {
                                 text: $viewModel.newPassword,
                                 showText: $showNewPassword,
                             )
-
-
+                            
+                            
                             
                             if !viewModel.newPassword.isEmpty {
                                 PasswordPolicyView(
@@ -107,7 +108,7 @@ struct CreateNewPasswordView: View {
                                 .transition(.opacity.combined(with: .move(edge: .top)))
                                 .animation(.easeInOut(duration: 0.25), value: viewModel.newPassword)
                             }
-
+                            
                             
                             PasswordField(
                                 title: "Confirm Password",
@@ -115,8 +116,8 @@ struct CreateNewPasswordView: View {
                                 text: $viewModel.confirmPassword,
                                 showText: $showConfirmPassword,
                             )
-
-
+                            
+                            
                             
                             Spacer()
                             
@@ -124,102 +125,104 @@ struct CreateNewPasswordView: View {
                             
                         }
                         .padding(.top,10)
-                        .padding(.horizontal, 10) // ✅ Apply padding to entire VStack
+                        .padding(.horizontal, 10)
+                        
                     } .keyboardAware()
-                    .scrollIndicators(.hidden)
-                    
-                    // Bottom Button
-                    VStack(spacing: 16) {
-                        Button(action: {
-                            if !network.hasInternet {
-                                showNoInternetAlert = true
-                                return
-                            }
+                        .scrollIndicators(.hidden)
+                } .padding(.bottom, 100)
+                
+                // Bottom Button
+                VStack(spacing: 16) {
+                    Button(action: {
+                        if !network.hasInternet {
+                            showNoInternetAlert = true
+                            return
+                        }
+                        
+                        Task {
                             
-                            Task {
+                            
+                            await viewModel.updatePassword(username: self.userName)
+                            
+                            if viewModel.updateSuccess {
+                                // Show success toast
                                 
-                                
-                                await viewModel.updatePassword(username: self.userName)
-                                
-                                if viewModel.updateSuccess {
-                                    // Show success toast
-                                    
-                                    if comingFrom == "user_profile"{
-                                        showSuccessUpdateAlert = true
-                                    }
-                                    else if comingFrom == "validate_email" { //come from setup user
-                                        
-                                        toastManager.show(
-                                            message: "Password updated successfully!",
-                                            type: .success,
-                                            duration: 1.0
-                                        )
-                                        
-                                        // Navigate after a short delay to show the toast
-                                        try? await Task.sleep(nanoseconds: 1_000_000_000)
-                                        
-                                        // isAdmin = (userType == "facility_manager")
-                                        navigateToAggrement = true
-                                    } else { 
-                                        toastManager.show(
-                                            message: "Password updated successfully!",
-                                            type: .success,
-                                            duration: 1.0
-                                        )
-                                        
-                                        // Navigate after a short delay to show the toast
-                                        try? await Task.sleep(nanoseconds: 1_000_000_000)
-                                        
-                                        
-                                       // KeychainManager.shared.resetToLogin()
-                                        navigateToLogin = true
-                                    }
-                                    
-                                }else{
-                                    showUpdateFailedAlert = true
+                                if comingFrom == "user_profile"{
+                                    showSuccessUpdateAlert = true
                                 }
+                                else if comingFrom == "validate_email" { //come from setup user
+                                    
+                                    toastManager.show(
+                                        message: "Password updated successfully!",
+                                        type: .success,
+                                        duration: 1.0
+                                    )
+                                    
+                                    // Navigate after a short delay to show the toast
+                                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                                    
+                                    // isAdmin = (userType == "facility_manager")
+                                    navigateToAggrement = true
+                                } else {
+                                    toastManager.show(
+                                        message: "Password updated successfully!",
+                                        type: .success,
+                                        duration: 1.0
+                                    )
+                                    
+                                    // Navigate after a short delay to show the toast
+                                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                                    
+                                    
+                                    // KeychainManager.shared.resetToLogin()
+                                    navigateToLogin = true
+                                }
+                                
+                            }else{
+                                showUpdateFailedAlert = true
                             }
-                            
-                        }) {
-                           // Text(comingFrom == "validate_email" ? "CREATE PASSWORD" :  "UPDATE PASSWORD")
-                            Text(
-                                comingFrom == "validate_email" ? "CREATE PASSWORD" :
+                        }
+                        
+                    }) {
+                        // Text(comingFrom == "validate_email" ? "CREATE PASSWORD" :  "UPDATE PASSWORD")
+                        Text(
+                            comingFrom == "validate_email" ? "CREATE PASSWORD" :
                                 comingFrom == "user_profile" ? "UPDATE PASSWORD" :
                                 comingFrom == "forgetPassword" ? "RESET PASSWORD" :
                                 "" // fallback
-                            )
-                                .font(.custom("Inter-SemiBold", size: 16))
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.white)
-                                .cornerRadius(10)
-                        }
-                        
+                        )
+                        .font(.custom("Inter-SemiBold", size: 16))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.white)
+                        .cornerRadius(10)
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 30)
-                   // .background(.black)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                     
-                    if viewModel.isLoading {
-                        ZStack {
-                            Color.black.opacity(0.4)
-                                .ignoresSafeArea()
-                            
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(1.8)
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .ignoresSafeArea()
+                }
+                .padding(.horizontal, 10)
+                .padding(.bottom, 30)
+                // .background(.black)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                
+                if viewModel.isLoading {
+                    ZStack {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+                        
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.8)
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                }
                 
             }
             .onTapGesture {
                 UIApplication.shared.hideKeyboard()
             }
-
+            
             .navigationDestination(isPresented: $navigateToLogin) {
                 LoginView(isUserInitialSetupCompleted: true,prefilledEmail: UserDefaults.standard.string(forKey: "email") ?? "")
                     .navigationBarBackButtonHidden(true)
@@ -228,40 +231,40 @@ struct CreateNewPasswordView: View {
             }
             
             .modernAlert(isPresented: $showNoInternetAlert) {
-                  ModernAlertView(
-                      title: "Error!",
-                      message: "Please check your connection and try again.",
-                      isSuccess: false,
-                      buttonTitle: "OK"
-                  ) { showNoInternetAlert = false }
+                ModernAlertView(
+                    title: "Error!",
+                    message: "Please check your connection and try again.",
+                    isSuccess: false,
+                    buttonTitle: "OK"
+                ) { showNoInternetAlert = false }
             }
             
-
+            
             
             
             .modernAlert(isPresented: $showUpdateFailedAlert) {
-                  ModernAlertView(
-                      title: "Error!",
-                      message: viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage,
-                      isSuccess: false,
-                      buttonTitle: "OK"
-                  ) { showUpdateFailedAlert = false }
+                ModernAlertView(
+                    title: "Error!",
+                    message: viewModel.errorMessage.isEmpty ? "Invalid credentials." : viewModel.errorMessage,
+                    isSuccess: false,
+                    buttonTitle: "OK"
+                ) { showUpdateFailedAlert = false }
             }
             
-
+            
             
             .modernAlert(isPresented: $showSuccessUpdateAlert) {
-                  ModernAlertView(
-                      title: "Success!",
-                      message: "Your Password updated successfully",
-                      isSuccess: true,
-                      buttonTitle: "OK"
-                  ) {
-                      showSuccessUpdateAlert = false
-                      dismiss()
-                  }
+                ModernAlertView(
+                    title: "Success!",
+                    message: "Your Password updated successfully",
+                    isSuccess: true,
+                    buttonTitle: "OK"
+                ) {
+                    showSuccessUpdateAlert = false
+                    dismiss()
+                }
             }
-            .navigationDestination(isPresented: $navigateToAggrement) {                
+            .navigationDestination(isPresented: $navigateToAggrement) {
                 UserAgreementScreen(password:viewModel.confirmPassword)
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
@@ -269,11 +272,11 @@ struct CreateNewPasswordView: View {
             
         }
         .internetOverlay()
-       // .navigationBarBackButtonHidden(true)
+        // .navigationBarBackButtonHidden(true)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .toast()  // Add toast modifier
-
-           
+        
+        
     }
 }
 
@@ -293,16 +296,16 @@ struct PasswordField: View {
                 Text(" *")
                     .foregroundColor(.red)
             }
-
+            
             ZStack(alignment: .leading) {
-
+                
                 if text.isEmpty {
                     Text(placeholder)
                         .font(.custom("Inter-Regular", size: 16))
                         .foregroundColor(.white.opacity(0.5))
                         .padding(.leading, 14)
                 }
-
+                
                 HStack {
                     if showText {
                         TextField("", text: $text)
@@ -315,7 +318,7 @@ struct PasswordField: View {
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
                     }
-
+                    
                     Button(action: { showText.toggle() }) {
                         Image(systemName: showText ? "eye.slash.fill" : "eye.fill")
                             .foregroundColor(.white.opacity(0.8))
@@ -335,7 +338,7 @@ struct PasswordField: View {
 
 struct PasswordPolicyView: View {
     let policy: PasswordPolicy
-
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             PolicyRow(text: "At least one uppercase letter (A-Z)", isValid: policy.hasUppercase)
@@ -353,14 +356,14 @@ struct PasswordPolicyView: View {
 struct PolicyRow: View {
     let text: String
     let isValid: Bool
-
+    
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: isValid ? "checkmark.circle.fill" : "xmark.circle.fill")
                 .foregroundColor(isValid ? .green : .red)
                 .font(.system(size: 13))
             
-
+            
             Text(text)
                 .font(.custom("Inter-Regular", size: 13))
                 .foregroundColor(isValid ? .green : .gray)

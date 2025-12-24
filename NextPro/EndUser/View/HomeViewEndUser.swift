@@ -30,10 +30,16 @@ struct HomeViewEndUser: View {
                         switch selectedTab {
                         case 0:
                             DoorOpenView()
+                                .navigationBarBackButtonHidden(true)
+                                .navigationBarHidden(true)
                         case 1:
                             MembershipEndUserView()
+                                .navigationBarBackButtonHidden(true)
+                                .navigationBarHidden(true)
                         case 2:
                             ProfileEndUserView()
+                                .navigationBarBackButtonHidden(true)
+                                .navigationBarHidden(true)
                         default:
                             EmptyView()
                         }

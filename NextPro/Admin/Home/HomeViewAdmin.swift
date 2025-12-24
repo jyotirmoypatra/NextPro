@@ -87,6 +87,9 @@ struct HomeViewAdmin: View {
                                 .navigationBarBackButtonHidden(true)
                                 .navigationBarHidden(true)
                                 .interactiveDismissDisabled(true)
+//                            ProfileEndUserView()
+//                                .navigationBarBackButtonHidden(true)
+//                                .navigationBarHidden(true)
                         default:
                             EmptyView()
                         }
