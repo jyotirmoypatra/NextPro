@@ -40,7 +40,7 @@ struct DeviceAdminTabView: View {
                             .foregroundColor(.white)
                             .fontWeight(.bold)
                           
-                        Text("Provision device")
+                        Text("Configure device")
                             .font(.custom("Inter-SemiBold", size: 16))
                             .foregroundColor(.white)
                     }

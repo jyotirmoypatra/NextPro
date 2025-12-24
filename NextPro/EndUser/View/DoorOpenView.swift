@@ -11,7 +11,6 @@ import Combine
 import AVFoundation
 
 struct DoorOpenView: View {
-    // let Card: CardModelUser
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var mqttManager = MQTTManager.shared
     @StateObject private var doorStorage = DoorStorageManager.shared

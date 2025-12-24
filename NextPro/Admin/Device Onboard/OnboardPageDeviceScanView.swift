@@ -61,7 +61,7 @@ struct OnboardPageDeviceScanView: View {
                             .frame(width: 20, height: 20)
                     }
                     .overlay(
-                        Text("Provision Device")
+                        Text("Configure Device")
                             .foregroundColor(.white)
                             .font(.custom("Inter-Bold", size: 16))
                     )
