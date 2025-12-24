@@ -242,13 +242,20 @@ struct VerifyOtpAccount: View {
                                 Button(action: {
                                   resendOtpNow()
                                 }) {
-                                    Text("RESEND OTP")
-                                        .font(.custom("Inter-SemiBold", size: 16))
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                        .underline()
-                                        .cornerRadius(8)
+                                    HStack{
+                                        Text("RESEND")
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .foregroundColor(Color(hex: "#6D717F"))
+                                            
+                                        Image("refresh")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 16, height: 16)
+                                            .foregroundColor(.gray)
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    
                                 }
                             }
                         }
