@@ -56,151 +56,149 @@ struct EditProfileView: View {
                     .ignoresSafeArea()
                 
                 // MARK: - Header (Fixed at top)
-                HStack {
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        Image(systemName: "arrow.left")
-                            .font(.system(size: 20, weight: .semibold))
+                VStack {
+                    HStack {
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            Image(systemName: "arrow.left")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(10)
+                            // .background(Color.white.opacity(0.1))
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                        }
+                        
+                        Spacer()
+                        
+                        Text("Edit Profile")
+                            .font(.custom("Inter-SemiBold", size: 18))
                             .foregroundColor(.white)
-                            .padding(10)
-                           // .background(Color.white.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                    }
-                    
-                    Spacer()
-                    
-                    Text("Edit Profile")
-                        .font(.custom("Inter-SemiBold", size: 18))
-                        .foregroundColor(.white)
-                    
-                    Spacer()
-                    
-                    // Invisible button for symmetry
-                    Button(action: {}) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 18))
-                            .foregroundColor(.clear)
-                            .padding(10)
-                    }
-                    .disabled(true)
-                }
-                .padding(.horizontal)
-                .padding(.top, 16)
-                .padding(.bottom, 12)
-                .background(Color.black)
-                .frame(maxWidth: .infinity, alignment: .top)
-                .zIndex(1)
-                
-                // Scrollable Content
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 25) {
-                        Spacer().frame(height: 90)
                         
-                        // Profile Image Section
-                        VStack(spacing: 12) {
-                            ZStack(alignment: .bottomTrailing) {
-                                
-                                if let img = selectedImage {
-                                    Image(uiImage: img)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 110, height: 110)
-                                        .clipShape(Circle())
-                                        .overlay(
-                                            Circle()
-                                                .stroke(Color.white.opacity(0.2), lineWidth: 2)
-                                        )
-                                } else {
-                                    
-                                    
-                                    
-                                    ProfileImageView(imageUrl: profileImgUrl)
-                                    
-                                }
-                                
-                                
-                                // Edit icon
-                                Button(action: {
-                                    // Handle image picker
-                                    print("Change profile picture")
-                                    //checkPhotoPermission()
-                                    showSourcePicker = true
-                                }) {
-                                    Image(systemName: "camera")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.black)
-                                        .padding(8)
-                                        .background(Color.white)
-                                        .clipShape(Circle())
-                                        .overlay(
-                                            Circle()
-                                                .stroke(Color.black.opacity(0.4), lineWidth: 2)
-                                        )
-                                }
-                                //.offset(x: -5, y: -5)
-                            }
+                        Spacer()
+                        
+                        // Invisible button for symmetry
+                        Button(action: {}) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 18))
+                                .foregroundColor(.clear)
+                                .padding(10)
                         }
-                        .padding(.bottom, 20)
-                        
-                        // Full Name Field
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack(spacing: 0) {
-                                Text("Full Name")
-                                    .font(.custom("Inter-Medium", size: 16))
-                                    .foregroundColor(.white)
-                                Text(" *")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.red)
-                            }
-                            
-                            ZStack(alignment: .leading) {
-                                if fullName.isEmpty {
-                                    Text("Enter your full name")
-                                        .foregroundColor(Color.white.opacity(0.5))
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .padding(.leading, 14)
-                                }
-                                
-                                TextField("", text: $fullName)
-                                    .foregroundColor(.white)
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .padding(.horizontal, 14)
-                                    .frame(height: 50)
-                                    .background(Color.white.opacity(0.15))
-                                    .cornerRadius(10)
-                                    .autocapitalization(.words)
-                                    .disableAutocorrection(false)
-                            }
-                        }
-                        
-                        // Phone Number Field
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack(spacing: 0) {
-                                Text("Phone Number")
-                                    .font(.custom("Inter-Medium", size: 16))
-                                    .foregroundColor(.white)
-                                Text(" *")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.red)
-                            }
-                            
-                            ZStack(alignment: .leading) {
-                                if phoneNumber.isEmpty {
-                                    Text("Enter your phone number")
-                                        .foregroundColor(Color.white.opacity(0.5))
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .padding(.leading, 14)
-                                }
-                                
-                                TextField("", text: Binding(
-                                    get: {
-                                        phoneNumber.formattedUSPhone()   // show formatted
-                                    },
-                                    set: { newValue in
-                                        phoneNumber = newValue.filter { $0.isNumber } // store only digits
+                        .disabled(true)
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 16)
+                    .frame(maxWidth: .infinity, alignment: .top)
+                    .zIndex(999)
+                    
+                    // Scrollable Content
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 25) {
+                            Spacer()
+                            // Profile Image Section
+                            VStack(spacing: 12) {
+                                ZStack(alignment: .bottomTrailing) {
+                                    
+                                    if let img = selectedImage {
+                                        Image(uiImage: img)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 110, height: 110)
+                                            .clipShape(Circle())
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.white.opacity(0.2), lineWidth: 2)
+                                            )
+                                    } else {
+                                        
+                                        
+                                        
+                                        ProfileImageView(imageUrl: profileImgUrl)
+                                        
                                     }
-                                ))
+                                    
+                                    
+                                    // Edit icon
+                                    Button(action: {
+                                        // Handle image picker
+                                        print("Change profile picture")
+                                        //checkPhotoPermission()
+                                        showSourcePicker = true
+                                    }) {
+                                        Image(systemName: "camera")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.black)
+                                            .padding(8)
+                                            .background(Color.white)
+                                            .clipShape(Circle())
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.black.opacity(0.4), lineWidth: 2)
+                                            )
+                                    }
+                                    //.offset(x: -5, y: -5)
+                                }
+                            }
+                            .padding(.bottom, 20)
+                            
+                            // Full Name Field
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack(spacing: 0) {
+                                    Text("Full Name")
+                                        .font(.custom("Inter-Medium", size: 16))
+                                        .foregroundColor(.white)
+                                    Text(" *")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.red)
+                                }
+                                
+                                ZStack(alignment: .leading) {
+                                    if fullName.isEmpty {
+                                        Text("Enter your full name")
+                                            .foregroundColor(Color.white.opacity(0.5))
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .padding(.leading, 14)
+                                    }
+                                    
+                                    TextField("", text: $fullName)
+                                        .foregroundColor(.white)
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .padding(.horizontal, 14)
+                                        .frame(height: 50)
+                                        .background(Color.white.opacity(0.15))
+                                        .cornerRadius(10)
+                                        .autocapitalization(.words)
+                                        .disableAutocorrection(false)
+                                }
+                            }
+                            
+                            // Phone Number Field
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack(spacing: 0) {
+                                    Text("Phone Number")
+                                        .font(.custom("Inter-Medium", size: 16))
+                                        .foregroundColor(.white)
+                                    Text(" *")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.red)
+                                }
+                                
+                                ZStack(alignment: .leading) {
+                                    if phoneNumber.isEmpty {
+                                        Text("Enter your phone number")
+                                            .foregroundColor(Color.white.opacity(0.5))
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .padding(.leading, 14)
+                                    }
+                                    
+                                    TextField("", text: Binding(
+                                        get: {
+                                            phoneNumber.formattedUSPhone()   // show formatted
+                                        },
+                                        set: { newValue in
+                                            phoneNumber = newValue.filter { $0.isNumber } // store only digits
+                                        }
+                                    ))
                                     .foregroundColor(.white)
                                     .font(.custom("Inter-Regular", size: 16))
                                     .padding(.horizontal, 14)
@@ -208,45 +206,46 @@ struct EditProfileView: View {
                                     .background(Color.white.opacity(0.15))
                                     .cornerRadius(10)
                                     .keyboardType(.phonePad)
-                            }
-                        }
-                        
-                        // Email Field
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack(spacing: 0) {
-                                Text("Email ID")
-                                    .font(.custom("Inter-Medium", size: 16))
-                                    .foregroundColor(.white)
+                                }
                             }
                             
-                            ZStack(alignment: .leading) {
-                                if email.isEmpty {
-                                    Text("Enter your email")
-                                        .foregroundColor(Color.white.opacity(0.5))
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .padding(.leading, 14)
+                            // Email Field
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack(spacing: 0) {
+                                    Text("Email ID")
+                                        .font(.custom("Inter-Medium", size: 16))
+                                        .foregroundColor(.white)
                                 }
                                 
-                                TextField("", text: $email)
-                                    .foregroundColor(.gray)
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .padding(.horizontal, 14)
-                                    .frame(height: 50)
-                                    .disabled(true)
-                                    .background(Color.white.opacity(0.15))
-                                    .cornerRadius(10)
-                                    .autocapitalization(.none)
-                                    .keyboardType(.emailAddress)
-                                    .disableAutocorrection(true)
+                                ZStack(alignment: .leading) {
+                                    if email.isEmpty {
+                                        Text("Enter your email")
+                                            .foregroundColor(Color.white.opacity(0.5))
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .padding(.leading, 14)
+                                    }
+                                    
+                                    TextField("", text: $email)
+                                        .foregroundColor(.gray)
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .padding(.horizontal, 14)
+                                        .frame(height: 50)
+                                        .disabled(true)
+                                        .background(Color.white.opacity(0.15))
+                                        .cornerRadius(10)
+                                        .autocapitalization(.none)
+                                        .keyboardType(.emailAddress)
+                                        .disableAutocorrection(true)
+                                }
                             }
+                            
+                            
+                            Spacer().frame(height: 150)  // Prevent cut-off
                         }
-                        
-                        
-                        Spacer().frame(height: 150)  // Prevent cut-off
+                        .padding(.horizontal, 10)
                     }
-                    .padding(.horizontal, 10)
-                }
-                .keyboardAware()
+                    .keyboardAware()
+                }.padding(.bottom, 120)
                 
                 // FOOTER - Fixed at Bottom
                 VStack(spacing: 16) {
@@ -273,8 +272,7 @@ struct EditProfileView: View {
                     }
                 }
                 .padding(.horizontal, 10)
-                .padding(.bottom, 35)
-                .background(.black)
+                .padding(.bottom, 20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 
                 // LOADING OVERLAY

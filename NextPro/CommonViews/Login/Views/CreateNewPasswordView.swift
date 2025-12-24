@@ -63,7 +63,7 @@ struct CreateNewPasswordView: View {
                     .padding(.bottom, 10)
                     // .background(Color.black)
                     .frame(maxWidth: .infinity, alignment: .top)
-                    .zIndex(1)
+                    .zIndex(999)
                     
                     
                     
