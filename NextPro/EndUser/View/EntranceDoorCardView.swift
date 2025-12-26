@@ -53,25 +53,25 @@ struct RemoteDoorCardView: View {
                     }
                 }
 
-                if hasRemoteBLEAccess {
-                    Button(action: onBLEOpen) {
-                        VStack(spacing: 6) {
-                            Image("bluetooth-white")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 22, height: 22)
-
-                            Text("Open Door")
-                                .font(.custom("Inter-Regular", size: 10))
-                                .foregroundColor(.white)
-                        }
-                        .frame(width: 68, height: 58) // ✅ same size
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                        )
-                    }
-                }
+//                if hasRemoteBLEAccess {
+//                    Button(action: onBLEOpen) {
+//                        VStack(spacing: 6) {
+//                            Image("bluetooth-white")
+//                                .resizable()
+//                                .scaledToFit()
+//                                .frame(width: 22, height: 22)
+//
+//                            Text("Open Door")
+//                                .font(.custom("Inter-Regular", size: 10))
+//                                .foregroundColor(.white)
+//                        }
+//                        .frame(width: 68, height: 58) // ✅ same size
+//                        .overlay(
+//                            RoundedRectangle(cornerRadius: 12)
+//                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+//                        )
+//                    }
+//                }
             }
         }
         .padding(16)

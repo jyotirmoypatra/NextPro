@@ -9,52 +9,44 @@
 import Foundation
 
 struct DeviceDetailsResponse: Codable {
-    let backendUserId: String
+    let status: Bool
+    let userId: String
     let deviceUserId: Int
-    let organizationName: String
-    let userFullName: String
-    let cardNumber: String
-    let cardExpiryDate: String
-    let facilities: [Facility]
+    let organizationName: String?
+    let userFullName: String?
+    let physicalCardNumber: String?
+    let digitalCardNumber: String?
+    let cardExpiryDate: String?
+    let controllers: [Controller]?
+    let standaloneAllInOne: [Standalone_All_In_One_Door]?
+    let standaloneController: [StandaloneController]?
 
     enum CodingKeys: String, CodingKey {
-        case backendUserId = "backend_user_id"
+        case status
+        case userId = "user_id"
         case deviceUserId = "device_user_id"
         case organizationName = "organization_name"
         case userFullName = "user_full_name"
-        case cardNumber = "card_number"
+        case physicalCardNumber = "physical_card_number"
+        case digitalCardNumber = "digital_card_number"
         case cardExpiryDate = "card_expiry_date"
-        case facilities
-    }
-}
-
-
-struct Facility: Codable {
-    let facilityId: String
-    let facilityName: String
-    let controllers: [Controller]
-    let standaloneDoors: [StandaloneDoor]?
-
-    enum CodingKeys: String, CodingKey {
-        case facilityId = "facility_id"
-        case facilityName = "facility_name"
-        case controllers
-        case standaloneDoors = "standalone_doors"
+        case controllers = "controllers"
+        case standaloneAllInOne = "standalone_all_in_one"
+        case standaloneController = "standalone_controller"
     }
 }
 
 
 struct Controller: Codable {
     let controllerId: String
-    let controllerName: String
-    let controllerSerial: String
-    let controllerMac: String
-    let controllerKey: String
-    let controllerModel: String
-    let controllerCommType: String
-    let controllerType: Int?
-    let maxDoorsSupported: Int
-    let doors: [Door]
+    let controllerName: String?
+    let controllerSerial: String?
+    let controllerMac: String?
+    let controllerKey: String?
+    let controllerModel: String?
+    let controllerCommType: String?
+    let maxDoorsSupported: Int?
+    let doors: [Door]?
 
     enum CodingKeys: String, CodingKey {
         case controllerId = "controller_id"
@@ -64,7 +56,6 @@ struct Controller: Codable {
         case controllerKey = "controller_key"
         case controllerModel = "controller_model"
         case controllerCommType = "controller_comm_type"
-        case controllerType = "controller_type"
         case maxDoorsSupported = "max_doors_supported"
         case doors
     }
@@ -73,15 +64,15 @@ struct Controller: Codable {
 
 struct Door: Codable {
     let doorId: String
-    let doorName: String
-    let doorNumber: Int
-    let doorModel: String
-    let doorSerial: String
-    let doorMac: String
-    let doorKey: String
-    let devType: Int
-    let openType: Int
-    let doorCommType: String
+    let doorName: String?
+    let doorNumber: Int?
+    let doorModel: String?
+    let doorSerial: String?
+    let doorMac: String?
+    let doorKey: String?
+    let devType: Int?
+    let openType: Int?
+    let doorCommType: String?
     let isStandalone: Bool?
 
     enum CodingKeys: String, CodingKey {
@@ -100,18 +91,18 @@ struct Door: Codable {
 }
 
 
-struct StandaloneDoor: Codable {
+struct Standalone_All_In_One_Door: Codable {
     let doorId: String
-    let doorName: String
-    let doorNumber: Int
-    let doorModel: String
-    let doorSerial: String
-    let doorMac: String
-    let doorKey: String
-    let controllerCommType: String
-    let controllerBased: Bool
-    let devType: Int
-    let openType: Int
+    let doorName: String?
+    let doorNumber: Int?
+    let doorModel: String?
+    let doorSerial: String?
+    let doorMac: String?
+    let doorKey: String?
+    let controllerCommType: String?
+    let controllerBased: Bool?
+    let devType: Int?
+    let openType: Int?
 
     enum CodingKeys: String, CodingKey {
         case doorId = "door_id"
@@ -125,5 +116,48 @@ struct StandaloneDoor: Codable {
         case controllerBased = "controller_based"
         case devType = "dev_type"
         case openType = "open_type"
+    }
+}
+
+
+
+struct StandaloneController: Codable {
+    let controllerId: String
+    let controllerName: String?
+    let controllerSerial: String?
+    let controllerMac: String?
+    let controllerKey: String?
+    let controllerModel: String?
+    let controllerCommType: String?
+    let controllerType : String?
+    let maxDoorsSupported: Int?
+    let doors: [SensorlessDoor]?
+
+    enum CodingKeys: String, CodingKey {
+        case controllerId = "controller_id"
+        case controllerName = "controller_name"
+        case controllerSerial = "controller_serial"
+        case controllerMac = "controller_mac"
+        case controllerKey = "controller_key"
+        case controllerModel = "controller_model"
+        case controllerCommType = "controller_comm_type"
+        case controllerType = "controller_type"
+        case maxDoorsSupported = "max_doors_supported"
+        case doors
+    }
+}
+
+
+
+struct SensorlessDoor: Codable {
+    
+    let doorId: String
+    let doorName: String?
+    let doorNumber: Int?
+    
+    enum CodingKeys: String, CodingKey {
+        case doorId = "door_id"
+        case doorName = "door_name"
+        case doorNumber = "door_number"
     }
 }

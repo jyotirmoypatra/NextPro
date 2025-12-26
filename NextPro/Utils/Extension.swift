@@ -179,3 +179,27 @@ func parseMQTTTime(_ value: Any?) -> Date? {
 
     return nil
 }
+
+
+extension String {
+    
+    /// Converts a date string to formatted display string
+    /// Example: "2026-01-10T21:26" → "10 Jan 2026"
+    func toFormattedDate(
+        inputFormat: String = "yyyy-MM-dd'T'HH:mm",
+        outputFormat: String = "dd MMM yyyy"
+    ) -> String {
+        
+        let inputFormatter = DateFormatter()
+        inputFormatter.dateFormat = inputFormat
+        inputFormatter.locale = Locale(identifier: "en_US_POSIX")
+        
+        guard let date = inputFormatter.date(from: self) else {
+            return ""
+        }
+        
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = outputFormat
+        return outputFormatter.string(from: date)
+    }
+}

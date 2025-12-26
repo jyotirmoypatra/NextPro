@@ -106,60 +106,76 @@ class DeviceDetailsViewModel: ObservableObject {
         // Dummy JSON (for now)
         let dummyJSON = """
         {
-          "backend_user_id": "d6b5e158-f48c-40bf-bbc0-4de054069fbc",
-          "device_user_id": 1234,
-          "organization_name": "Iron Core Fitness Group",
-          "user_full_name": "Jyotirmoy Patra",
-          "card_number": "2988462596",
-          "card_expiry_date": "2027-06-12",
-          "facilities": [
-            {
-              "facility_id": "iron-1234567890",
-              "facility_name": "Iron Hive Gym",
-              "controllers": [
+            "status": true,
+            "user_id": "d6b5e158-f48c-40bf-bbc0-4de054069fbc",
+            "device_user_id": 1766409371469,
+            "organization_name": "Lockheed Martin",
+            "user_full_name": "Jyotirmoy Patra",
+            "physical_card_number": "2988462596",
+            "digital_card_number": "2988462596",
+            "card_expiry_date": "2026-01-10T21:26",
+            "controllers": [
                 {
-                  "controller_id": "e58973dc-18d0-4302-a12f-e8f3f8766c19",
-                  "controller_name": "Main Gym Controller",
-                  "controller_serial": "4282184653",
-                  "controller_mac": "a0:76:4e:5a:ae:a2F",
-                  "controller_key": "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
-                  "controller_model": "BC220",
-                  "controller_comm_type": "BLE+WIFI",
-                  "max_doors_supported": 1,
-                  "doors": [
-                    {
-                      "door_id": "door-1-id",
-                      "door_name": "Gym Mian Entrance",
-                      "door_number": 1,
-                      "door_model": "M230",
-                      "door_serial": "4287123590",
-                      "door_mac": "58:cf:79:1a:c4:86",
-                      "door_key": "d8829cf1e861620e2d42b2f4af4fd4db000000000000000000000000000000001000",
-                      "dev_type": 14,
-                      "open_type": 2,
-                      "door_comm_type": "BLE",
-                      "is_standalone": false
-                    }
-                  ]
+                    "controller_id": "94f5dbd6-c8b7-4002-a593-1d2f3c137320",
+                    "controller_name": "Main Gate Controller",
+                    "controller_serial": "4282184653",
+                    "controller_mac": "a0:76:4e:5a:ae:a2",
+                    "controller_key": "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
+                    "controller_model": "BC220",
+                    "controller_comm_type": null,
+                    "max_doors_supported": 1,
+                    "doors": [
+                        {
+                            "door_id": "e58973dc-18d0-4302-a12f-e8f3f8766c19",
+                            "door_name": "Gym Entrance 1",
+                            "door_number": null,
+                            "door_model": "RD-106",
+                            "door_serial": "4287123590",
+                            "door_mac": "58:cf:79:1a:c4:86",
+                            "door_key": "d8829cf1e861620e2d42b2f4af4fd4db000000000000000000000000000000001000",
+                            "dev_type": 14,
+                            "open_type": 2,
+                            "door_comm_type": null,
+                            "is_standalone": false
+                        }
+                    ]
                 }
-              ],
-              "standalone_doors": [
+            ],
+            "standalone_all_in_one": [
                 {
-                  "door_id": "solo-door-1",
-                  "door_name": "Locker Room Door",
-                  "door_number": 2,
-                  "door_model": "M230",
-                  "door_serial": "4282705968",
-                  "door_mac": "58:cf:79:1a:89:ce",
-                  "door_key": "92fc410e8d125331c26faf21c7e77292000000000000000000000000000000001000",
-                  "controller_comm_type": "BLE+WIFI",
-                  "controller_based": false,
-                  "dev_type": 14,
-                  "open_type": 2
+                    "door_id": "838b0ec8-32ad-4d49-824b-5a67ef87b7f0",
+                    "door_name": "Door One",
+                    "door_number": 1,
+                    "door_model": "DC-106",
+                    "door_serial": "SN006",
+                    "door_mac": "AUTO-37f86e95b277",
+                    "door_key": null,
+                    "controller_comm_type": null,
+                    "controller_based": false,
+                    "dev_type": 14,
+                    "open_type": 2
                 }
-              ]
-            }
-          ]
+            ],
+            "standalone_controller": [
+                {
+                    "controller_id": "94f5dbd6-c8b7-4002-a593-1d2f3c137320",
+                    "controller_name": "RD-106",
+                    "controller_serial": "SN016",
+                    "controller_mac": "AUTO-a1f1d0eca648",
+                    "controller_key": "34567",
+                    "controller_model": "RD-106",
+                    "controller_comm_type": null,
+                    "controller_type": "Controller",
+                    "max_doors_supported": 1,
+                    "doors": [
+                        {
+                            "door_id": "94435688-a677-4202-866a-d75ccca52d9d",
+                            "door_name": "Door 1",
+                            "door_number": null
+                        }
+                    ]
+                }
+            ]
         }
         """
         
@@ -168,9 +184,7 @@ class DeviceDetailsViewModel: ObservableObject {
             let decodedResponse = try JSONDecoder().decode(DeviceDetailsResponse.self, from: data)
             self.deviceDetails = decodedResponse
             saveDetailsLocally(decodedResponse)
-            updateControllerSerials()
-           // subscribeAllControllers()
-            subscribeAllDevices()
+            updateAndSubscribeAllDevices()
 
             print("✅ Dummy Device Details Loaded")
         } catch {
@@ -195,12 +209,7 @@ class DeviceDetailsViewModel: ObservableObject {
            let decoded = try? JSONDecoder().decode(DeviceDetailsResponse.self, from: data) {
             self.deviceDetails = decoded
             
-            // ✅ Update controller serials immediately
-            updateControllerSerials()
-            
-            // ✅ Subscribe automatically
-          //  subscribeAllControllers()
-            subscribeAllDevices()
+            updateAndSubscribeAllDevices()
 
             
             return true
@@ -211,64 +220,134 @@ class DeviceDetailsViewModel: ObservableObject {
         
         return false
     }
-
-  
+    
     
     private func updateControllerSerials() {
-            guard let details = deviceDetails else {
-                allControllerSerials = []
-                return
-            }
-            allControllerSerials = details.facilities.flatMap { $0.controllers.map { $0.controllerSerial } }
-    }
-        
-        // MARK: - Subscribe to all controllers
-    private func subscribeAllControllers() {
-        guard let details = deviceDetails else { return }
-        
-        for facility in details.facilities {
-            for controller in facility.controllers {
-                mqttManager.subscribeToDevice(controller.controllerSerial, model: controller.controllerModel)
-                print("Subscribed to Controller:", controller.controllerSerial, "Model:", controller.controllerModel)
-            }
+        guard let details = deviceDetails else {
+            allControllerSerials = []
+            return
         }
+
+        var serials: [String] = []
+
+        // 1️⃣ Normal Controllers
+        if let controllers = details.controllers {
+            serials.append(contentsOf:
+                controllers.compactMap { $0.controllerSerial }
+            )
+        }
+
+        // 2️⃣ Standalone Controllers
+        if let standaloneControllers = details.standaloneController {
+            serials.append(contentsOf:
+                standaloneControllers.compactMap { $0.controllerSerial }
+            )
+        }
+
+        // 3️⃣ Standalone All-in-One Doors (device itself acts as controller)
+        if let allInOneDoors = details.standaloneAllInOne {
+            serials.append(contentsOf:
+                allInOneDoors.compactMap { $0.doorSerial }
+            )
+        }
+
+        // 4️⃣ Remove duplicates (important for MQTT)
+        allControllerSerials = Array(Set(serials))
+
+        print("📡 All Controller Serials:", allControllerSerials)
     }
+
+
+ 
 
     
-    // MARK: - Subscribe to all devices (Controllers + Standalone Doors)
-    private func subscribeAllDevices() {
+//    private func subscribeAllDevices() {
+//        guard let details = deviceDetails else { return }
+//
+//        // Ensure serials are ready
+//        updateControllerSerials()
+//
+//        for serial in allControllerSerials {
+//
+//            // 🔹 Try to resolve model (optional but useful)
+//            let model =
+//                details.controllers?
+//                    .first(where: { $0.controllerSerial == serial })?
+//                    .controllerModel
+//                ??
+//                details.standaloneController?
+//                    .first(where: { $0.controllerSerial == serial })?
+//                    .controllerModel
+//                ??
+//                details.standaloneAllInOne?
+//                    .first(where: { $0.doorSerial == serial })?
+//                    .doorModel
+//
+//            mqttManager.subscribeToDevice(serial, model: model ?? "")
+//
+//            print("📡 Subscribed Device:",
+//                  serial,
+//                  "Model:",
+//                  model ?? "Unknown")
+//        }
+//    }
+
+    
+    
+    private func updateAndSubscribeAllDevices() {
         guard let details = deviceDetails else { return }
 
-        for facility in details.facilities {
+        var subscribedSerials = Set<String>() // prevent duplicates
 
-            // 🔹 1️⃣ Subscribe Controllers
-            for controller in facility.controllers {
-                mqttManager.subscribeToDevice(
-                    controller.controllerSerial,
-                    model: controller.controllerModel
-                )
-                
+        // 🔹 1️⃣ Normal Controllers
+        details.controllers?.forEach { controller in
+            if let serial = controller.controllerSerial,
+               !subscribedSerials.contains(serial) {
+
+                subscribedSerials.insert(serial)
+                mqttManager.subscribeToDevice(serial, model: controller.controllerModel ?? "")
+
                 print("📡 Subscribed Controller:",
-                      controller.controllerSerial,
+                      serial,
                       "Model:",
-                      controller.controllerModel)
-            }
-
-            // 🔹 2️⃣ Subscribe Standalone Doors (if available)
-            if let standaloneDoors = facility.standaloneDoors {
-                for door in standaloneDoors {
-                    mqttManager.subscribeToDevice(
-                        door.doorSerial,
-                        model: door.doorModel
-                    )
-                    
-                    print("🚪 Subscribed Standalone Door:",
-                          door.doorSerial,
-                          "Model:",
-                          door.doorModel)
-                }
+                      controller.controllerModel ?? "Unknown")
             }
         }
+
+        // 🔹 2️⃣ Standalone Controllers
+        details.standaloneController?.forEach { controller in
+            if let serial = controller.controllerSerial,
+               !subscribedSerials.contains(serial) {
+
+                subscribedSerials.insert(serial)
+                mqttManager.subscribeToDevice(serial, model: controller.controllerModel ?? "")
+
+                print("📡 Subscribed Standalone Controller:",
+                      serial,
+                      "Model:",
+                      controller.controllerModel ?? "Unknown")
+            }
+        }
+
+        // 🔹 3️⃣ All-in-One Standalone Doors
+        details.standaloneAllInOne?.forEach { door in
+            if let serial = door.doorSerial,
+               !subscribedSerials.contains(serial) {
+
+                subscribedSerials.insert(serial)
+                mqttManager.subscribeToDevice(serial, model: door.doorModel ?? "")
+
+                print("🚪 Subscribed All-in-One Door:",
+                      serial,
+                      "Model:",
+                      door.doorModel ?? "Unknown")
+            }
+        }
+
+        // 🔹 Store for reference/debug (optional)
+        allControllerSerials = Array(subscribedSerials)
+
+        print("✅ Total Subscribed Devices:", allControllerSerials.count)
     }
 
     

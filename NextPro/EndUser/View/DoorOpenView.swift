@@ -162,7 +162,7 @@ struct DoorOpenView: View {
                                                     .font(.custom("Inter-Regular", size: 12))
                                                     .foregroundColor(.gray)
                                                 
-                                                Text(maskCardNumber(deviceVM.deviceDetails?.cardNumber ?? ""))
+                                                Text(maskCardNumber(deviceVM.deviceDetails?.digitalCardNumber ?? ""))
                                                     .font(.custom("Inter-Regular", size: 12))
                                                     .foregroundColor(.gray)
                                                 
@@ -174,7 +174,7 @@ struct DoorOpenView: View {
                                                 Text("Exp")
                                                     .font(.custom("Inter-Regular", size: 12))
                                                     .foregroundColor(.white)
-                                                Text(deviceVM.deviceDetails?.cardExpiryDate ?? "")
+                                                Text(deviceVM.deviceDetails?.cardExpiryDate?.toFormattedDate() ?? "")
                                                     .font(.custom("Inter-Regular", size: 12))
                                                     .foregroundColor(.gray)
                                             }
