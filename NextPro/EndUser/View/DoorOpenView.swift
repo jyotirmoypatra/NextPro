@@ -53,17 +53,6 @@ struct DoorOpenView: View {
     @State private var hasRemoteAccess: Bool = false
     
     
-    let doors: [DoorModelUser] = [
-        DoorModelUser(
-            name: "Iron Hive Gym : Main Gate",
-            devSn: "4282184653",
-            devMac: "a0:76:4e:5a:ae:a2",
-            doorID: 1,
-            eKey: "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
-            cardno: "2988462596"
-        )
-        ]
-    
     var body: some View {
         ZStack {
             
@@ -233,7 +222,7 @@ struct DoorOpenView: View {
                         // Remote Access Tab
                         ScrollView(.vertical, showsIndicators: false) {
                             VStack(alignment: .leading, spacing: 20) {
-                                ForEach(doors) { door in
+                                ForEach(deviceVM.standaloneControllerList) { door in
                                     RemoteDoorCardView(
                                         door: door,
                                         onRemoteOpen: {

@@ -72,6 +72,7 @@ class DeviceDetailsViewModel: ObservableObject {
     private let mqttManager = MQTTManager.shared
     @Published var errorMessage = ""
     @Published var allControllerSerials: [String] = []
+    @Published var standaloneControllerList: [DoorModelUser] = []
     private let network = NetworkManager.shared
     
     func fetchDeviceDetailsIfNeeded() async {
@@ -278,10 +279,28 @@ class DeviceDetailsViewModel: ObservableObject {
         
         let bleDoors = buildAllDoorsForBLE()
         DoorStorageManager.shared.updateDoors(bleDoors)
+       
+        standaloneControllerList = deviceDetails?.standaloneController?.compactMap { controller in
+            guard let sn = controller.controllerSerial,
+                  let mac = controller.controllerMac,
+                  let key = controller.controllerKey else { return nil }
+
+            return DoorModelUser(
+                name: controller.controllerName ?? "Standalone Controller",
+                devSn: sn,
+                devMac: mac,
+                devType: 14,
+                doorID: 1,
+                eKey: key,
+                cardno: deviceDetails?.digitalCardNumber ?? deviceDetails?.physicalCardNumber ?? ""
+            )
+        } ?? []
+
 
 
         print("✅ Total Subscribed Devices:", allControllerSerials.count)
         print("✅ All door:", bleDoors)
+        print("✅ All standalond controller :", standaloneControllerList)
     }
 
     
