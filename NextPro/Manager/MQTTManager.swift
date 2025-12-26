@@ -186,6 +186,7 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
                         object: nil,
                         userInfo: [
                             "doorID": first.doorID,
+                            "userID" : first.userID,
                             "verified": first.verified,
                             "type": first.type,
                             "sn": event.SN,

@@ -13,7 +13,6 @@ import Combine
 struct DoorModelUser: Identifiable, Codable {
     let id: UUID
     let name: String
-    let duration: String
     let devSn: String
     let devMac: String
     let devType: Int32
@@ -24,7 +23,6 @@ struct DoorModelUser: Identifiable, Codable {
     init(
         id: UUID = UUID(),
         name: String,
-        duration: String = "For 5 Second",
         devSn: String,
         devMac: String,
         devType: Int32 = 14,
@@ -34,7 +32,6 @@ struct DoorModelUser: Identifiable, Codable {
     ) {
         self.id = id
         self.name = name
-        self.duration = duration
         self.devSn = devSn
         self.devMac = devMac
         self.devType = devType

@@ -212,6 +212,11 @@ struct DoorOpenView: View {
                             .padding(.bottom, 30)
                             
                         }.transition(.opacity)
+                            .refreshable{
+                               
+                                await deviceVM.refreshDeviceDetails()
+
+                            }
                     }
                     
                     // Digital Key Tab end
@@ -524,6 +529,21 @@ struct DoorOpenView: View {
             
             let type = info["type"] as? Int
             doorId = info["doorID"] as? Int
+            
+            
+            let deniedTypes: Set<Int> = [
+                41, // Non-effective time period
+                42, // Illegal time period
+                43, // Illegal access permission
+                47, // Card not registered
+                49, // Card expired
+                53, // Card reported lost
+                54, // Blacklist user
+                55, // Verification mode error
+                62  // User permission disabled
+            ]
+
+            
             if type == 0 {
                 animateSuccess()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -552,17 +572,19 @@ struct DoorOpenView: View {
                 speakText("Remote Open Door Successfully")
                 
             }
-            else {
-                animateFailure()
-                UINotificationFeedbackGenerator().notificationOccurred(.error)
-                
-                AceesMessage =  accessDeniedMessage
-                speakText(accessDeniedMessage)
-                
-               // speakText("Access Denied.")
-                print("succes event recievd")
-                
+            else if let type = type, deniedTypes.contains(type) {
+                   // ✅ ONLY real denial codes come here
+                   animateFailure()
+                   UINotificationFeedbackGenerator().notificationOccurred(.error)
+                   AceesMessage = accessDeniedMessage
+                   speakText(accessDeniedMessage)
+
             }
+           else {
+               // 🚫 Ignore all other events
+               print("Ignored door event type:", type ?? -1)
+               return
+           }
             
             doorManager.clearDoorEvent()
         }

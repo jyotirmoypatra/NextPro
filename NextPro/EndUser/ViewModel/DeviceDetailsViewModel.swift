@@ -10,60 +10,6 @@ import Foundation
 import Combine
 import SwiftUI
 
-//@MainActor
-//class DeviceDetailsViewModel: ObservableObject {
-//    
-//    @Published var isLoading = false
-//    @Published var deviceDetails: DeviceDetailsResponse?
-//    @Published var errorMessage = ""
-//
-//    private let network = NetworkManager.shared
-//
-//    func fetchDeviceDetails() async {
-//        errorMessage = ""
-//        isLoading = true
-//
-//        guard let token = KeychainManager.shared.get("access_token") else {
-//            errorMessage = "Missing access token."
-//            isLoading = false
-//            return
-//        }
-//
-//        do {
-//            let response = try await network.deviceDetails(accessToken: token)
-//            print("✅ Device Details Success")
-//            self.deviceDetails = response
-//            
-//            //save to userdefaults
-//            saveDetailsLocally(response)
-//
-//        } catch {
-//            print("❌ Device Details Error:", error.localizedDescription)
-//            self.errorMessage = error.localizedDescription
-//        }
-//
-//        isLoading = false
-//    }
-//    
-//    // MARK: - Save To UserDefaults
-//        private func saveDetailsLocally(_ response: DeviceDetailsResponse) {
-//            if let encoded = try? JSONEncoder().encode(response) {
-//                UserDefaults.standard.set(encoded, forKey: "device_details")
-//            }
-//        }
-//    
-//    func loadSavedDetails() {
-//            if let data = UserDefaults.standard.data(forKey: "device_details"),
-//               let decoded = try? JSONDecoder().decode(DeviceDetailsResponse.self, from: data) {
-//                self.deviceDetails = decoded
-//                print("📦 Loaded Saved Device Details")
-//            }
-//        }
-//    
-//}
-
-
-
 @MainActor
 class DeviceDetailsViewModel: ObservableObject {
     
@@ -160,10 +106,10 @@ class DeviceDetailsViewModel: ObservableObject {
             "standalone_controller": [
                 {
                     "controller_id": "94f5dbd6-c8b7-4002-a593-1d2f3c137320",
-                    "controller_name": "RD-106",
-                    "controller_serial": "SN016",
-                    "controller_mac": "AUTO-a1f1d0eca648",
-                    "controller_key": "34567",
+                    "controller_name": "Lockheed Martin : Main Gate",
+                    "controller_serial": "4282184653",
+                    "controller_mac": "a0:76:4e:5a:ae:a2",
+                    "controller_key": "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
                     "controller_model": "RD-106",
                     "controller_comm_type": null,
                     "controller_type": "Controller",
@@ -358,6 +304,21 @@ class DeviceDetailsViewModel: ObservableObject {
 
 
         return doors
+    }
+
+    
+    @MainActor
+    func refreshDeviceDetails() async {
+        errorMessage = ""
+        isLoading = true
+
+        // 🔄 Clear local cache
+        UserDefaults.standard.removeObject(forKey: "device_details")
+        deviceDetails = nil
+        allControllerSerials = []
+
+        // 🔁 Reload fresh data (dummy / API)
+        await fetchDeviceDetailsIfNeeded()
     }
 
     
