@@ -149,7 +149,7 @@ class DeviceDetailsViewModel: ObservableObject {
                     "door_model": "DC-106",
                     "door_serial": "SN006",
                     "door_mac": "AUTO-37f86e95b277",
-                    "door_key": null,
+                    "door_key": "7878877",
                     "controller_comm_type": null,
                     "controller_based": false,
                     "dev_type": 14,
@@ -222,77 +222,6 @@ class DeviceDetailsViewModel: ObservableObject {
     }
     
     
-    private func updateControllerSerials() {
-        guard let details = deviceDetails else {
-            allControllerSerials = []
-            return
-        }
-
-        var serials: [String] = []
-
-        // 1️⃣ Normal Controllers
-        if let controllers = details.controllers {
-            serials.append(contentsOf:
-                controllers.compactMap { $0.controllerSerial }
-            )
-        }
-
-        // 2️⃣ Standalone Controllers
-        if let standaloneControllers = details.standaloneController {
-            serials.append(contentsOf:
-                standaloneControllers.compactMap { $0.controllerSerial }
-            )
-        }
-
-        // 3️⃣ Standalone All-in-One Doors (device itself acts as controller)
-        if let allInOneDoors = details.standaloneAllInOne {
-            serials.append(contentsOf:
-                allInOneDoors.compactMap { $0.doorSerial }
-            )
-        }
-
-        // 4️⃣ Remove duplicates (important for MQTT)
-        allControllerSerials = Array(Set(serials))
-
-        print("📡 All Controller Serials:", allControllerSerials)
-    }
-
-
- 
-
-    
-//    private func subscribeAllDevices() {
-//        guard let details = deviceDetails else { return }
-//
-//        // Ensure serials are ready
-//        updateControllerSerials()
-//
-//        for serial in allControllerSerials {
-//
-//            // 🔹 Try to resolve model (optional but useful)
-//            let model =
-//                details.controllers?
-//                    .first(where: { $0.controllerSerial == serial })?
-//                    .controllerModel
-//                ??
-//                details.standaloneController?
-//                    .first(where: { $0.controllerSerial == serial })?
-//                    .controllerModel
-//                ??
-//                details.standaloneAllInOne?
-//                    .first(where: { $0.doorSerial == serial })?
-//                    .doorModel
-//
-//            mqttManager.subscribeToDevice(serial, model: model ?? "")
-//
-//            print("📡 Subscribed Device:",
-//                  serial,
-//                  "Model:",
-//                  model ?? "Unknown")
-//        }
-//    }
-
-    
     
     private func updateAndSubscribeAllDevices() {
         guard let details = deviceDetails else { return }
@@ -346,8 +275,70 @@ class DeviceDetailsViewModel: ObservableObject {
 
         // 🔹 Store for reference/debug (optional)
         allControllerSerials = Array(subscribedSerials)
+        
+        let bleDoors = buildAllDoorsForBLE()
+        DoorStorageManager.shared.updateDoors(bleDoors)
+
 
         print("✅ Total Subscribed Devices:", allControllerSerials.count)
+        print("✅ All door:", bleDoors)
+    }
+
+    
+    
+    private func buildAllDoorsForBLE() -> [DoorModelUser] {
+        guard let details = deviceDetails else { return [] }
+
+        var doors: [DoorModelUser] = []
+
+        let cardNo = details.digitalCardNumber ?? details.physicalCardNumber ?? ""
+
+        // 🔹 1️⃣ Controller → Doors
+        details.controllers?.forEach { controller in
+            controller.doors?.forEach { door in
+                guard
+                    let sn = door.doorSerial,
+                    let mac = door.doorMac,
+                    let key = door.doorKey
+                else { return }
+
+                doors.append(
+                    DoorModelUser(
+                        name: door.doorName ?? "Door",
+                        devSn: sn,
+                        devMac: mac,
+                        devType: Int32(door.devType ?? 14),
+                        doorID: Int32(door.doorNumber ?? 1),
+                        eKey: key,
+                        cardno: cardNo
+                    )
+                )
+            }
+        }
+
+        // 🔹 2️⃣ Standalone All-in-One Doors
+        details.standaloneAllInOne?.forEach { door in
+            guard
+                let sn = door.doorSerial,
+                let mac = door.doorMac,
+                let key = door.doorKey
+            else { return }
+
+            doors.append(
+                DoorModelUser(
+                    name: door.doorName ?? "Standalone Door",
+                    devSn: sn,
+                    devMac: mac,
+                    devType: Int32(door.devType ?? 14),
+                    doorID: Int32(door.doorNumber ?? 1),
+                    eKey: key,
+                    cardno: cardNo
+                )
+            )
+        }
+
+
+        return doors
     }
 
     

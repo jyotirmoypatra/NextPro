@@ -174,6 +174,7 @@ struct DoorOpenView: View {
                                                 Text("Exp")
                                                     .font(.custom("Inter-Regular", size: 12))
                                                     .foregroundColor(.white)
+                                                //.toFormattedDate(outputFormat: "yyyy") 
                                                 Text(deviceVM.deviceDetails?.cardExpiryDate?.toFormattedDate() ?? "")
                                                     .font(.custom("Inter-Regular", size: 12))
                                                     .foregroundColor(.gray)
@@ -309,6 +310,20 @@ struct DoorOpenView: View {
                 .transition(.opacity)
                 .zIndex(10)
             }
+            
+            if deviceVM.isLoading {
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                    
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(1.8)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
+            }
+            
         }
         .background(Color.black.opacity(0.4))
         .task{
@@ -324,17 +339,12 @@ struct DoorOpenView: View {
             accessGrantedMessage = (UserDefaults.standard.string(forKey: "voice_granted") ?? VoiceMessageDefaults.granted.first?.text ?? "" ) + " - " + accessGreetingMessage
             accessDeniedMessage = UserDefaults.standard.string(forKey: "voice_denied") ??  VoiceMessageDefaults.denied.first?.text ?? ""
             accessUnAuthorizedMessage = UserDefaults.standard.string(forKey: "voice_unauthorized") ?? VoiceMessageDefaults.unauthorized.first?.text ?? ""
-           
-           
-            
+
             isViewVisible = true
-            
-            //
-            
+
             mqttManager.connect()
             
- 
-            await doorStorage.loadDoors()
+
             
             AceesMessage = "Preparing Scan.."
             

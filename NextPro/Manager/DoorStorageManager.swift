@@ -1,0 +1,71 @@
+
+//
+//  DoorStorageManager.swift
+//  NextPro
+//
+//  Created by JYOTIRMOY PATRA on 12/11/25.
+//
+
+import Foundation
+import Combine
+
+// MARK: - Door Model (Unified)
+struct DoorModelUser: Identifiable, Codable {
+    let id: UUID
+    let name: String
+    let duration: String
+    let devSn: String
+    let devMac: String
+    let devType: Int32
+    let doorID: Int32
+    let eKey: String
+    let cardno: String
+    
+    init(
+        id: UUID = UUID(),
+        name: String,
+        duration: String = "For 5 Second",
+        devSn: String,
+        devMac: String,
+        devType: Int32 = 14,
+        doorID: Int32 ,
+        eKey: String,
+        cardno: String
+    ) {
+        self.id = id
+        self.name = name
+        self.duration = duration
+        self.devSn = devSn
+        self.devMac = devMac
+        self.devType = devType
+        self.doorID = doorID
+        self.eKey = eKey
+        self.cardno = cardno
+    }
+}
+
+@MainActor
+class DoorStorageManager: ObservableObject {
+    static let shared = DoorStorageManager()
+
+    @Published var doors: [DoorModelUser] = []
+    @Published var isLoading: Bool = false
+    @Published var errorMessage: String? = nil
+
+    private init() {}
+
+    // ✅ Just update doors
+    func updateDoors(_ newDoors: [DoorModelUser]) {
+        doors.removeAll()
+        self.doors = newDoors
+        print("🚪 DoorStorage updated with \(newDoors.count) doors")
+    }
+
+    func clearDoors() {
+        doors.removeAll()
+    }
+
+    func getDoor(bySN sn: String) -> DoorModelUser? {
+        doors.first(where: { $0.devSn == sn })
+    }
+}

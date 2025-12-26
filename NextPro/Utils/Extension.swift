@@ -185,6 +185,7 @@ extension String {
     
     /// Converts a date string to formatted display string
     /// Example: "2026-01-10T21:26" → "10 Jan 2026"
+    /// .toFormattedDate(outputFormat: "yyyy")
     func toFormattedDate(
         inputFormat: String = "yyyy-MM-dd'T'HH:mm",
         outputFormat: String = "dd MMM yyyy"

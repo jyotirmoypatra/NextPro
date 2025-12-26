@@ -24,7 +24,7 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
     }
 
     func mqtt(_ mqtt: CocoaMQTT, didSubscribeTopics success: NSDictionary, failed: [String]) {
-        print("📥 Subscribed: \(success.allKeys) | Failed: \(failed)")
+       // print("📥 Subscribed: \(success.allKeys) | Failed: \(failed)")
     }
 
     func mqtt(_ mqtt: CocoaMQTT, didUnsubscribeTopics topics: [String]) {
