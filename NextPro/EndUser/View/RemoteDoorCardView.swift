@@ -74,7 +74,7 @@ struct RemoteDoorCardView: View {
                                 onRemoteOpen()
                             } label: {
                                 VStack(spacing: 6) {
-                                    Image("antenna-signal")
+                                    Image(isSuccess ? "antena_active" : "antenna-signal")
                                         .resizable()
                                         .scaledToFit()
                                         .frame(width: 22, height: 22)
