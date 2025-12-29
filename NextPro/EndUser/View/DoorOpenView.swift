@@ -45,6 +45,7 @@ struct DoorOpenView: View {
     @State private var accessDeniedMessage = ""
     @State private var accessUnAuthorizedMessage = ""
     @State private var accessGreetingMessage = ""
+    @State private var remoteAccessMessage = ""
     @State private var overlayMessage = ""
     
     @State private var animationResetTask: DispatchWorkItem?
@@ -588,7 +589,9 @@ struct DoorOpenView: View {
             else if type == 19 {
                 animateSuccess()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-                speakText("Remote Open Door Successfully")
+               // speakText("Remote Open Door Successfully")
+                speakText(remoteAccessMessage)
+                overlayMessage = remoteAccessMessage
                 
             }
             else if type == 126 {
@@ -601,7 +604,9 @@ struct DoorOpenView: View {
                 
                 animateSuccess()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-                speakText("Remote Open Door Successfully")
+                //speakText("Remote Open Door Successfully")
+                speakText(remoteAccessMessage)
+                overlayMessage = remoteAccessMessage
                 
             }
             else if let type = type, deniedTypes.contains(type) {
@@ -747,8 +752,31 @@ struct DoorOpenView: View {
 
     }
     
+//    private func updateVoiceMessages(for doorName: String?) {
+//        let prefix = doorName.map { "\($0), " } ?? ""
+//
+//        accessGrantedMessage =
+//            prefix + grantedBase + " - " + accessGreetingMessage
+//
+//        accessDeniedMessage =
+//            prefix + deniedBase
+//
+//        accessUnAuthorizedMessage =
+//            prefix + unauthorizedBase
+//        
+//        remoteAccessMessage = prefix + "Remote Open Successfully"
+//    }
+    
     private func updateVoiceMessages(for doorName: String?) {
-        let prefix = doorName.map { "\($0), " } ?? ""
+        let cleanName = doorName?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let prefix: String
+        if let name = cleanName, !name.isEmpty {
+            prefix = "\(name), "
+        } else {
+            prefix = ""
+        }
 
         accessGrantedMessage =
             prefix + grantedBase + " - " + accessGreetingMessage
@@ -758,6 +786,9 @@ struct DoorOpenView: View {
 
         accessUnAuthorizedMessage =
             prefix + unauthorizedBase
+
+        remoteAccessMessage =
+            prefix + "Remote Open Successfully"
     }
 
 
@@ -790,7 +821,7 @@ struct DoorOpenView: View {
             progress = 1.0
             
             if isRemoteUnlock{
-                overlayMessage = doorName ?? "" + "Remote Open Door Successfully"
+                overlayMessage = remoteAccessMessage
             }else{
                 overlayMessage = accessGrantedMessage
             }
@@ -840,6 +871,7 @@ struct DoorOpenView: View {
                 progress = 0.0
                 AceesMessage = "Walk closer to the door."
                 doorId = nil
+                doorName = ""
                 isUnauthorise = false
                 isRemoteUnlock = false
                 overlayMessage = "Processing.."
@@ -915,6 +947,9 @@ struct DoorOpenView: View {
                    bleManager.stopMonitoringDevice()
                    timer.invalidate()
                    rssiTimer = nil
+                   doorName = ""
+                   doorId = nil
+                   updateVoiceMessages(for: "")
                    isScanningActive = false
                    
                    DispatchQueue.main.async {
