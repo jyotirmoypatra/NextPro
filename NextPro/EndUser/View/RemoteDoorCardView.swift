@@ -10,6 +10,7 @@ import SwiftUI
 struct RemoteDoorCardView: View {
     let door: RemoteDoorItem
     @Binding var successKey: String?
+    @Binding var activeDoorKey: String?
     let onRemoteOpen: () -> Void
     
     @State private var isWaiting = false
@@ -104,6 +105,10 @@ struct RemoteDoorCardView: View {
             }
 
         }
+        .opacity(isDisabled ? 0.2 : 1.0)
+        .allowsHitTesting(!isDisabled)
+
+
         .padding(16)
         .background(Color.white.opacity(0.08))
         .cornerRadius(14)
@@ -126,6 +131,12 @@ struct RemoteDoorCardView: View {
         
         
     }
+    private var isDisabled: Bool {
+        guard let active = activeDoorKey else { return false }
+        return active != door.key
+    }
+
+
     private func startWaiting() {
         isWaiting = true
         isSuccess = false
@@ -134,6 +145,9 @@ struct RemoteDoorCardView: View {
         
         let task = DispatchWorkItem {
             isWaiting = false
+            DispatchQueue.main.async {
+                    activeDoorKey = nil   // 👈 unlock other cards
+                }
         }
         
         waitTask = task
@@ -150,6 +164,9 @@ struct RemoteDoorCardView: View {
         
         let task = DispatchWorkItem {
             isSuccess = false
+            DispatchQueue.main.async {
+                    activeDoorKey = nil   // 👈 unlock other cards
+                }
         }
         
         successTask = task

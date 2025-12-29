@@ -51,6 +51,9 @@ struct DoorOpenView: View {
     @State private var animationResetTask: DispatchWorkItem?
     
     @State private var successDoorKey: String?
+    @State private var activeDoorKey: String? = nil
+
+
 
     @State private var selectedTab = 0
     @State private var isRemoteUnlock = false
@@ -281,7 +284,9 @@ struct DoorOpenView: View {
                                             RemoteDoorCardView(
                                                 door: door,
                                                 successKey: $successDoorKey,
+                                                activeDoorKey: $activeDoorKey,
                                                 onRemoteOpen: {
+                                                    activeDoorKey = door.key
                                                     handleRemoteOpen(for: door)
                                                 }
                                             )
