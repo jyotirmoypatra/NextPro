@@ -116,7 +116,30 @@ struct DoorOpenView: View {
                 DoorTabSection
                 Group {
                     
-                    if selectedTab == 0 && hasDigitalKeyAccess{
+                    
+                    if !hasRemoteAccess && !hasDigitalKeyAccess {
+
+                           VStack(spacing: 12) {
+                               Image(systemName: "lock.slash")
+                                   .font(.system(size: 48))
+                                   .foregroundColor(.gray)
+                               Text("No Access Permission")
+                                   .font(.custom("Inter-SemiBold", size: 18))
+                                   .foregroundColor(.white)
+
+                               Text("You do not have permission to unlock any doors.")
+                                   .font(.custom("Inter-Regular", size: 14))
+                                   .foregroundColor(.gray)
+                                   .multilineTextAlignment(.center)
+                                   .padding(.horizontal, 30)
+
+                           }
+                           .frame(maxWidth: .infinity, maxHeight: .infinity)
+                           .transition(.opacity)
+
+                       }
+                    
+                    else if selectedTab == 0 && hasDigitalKeyAccess{
                         // Digital Key Tab start
                         
                         ScrollView(.vertical, showsIndicators: false){
@@ -228,29 +251,50 @@ struct DoorOpenView: View {
                     
                      else if selectedTab == 1 && hasRemoteAccess
                     {
-                        
-                        // Remote Access Tab
-                        ScrollView(.vertical, showsIndicators: false) {
-                            VStack(alignment: .leading, spacing: 20) {
-                                ForEach(deviceVM.standaloneControllerList) { door in
-                                    RemoteDoorCardView(
-                                        door: door,
-                                        onRemoteOpen: {
-                                            handleRemoteOpen(for: door)
-                                        },
-                                        onBLEOpen: {
-                                           // handleBLEOpen(for: door)
-                                        }
-                                    )
-                                }
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.top, 20)
-                        }
+                         
+                         if deviceVM.standaloneControllerList.isEmpty {
+                             VStack(spacing: 12) {
+                                         Image(systemName: "wifi.slash")
+                                             .font(.system(size: 42))
+                                             .foregroundColor(.gray)
 
+                                         Text("No Remote Access Doors")
+                                             .font(.custom("Inter-SemiBold", size: 18))
+                                             .foregroundColor(.white)
 
-                        .transition(.opacity)
-                        // Remote Access Tab
+                                         Text("You do not have any doors available for remote unlocking.")
+                                             .font(.custom("Inter-Regular", size: 14))
+                                             .foregroundColor(.gray)
+                                             .multilineTextAlignment(.center)
+                                             .padding(.horizontal, 30)
+                                     }
+                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                     .transition(.opacity)
+                         }
+                         
+                         else
+                         {
+                             // Remote Access Tab
+                             ScrollView(.vertical, showsIndicators: false) {
+                                 VStack(alignment: .leading, spacing: 20) {
+                                     ForEach(deviceVM.standaloneControllerList) { door in
+                                         RemoteDoorCardView(
+                                            door: door,
+                                            onRemoteOpen: {
+                                                handleRemoteOpen(for: door)
+                                            },
+                                            onBLEOpen: {
+                                                // handleBLEOpen(for: door)
+                                            }
+                                         )
+                                     }
+                                 }
+                                 .padding(.horizontal, 10)
+                                 .padding(.top, 20)
+                             }
+                             .transition(.opacity)
+                         // Remote Access Tab
+                       }
                     }
                     
                 }.animation(.easeInOut(duration: 0.6), value: selectedTab)
