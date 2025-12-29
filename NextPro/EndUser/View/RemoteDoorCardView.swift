@@ -13,11 +13,11 @@ struct RemoteDoorCardView: View {
     let onBLEOpen: () -> Void
 
     private var hasRemoteBLEAccess: Bool {
-        UserDefaults.standard.bool(forKey: "remote_ble")
+        UserDefaults.standard.bool(forKey: "digital_access")
     }
 
     private var hasRemoteWIFIAccess: Bool {
-        UserDefaults.standard.bool(forKey: "remote_wifi")
+        UserDefaults.standard.bool(forKey: "remote_access")
     }
 
     var body: some View {

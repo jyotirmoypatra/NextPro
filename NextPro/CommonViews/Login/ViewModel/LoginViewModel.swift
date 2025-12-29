@@ -98,21 +98,30 @@ class LoginViewModel: ObservableObject {
                 UserDefaults.standard.set(true, forKey: "isUserInitialSetupCompleted")
                
                 //digital key access
-                UserDefaults.standard.set(response.access_modes?.digitalKeyAccess ?? true, forKey: "digital_key_access")
-               
-                //remote access
-                let hasRemoteAccess = (response.access_modes?.remoteAccess?.remoteBLE ?? true) || (response.access_modes?.remoteAccess?.remoteWiFi ?? true)
-                UserDefaults.standard.set(hasRemoteAccess, forKey: "remote_access")
-
+//                UserDefaults.standard.set(response.access_modes?.digitalKeyAccess ?? true, forKey: "digital_key_access")
+//               
+//                //remote access
+//                let hasRemoteAccess = (response.access_modes?.remoteAccess?.remoteBLE ?? true) || (response.access_modes?.remoteAccess?.remoteWiFi ?? true)
+//                UserDefaults.standard.set(hasRemoteAccess, forKey: "remote_access")
+//
+//                
+//                // BLE access
+//                let hasRemoteBLEAccess = response.access_modes?.remoteAccess?.remoteBLE ?? true
+//                UserDefaults.standard.set(hasRemoteBLEAccess, forKey: "remote_ble")
+//
+//                // Wi-Fi access
+//                let hasRemoteWIFIAccess = response.access_modes?.remoteAccess?.remoteWiFi ?? true
+//                UserDefaults.standard.set(hasRemoteWIFIAccess, forKey: "remote_wifi")
                 
+                
+
                 // BLE access
-                let hasRemoteBLEAccess = response.access_modes?.remoteAccess?.remoteBLE ?? true
-                UserDefaults.standard.set(hasRemoteBLEAccess, forKey: "remote_ble")
+                let hasDigitalAccess = response.digital_access ?? false
+                UserDefaults.standard.set(hasDigitalAccess, forKey: "digital_access")
 
                 // Wi-Fi access
-                let hasRemoteWIFIAccess = response.access_modes?.remoteAccess?.remoteWiFi ?? true
-                UserDefaults.standard.set(hasRemoteWIFIAccess, forKey: "remote_wifi")
-
+                let hasRemoteAccess = response.remote_access ?? false
+                UserDefaults.standard.set(hasRemoteAccess, forKey: "remote_access")
                 
                
             } else {

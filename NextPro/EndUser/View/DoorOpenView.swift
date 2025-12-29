@@ -327,6 +327,12 @@ struct DoorOpenView: View {
         .background(Color.black.opacity(0.4))
         .task{
           
+//            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
+//            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
+            
+            hasDigitalKeyAccess = true
+            hasRemoteAccess = true
+            
             
             await deviceVM.fetchDeviceDetailsIfNeeded()
             // Make sure deviceDetails is not nil
@@ -380,6 +386,11 @@ struct DoorOpenView: View {
                     return
                 }
                 
+                guard hasDigitalKeyAccess else {
+                       print("🚫 Digital Key Access not allowed. Skipping BLE monitoring.")
+                       return
+                   }
+                
                 if let isOn = bleManager?.isBluetoothOn, !isOn {
                     print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
                    // showBluetoothAlert = true
@@ -405,9 +416,9 @@ struct DoorOpenView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: workItem)
         }
         .onAppear {
-                    // Load access flags from UserDefaults
-//                    hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_key_access")
-//                    hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
+            // Load access flags from UserDefaults
+//            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
+//            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
             
             hasDigitalKeyAccess = true
             hasRemoteAccess = true
@@ -464,6 +475,11 @@ struct DoorOpenView: View {
                     return
                 }
 
+                guard hasDigitalKeyAccess else {
+                        print("🚫 Digital Key disabled — BLE restart blocked")
+                        return
+                    }
+                
                 if !bleManager.isBluetoothOn {
                     print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
                   //  showBluetoothAlert = true
@@ -500,6 +516,11 @@ struct DoorOpenView: View {
                 // 👉 Switched to Remote Access
                 stopAllScanningAndMonitoring()
             } else {
+                
+                guard hasDigitalKeyAccess else {
+                            print("🚫 Digital Key disabled — BLE not allowed")
+                            return
+                        }
                 // 👉 Back to Digital Key
                 guard isViewVisible else { return }
                 guard bleManager.isBluetoothOn else {

@@ -18,7 +18,9 @@ struct LoginResponseModel: Decodable {
     let user_type: String?
     let refresh: String?
     let access: String?
-    let access_modes: AccessModes?
+   // let access_modes: AccessModes?
+    let digital_access : Bool?
+    let remote_access : Bool?
 }
 
 
