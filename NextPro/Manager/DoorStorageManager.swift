@@ -46,6 +46,10 @@ struct RemoteDoorItem: Identifiable {
     let doorName: String
     let doorNumber: Int
     let serial: String   // controller_serial OR door_serial
+    
+    var key: String {
+            "\(serial)_\(doorNumber)"
+        }
 }
 
 

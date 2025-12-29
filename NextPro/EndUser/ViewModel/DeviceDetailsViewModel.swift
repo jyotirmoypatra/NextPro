@@ -107,7 +107,7 @@ class DeviceDetailsViewModel: ObservableObject {
                 {
                     "controller_id": "94f5dbd6-c8b7-4002-a593-1d2f3c137320",
                     "controller_name": "Lockheed Martin : Main Gate",
-                    "controller_serial": "4282184653",
+                    "controller_serial": "4282184656",
                     "controller_mac": "a0:76:4e:5a:ae:a2",
                     "controller_key": "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
                     "controller_model": "RD-106",

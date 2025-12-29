@@ -50,7 +50,8 @@ struct DoorOpenView: View {
     
     @State private var animationResetTask: DispatchWorkItem?
     
-    
+    @State private var successDoorKey: String?
+
     @State private var selectedTab = 0
     @State private var isRemoteUnlock = false
     
@@ -279,11 +280,9 @@ struct DoorOpenView: View {
                                         ForEach(deviceVM.standaloneControllerList) { door in
                                             RemoteDoorCardView(
                                                 door: door,
+                                                successKey: $successDoorKey,
                                                 onRemoteOpen: {
                                                     handleRemoteOpen(for: door)
-                                                },
-                                                onBLEOpen: {
-                                                    // handleBLEOpen(for: door)
                                                 }
                                             )
                                         }
@@ -644,7 +643,7 @@ struct DoorOpenView: View {
                 
             }
             else if type == 19 {
-                animateSuccess()
+               // animateSuccess()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 // speakText("Remote Open Door Successfully")
                 speakText(remoteAccessMessage)
@@ -658,10 +657,11 @@ struct DoorOpenView: View {
             }
             
             else if type == 8 {
+                guard let sn = sn, let doorId = doorId else { return }
+                successDoorKey = "\(sn)_\(doorId)"
                 
-                animateSuccess()
+               // animateSuccess()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-                //speakText("Remote Open Door Successfully")
                 speakText(remoteAccessMessage)
                 overlayMessage = remoteAccessMessage
                 
@@ -716,7 +716,7 @@ struct DoorOpenView: View {
         //        )
         
         isRemoteUnlock = true
-        animateOpeningStart()
+      //  animateOpeningStart()
         MQTTManager.shared.sendOpenDoorCommand(
             to: door.serial,
             doorID: Int32(door.doorNumber),
@@ -804,23 +804,8 @@ struct DoorOpenView: View {
         isScanningActive = false
         AceesMessage = "Scanning paused"
         
-        
     }
-    
-    //    private func updateVoiceMessages(for doorName: String?) {
-    //        let prefix = doorName.map { "\($0), " } ?? ""
-    //
-    //        accessGrantedMessage =
-    //            prefix + grantedBase + " - " + accessGreetingMessage
-    //
-    //        accessDeniedMessage =
-    //            prefix + deniedBase
-    //
-    //        accessUnAuthorizedMessage =
-    //            prefix + unauthorizedBase
-    //
-    //        remoteAccessMessage = prefix + "Remote Open Successfully"
-    //    }
+ 
     
     private func updateVoiceMessages(for doorName: String?) {
         let cleanName = doorName?
@@ -843,7 +828,7 @@ struct DoorOpenView: View {
         prefix + unauthorizedBase
         
         remoteAccessMessage =
-        prefix + "Remote Open Successfully"
+        prefix + "Door Unlocked!"
     }
     
     
