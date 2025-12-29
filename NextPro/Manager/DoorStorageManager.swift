@@ -41,6 +41,14 @@ struct DoorModelUser: Identifiable, Codable {
     }
 }
 
+struct RemoteDoorItem: Identifiable {
+    let id = UUID()
+    let doorName: String
+    let doorNumber: Int
+    let serial: String   // controller_serial OR door_serial
+}
+
+
 @MainActor
 class DoorStorageManager: ObservableObject {
     static let shared = DoorStorageManager()

@@ -18,7 +18,7 @@ class DeviceDetailsViewModel: ObservableObject {
     private let mqttManager = MQTTManager.shared
     @Published var errorMessage = ""
     @Published var allControllerSerials: [String] = []
-    @Published var standaloneControllerList: [DoorModelUser] = []
+    @Published var standaloneControllerList: [RemoteDoorItem] = []
     private let network = NetworkManager.shared
     
     func fetchDeviceDetailsIfNeeded() async {
@@ -226,22 +226,23 @@ class DeviceDetailsViewModel: ObservableObject {
         let bleDoors = buildAllDoorsForBLE()
         DoorStorageManager.shared.updateDoors(bleDoors)
        
-        standaloneControllerList = deviceDetails?.standaloneController?.compactMap { controller in
-            guard let sn = controller.controllerSerial,
-                  let mac = controller.controllerMac,
-                  let key = controller.controllerKey else { return nil }
+//        standaloneControllerList = deviceDetails?.standaloneController?.compactMap { controller in
+//            guard let sn = controller.controllerSerial,
+//                  let mac = controller.controllerMac,
+//                  let key = controller.controllerKey else { return nil }
+//
+//            return DoorModelUser(
+//                name: controller.controllerName ?? "Standalone Controller",
+//                devSn: sn,
+//                devMac: mac,
+//                devType: 14,
+//                doorID: 1,
+//                eKey: key,
+//                cardno: deviceDetails?.digitalCardNumber ?? deviceDetails?.physicalCardNumber ?? ""
+//            )
+//        } ?? []
 
-            return DoorModelUser(
-                name: controller.controllerName ?? "Standalone Controller",
-                devSn: sn,
-                devMac: mac,
-                devType: 14,
-                doorID: 1,
-                eKey: key,
-                cardno: deviceDetails?.digitalCardNumber ?? deviceDetails?.physicalCardNumber ?? ""
-            )
-        } ?? []
-
+        standaloneControllerList = remoteDoorList()
 
 
         print("✅ Total Subscribed Devices:", allControllerSerials.count)
@@ -306,6 +307,60 @@ class DeviceDetailsViewModel: ObservableObject {
         return doors
     }
 
+    
+    
+    func remoteDoorList() -> [RemoteDoorItem] {
+        guard let details = deviceDetails else { return [] }
+
+        var result: [RemoteDoorItem] = []
+
+        // 🔹 1️⃣ Controllers → Doors
+        details.controllers?.forEach { controller in
+            guard let controllerSerial = controller.controllerSerial else { return }
+
+            controller.doors?.forEach { door in
+                result.append(
+                    RemoteDoorItem(
+                        doorName: door.doorName ?? "",
+                        doorNumber: door.doorNumber ?? 1,
+                        serial: controllerSerial
+                    )
+                )
+            }
+        }
+
+        // 🔹 2️⃣ Standalone All-in-One Doors
+        details.standaloneAllInOne?.forEach { door in
+            guard let doorSerial = door.doorSerial else { return }
+
+            result.append(
+                RemoteDoorItem(
+                    doorName: door.doorName ?? "",
+                    doorNumber: door.doorNumber ?? 1,
+                    serial: doorSerial
+                )
+            )
+        }
+
+        // 🔹 3️⃣ Standalone Controller → Doors
+        details.standaloneController?.forEach { controller in
+            guard let controllerSerial = controller.controllerSerial else { return }
+
+            controller.doors?.forEach { door in
+                result.append(
+                    RemoteDoorItem(
+                        doorName: door.doorName ?? "",
+                        doorNumber: door.doorNumber ?? 1,
+                        serial: controllerSerial
+                    )
+                )
+            }
+        }
+
+        return result
+    }
+
+    
     
     @MainActor
     func refreshDeviceDetails() async {

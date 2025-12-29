@@ -239,7 +239,7 @@ struct DoorOpenView: View {
                                             handleRemoteOpen(for: door)
                                         },
                                         onBLEOpen: {
-                                            handleBLEOpen(for: door)
+                                           // handleBLEOpen(for: door)
                                         }
                                     )
                                 }
@@ -659,8 +659,8 @@ struct DoorOpenView: View {
         }
     }
     
-    private func handleRemoteOpen(for door: DoorModelUser) {
-        print("🌐 Remote open tapped for:", door.name)
+    private func handleRemoteOpen(for door: RemoteDoorItem) {
+        print("🌐 Remote open tapped for:", door.doorName)
 
         // 1️⃣ Ensure MQTT is connected
 //        MQTTManager.shared.connect()
@@ -674,30 +674,28 @@ struct DoorOpenView: View {
         isRemoteUnlock = true
         animateOpeningStart()
         MQTTManager.shared.sendOpenDoorCommand(
-            to: door.devSn,
-            doorID: door.doorID,
+            to: door.serial,
+            doorID: Int32(door.doorNumber),
             duration: 5
         )
-        
-
-        print("🚪 Remote open command sent for doorID:", door.doorID)
+      
     }
 
 
-    private func handleBLEOpen(for door: DoorModelUser) {
-        print("📡 BLE open tapped for:", door.name)
-
-        // Ensure BLE is on
-        guard bleManager.isBluetoothOn else {
-            showBluetoothAlert = true
-            return
-        }
-
-        isRemoteUnlock = true
-        animateOpeningStart()
-        // Open via BLE
-        doorManager.openSelectedDoor(door)
-    }
+//    private func handleBLEOpen(for door: RemoteDoorItem) {
+//        print("📡 BLE open tapped for:", door.doorName)
+//
+//        // Ensure BLE is on
+//        guard bleManager.isBluetoothOn else {
+//            showBluetoothAlert = true
+//            return
+//        }
+//
+//        isRemoteUnlock = true
+//        animateOpeningStart()
+//        // Open via BLE
+//        doorManager.openSelectedDoor(door)
+//    }
 
     
     private var DoorTabSection: some View {

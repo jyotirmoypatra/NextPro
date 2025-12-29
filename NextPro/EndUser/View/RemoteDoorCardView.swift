@@ -8,7 +8,7 @@ import SwiftUI
 
 
 struct RemoteDoorCardView: View {
-    let door: DoorModelUser
+    let door: RemoteDoorItem
     let onRemoteOpen: () -> Void
     let onBLEOpen: () -> Void
 
@@ -24,7 +24,7 @@ struct RemoteDoorCardView: View {
         HStack(spacing: 16) {
 
             // LEFT : Door name
-            Text(door.name)
+            Text(door.doorName)
                 .font(.custom("Inter-SemiBold", size: 14))
                 .foregroundColor(.white)
                 .multilineTextAlignment(.leading)
