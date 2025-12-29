@@ -74,8 +74,8 @@ class DeviceDetailsViewModel: ObservableObject {
                     "doors": [
                         {
                             "door_id": "e58973dc-18d0-4302-a12f-e8f3f8766c19",
-                            "door_name": "Gym Entrance 1",
-                            "door_number": null,
+                            "door_name": "Main Entrance",
+                            "door_number": 1,
                             "door_model": "RD-106",
                             "door_serial": "4287123590",
                             "door_mac": "58:cf:79:1a:c4:86",
@@ -118,7 +118,7 @@ class DeviceDetailsViewModel: ObservableObject {
                         {
                             "door_id": "94435688-a677-4202-866a-d75ccca52d9d",
                             "door_name": "Door 1",
-                            "door_number": null
+                            "door_number": 1
                         }
                     ]
                 }
@@ -319,6 +319,46 @@ class DeviceDetailsViewModel: ObservableObject {
 
         // 🔁 Reload fresh data (dummy / API)
         await fetchDeviceDetailsIfNeeded()
+    }
+
+    
+    
+    func getDoorName(sn: String?, doorId: Int?) -> String? {
+        guard
+            let details = deviceDetails,
+            let sn = sn,
+            let doorId = doorId
+        else { return nil }
+
+        // 1️⃣ Normal Controllers
+        if let controller = details.controllers?
+            .first(where: { $0.controllerSerial == sn }) {
+
+            if let door = controller.doors?
+                .first(where: { $0.doorNumber == doorId }) {
+                return door.doorName
+            }
+        }
+
+        // 2️⃣ Standalone All-in-One
+        if let door = details.standaloneAllInOne?
+            .first(where: {
+                $0.doorSerial == sn && $0.doorNumber == doorId
+            }) {
+            return door.doorName
+        }
+
+        // 3️⃣ Standalone Controller
+        if let controller = details.standaloneController?
+            .first(where: { $0.controllerSerial == sn }) {
+
+            if let door = controller.doors?
+                .first(where: { $0.doorNumber == doorId }) {
+                return door.doorName
+            }
+        }
+
+        return nil
     }
 
     

@@ -32,11 +32,15 @@ struct DoorOpenView: View {
     @ObservedObject var network = NetworkManager.shared
     
     @State private var doorId : Int?
+    @State private var doorName : String?
     @State private var AceesMessage : String?
     
     @State private var isUnauthorise = false
     
-    
+    @State private var grantedBase = ""
+    @State private var deniedBase = ""
+    @State private var unauthorizedBase = ""
+
     @State private var accessGrantedMessage = ""
     @State private var accessDeniedMessage = ""
     @State private var accessUnAuthorizedMessage = ""
@@ -333,6 +337,31 @@ struct DoorOpenView: View {
             accessGrantedMessage = (UserDefaults.standard.string(forKey: "voice_granted") ?? VoiceMessageDefaults.granted.first?.text ?? "" ) + " - " + accessGreetingMessage
             accessDeniedMessage = UserDefaults.standard.string(forKey: "voice_denied") ??  VoiceMessageDefaults.denied.first?.text ?? ""
             accessUnAuthorizedMessage = UserDefaults.standard.string(forKey: "voice_unauthorized") ?? VoiceMessageDefaults.unauthorized.first?.text ?? ""
+            
+            
+            
+            accessGreetingMessage =
+                UserDefaults.standard.string(forKey: "voice_greeting")
+                ?? VoiceMessageDefaults.greetings.first?.text
+                ?? ""
+
+            grantedBase =
+                UserDefaults.standard.string(forKey: "voice_granted")
+                ?? VoiceMessageDefaults.granted.first?.text
+                ?? ""
+
+            deniedBase =
+                UserDefaults.standard.string(forKey: "voice_denied")
+                ?? VoiceMessageDefaults.denied.first?.text
+                ?? ""
+
+            unauthorizedBase =
+                UserDefaults.standard.string(forKey: "voice_unauthorized")
+                ?? VoiceMessageDefaults.unauthorized.first?.text
+                ?? ""
+
+            
+            
 
             isViewVisible = true
 
@@ -529,8 +558,11 @@ struct DoorOpenView: View {
             
             let type = info["type"] as? Int
             doorId = info["doorID"] as? Int
+            let sn = info["sn"] as? String
             
-            
+            let resolvedDoorName = deviceVM.getDoorName(sn: sn, doorId: doorId)
+            doorName = resolvedDoorName
+            updateVoiceMessages(for: resolvedDoorName)
             let deniedTypes: Set<Int> = [
                 41, // Non-effective time period
                 42, // Illegal time period
@@ -714,6 +746,20 @@ struct DoorOpenView: View {
         
 
     }
+    
+    private func updateVoiceMessages(for doorName: String?) {
+        let prefix = doorName.map { "\($0), " } ?? ""
+
+        accessGrantedMessage =
+            prefix + grantedBase + " - " + accessGreetingMessage
+
+        accessDeniedMessage =
+            prefix + deniedBase
+
+        accessUnAuthorizedMessage =
+            prefix + unauthorizedBase
+    }
+
 
     func animateOpeningStart() {
         
@@ -744,7 +790,7 @@ struct DoorOpenView: View {
             progress = 1.0
             
             if isRemoteUnlock{
-                overlayMessage = "Remote Open Door Successfully"
+                overlayMessage = doorName ?? "" + "Remote Open Door Successfully"
             }else{
                 overlayMessage = accessGrantedMessage
             }
