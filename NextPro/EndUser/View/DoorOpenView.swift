@@ -339,14 +339,6 @@ struct DoorOpenView: View {
             print("Controller Serials:", deviceVM.allControllerSerials)
 
             
-            accessGreetingMessage = UserDefaults.standard.string(forKey: "voice_greeting") ?? VoiceMessageDefaults.greetings.first?.text ?? ""
-            
-            accessGrantedMessage = (UserDefaults.standard.string(forKey: "voice_granted") ?? VoiceMessageDefaults.granted.first?.text ?? "" ) + " - " + accessGreetingMessage
-            accessDeniedMessage = UserDefaults.standard.string(forKey: "voice_denied") ??  VoiceMessageDefaults.denied.first?.text ?? ""
-            accessUnAuthorizedMessage = UserDefaults.standard.string(forKey: "voice_unauthorized") ?? VoiceMessageDefaults.unauthorized.first?.text ?? ""
-            
-            
-            
             accessGreetingMessage =
                 UserDefaults.standard.string(forKey: "voice_greeting")
                 ?? VoiceMessageDefaults.greetings.first?.text
