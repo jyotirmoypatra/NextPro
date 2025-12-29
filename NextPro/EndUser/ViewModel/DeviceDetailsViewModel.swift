@@ -74,7 +74,7 @@ class DeviceDetailsViewModel: ObservableObject {
                     "doors": [
                         {
                             "door_id": "e58973dc-18d0-4302-a12f-e8f3f8766c19",
-                            "door_name": "Main Entrance",
+                            "door_name": "Lockheed Martin : Main Entrance",
                             "door_number": 1,
                             "door_model": "RD-106",
                             "door_serial": "4287123590",

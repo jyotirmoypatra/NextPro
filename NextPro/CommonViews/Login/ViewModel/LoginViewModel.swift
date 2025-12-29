@@ -37,7 +37,7 @@ class LoginViewModel: ObservableObject {
 
         loginError = ""
 
-        let trimmedEmail = email.lowercased().trimmingCharacters(in: .whitespaces)
+        let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
         let trimmedPassword = password.trimmingCharacters(in: .whitespaces)
         
         

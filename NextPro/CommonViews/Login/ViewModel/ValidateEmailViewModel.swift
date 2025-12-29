@@ -27,7 +27,7 @@ class ValidateEmailViewModel: ObservableObject {
 
         validateEmailError = ""
 
-        let trimmedEmail = email.lowercased().trimmingCharacters(in: .whitespaces)
+        let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
 
         // Internet check
         guard network.hasInternet else {
