@@ -40,7 +40,7 @@ struct DoorOpenView: View {
     @State private var grantedBase = ""
     @State private var deniedBase = ""
     @State private var unauthorizedBase = ""
-
+    
     @State private var accessGrantedMessage = ""
     @State private var accessDeniedMessage = ""
     @State private var accessUnAuthorizedMessage = ""
@@ -49,7 +49,7 @@ struct DoorOpenView: View {
     @State private var overlayMessage = ""
     
     @State private var animationResetTask: DispatchWorkItem?
-
+    
     
     @State private var selectedTab = 0
     @State private var isRemoteUnlock = false
@@ -84,7 +84,7 @@ struct DoorOpenView: View {
                         Text("Welcome!")
                             .font(.custom("Inter-SemiBold", size: 18))
                             .foregroundColor(.white)
-                       
+                        
                         if deviceVM.isLoading {
                             ShimmerTextView(width: 100, height: 16)
                         } else {
@@ -112,192 +112,192 @@ struct DoorOpenView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 12)
                 
-                
-                DoorTabSection
-                Group {
+                if !hasRemoteAccess && !hasDigitalKeyAccess {
                     
-                    
-                    if !hasRemoteAccess && !hasDigitalKeyAccess {
-
-                           VStack(spacing: 12) {
-                               Image(systemName: "lock.slash")
-                                   .font(.system(size: 48))
-                                   .foregroundColor(.gray)
-                               Text("No Access Permission")
-                                   .font(.custom("Inter-SemiBold", size: 18))
-                                   .foregroundColor(.white)
-
-                               Text("You do not have permission to unlock any doors.")
-                                   .font(.custom("Inter-Regular", size: 14))
-                                   .foregroundColor(.gray)
-                                   .multilineTextAlignment(.center)
-                                   .padding(.horizontal, 30)
-
-                           }
-                           .frame(maxWidth: .infinity, maxHeight: .infinity)
-                           .transition(.opacity)
-
-                       }
-                    
-                    else if selectedTab == 0 && hasDigitalKeyAccess{
-                        // Digital Key Tab start
+                    VStack(spacing: 12) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .font(.system(size: 48))
+                            .foregroundColor(.red)
+                        Text("No Access Available")
+                            .font(.custom("Inter-SemiBold", size: 18))
+                            .foregroundColor(.white)
                         
-                        ScrollView(.vertical, showsIndicators: false){
-                            VStack{
-                                Spacer().frame(height: 20)
-                                
-                                VStack(spacing: 20) {
+                        Text("You don't have any access method enable. Please contact your administrator.")
+                            .font(.custom("Inter-Regular", size: 14))
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 30)
+                        
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .transition(.opacity)
+                    
+                }else {
+                    
+                    DoorTabSection
+                    
+                    Group {
+                        
+                        if selectedTab == 0 && hasDigitalKeyAccess{
+                            // Digital Key Tab start
+                            
+                            ScrollView(.vertical, showsIndicators: false){
+                                VStack{
+                                    Spacer().frame(height: 20)
                                     
-                                    // 🪪 Card (centered in the view)
-                                    VStack(spacing: 32) {
-                                        HStack {
-                                            Text(deviceVM.deviceDetails?.organizationName ?? "")
-                                                .font(.custom("Inter-SemiBold", size: 16))
-                                                .foregroundColor(.white)
-                                            Spacer()
-                                            Text("NextPro")
-                                                .font(.custom("Inter-Semibold", size: 16))
-                                                .foregroundColor(.gray)
-                                        }
+                                    VStack(spacing: 20) {
                                         
-                                        HStack {
-                                            Image("dooricon")
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: 52, height: 48)
-                                            
-                                            Spacer()
-                                            
-                                            HotspotWaveExact(isActive: $isScanningActive)
-                                                .frame(width: 60, height: 20)
-                                        }
-                                        
-                                        HStack {
-                                            VStack(alignment: .leading) {
-                                                //  Text(selectedCard?.userName ?? "")
-                                                Text(deviceVM.deviceDetails?.userFullName ?? "")
-                                                    .font(.custom("Inter-Regular", size: 12))
-                                                    .foregroundColor(.gray)
-                                                
-                                                Text(maskCardNumber(deviceVM.deviceDetails?.digitalCardNumber ?? ""))
-                                                    .font(.custom("Inter-Regular", size: 12))
-                                                    .foregroundColor(.gray)
-                                                
-                                            }
-                                            
-                                            Spacer()
-                                            
-                                            VStack(alignment: .trailing) {
-                                                Text("Exp")
-                                                    .font(.custom("Inter-Regular", size: 12))
+                                        // 🪪 Card (centered in the view)
+                                        VStack(spacing: 32) {
+                                            HStack {
+                                                Text(deviceVM.deviceDetails?.organizationName ?? "")
+                                                    .font(.custom("Inter-SemiBold", size: 16))
                                                     .foregroundColor(.white)
-                                                //.toFormattedDate(outputFormat: "yyyy") 
-                                                Text(deviceVM.deviceDetails?.cardExpiryDate?.toFormattedDate() ?? "")
-                                                    .font(.custom("Inter-Regular", size: 12))
+                                                Spacer()
+                                                Text("NextPro")
+                                                    .font(.custom("Inter-Semibold", size: 16))
                                                     .foregroundColor(.gray)
                                             }
+                                            
+                                            HStack {
+                                                Image("dooricon")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: 52, height: 48)
+                                                
+                                                Spacer()
+                                                
+                                                HotspotWaveExact(isActive: $isScanningActive)
+                                                    .frame(width: 60, height: 20)
+                                            }
+                                            
+                                            HStack {
+                                                VStack(alignment: .leading) {
+                                                    //  Text(selectedCard?.userName ?? "")
+                                                    Text(deviceVM.deviceDetails?.userFullName ?? "")
+                                                        .font(.custom("Inter-Regular", size: 12))
+                                                        .foregroundColor(.gray)
+                                                    
+                                                    Text(maskCardNumber(deviceVM.deviceDetails?.digitalCardNumber ?? ""))
+                                                        .font(.custom("Inter-Regular", size: 12))
+                                                        .foregroundColor(.gray)
+                                                    
+                                                }
+                                                
+                                                Spacer()
+                                                
+                                                VStack(alignment: .trailing) {
+                                                    Text("Exp")
+                                                        .font(.custom("Inter-Regular", size: 12))
+                                                        .foregroundColor(.white)
+                                                    //.toFormattedDate(outputFormat: "yyyy")
+                                                    Text(deviceVM.deviceDetails?.cardExpiryDate?.toFormattedDate() ?? "")
+                                                        .font(.custom("Inter-Regular", size: 12))
+                                                        .foregroundColor(.gray)
+                                                }
+                                            }
                                         }
-                                    }
-                                    .padding(20)
-                                    .frame(maxWidth: .infinity)
-                                    .background(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [
-                                                Color.white.opacity(0.09),
-                                                Color.white.opacity(0.06)
-                                            ]),
-                                            startPoint: .top,
-                                            endPoint: .bottom
+                                        .padding(20)
+                                        .frame(maxWidth: .infinity)
+                                        .background(
+                                            LinearGradient(
+                                                gradient: Gradient(colors: [
+                                                    Color.white.opacity(0.09),
+                                                    Color.white.opacity(0.06)
+                                                ]),
+                                                startPoint: .top,
+                                                endPoint: .bottom
+                                            )
                                         )
-                                    )
-                                    
-                                    .cornerRadius(14)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 14)
-                                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                                    )
-                                    .padding(.horizontal, 10)
-                                    
-                                    
-                                    HStack(spacing: 6) {
-                                        // Image("bluetooth")
-                                        // .frame(width: 30,height: 30)
                                         
-                                        Text(AceesMessage ?? "")
-                                            .font(.custom("Inter-SemiBold", size: 16))
-                                            .foregroundColor(isScanningActive ? .white.opacity(0.5) : .red.opacity(0.8))
-                                            .padding(.horizontal,15)
+                                        .cornerRadius(14)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 14)
+                                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                        )
+                                        .padding(.horizontal, 10)
+                                        
+                                        
+                                        HStack(spacing: 6) {
+                                            // Image("bluetooth")
+                                            // .frame(width: 30,height: 30)
+                                            
+                                            Text(AceesMessage ?? "")
+                                                .font(.custom("Inter-SemiBold", size: 16))
+                                                .foregroundColor(isScanningActive ? .white.opacity(0.5) : .red.opacity(0.8))
+                                                .padding(.horizontal,15)
+                                            
+                                        }
+                                        
+                                        
+                                        HowItWorksView()
+                                        
                                         
                                     }
-                                    
-                                    
-                                    HowItWorksView()
-                                    
                                     
                                 }
+                                .padding(.bottom, 30)
                                 
-                            }
-                            .padding(.bottom, 30)
+                            }.transition(.opacity)
+                                .refreshable{
+                                    
+                                    await deviceVM.refreshDeviceDetails()
+                                    
+                                }
+                        }
+                        
+                        // Digital Key Tab end
+                        
+                        else if selectedTab == 1 && hasRemoteAccess
+                        {
                             
-                        }.transition(.opacity)
-                            .refreshable{
-                               
-                                await deviceVM.refreshDeviceDetails()
-
+                            if deviceVM.standaloneControllerList.isEmpty {
+                                VStack(spacing: 12) {
+                                    Image(systemName: "wifi.slash")
+                                        .font(.system(size: 42))
+                                        .foregroundColor(.gray)
+                                    
+                                    Text("No Remote Access Doors")
+                                        .font(.custom("Inter-SemiBold", size: 18))
+                                        .foregroundColor(.white)
+                                    
+                                    Text("You do not have any doors available for remote unlocking.")
+                                        .font(.custom("Inter-Regular", size: 14))
+                                        .foregroundColor(.gray)
+                                        .multilineTextAlignment(.center)
+                                        .padding(.horizontal, 30)
+                                }
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .transition(.opacity)
                             }
-                    }
-                    
-                    // Digital Key Tab end
-                    
-                     else if selectedTab == 1 && hasRemoteAccess
-                    {
-                         
-                         if deviceVM.standaloneControllerList.isEmpty {
-                             VStack(spacing: 12) {
-                                         Image(systemName: "wifi.slash")
-                                             .font(.system(size: 42))
-                                             .foregroundColor(.gray)
-
-                                         Text("No Remote Access Doors")
-                                             .font(.custom("Inter-SemiBold", size: 18))
-                                             .foregroundColor(.white)
-
-                                         Text("You do not have any doors available for remote unlocking.")
-                                             .font(.custom("Inter-Regular", size: 14))
-                                             .foregroundColor(.gray)
-                                             .multilineTextAlignment(.center)
-                                             .padding(.horizontal, 30)
-                                     }
-                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                     .transition(.opacity)
-                         }
-                         
-                         else
-                         {
-                             // Remote Access Tab
-                             ScrollView(.vertical, showsIndicators: false) {
-                                 VStack(alignment: .leading, spacing: 20) {
-                                     ForEach(deviceVM.standaloneControllerList) { door in
-                                         RemoteDoorCardView(
-                                            door: door,
-                                            onRemoteOpen: {
-                                                handleRemoteOpen(for: door)
-                                            },
-                                            onBLEOpen: {
-                                                // handleBLEOpen(for: door)
-                                            }
-                                         )
-                                     }
-                                 }
-                                 .padding(.horizontal, 10)
-                                 .padding(.top, 20)
-                             }
-                             .transition(.opacity)
-                         // Remote Access Tab
-                       }
-                    }
-                    
-                }.animation(.easeInOut(duration: 0.6), value: selectedTab)
+                            
+                            else
+                            {
+                                // Remote Access Tab
+                                ScrollView(.vertical, showsIndicators: false) {
+                                    VStack(alignment: .leading, spacing: 20) {
+                                        ForEach(deviceVM.standaloneControllerList) { door in
+                                            RemoteDoorCardView(
+                                                door: door,
+                                                onRemoteOpen: {
+                                                    handleRemoteOpen(for: door)
+                                                },
+                                                onBLEOpen: {
+                                                    // handleBLEOpen(for: door)
+                                                }
+                                            )
+                                        }
+                                    }
+                                    .padding(.horizontal, 10)
+                                    .padding(.top, 20)
+                                }
+                                .transition(.opacity)
+                                // Remote Access Tab
+                            }
+                        }
+                        
+                    }.animation(.easeInOut(duration: 0.6), value: selectedTab)
+                }
                 
             }.frame(maxHeight: .infinity, alignment: .top)
             
@@ -341,7 +341,7 @@ struct DoorOpenView: View {
                         .shadow(color: ringColor.opacity(0.4), radius: 10, x: 0, y: 5)
                         
                         // Status Message
-                       // Text(getStatusMessage())
+                        // Text(getStatusMessage())
                         Text(overlayMessage)
                             .font(.custom("Inter-SemiBold", size: 18))
                             .foregroundColor(ringColor)
@@ -370,9 +370,9 @@ struct DoorOpenView: View {
         }
         .background(Color.black.opacity(0.4))
         .task{
-          
-//            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
-//            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
+            
+            //            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
+            //            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
             
             hasDigitalKeyAccess = true
             hasRemoteAccess = true
@@ -381,36 +381,36 @@ struct DoorOpenView: View {
             await deviceVM.fetchDeviceDetailsIfNeeded()
             // Make sure deviceDetails is not nil
             print("Controller Serials:", deviceVM.allControllerSerials)
-
+            
             
             accessGreetingMessage =
-                UserDefaults.standard.string(forKey: "voice_greeting")
-                ?? VoiceMessageDefaults.greetings.first?.text
-                ?? ""
-
+            UserDefaults.standard.string(forKey: "voice_greeting")
+            ?? VoiceMessageDefaults.greetings.first?.text
+            ?? ""
+            
             grantedBase =
-                UserDefaults.standard.string(forKey: "voice_granted")
-                ?? VoiceMessageDefaults.granted.first?.text
-                ?? ""
-
+            UserDefaults.standard.string(forKey: "voice_granted")
+            ?? VoiceMessageDefaults.granted.first?.text
+            ?? ""
+            
             deniedBase =
-                UserDefaults.standard.string(forKey: "voice_denied")
-                ?? VoiceMessageDefaults.denied.first?.text
-                ?? ""
-
+            UserDefaults.standard.string(forKey: "voice_denied")
+            ?? VoiceMessageDefaults.denied.first?.text
+            ?? ""
+            
             unauthorizedBase =
-                UserDefaults.standard.string(forKey: "voice_unauthorized")
-                ?? VoiceMessageDefaults.unauthorized.first?.text
-                ?? ""
-
+            UserDefaults.standard.string(forKey: "voice_unauthorized")
+            ?? VoiceMessageDefaults.unauthorized.first?.text
+            ?? ""
             
             
-
+            
+            
             isViewVisible = true
-
+            
             mqttManager.connect()
             
-
+            
             
             AceesMessage = "Preparing Scan.."
             
@@ -423,17 +423,17 @@ struct DoorOpenView: View {
                 }
                 
                 guard hasDigitalKeyAccess else {
-                       print("🚫 Digital Key Access not allowed. Skipping BLE monitoring.")
-                       return
-                   }
+                    print("🚫 Digital Key Access not allowed. Skipping BLE monitoring.")
+                    return
+                }
                 
                 if let isOn = bleManager?.isBluetoothOn, !isOn {
                     print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
-                   // showBluetoothAlert = true
+                    // showBluetoothAlert = true
                     isScanningActive = false
                     return
                 }
-
+                
                 print("🟢 Auto-open enabled — starting continuous BLE scanning...")
                 
                 // Start continuous scanning
@@ -442,7 +442,7 @@ struct DoorOpenView: View {
                 
                 // Begin monitoring RSSI and auto-open logic
                 monitorAndAutoOpenNearbyDoor()
-               
+                
             }
             
             // Store the work item so it can be cancelled
@@ -453,18 +453,18 @@ struct DoorOpenView: View {
         }
         .onAppear {
             // Load access flags from UserDefaults
-//            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
-//            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
+            //            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
+            //            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
             
             hasDigitalKeyAccess = true
             hasRemoteAccess = true
             
             // Automatically select first available tab
-                if hasDigitalKeyAccess {
-                    selectedTab = 0
-                } else if hasRemoteAccess {
-                    selectedTab = 1
-                }
+            if hasDigitalKeyAccess {
+                selectedTab = 0
+            } else if hasRemoteAccess {
+                selectedTab = 1
+            }
         }
         .onDisappear {
             print("🛑 DoorOpenView disappeared — stopping all BLE and timers")
@@ -510,20 +510,20 @@ struct DoorOpenView: View {
                     print("⚠️ View is not visible. Skipping BLE restart.")
                     return
                 }
-
+                
                 guard hasDigitalKeyAccess else {
-                        print("🚫 Digital Key disabled — BLE restart blocked")
-                        return
-                    }
+                    print("🚫 Digital Key disabled — BLE restart blocked")
+                    return
+                }
                 
                 if !bleManager.isBluetoothOn {
                     print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
-                  //  showBluetoothAlert = true
+                    //  showBluetoothAlert = true
                     isScanningActive = false
                     return
                 }
-
-
+                
+                
                 // Restart BLE scanning with a small delay to ensure everything is ready
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     // Double-check view is still visible
@@ -546,7 +546,7 @@ struct DoorOpenView: View {
             }
         }
         
-
+        
         .onChange(of: selectedTab) { newTab in
             if newTab == 1 {
                 // 👉 Switched to Remote Access
@@ -554,18 +554,18 @@ struct DoorOpenView: View {
             } else {
                 
                 guard hasDigitalKeyAccess else {
-                            print("🚫 Digital Key disabled — BLE not allowed")
-                            return
-                        }
+                    print("🚫 Digital Key disabled — BLE not allowed")
+                    return
+                }
                 // 👉 Back to Digital Key
                 guard isViewVisible else { return }
                 guard bleManager.isBluetoothOn else {
                     AceesMessage = "Bluetooth is Off. Please turn it on."
                     return
                 }
-
+                
                 print("🔄 Restarting BLE scanning (Back to Digital Key)")
-
+                
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                     bleManager.startContinuousScanning()
                     isScanningActive = true
@@ -573,46 +573,46 @@ struct DoorOpenView: View {
                 }
             }
         }
-
+        
         
         
         
         .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
-
+            
             BluetoothAlertView(
-                    onCancel: { showBluetoothAlert = false },
-                    openSettings: {
-                        if let url = URL(string: "App-Prefs:root=Bluetooth"),
-                           UIApplication.shared.canOpenURL(url) {
-                            UIApplication.shared.open(url)
-                        }
+                onCancel: { showBluetoothAlert = false },
+                openSettings: {
+                    if let url = URL(string: "App-Prefs:root=Bluetooth"),
+                       UIApplication.shared.canOpenURL(url) {
+                        UIApplication.shared.open(url)
                     }
-                )
+                }
+            )
         }
         
-
+        
         .onReceive(bleManager.$bleState) { state in
             if state == .poweredOff {
-               // showBluetoothAlert = true
+                // showBluetoothAlert = true
                 AceesMessage = "Bluetooth is Off. Please turn it on."
                 isScanningActive = false
             } else {
                 //showBluetoothAlert = false
             }
         }
-
-
+        
+        
         .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in
             guard let info = notification.userInfo
             else { return }
             
             
             let eventTime = parseMQTTTime(info["time"]) ?? Date()
-
-               // ⛔ Drop old MQTT events
-               if DoorManager.shared.shouldIgnoreMQTT(eventTime: eventTime) {
-                   return
-               }
+            
+            // ⛔ Drop old MQTT events
+            if DoorManager.shared.shouldIgnoreMQTT(eventTime: eventTime) {
+                return
+            }
             
             let type = info["type"] as? Int
             doorId = info["doorID"] as? Int
@@ -632,7 +632,7 @@ struct DoorOpenView: View {
                 55, // Verification mode error
                 62  // User permission disabled
             ]
-
+            
             
             if type == 0 {
                 animateSuccess()
@@ -646,7 +646,7 @@ struct DoorOpenView: View {
             else if type == 19 {
                 animateSuccess()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-               // speakText("Remote Open Door Successfully")
+                // speakText("Remote Open Door Successfully")
                 speakText(remoteAccessMessage)
                 overlayMessage = remoteAccessMessage
                 
@@ -667,18 +667,18 @@ struct DoorOpenView: View {
                 
             }
             else if let type = type, deniedTypes.contains(type) {
-                   // ✅ ONLY real denial codes come here
-                   animateFailure()
-                   UINotificationFeedbackGenerator().notificationOccurred(.error)
-                   AceesMessage = accessDeniedMessage
-                   speakText(accessDeniedMessage)
-
+                // ✅ ONLY real denial codes come here
+                animateFailure()
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+                AceesMessage = accessDeniedMessage
+                speakText(accessDeniedMessage)
+                
             }
-           else {
-               // 🚫 Ignore all other events
-               print("Ignored door event type:", type ?? -1)
-               return
-           }
+            else {
+                // 🚫 Ignore all other events
+                print("Ignored door event type:", type ?? -1)
+                return
+            }
             
             doorManager.clearDoorEvent()
         }
@@ -686,7 +686,7 @@ struct DoorOpenView: View {
         
         
         .onReceive(doorManager.$doorEvent.compactMap({ $0 })) { event in
-
+            
             switch event.status {
             case .starting:
                 animateOpeningStart()
@@ -705,16 +705,16 @@ struct DoorOpenView: View {
     
     private func handleRemoteOpen(for door: RemoteDoorItem) {
         print("🌐 Remote open tapped for:", door.doorName)
-
+        
         // 1️⃣ Ensure MQTT is connected
-//        MQTTManager.shared.connect()
-//
-//        // 2️⃣ Subscribe to this device (optional but recommended)
-//        MQTTManager.shared.subscribeToDevice(
-//            door.devSn,
-//            model: "BC220" // or door.model if you have it
-//        )
-
+        //        MQTTManager.shared.connect()
+        //
+        //        // 2️⃣ Subscribe to this device (optional but recommended)
+        //        MQTTManager.shared.subscribeToDevice(
+        //            door.devSn,
+        //            model: "BC220" // or door.model if you have it
+        //        )
+        
         isRemoteUnlock = true
         animateOpeningStart()
         MQTTManager.shared.sendOpenDoorCommand(
@@ -722,25 +722,25 @@ struct DoorOpenView: View {
             doorID: Int32(door.doorNumber),
             duration: 5
         )
-      
+        
     }
-
-
-//    private func handleBLEOpen(for door: RemoteDoorItem) {
-//        print("📡 BLE open tapped for:", door.doorName)
-//
-//        // Ensure BLE is on
-//        guard bleManager.isBluetoothOn else {
-//            showBluetoothAlert = true
-//            return
-//        }
-//
-//        isRemoteUnlock = true
-//        animateOpeningStart()
-//        // Open via BLE
-//        doorManager.openSelectedDoor(door)
-//    }
-
+    
+    
+    //    private func handleBLEOpen(for door: RemoteDoorItem) {
+    //        print("📡 BLE open tapped for:", door.doorName)
+    //
+    //        // Ensure BLE is on
+    //        guard bleManager.isBluetoothOn else {
+    //            showBluetoothAlert = true
+    //            return
+    //        }
+    //
+    //        isRemoteUnlock = true
+    //        animateOpeningStart()
+    //        // Open via BLE
+    //        doorManager.openSelectedDoor(door)
+    //    }
+    
     
     private var DoorTabSection: some View {
         VStack(spacing: 0) {
@@ -753,7 +753,7 @@ struct DoorOpenView: View {
                             .frame(maxWidth: .infinity)
                     }
                 }
-            
+                
                 if hasRemoteAccess {
                     Button(action: { withAnimation { selectedTab = 1 } }) {
                         Text("Remote Access")
@@ -767,91 +767,91 @@ struct DoorOpenView: View {
             .padding(.top, 15)
             
             ZStack(alignment: selectedTab == 0 ? .leading : .trailing) {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(height: 1.0)
-                        
-                        if hasDigitalKeyAccess && hasRemoteAccess {
-                            Rectangle()
-                                .fill(Color.white)
-                                .frame(width: UIScreen.main.bounds.width / 2 - 20, height: 2)
-                                .animation(.easeInOut(duration: 0.07), value: selectedTab)
-                                .padding(.horizontal,20)
-                        } else {
-                            Rectangle()
-                                .fill(Color.white)
-                                .frame(width: UIScreen.main.bounds.width - 40, height: 2)
-                                .animation(.easeInOut(duration: 0.07), value: selectedTab)
-                                .padding(.horizontal,20)
-                        }
-                    }
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(height: 1.0)
+                
+                if hasDigitalKeyAccess && hasRemoteAccess {
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: UIScreen.main.bounds.width / 2 - 20, height: 2)
+                        .animation(.easeInOut(duration: 0.07), value: selectedTab)
+                        .padding(.horizontal,20)
+                } else {
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: UIScreen.main.bounds.width - 40, height: 2)
+                        .animation(.easeInOut(duration: 0.07), value: selectedTab)
+                        .padding(.horizontal,20)
+                }
+            }
             .padding(.top, 10)
             .padding(.bottom, 10)
         }
     }
-
+    
     
     private func stopAllScanningAndMonitoring() {
         print("🛑 Stopping BLE scanning & monitoring (Tab switch)")
-
+        
         bleManager.stopContinuousScanning()
         bleManager.stopMonitoringDevice()
         bleManager.stopScanning()
-
+        
         rssiTimer?.invalidate()
         rssiTimer = nil
-
+        
         isScanningActive = false
         AceesMessage = "Scanning paused"
         
-
+        
     }
     
-//    private func updateVoiceMessages(for doorName: String?) {
-//        let prefix = doorName.map { "\($0), " } ?? ""
-//
-//        accessGrantedMessage =
-//            prefix + grantedBase + " - " + accessGreetingMessage
-//
-//        accessDeniedMessage =
-//            prefix + deniedBase
-//
-//        accessUnAuthorizedMessage =
-//            prefix + unauthorizedBase
-//        
-//        remoteAccessMessage = prefix + "Remote Open Successfully"
-//    }
+    //    private func updateVoiceMessages(for doorName: String?) {
+    //        let prefix = doorName.map { "\($0), " } ?? ""
+    //
+    //        accessGrantedMessage =
+    //            prefix + grantedBase + " - " + accessGreetingMessage
+    //
+    //        accessDeniedMessage =
+    //            prefix + deniedBase
+    //
+    //        accessUnAuthorizedMessage =
+    //            prefix + unauthorizedBase
+    //
+    //        remoteAccessMessage = prefix + "Remote Open Successfully"
+    //    }
     
     private func updateVoiceMessages(for doorName: String?) {
         let cleanName = doorName?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-
+        
         let prefix: String
         if let name = cleanName, !name.isEmpty {
             prefix = "\(name), "
         } else {
             prefix = ""
         }
-
+        
         accessGrantedMessage =
-            prefix + grantedBase + " - " + accessGreetingMessage
-
+        prefix + grantedBase + " - " + accessGreetingMessage
+        
         accessDeniedMessage =
-            prefix + deniedBase
-
+        prefix + deniedBase
+        
         accessUnAuthorizedMessage =
-            prefix + unauthorizedBase
-
+        prefix + unauthorizedBase
+        
         remoteAccessMessage =
-            prefix + "Remote Open Successfully"
+        prefix + "Remote Open Successfully"
     }
-
-
+    
+    
     func animateOpeningStart() {
         
         // Cancel previous reset (important)
-            animationResetTask?.cancel()
-
+        animationResetTask?.cancel()
+        
         
         withAnimation(.easeInOut(duration: 0.3)) {
             ringColor = .yellow
@@ -917,7 +917,7 @@ struct DoorOpenView: View {
     func scheduleReset() {
         // Cancel any previous reset
         animationResetTask?.cancel()
-
+        
         let task = DispatchWorkItem {
             withAnimation(.easeInOut(duration: 0.3)) {
                 ringColor = .white
@@ -933,11 +933,11 @@ struct DoorOpenView: View {
                 
             }
         }
-
+        
         animationResetTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0, execute: task)
     }
-
+    
     
     func speakText(_ text: String) {
         let utterance = AVSpeechUtterance(string: text)
@@ -949,90 +949,90 @@ struct DoorOpenView: View {
         
         speechSynthesizer.speak(utterance)
     }
-
+    
     
     func monitorAndAutoOpenNearbyDoor() {
         AceesMessage = "Walk closer to the door"
-           rssiTimer?.invalidate()
-           
-           rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
-               // 1️⃣ Find the closest device (BLEManager already filters for Thimmo devices only)
-               let nearbyDevices = bleManager.devices.compactMap { peripheral -> (peripheral: CBPeripheral, rssi: Int)? in
-                   let name = (peripheral.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-                   let rssi = bleManager.monitoredDeviceRSSI ?? bleManager.deviceLastRSSI[peripheral.identifier] ?? -100
-                   
-                   return (peripheral, rssi)
-               }
-               
-               // Sort by strongest RSSI (closest)
-               guard let closest = nearbyDevices.max(by: { $0.rssi < $1.rssi }) else { return }
-               
-               let name = closest.peripheral.name ?? ""
-               let rssi = closest.rssi
-               
-               print("🎯 Closest device: \(name) with RSSI: \(rssi)")
-               
-               // Only act if RSSI is strong
-               guard rssi > -40 && rssi < 0 else { return }
-               
-               if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
-                   // ✅ Authorized door
-                   print("🚪 Door nearby! Opening \(door.name)...")
-                   doorManager.openSelectedDoor(door)
-                   
-                   UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                   isScanningActive = false
-                   bleManager.stopScanning()
-                   bleManager.stopMonitoringDevice()
-                   timer.invalidate()
-                   rssiTimer = nil
-                   
-                   // Restart monitoring after 5 seconds
-                   DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-                       bleManager.startContinuousScanning()
-                       isScanningActive = true
-                       monitorAndAutoOpenNearbyDoor()
-                   }
-               }
-               else {
-                   // ⚠️ Unauthorized Thimmo device
-                   print("🚫 Unauthorized Thimmo device nearby: \(name)")
-                   
-                   bleManager.stopScanning()
-                   bleManager.stopMonitoringDevice()
-                   timer.invalidate()
-                   rssiTimer = nil
-                   doorName = ""
-                   doorId = nil
-                   updateVoiceMessages(for: "")
-                   isScanningActive = false
-                   
-                   DispatchQueue.main.async {
-                       ringColor = .yellow
-                       lockIcon = "lock.fill"
-                       isOpening = true
-                       progress = 1.0
-                       AceesMessage = "Verifying..."
-                   }
-                   
-                   DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                       overlayMessage = accessUnAuthorizedMessage
-                       unauthorised()
-                       AceesMessage = accessUnAuthorizedMessage
-                       UINotificationFeedbackGenerator().notificationOccurred(.error)
-                       speakText(accessUnAuthorizedMessage)
-                   }
-                   
-                   // Restart scanning after 5 seconds
-                   DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-                       bleManager.startContinuousScanning()
-                       isScanningActive = true
-                       monitorAndAutoOpenNearbyDoor()
-                   }
-               }
-           }
-       }
-
+        rssiTimer?.invalidate()
+        
+        rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+            // 1️⃣ Find the closest device (BLEManager already filters for Thimmo devices only)
+            let nearbyDevices = bleManager.devices.compactMap { peripheral -> (peripheral: CBPeripheral, rssi: Int)? in
+                let name = (peripheral.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                let rssi = bleManager.monitoredDeviceRSSI ?? bleManager.deviceLastRSSI[peripheral.identifier] ?? -100
+                
+                return (peripheral, rssi)
+            }
+            
+            // Sort by strongest RSSI (closest)
+            guard let closest = nearbyDevices.max(by: { $0.rssi < $1.rssi }) else { return }
+            
+            let name = closest.peripheral.name ?? ""
+            let rssi = closest.rssi
+            
+            print("🎯 Closest device: \(name) with RSSI: \(rssi)")
+            
+            // Only act if RSSI is strong
+            guard rssi > -40 && rssi < 0 else { return }
+            
+            if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
+                // ✅ Authorized door
+                print("🚪 Door nearby! Opening \(door.name)...")
+                doorManager.openSelectedDoor(door)
+                
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                isScanningActive = false
+                bleManager.stopScanning()
+                bleManager.stopMonitoringDevice()
+                timer.invalidate()
+                rssiTimer = nil
+                
+                // Restart monitoring after 5 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                    bleManager.startContinuousScanning()
+                    isScanningActive = true
+                    monitorAndAutoOpenNearbyDoor()
+                }
+            }
+            else {
+                // ⚠️ Unauthorized Thimmo device
+                print("🚫 Unauthorized Thimmo device nearby: \(name)")
+                
+                bleManager.stopScanning()
+                bleManager.stopMonitoringDevice()
+                timer.invalidate()
+                rssiTimer = nil
+                doorName = ""
+                doorId = nil
+                updateVoiceMessages(for: "")
+                isScanningActive = false
+                
+                DispatchQueue.main.async {
+                    ringColor = .yellow
+                    lockIcon = "lock.fill"
+                    isOpening = true
+                    progress = 1.0
+                    AceesMessage = "Verifying..."
+                }
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    overlayMessage = accessUnAuthorizedMessage
+                    unauthorised()
+                    AceesMessage = accessUnAuthorizedMessage
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                    speakText(accessUnAuthorizedMessage)
+                }
+                
+                // Restart scanning after 5 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                    bleManager.startContinuousScanning()
+                    isScanningActive = true
+                    monitorAndAutoOpenNearbyDoor()
+                }
+            }
+        }
+    }
+    
     
     func maskCardNumber(_ cardNumber: String) -> String {
         guard cardNumber.count > 6 else {
