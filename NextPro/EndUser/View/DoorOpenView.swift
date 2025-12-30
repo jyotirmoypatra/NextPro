@@ -17,7 +17,7 @@ struct DoorOpenView: View {
     @StateObject private var deviceVM = DeviceDetailsViewModel()
     @StateObject private var doorManager = DoorManager.shared
     @StateObject private var bleManager = BLEManager()
-    private let speechSynthesizer = AVSpeechSynthesizer()
+  //  private let speechSynthesizer = AVSpeechSynthesizer()
     @State private var animateWave = false
     @State private var showBluetoothAlert = false
     @State private var isAutoOpenEnabled = false
@@ -945,17 +945,21 @@ struct DoorOpenView: View {
     }
     
     
-    func speakText(_ text: String) {
-        let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = 0.42                // slightly slower, smooth pace
-        utterance.pitchMultiplier = 0.95     // a bit lower pitch, soft and natural
-        utterance.volume = 0.9               // gentle loudness
-        utterance.postUtteranceDelay = 0.1   // small pause after speaking
-        
-        speechSynthesizer.speak(utterance)
-    }
+//    func speakText(_ text: String) {
+//        let utterance = AVSpeechUtterance(string: text)
+//        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+//        utterance.rate = 0.42                // slightly slower, smooth pace
+//        utterance.pitchMultiplier = 0.95     // a bit lower pitch, soft and natural
+//        utterance.volume = 0.9               // gentle loudness
+//        utterance.postUtteranceDelay = 0.1   // small pause after speaking
+//        
+//        speechSynthesizer.speak(utterance)
+//    }
     
+    func speakText(_ text: String) {
+        SpeechManager.shared.speak(text)
+    }
+
     
     func monitorAndAutoOpenNearbyDoor() {
         AceesMessage = "Walk closer to the door"
