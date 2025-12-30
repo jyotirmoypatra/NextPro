@@ -532,10 +532,15 @@ struct DoorOpenView: View {
                     return
                 }
                 
+                guard selectedTab == 0 else {
+                       print("🚫 Remote Access tab active — BLE restart blocked")
+                       return
+                   }
                 guard hasDigitalKeyAccess else {
                     print("🚫 Digital Key disabled — BLE restart blocked")
                     return
                 }
+                
                 
                 if !bleManager.isBluetoothOn {
                     print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
