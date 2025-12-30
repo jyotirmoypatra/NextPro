@@ -50,20 +50,24 @@ struct LoginView: View {
                     Color.black.opacity(0.9)
                         .ignoresSafeArea()
                     
-                    // Content VStack (fixed at the top)
+                    VStack{
+                    
+                        HStack {
+                        
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 10)
+                        .frame(maxWidth: .infinity, alignment: .top)
+                        .zIndex(999)
+                    
                     // Scrollable Fields
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(spacing: 25) {
                             Spacer().frame(height: 40)
-
+                            
                             // Header
                             VStack(spacing: 5) {
-                                
-//                                if !isUserInitialSetupDone {
-//                                    Text("WELCOME!")
-//                                        .font(.custom("Inter-Regular", size: 16))
-//                                        .foregroundColor(Color.gray.opacity(0.8))
-//                                }
+                             
                                 Text(isUserInitialSetupDone ? "LOG IN TO YOUR ACCOUNT" : "SETUP YOUR ACCOUNT")
                                     .font(.custom("Inter-SemiBold", size: 20))
                                     .foregroundColor(.white)
@@ -73,7 +77,7 @@ struct LoginView: View {
                                         .font(.custom("Inter-Regular", size: 16))
                                         .foregroundColor(Color.gray.opacity(0.8))
                                 }
-                               
+                                
                                 
                                 if isUserInitialSetupDone {
                                     Text("WELCOME!")
@@ -82,7 +86,7 @@ struct LoginView: View {
                                 }
                             }
                             .padding(.bottom, 40)
-
+                            
                             // Email Field
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack(spacing: 0) {
@@ -93,7 +97,7 @@ struct LoginView: View {
                                         .font(.system(size: 14))
                                         .foregroundColor(.red)
                                 }
-
+                                
                                 ZStack(alignment: .leading) {
                                     if isUserInitialSetupDone {
                                         if vm.email.isEmpty {
@@ -101,18 +105,12 @@ struct LoginView: View {
                                                 .foregroundColor(Color.white.opacity(0.5))
                                                 .font(.custom("Inter-Regular", size: 16))
                                                 .padding(.leading, 14)
-//                                                .onAppear {
-//                                                               if !prefilledEmail.isEmpty {
-//                                                                   vm.email = prefilledEmail
-//                                                               }
-//                                                    }
-                                            
                                                 .onAppear {
-                                                        if !didPrefillEmail, !prefilledEmail.isEmpty {
-                                                            vm.email = prefilledEmail
-                                                            didPrefillEmail = true
-                                                        }
+                                                    if !didPrefillEmail, !prefilledEmail.isEmpty {
+                                                        vm.email = prefilledEmail
+                                                        didPrefillEmail = true
                                                     }
+                                                }
                                         }
                                         
                                         TextField("", text: $vm.email)
@@ -144,7 +142,7 @@ struct LoginView: View {
                                     }
                                 }
                             }
-
+                            
                             // Password Field
                             if  isUserInitialSetupDone {
                                 VStack(alignment: .leading, spacing: 6) {
@@ -199,7 +197,7 @@ struct LoginView: View {
                             
                             HStack {
                                 Spacer()
-
+                                
                                 if isUserInitialSetupDone {
                                     
                                     Button(action: {
@@ -214,11 +212,12 @@ struct LoginView: View {
                                     }
                                 }
                             }
-
+                            
                             Spacer().frame(height: 150)  // Prevent cut-off
                         }
                         .padding(.horizontal, 10)
                     } .keyboardAware()
+                }.padding(.bottom, 100)
 
                     // FOOTER - Fixed at Bottom
                     VStack(spacing: 16) {
@@ -343,22 +342,7 @@ struct LoginView: View {
                                     .cornerRadius(10)
                             }
                         }
-//                        HStack {
-//
-//                            if isUserInitialSetupDone {
-//                                
-//                                Button(action: {
-//                                    
-//                                    navigateToResetPassword = true
-//                                    
-//                                }) {
-//                                    Text("Forgot Password?")
-//                                        .font(.custom("Inter-Regular", size: 14))
-//                                        .foregroundColor(.white)
-//                                        .padding(.top, 6)
-//                                }
-//                            }
-//                        }
+
 
                     }
                     .padding(.horizontal, 10)
