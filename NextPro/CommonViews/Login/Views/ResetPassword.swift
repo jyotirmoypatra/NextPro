@@ -27,60 +27,69 @@ struct ResetPassword: View {
                 // Black translucent overlay
                 Color.black.opacity(0.9)
                     .ignoresSafeArea()
-                
-                // Scrollable Content
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 25) {
-                        Spacer().frame(height: 40)
+                VStack{
+                    
+                    HStack {
                         
-                        // Header Text
-                        VStack(spacing: 5) {
-                            Text("RESET YOUR PASSWORD")
-                                .font(.custom("Inter-SemiBold", size: 20))
-                                .foregroundColor(.white)
-                            Text("Enter the email associated with your account, and we'll send you a code to reset your password securely.")
-                                .font(.custom("Inter-Regular", size: 16))
-                                .foregroundColor(Color.gray.opacity(0.8))
-                                .multilineTextAlignment(.center)
-                        }
-                        .padding(.bottom, 40)
-                        
-                        // Email Field
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack(spacing: 0) {
-                                Text("Email Address")
-                                    .font(.custom("Inter-Medium", size: 16))
-                                    .foregroundColor(.white)
-                                Text(" *")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.red)
-                            }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 10)
+                    .frame(maxWidth: .infinity, alignment: .top)
+                    .zIndex(999)
+                    
+                    // Scrollable Content
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 25) {
+                            Spacer().frame(height: 40)
                             
-                            ZStack(alignment: .leading) {
-                                if viewModel.email.isEmpty {
-                                    Text("Enter Email")
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .foregroundColor(Color.white.opacity(0.5))
-                                        .padding(.leading, 14)
+                            // Header Text
+                            VStack(spacing: 5) {
+                                Text("RESET YOUR PASSWORD")
+                                    .font(.custom("Inter-SemiBold", size: 20))
+                                    .foregroundColor(.white)
+                                Text("Enter the email associated with your account, and we'll send you a code to reset your password securely.")
+                                    .font(.custom("Inter-Regular", size: 16))
+                                    .foregroundColor(Color.gray.opacity(0.8))
+                                    .multilineTextAlignment(.center)
+                            }
+                            .padding(.bottom, 40)
+                            
+                            // Email Field
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack(spacing: 0) {
+                                    Text("Email Address")
+                                        .font(.custom("Inter-Medium", size: 16))
+                                        .foregroundColor(.white)
+                                    Text(" *")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.red)
                                 }
                                 
-                                TextField("", text: $viewModel.email)
-                                    .foregroundColor(.white)
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .padding(.horizontal, 14)
-                                    .frame(height: 50)
-                                    .background(Color.white.opacity(0.15))
-                                    .cornerRadius(10)
-                                    .autocapitalization(.none)
-                                    .disableAutocorrection(true)
+                                ZStack(alignment: .leading) {
+                                    if viewModel.email.isEmpty {
+                                        Text("Enter Email")
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .foregroundColor(Color.white.opacity(0.5))
+                                            .padding(.leading, 14)
+                                    }
+                                    
+                                    TextField("", text: $viewModel.email)
+                                        .foregroundColor(.white)
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .padding(.horizontal, 14)
+                                        .frame(height: 50)
+                                        .background(Color.white.opacity(0.15))
+                                        .cornerRadius(10)
+                                        .autocapitalization(.none)
+                                        .disableAutocorrection(true)
+                                }
                             }
+                            
+                            Spacer().frame(height: 150)  // Prevent cut-off
                         }
-                        
-                        Spacer().frame(height: 150)  // Prevent cut-off
-                    }
-                    .padding(.horizontal, 10)
-                }
-                
+                        .padding(.horizontal, 10)
+                    }.keyboardAware()
+                }.padding(.bottom, 100)
                 // FOOTER - Fixed at Bottom
                 VStack(spacing: 16) {
                     // Confirm Button

@@ -9,6 +9,9 @@ import SwiftUI
 
 @main
 struct NextProApp: App {
+    init() {
+            UIRefreshControl.appearance().tintColor = .white
+        }
     var body: some Scene {
         WindowGroup {
             ContentView()
