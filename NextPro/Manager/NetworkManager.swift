@@ -345,54 +345,61 @@ class NetworkManager: ObservableObject {
     
     
        // MARK: - Device Details API
-    func deviceDetails(accessToken: String) async throws -> DeviceDetailsResponse {
+    func deviceDetails(userID: String) async throws -> DeviceDetailsResponse {
 
         let urlString = APIConfig.url(APIConfig.Endpoints.deviceDetails)
         guard let url = URL(string: urlString) else {
-            throw URLError(.badURL)
+            throw APIError.invalidURL
         }
 
-        print("Url:\(urlString)")
-        print("access token:\(accessToken)")
-        
+        print("URL: \(urlString)")
+
         var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.addValue("application/json", forHTTPHeaderField: "Accept")
-        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.httpMethod = "POST"
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let params: [String: Any] = [
+            "user_id" : userID,
+        ]
 
-        if let jsonString = String(data: data, encoding: .utf8) {
-            print("📥 Device Details Response:\n\(jsonString)")
-        }
+        print("Request Params: \(params)")
+        request.httpBody = try JSONSerialization.data(withJSONObject: params)
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let httpResponse = response as? HTTPURLResponse
-        let statusCode = httpResponse?.statusCode ?? 0
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
 
-        let decoder = JSONDecoder()
-
-       
-        if (200...299).contains(statusCode) {
-            if let success = try? decoder.decode(DeviceDetailsResponse.self, from: data) {
-                return success
+            // Debug Response
+            if let json = String(data: data, encoding: .utf8) {
+                print("📥 Device Details Response:\n\(json)")
             }
+
+            guard let http = response as? HTTPURLResponse else {
+                throw APIError.invalidResponse
+            }
+
+            // Handle non-200 HTTP Codes (400, 404, 500...)
+            guard (200...299).contains(http.statusCode) else {
+                let message = extractErrorMessage(from: data) ?? "Something went wrong."
+                throw APIError.serverError(code: http.statusCode, message: message)
+            }
+
+            // Decode response
+            let decoded = try JSONDecoder().decode(DeviceDetailsResponse.self, from: data)
+
+            // Backend returns success = false even with 200
+            if decoded.status == false {
+                throw APIError.backend(message: decoded.message ?? "Something went wrong!")
+            }
+
+            return decoded
+
+        } catch let error as APIError {
+            throw error
+        } catch {
+            print("❌ ERROR REASON:", error)
+               print("❌ LOCALIZED DESCRIPTION:", error.localizedDescription)
+            throw APIError.network(error.localizedDescription)
         }
-
-     
-        if let errorResponse = try? decoder.decode(deviceDetailsErrorResponse.self, from: data) {
-            throw NSError(
-                domain: "APIError",
-                code: statusCode,
-                userInfo: [NSLocalizedDescriptionKey: errorResponse.detail]
-            )
-        }
-
-
-        throw NSError(
-            domain: "UnknownError",
-            code: statusCode,
-            userInfo: [NSLocalizedDescriptionKey: "Something went wrong. Please try again."]
-        )
     }
 
 

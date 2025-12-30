@@ -17,7 +17,7 @@ struct APIConfig {
     struct Endpoints {
         static let login = "/api/facility-user/login/"
         static let updatePassword = "/api/facility-user/reset-password/"
-        static let deviceDetails = "/api/facility-user/device/detail/"
+        static let deviceDetails = "/api/facility/user/device-access/"
         static let forgetPasswordRequest = "/api/facility-user/forgot-password/request/"
         static let forgetPasswordOtpVerify = "/api/facility-user/forgot-password/verify/"
         static let getUserProfileData = "/api/facility-user/user/detail/"

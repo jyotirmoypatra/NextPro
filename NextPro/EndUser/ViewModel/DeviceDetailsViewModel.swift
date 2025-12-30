@@ -14,12 +14,47 @@ import Combine
 class DeviceDetailsViewModel: ObservableObject {
     
     @Published var isLoading = false
+    @Published var issuccess = false
     @Published var deviceDetails: DeviceDetailsResponse?
     private let mqttManager = MQTTManager.shared
     @Published var errorMessage = ""
     @Published var allControllerSerials: [String] = []
     @Published var standaloneControllerList: [RemoteDoorItem] = []
     private let network = NetworkManager.shared
+    private var fetchTask: Task<Void, Never>?
+//
+//    func fetchDeviceDetailsIfNeeded(force: Bool = false) async {
+//        // 🔴 Cancel previous fetch if any
+//        fetchTask?.cancel()
+//
+//        fetchTask = Task { @MainActor in
+//            errorMessage = ""
+//
+//            if !force, loadSavedDetails() {
+//                print("📦 Loaded from cache")
+//                return
+//            }
+//
+//            isLoading = true
+//            defer { isLoading = false }
+//
+//            guard let userId = UserDefaults.standard.string(forKey: "user_id") else {
+//                errorMessage = "User ID missing!"
+//                return
+//            }
+//
+//            do {
+//                let response = try await network.deviceDetails(userID: userId)
+//                self.deviceDetails = response
+//                saveDetailsLocally(response)
+//                updateAndSubscribeAllDevices()
+//            } catch {
+//                self.errorMessage = error.localizedDescription
+//            }
+//        }
+//
+//        await fetchTask?.value
+//    }
     
     func fetchDeviceDetailsIfNeeded() async {
         errorMessage = ""
@@ -45,6 +80,7 @@ class DeviceDetailsViewModel: ObservableObject {
             let response = try await network.deviceDetails(accessToken: token)
             self.deviceDetails = response
             saveDetailsLocally(response)
+            issuccess = true
         } catch {
             self.errorMessage = error.localizedDescription
         }
@@ -132,9 +168,10 @@ class DeviceDetailsViewModel: ObservableObject {
             self.deviceDetails = decodedResponse
             saveDetailsLocally(decodedResponse)
             updateAndSubscribeAllDevices()
-
+            issuccess = true
             print("✅ Dummy Device Details Loaded")
         } catch {
+            issuccess = false
             self.errorMessage = error.localizedDescription
             print("❌ Dummy Decode Error:", error)
         }
@@ -157,7 +194,7 @@ class DeviceDetailsViewModel: ObservableObject {
             self.deviceDetails = decoded
             
             updateAndSubscribeAllDevices()
-
+            issuccess = true
             
             return true
         }
@@ -225,23 +262,6 @@ class DeviceDetailsViewModel: ObservableObject {
         
         let bleDoors = buildAllDoorsForBLE()
         DoorStorageManager.shared.updateDoors(bleDoors)
-       
-//        standaloneControllerList = deviceDetails?.standaloneController?.compactMap { controller in
-//            guard let sn = controller.controllerSerial,
-//                  let mac = controller.controllerMac,
-//                  let key = controller.controllerKey else { return nil }
-//
-//            return DoorModelUser(
-//                name: controller.controllerName ?? "Standalone Controller",
-//                devSn: sn,
-//                devMac: mac,
-//                devType: 14,
-//                doorID: 1,
-//                eKey: key,
-//                cardno: deviceDetails?.digitalCardNumber ?? deviceDetails?.physicalCardNumber ?? ""
-//            )
-//        } ?? []
-
         standaloneControllerList = remoteDoorList()
 
 
@@ -375,6 +395,17 @@ class DeviceDetailsViewModel: ObservableObject {
         // 🔁 Reload fresh data (dummy / API)
         await fetchDeviceDetailsIfNeeded()
     }
+
+//    @MainActor
+//    func refreshDeviceDetails() async {
+//        // 🔄 Clear cache
+//        UserDefaults.standard.removeObject(forKey: "device_details")
+//        deviceDetails = nil
+//        allControllerSerials = []
+//
+//        // 🔁 Force reload
+//        await fetchDeviceDetailsIfNeeded(force: true)
+//    }
 
     
     

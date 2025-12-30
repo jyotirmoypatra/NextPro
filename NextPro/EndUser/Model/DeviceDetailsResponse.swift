@@ -10,8 +10,9 @@ import Foundation
 
 struct DeviceDetailsResponse: Codable {
     let status: Bool
-    let userId: String
-    let deviceUserId: Int
+    let message: String?
+    let userId: String?
+    let deviceUserId: Int?
     let organizationName: String?
     let userFullName: String?
     let physicalCardNumber: String?
@@ -23,6 +24,7 @@ struct DeviceDetailsResponse: Codable {
 
     enum CodingKeys: String, CodingKey {
         case status
+        case message
         case userId = "user_id"
         case deviceUserId = "device_user_id"
         case organizationName = "organization_name"

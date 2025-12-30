@@ -57,6 +57,7 @@ struct DoorOpenView: View {
 
     @State private var selectedTab = 0
     @State private var isRemoteUnlock = false
+    @State private var showDoorErrorAlert = false
     
     @State private var hasDigitalKeyAccess: Bool = false
     @State private var hasRemoteAccess: Bool = false
@@ -345,12 +346,15 @@ struct DoorOpenView: View {
                         .shadow(color: ringColor.opacity(0.4), radius: 10, x: 0, y: 5)
                         
                         // Status Message
-                        // Text(getStatusMessage())
+                        
                         Text(overlayMessage)
                             .font(.custom("Inter-SemiBold", size: 18))
                             .foregroundColor(ringColor)
                             .padding(.horizontal,10)
-                            .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 2)
+                            .id(overlayMessage)
+                            .transition(.opacity)
+                            .animation(.easeInOut(duration: 0.25), value: overlayMessage)
+
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -383,6 +387,9 @@ struct DoorOpenView: View {
             
             
             await deviceVM.fetchDeviceDetailsIfNeeded()
+            if !deviceVM.issuccess{
+                showDoorErrorAlert = true
+            }
             // Make sure deviceDetails is not nil
             print("Controller Serials:", deviceVM.allControllerSerials)
             
@@ -454,6 +461,16 @@ struct DoorOpenView: View {
             
             // Schedule the work item with 2-second delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: workItem)
+        }
+        .modernAlert(isPresented: $showDoorErrorAlert) {
+              ModernAlertView(
+                  title: "Error!",
+                  message: deviceVM.errorMessage,
+                  isSuccess: false,
+                  buttonTitle: "OK"
+              ) { showDoorErrorAlert = false
+                 
+              }
         }
         .onAppear {
             // Load access flags from UserDefaults
@@ -644,13 +661,14 @@ struct DoorOpenView: View {
                 
                 AceesMessage =  accessGrantedMessage
                 speakText(accessGrantedMessage)
+                overlayMessage = accessGrantedMessage
                 print("succes event recievd")
                 
             }
             else if type == 19 {
-               // animateSuccess()
+                guard let sn = sn, let doorId = doorId else { return }
+                successDoorKey = "\(sn)_\(doorId)"
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-                // speakText("Remote Open Door Successfully")
                 speakText(remoteAccessMessage)
                 overlayMessage = remoteAccessMessage
                 
@@ -664,8 +682,6 @@ struct DoorOpenView: View {
             else if type == 8 {
                 guard let sn = sn, let doorId = doorId else { return }
                 successDoorKey = "\(sn)_\(doorId)"
-                
-               // animateSuccess()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 speakText(remoteAccessMessage)
                 overlayMessage = remoteAccessMessage
@@ -676,6 +692,7 @@ struct DoorOpenView: View {
                 animateFailure()
                 UINotificationFeedbackGenerator().notificationOccurred(.error)
                 AceesMessage = accessDeniedMessage
+                overlayMessage = accessDeniedMessage
                 speakText(accessDeniedMessage)
                 
             }
@@ -864,12 +881,6 @@ struct DoorOpenView: View {
             lockIcon = "checkmark"
             isOpening = true
             progress = 1.0
-            
-            if isRemoteUnlock{
-                overlayMessage = remoteAccessMessage
-            }else{
-                overlayMessage = accessGrantedMessage
-            }
         }
         scheduleReset()
     }
@@ -882,7 +893,7 @@ struct DoorOpenView: View {
             lockIcon = "xmark"
             isOpening = false
             progress = 1.0
-            overlayMessage = isRemoteUnlock ? "Remote Unlock Failed" : accessDeniedMessage
+           // overlayMessage = isRemoteUnlock ? "Remote Unlock Failed" : accessDeniedMessage
             
         }
         scheduleReset()
