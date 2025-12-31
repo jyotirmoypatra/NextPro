@@ -633,12 +633,20 @@ struct DoorOpenView: View {
             else { return }
             
             
-            let eventTime = parseMQTTTime(info["time"]) ?? Date()
+//            let eventTime = parseMQTTTime(info["time"]) ?? Date()
+//            
+//            // ⛔ Drop old MQTT events
+//            if DoorManager.shared.shouldIgnoreMQTT(eventTime: eventTime) {
+//                return
+//            }
             
-            // ⛔ Drop old MQTT events
-            if DoorManager.shared.shouldIgnoreMQTT(eventTime: eventTime) {
+            
+            // ⛔ Ignore MQTT if not within active window
+            guard DoorManager.shared.shouldProcessMQTTEvent() else {
+                print("🚫 MQTT ignored — outside 20s active window")
                 return
             }
+
             
             let type = info["type"] as? Int
             doorId = info["doorID"] as? Int
@@ -741,7 +749,8 @@ struct DoorOpenView: View {
         //            door.devSn,
         //            model: "BC220" // or door.model if you have it
         //        )
-        
+        // ✅ Activate 20s MQTT window
+        DoorManager.shared.activateMQTTWindow()
         isRemoteUnlock = true
       //  animateOpeningStart()
         MQTTManager.shared.sendOpenDoorCommand(
@@ -989,6 +998,8 @@ struct DoorOpenView: View {
                 // ✅ Authorized door
                 print("🚪 Door nearby! Opening \(door.name)...")
                 doorManager.openSelectedDoor(door)
+                // ✅ Activate 20s MQTT window
+                DoorManager.shared.activateMQTTWindow()
                 
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 isScanningActive = false

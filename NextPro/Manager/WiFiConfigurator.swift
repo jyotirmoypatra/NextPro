@@ -36,7 +36,7 @@ class WiFiConfigurator {
         devModel.devSn = deviceConfig.devSn
         devModel.devMac = deviceConfig.devMac
         devModel.eKey = deviceConfig.eKey
-        devModel.devType = 2    // set from docs / device type
+        devModel.devType = 13    // set from docs / device type
 
         // Change IP & port to match your actual server
         let ip = "13.223.139.54"

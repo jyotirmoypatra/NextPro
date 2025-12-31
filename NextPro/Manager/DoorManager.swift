@@ -38,6 +38,10 @@ class DoorManager: NSObject, ObservableObject, CBCentralManagerDelegate {
     private var currentProcessingDoorSn: String?
     private var currentProcessingDoorID: Int32?
     
+    
+    private var mqttActiveTimer: DispatchWorkItem?
+    private(set) var isMQTTWindowActive: Bool = false
+    
     @Published var doorEvent: DoorEvent?
 
     struct DoorEvent {
@@ -306,19 +310,43 @@ class DoorManager: NSObject, ObservableObject, CBCentralManagerDelegate {
     }
     
 
-    func shouldIgnoreMQTT(eventTime: Date) -> Bool {
-        let now = Date()
-        let age = now.timeIntervalSince(eventTime)
+//    func shouldIgnoreMQTT(eventTime: Date) -> Bool {
+//        let now = Date()
+//        let age = now.timeIntervalSince(eventTime)
+//
+//        // ⛔ Ignore if event is older than 15 seconds
+//        if age > 15 {
+//            print("🕒 Ignoring stale MQTT event (age \(Int(age))s)")
+//            return true
+//        }
+//
+//        return false
+//    }
 
-        // ⛔ Ignore if event is older than 15 seconds
-        if age > 15 {
-            print("🕒 Ignoring stale MQTT event (age \(Int(age))s)")
-            return true
-        }
+    
 
-        return false
-    }
+       /// Call this whenever a door open command is triggered
+       func activateMQTTWindow(duration: TimeInterval = 20) {
+           // Cancel previous timer
+           mqttActiveTimer?.cancel()
 
+           // Mark active
+           isMQTTWindowActive = true
+           print("✅ MQTT window ACTIVE for \(duration)s")
+
+           let task = DispatchWorkItem { [weak self] in
+               self?.isMQTTWindowActive = false
+               print("⛔ MQTT window EXPIRED")
+           }
+
+           mqttActiveTimer = task
+           DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: task)
+       }
+
+       /// Replacement for shouldIgnoreMQTT
+       func shouldProcessMQTTEvent() -> Bool {
+           return isMQTTWindowActive
+       }
 
     
     // MARK: - Scan and Open Nearest Door
