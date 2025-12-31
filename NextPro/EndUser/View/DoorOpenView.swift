@@ -303,6 +303,11 @@ struct DoorOpenView: View {
                                 }
                                 .transition(.opacity)
                                 // Remote Access Tab
+                                .refreshable{
+                                    
+                                    await deviceVM.refreshDeviceDetails()
+                                    
+                                }
                             }
                         }
                         

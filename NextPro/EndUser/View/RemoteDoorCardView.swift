@@ -264,7 +264,7 @@ struct RemoteDoorCardView: View {
         }
         
         bleWaitTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 7, execute: task)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: task)
     }
     
     private func showBleSuccess() {
