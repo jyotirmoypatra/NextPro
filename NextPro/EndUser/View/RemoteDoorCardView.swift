@@ -30,12 +30,12 @@ struct RemoteDoorCardView: View {
     
     
     private var hasWIFIAccess: Bool {
-        //   UserDefaults.standard.bool(forKey: "remote_access")
+       //  UserDefaults.standard.bool(forKey: "remote_wifi")
         true
     }
     private var hasBleAccess: Bool {
-        //   UserDefaults.standard.bool(forKey: "remote_access")
-        true
+        // UserDefaults.standard.bool(forKey: "remote_ble")
+       true
     }
     
     private var isWifiDisabled: Bool {
