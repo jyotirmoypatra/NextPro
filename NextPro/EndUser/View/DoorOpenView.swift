@@ -291,13 +291,15 @@ struct DoorOpenView: View {
                                                     handleRemoteOpen(for: door)
                                                 },
                                                 onBleOpen: {
-                                                    activeDoorKey = door.key          
+                                                    activeDoorKey = door.key
+                                                    handleBLEOpen(for: door)
                                                 }
                                             )
                                         }
                                     }
                                     .padding(.horizontal, 10)
                                     .padding(.top, 20)
+                                    .padding(.bottom, 20)
                                 }
                                 .transition(.opacity)
                                 // Remote Access Tab
@@ -577,6 +579,7 @@ struct DoorOpenView: View {
         
         
         .onChange(of: selectedTab) { newTab in
+            resetOverlayState()
             if newTab == 1 {
                 // 👉 Switched to Remote Access
                 stopAllScanningAndMonitoring()
@@ -632,17 +635,22 @@ struct DoorOpenView: View {
         
         
         .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in
-            guard let info = notification.userInfo
+            
+            guard
+                let info = notification.userInfo,
+                let rawUserID = info["userID"],
+                let userid = (rawUserID as? NSNumber)?.intValue
+                    ?? (rawUserID as? Int)
+                    ?? Int(rawUserID as? String ?? ""),
+                // 👇 core rule
+                let deviceUserId = deviceVM.deviceDetails?.deviceUserId,
+                (userid == 0 || userid == deviceUserId)
             else { return }
-            
-            
-//            let eventTime = parseMQTTTime(info["time"]) ?? Date()
-//            
-//            // ⛔ Drop old MQTT events
-//            if DoorManager.shared.shouldIgnoreMQTT(eventTime: eventTime) {
-//                return
-//            }
-            
+
+
+                // ✅ Print both values after guard succeeds
+                print("✅ MQTT userID:", userid)
+                print("✅ Device userID:", deviceUserId)
             
             // ⛔ Ignore MQTT if not within active window
             guard DoorManager.shared.shouldProcessMQTTEvent() else {
@@ -672,13 +680,23 @@ struct DoorOpenView: View {
             
             
             if type == 0 {
-                animateSuccess()
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
                 
-                AceesMessage =  accessGrantedMessage
-                speakText(accessGrantedMessage)
-                overlayMessage = accessGrantedMessage
-                print("succes event recievd")
+                
+                if isRemoteUnlock{
+                    guard let sn = sn, let doorId = doorId else { return }
+                    successDoorKey = "\(sn)_\(doorId)"
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    speakText(remoteAccessMessage)
+                    overlayMessage = remoteAccessMessage
+                }else{
+                    animateSuccess()
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    
+                    AceesMessage =  accessGrantedMessage
+                    speakText(accessGrantedMessage)
+                    overlayMessage = accessGrantedMessage
+                    print("succes event recievd")
+                }
                 
             }
             else if type == 19 {
@@ -725,6 +743,8 @@ struct DoorOpenView: View {
         
         .onReceive(doorManager.$doorEvent.compactMap({ $0 })) { event in
             
+            if isRemoteUnlock && selectedTab == 1 { return }
+            
             switch event.status {
             case .starting:
                 animateOpeningStart()
@@ -741,6 +761,18 @@ struct DoorOpenView: View {
         }
     }
     
+    private func resetOverlayState() {
+        animationResetTask?.cancel()
+        isOpening = false
+        progress = 0
+        ringColor = .white
+        lockIcon = "lock.fill"
+        overlayMessage = ""
+        isUnauthorise = false
+        isRemoteUnlock = false
+    }
+
+    
     private func handleRemoteOpen(for door: RemoteDoorItem) {
         print("🌐 Remote open tapped for:", door.doorName)
         
@@ -755,7 +787,6 @@ struct DoorOpenView: View {
         // ✅ Activate 20s MQTT window
         DoorManager.shared.activateMQTTWindow()
         isRemoteUnlock = true
-      //  animateOpeningStart()
         MQTTManager.shared.sendOpenDoorCommand(
             to: door.serial,
             doorID: Int32(door.doorNumber),
@@ -765,20 +796,25 @@ struct DoorOpenView: View {
     }
     
     
-    //    private func handleBLEOpen(for door: RemoteDoorItem) {
-    //        print("📡 BLE open tapped for:", door.doorName)
-    //
-    //        // Ensure BLE is on
-    //        guard bleManager.isBluetoothOn else {
-    //            showBluetoothAlert = true
-    //            return
-    //        }
-    //
-    //        isRemoteUnlock = true
-    //        animateOpeningStart()
-    //        // Open via BLE
-    //        doorManager.openSelectedDoor(door)
-    //    }
+        private func handleBLEOpen(for door: RemoteDoorItem) {
+            print("📡 BLE open tapped for:", door.doorName)
+    
+            // Ensure BLE is on
+            guard bleManager.isBluetoothOn else {
+                showBluetoothAlert = true
+                return
+            }
+    
+            DoorManager.shared.activateMQTTWindow()
+            isRemoteUnlock = true
+            // Open via BLE
+            guard let sensor = door.sensorDetails else {
+                print("❌ Sensor details missing for door:", door.id)
+                return
+            }
+            doorManager.openSelectedDoor(sensor)
+
+        }
     
     
     private var DoorTabSection: some View {
@@ -892,7 +928,7 @@ struct DoorOpenView: View {
     func animateSuccess() {
         
         animationResetTask?.cancel()
-        
+        isRemoteUnlock = false
         withAnimation(.easeInOut(duration: 0.3)) {
             ringColor = .green
             lockIcon = "checkmark"
@@ -905,6 +941,7 @@ struct DoorOpenView: View {
     // ❌ Failure → red, then reset
     func animateFailure() {
         animationResetTask?.cancel()
+        isRemoteUnlock = false 
         withAnimation(.easeInOut(duration: 0.3)) {
             ringColor = .red
             lockIcon = "xmark"

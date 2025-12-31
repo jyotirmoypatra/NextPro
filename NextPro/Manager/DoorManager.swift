@@ -249,9 +249,9 @@ class DoorManager: NSObject, ObservableObject, CBCentralManagerDelegate {
     func openSelectedDoor(_ door: DoorModelUser) {
         
         print("🚪 Opening door: \(door.name)")
-        
+        resetState()
         // Cancel any existing reset timer
-        resetTimer?.cancel()
+       // resetTimer?.cancel()
         
         DispatchQueue.main.async {
             self.doorEvent = DoorEvent(devSn: door.devSn, doorId: door.doorID, status: .starting)

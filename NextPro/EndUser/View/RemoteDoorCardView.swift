@@ -45,6 +45,11 @@ struct RemoteDoorCardView: View {
     private var isBleDisabled: Bool {
         wifiWaiting || wifiSuccess
     }
+    
+    private var isStandAloneControllerTC434: Bool {
+        door.doorType == "standalone_controller" && door.doorControllerType == "TC434"
+    }
+
 
     var body: some View {
         HStack(spacing: 16) {
@@ -131,7 +136,8 @@ struct RemoteDoorCardView: View {
 
                 }
                 
-                if hasBleAccess {
+                if hasBleAccess && !isStandAloneControllerTC434 {
+                   
                     ZStack {
                         if !bleWaiting {
                             Button {
@@ -169,6 +175,7 @@ struct RemoteDoorCardView: View {
                                 lineWidth: 1
                             )
                     )
+                
 
                 }
                 
