@@ -289,6 +289,9 @@ struct DoorOpenView: View {
                                                 onRemoteOpen: {
                                                     activeDoorKey = door.key
                                                     handleRemoteOpen(for: door)
+                                                },
+                                                onBleOpen: {
+                                                    activeDoorKey = door.key          
                                                 }
                                             )
                                         }

@@ -12,17 +12,40 @@ struct RemoteDoorCardView: View {
     @Binding var successKey: String?
     @Binding var activeDoorKey: String?
     let onRemoteOpen: () -> Void
+    let onBleOpen: () -> Void
     
-    @State private var isWaiting = false
-    @State private var isSuccess = false
     
-    @State private var waitTask: DispatchWorkItem?
-    @State private var successTask: DispatchWorkItem?
+    @State private var wifiWaiting = false
+    @State private var bleWaiting = false
     
-    private var hasRemoteWIFIAccess: Bool {
-        UserDefaults.standard.bool(forKey: "remote_access")
+    @State private var wifiSuccess = false
+    @State private var bleSuccess = false
+    
+    
+    @State private var wifiWaitTask: DispatchWorkItem?
+    @State private var bleWaitTask: DispatchWorkItem?
+    
+    @State private var wifiSuccessTask: DispatchWorkItem?
+    @State private var bleSuccessTask: DispatchWorkItem?
+    
+    
+    private var hasWIFIAccess: Bool {
+        //   UserDefaults.standard.bool(forKey: "remote_access")
+        true
+    }
+    private var hasBleAccess: Bool {
+        //   UserDefaults.standard.bool(forKey: "remote_access")
+        true
     }
     
+    private var isWifiDisabled: Bool {
+        bleWaiting || bleSuccess
+    }
+
+    private var isBleDisabled: Bool {
+        wifiWaiting || wifiSuccess
+    }
+
     var body: some View {
         HStack(spacing: 16) {
             
@@ -35,59 +58,59 @@ struct RemoteDoorCardView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
                 
-                if isWaiting {
+                if wifiWaiting || bleWaiting {
                     Text("Waiting for response...")
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .font(.custom("Inter-SemiBold", size: 13))
                         .foregroundColor(.yellow)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top,3)
+                        .padding(.top, 3)
                 }
                 
-                if isSuccess{
-                    HStack{
-                        Image(systemName:"checkmark")
+                if wifiSuccess || bleSuccess {
+                    HStack {
+                        Image(systemName: "checkmark")
                             .resizable()
                             .scaledToFit()
                             .foregroundColor(.green)
                             .frame(width: 12, height: 12)
+                        
                         Text("Door Unlocked!")
-                            .font(.custom("Inter-SemiBold", size: 13))
+                           .font(.custom("Inter-SemiBold", size: 13))
                             .foregroundColor(.green)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
+                
             }
+            
             
             // RIGHT : Action buttons
             // RIGHT : Action buttons (fixed layout)
             HStack(spacing: 18) {
-
-                if hasRemoteWIFIAccess {
+                
+                
+                if hasWIFIAccess {
                     ZStack {
-
-                        // BUTTON
-                        if !isWaiting {
+                        if !wifiWaiting {
                             Button {
-                                startWaiting()
+                                resetBleState()
+                                startWifiWaiting()
                                 onRemoteOpen()
                             } label: {
                                 VStack(spacing: 6) {
-                                    Image(isSuccess ? "antena_active" : "antenna-signal")
+                                    Image(wifiSuccess ? "antena_active" : "antenna-signal")
                                         .resizable()
-                                        .scaledToFit()
                                         .frame(width: 22, height: 22)
-
+                                    
                                     Text("Open Door")
                                         .font(.custom("Inter-Regular", size: 10))
                                         .foregroundColor(.white)
                                 }
                             }
                         }
-
-                        // SPINNER (same position)
-                        if isWaiting {
+                        
+                        if wifiWaiting {
                             RingSpinner(
                                 ringColor: .yellow,
                                 lineWidth: 2.5,
@@ -95,20 +118,67 @@ struct RemoteDoorCardView: View {
                             )
                         }
                     }
-                    // 🔥 FIXED SIZE — KEY PART
                     .frame(width: 68, height: 58)
+                    .opacity(isWifiDisabled ? 0.2 : 1.0)
+                    .allowsHitTesting(!isWifiDisabled)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                            .stroke(
+                                Color.white.opacity(isWifiDisabled ? 0.11 : 0.3),
+                                lineWidth: 1
+                            )
                     )
-                }
-            }
 
+                }
+                
+                if hasBleAccess {
+                    ZStack {
+                        if !bleWaiting {
+                            Button {
+                                resetWifiState()
+                                startBleWaiting()
+                                onBleOpen()
+                            } label: {
+                                VStack(spacing: 6) {
+                                    Image(bleSuccess ? "bluetooth-blue" : "bluetooth-white")
+                                        .resizable()
+                                        .frame(width: 22, height: 22)
+                                    
+                                    Text("Open Door")
+                                        .font(.custom("Inter-Regular", size: 10))
+                                        .foregroundColor(.white)
+                                }
+                            }
+                        }
+                        
+                        if bleWaiting {
+                            RingSpinner(
+                                ringColor: .yellow,
+                                lineWidth: 2.5,
+                                size: 25
+                            )
+                        }
+                    }
+                    .frame(width: 68, height: 58)
+                    .opacity(isBleDisabled ? 0.2 : 1.0)
+                    .allowsHitTesting(!isBleDisabled)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(
+                                Color.white.opacity(isBleDisabled ? 0.11 : 0.3),
+                                lineWidth: 1
+                            )
+                    )
+
+                }
+                
+            }
+            
         }
         .opacity(isDisabled ? 0.2 : 1.0)
         .allowsHitTesting(!isDisabled)
-
-
+        
+        
         .padding(16)
         .background(Color.white.opacity(0.08))
         .cornerRadius(14)
@@ -117,17 +187,21 @@ struct RemoteDoorCardView: View {
                 .stroke(Color.white.opacity(0.15), lineWidth: 1)
         )
         
-        // 🔔 MQTT success — can arrive ANY time
         .onChange(of: successKey) { key in
             guard key == door.key else { return }
             
-            showSuccess()
+            // 🔥 Decide success type based on active waiting state
+            if wifiWaiting {
+                showWifiSuccess()
+            } else if bleWaiting {
+                showBleSuccess()
+            }
             
-            // ✅ CONSUME EVENT
             DispatchQueue.main.async {
                 successKey = nil
             }
         }
+        
         
         
     }
@@ -135,43 +209,91 @@ struct RemoteDoorCardView: View {
         guard let active = activeDoorKey else { return false }
         return active != door.key
     }
-
-
-    private func startWaiting() {
-        isWaiting = true
-        isSuccess = false
+    
+    private func startWifiWaiting() {
+        wifiWaiting = true
+        wifiSuccess = false
         
-        waitTask?.cancel()
+        wifiWaitTask?.cancel()
         
         let task = DispatchWorkItem {
-            isWaiting = false
-            DispatchQueue.main.async {
-                    activeDoorKey = nil   // 👈 unlock other cards
-                }
+            wifiWaiting = false
+            activeDoorKey = nil
         }
         
-        waitTask = task
+        wifiWaitTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + 7, execute: task)
     }
     
-    private func showSuccess() {
-        waitTask?.cancel()
+    private func showWifiSuccess() {
+        wifiWaitTask?.cancel()
         
-        isWaiting = false
-        isSuccess = true
+        wifiWaiting = false
+        wifiSuccess = true
         
-        successTask?.cancel()
+        wifiSuccessTask?.cancel()
         
         let task = DispatchWorkItem {
-            isSuccess = false
+            wifiSuccess = false
             DispatchQueue.main.async {
-                    activeDoorKey = nil   // 👈 unlock other cards
-                }
+                activeDoorKey = nil   // 👈 unlock other cards
+            }
         }
         
-        successTask = task
+        wifiSuccessTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: task)
     }
+    
+    
+    private func startBleWaiting() {
+        bleWaiting = true
+        bleSuccess = false
+        
+        bleWaitTask?.cancel()
+        
+        let task = DispatchWorkItem {
+            bleWaiting = false
+            activeDoorKey = nil
+        }
+        
+        bleWaitTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 7, execute: task)
+    }
+    
+    private func showBleSuccess() {
+        bleWaitTask?.cancel()
+        
+        bleWaiting = false
+        bleSuccess = true
+        
+        bleSuccessTask?.cancel()
+        
+        let task = DispatchWorkItem {
+            bleSuccess = false
+            DispatchQueue.main.async {
+                activeDoorKey = nil   // 👈 unlock other cards
+            }
+        }
+        
+        bleSuccessTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: task)
+    }
+    
+    private func resetWifiState() {
+        wifiWaitTask?.cancel()
+        wifiSuccessTask?.cancel()
+        wifiWaiting = false
+        wifiSuccess = false
+    }
+
+    private func resetBleState() {
+        bleWaitTask?.cancel()
+        bleSuccessTask?.cancel()
+        bleWaiting = false
+        bleSuccess = false
+    }
+
+    
 }
 
 struct RingSpinner: View {
