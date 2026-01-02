@@ -671,6 +671,7 @@ struct DoorOpenView: View {
 
                 (
                     (userid == 0 && cardNumber == 999_999_999) ||
+                    (userid == 0 && cardNumber == 0) ||
                     (userid == deviceUserId) ||
                     (userid != 0 && cardNumber == digitalCardNumber)
                 )
