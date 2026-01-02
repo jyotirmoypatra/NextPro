@@ -103,15 +103,27 @@ class DeviceDetailsViewModel: ObservableObject {
                   "open_type": 2,
                   "door_comm_type": null,
                   "is_standalone": false
-                },
+                }
+              ]
+            },
+            {
+              "controller_id": "hf7f7d6-c8b7-4002-a593-1d2f3c137320",
+              "controller_name": "GAte Controller",
+              "controller_serial": "4283847520",
+              "controller_mac": "d8:3b:da:36:53:62",
+              "controller_key": "41f888c5017576eb80f030fe8730851d000000000000000000000000000000001000",
+              "controller_model": "TC434",
+              "controller_comm_type": null,
+              "max_doors_supported": 4,
+              "doors": [
                 {
-                  "door_id": "e58973dc-18d0-4302-a12f-e8f3f8766c19",
-                  "door_name": "Main Entrance",
+                  "door_id": "rd497dc-18d0-dhd8-a12f-e8f3f8766c19",
+                  "door_name": "Conferance Hall",
                   "door_number": 2,
                   "door_model": "M230",
-                  "door_serial": "4287123597",
-                  "door_mac": "68:cf:69:1a:c4:86",
-                  "door_key": "45829cf14561620e2d42b2f4af4fd4db000000000000000000000000000000001000",
+                  "door_serial": "4282894706",
+                  "door_mac": "58:cf:79:1d:f7:e6",
+                  "door_key": "97b4c368894a17be950800a8022b7a21000000000000000000000000000000001000",
                   "dev_type": 14,
                   "open_type": 2,
                   "door_comm_type": null,
@@ -122,13 +134,13 @@ class DeviceDetailsViewModel: ObservableObject {
           ],
           "standalone_all_in_one": [
             {
-              "door_id": "8234b0ec8-32ad-4d49-824b-5a67ef87b7f0",
-              "door_name": "All In One",
+              "door_id": "82l4b0ec8-32ad-4d49-824b-5a67ef87b7f0",
+              "door_name": "Store room all In One",
               "door_number": 1,
-              "door_model": "DC-106",
-              "door_serial": "SN006",
-              "door_mac": "AUTO-37f86e95b277",
-              "door_key": "7878877",
+              "door_model": "M230",
+              "door_serial": "4282705968",
+              "door_mac": "58:cf:79:1a:89:ce",
+              "door_key": "92fc410e8d125331c26faf21c7e77292000000000000000000000000000000001000",
               "controller_comm_type": null,
               "controller_based": false,
               "dev_type": 14,
@@ -137,11 +149,11 @@ class DeviceDetailsViewModel: ObservableObject {
           ],
           "standalone_controller": [
             {
-              "controller_id": "234f5dbd6-c4b7-4002-a593-1d2f3c137320",
+              "controller_id": "66dbd6-c4b7-4002-a593-1d2f3c137320",
               "controller_name": "Lockheed Martin : Main Gate",
-              "controller_serial": "6282184656",
+              "controller_serial": "4282184653",
               "controller_mac": "a0:76:4e:5a:ae:a2",
-              "controller_key": "gd8ffbf83483b55c89b3bcf184b8294d000000000000000000000000000000001000",
+              "controller_key": "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
               "controller_model": "BC220",
               "controller_comm_type": null,
               "controller_type": "Controller",
@@ -153,30 +165,8 @@ class DeviceDetailsViewModel: ObservableObject {
                   "door_number": 1
                 }
               ]
-            },
-            {
-              "controller_id": "345dbd6-c8b7-4002-a593-1d2f3c137320",
-              "controller_name": "Back door",
-              "controller_serial": "4582184656",
-              "controller_mac": "hj:76:sd:5a:ae:a2",
-              "controller_key": "435dfr481283b55c89b3bcf184b8294d000000000000000000000000000000001000",
-              "controller_model": "TC434",
-              "controller_comm_type": null,
-              "controller_type": "Controller",
-              "max_doors_supported": 4,
-              "doors": [
-                {
-                  "door_id": "4355688-a677-dsfd-866a-d75ccca52d9d",
-                  "door_name": "Sensorless Door 1",
-                  "door_number": 1
-                },
-                {
-                  "door_id": "3435688-a3a7-4202-g66a-d75ccca52d9d",
-                  "door_name": "Sensorless Door 2",
-                  "door_number": 2
-                }
-              ]
             }
+           
           ]
         }
         """

@@ -640,17 +640,44 @@ struct DoorOpenView: View {
         
         
         .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in
+//            
+//            guard
+//                let info = notification.userInfo,
+//                let rawUserID = info["userID"],
+//                let userid = (rawUserID as? NSNumber)?.intValue
+//                    ?? (rawUserID as? Int)
+//                    ?? Int(rawUserID as? String ?? ""),
+//                // 👇 core rule
+//                let deviceUserId = deviceVM.deviceDetails?.deviceUserId,
+//                (userid == 0 || userid == deviceUserId)
+//            else { return }
             
             guard
                 let info = notification.userInfo,
                 let rawUserID = info["userID"],
+                let rawcardNumber = info["cardnumber"],
+
+                let cardNumber = (rawcardNumber as? NSNumber)?.intValue
+                    ?? (rawcardNumber as? Int)
+                    ?? Int(rawcardNumber as? String ?? ""),
+
                 let userid = (rawUserID as? NSNumber)?.intValue
                     ?? (rawUserID as? Int)
                     ?? Int(rawUserID as? String ?? ""),
-                // 👇 core rule
+
                 let deviceUserId = deviceVM.deviceDetails?.deviceUserId,
-                (userid == 0 || userid == deviceUserId)
-            else { return }
+                let digitalCardString = deviceVM.deviceDetails?.digitalCardNumber,
+                let digitalCardNumber = Int(digitalCardString),   // 🔥 FIX
+
+                (
+                    (userid == 0 && cardNumber == 999_999_999) ||
+                    (userid == deviceUserId) ||
+                    (userid != 0 && cardNumber == digitalCardNumber)
+                )
+            else {
+                return
+            }
+
 
 
                 // ✅ Print both values after guard succeeds

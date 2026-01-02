@@ -191,6 +191,7 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
                             "type": first.type,
                             "sn": event.SN,
                             "time": first.time,
+                            "cardnumber": first.number,
                             "topicType": isDataTopic ? "data" : "rtdata"  // ✅ Track topic type
                         ]
                     )
