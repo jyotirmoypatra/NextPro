@@ -275,7 +275,8 @@ struct OnboardPageWifiPasswordView: View {
         WiFiConfigurator.configureDeviceWiFi(
             deviceSN: selectedDeviceSN,
             wifiName: selectedWiFiNetwork,
-            wifiPassword: password
+            wifiPassword: password,
+            deviceModel: "BC434"
         ) { success, message in
             isConfiguring = false
             statusMessage = message
