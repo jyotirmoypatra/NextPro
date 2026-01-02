@@ -139,7 +139,8 @@ class WiFiConfigurator {
         let serverIP = "13.223.139.54"
         let serverPort = 6010
 
-        let isTCDevice = deviceModel.uppercased().hasPrefix("TC")
+      // let isTCDevice = deviceModel.uppercased().hasPrefix("TC")
+        let isTCDevice = deviceConfig.model.uppercased().hasPrefix("TC")
 
 
         // TC DEVICE FLOW (STRICT SEQUENTIAL)
