@@ -397,7 +397,7 @@ struct DoorOpenView: View {
             
             
             await deviceVM.fetchDeviceDetailsIfNeeded()
-            if !deviceVM.issuccess{
+            if !deviceVM.issuccess && deviceVM.errorMessage != ""{
                 showDoorErrorAlert = true
             }
             // Make sure deviceDetails is not nil

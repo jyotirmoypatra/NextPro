@@ -22,7 +22,7 @@ class DeviceDetailsViewModel: ObservableObject {
     @Published var standaloneControllerList: [RemoteDoorItem] = []
     private let network = NetworkManager.shared
     private var fetchTask: Task<Void, Never>?
-//
+
     func fetchDeviceDetailsIfNeeded(force: Bool = false) async {
         // 🔴 Cancel previous fetch if any
         fetchTask?.cancel()
@@ -68,23 +68,6 @@ class DeviceDetailsViewModel: ObservableObject {
 //        // 2️⃣ Only call API / load dummy JSON if no local data
 //        isLoading = true
 //        
-//        // Uncomment this if real API available
-//        /*
-//        guard let token = KeychainManager.shared.get("access_token") else {
-//            errorMessage = "Missing access token."
-//            isLoading = false
-//            return
-//        }
-//
-//        do {
-//            let response = try await network.deviceDetails(accessToken: token)
-//            self.deviceDetails = response
-//            saveDetailsLocally(response)
-//            issuccess = true
-//        } catch {
-//            self.errorMessage = error.localizedDescription
-//        }
-//        */
 //        
 //        // Dummy JSON (for now)
 //        let dummyJSON = """
