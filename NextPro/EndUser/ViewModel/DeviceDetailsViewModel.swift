@@ -161,11 +161,29 @@ class DeviceDetailsViewModel: ObservableObject {
               "doors": [
                 {
                   "door_id": "94435688-a677-4202-866a-d75ccca52d9d",
-                  "door_name": "Sensorless Store Room",
+                  "door_name": "Sensorless Store Room Bc220",
                   "door_number": 1
                 }
               ]
-            }
+            },
+                    {
+                      "controller_id": "66dbd6-c4b7-4002-a593-1d2f3c137320",
+                      "controller_name": "Main Gate",
+                      "controller_serial": "4282184653",
+                      "controller_mac": "a0:76:4e:5a:ae:a2",
+                      "controller_key": "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
+                      "controller_model": "TC434",
+                      "controller_comm_type": null,
+                      "controller_type": "Controller",
+                      "max_doors_supported": 1,
+                      "doors": [
+                        {
+                          "door_id": "94435688-a677-4202-866a-d75ccca52d9d",
+                          "door_name": "Sensorless Store Room TC434",
+                          "door_number": 1
+                        }
+                      ]
+                    }
            
           ]
         }
@@ -446,6 +464,7 @@ class DeviceDetailsViewModel: ObservableObject {
         await fetchDeviceDetailsIfNeeded()
     }
 
+    //for actual api call ->
 //    @MainActor
 //    func refreshDeviceDetails() async {
 //        // 🔄 Clear cache

@@ -95,7 +95,8 @@ struct RemoteDoorCardView: View {
             HStack(spacing: 18) {
                 
                 
-                if hasWIFIAccess {
+              //  if hasWIFIAccess {
+                if isStandAloneControllerTC434 {
                     ZStack {
                         if !wifiWaiting {
                             Button {
@@ -136,7 +137,8 @@ struct RemoteDoorCardView: View {
 
                 }
                 
-                if hasBleAccess && !isStandAloneControllerTC434 {
+               // if hasBleAccess && !isStandAloneControllerTC434 {
+                if !isStandAloneControllerTC434 {
                    
                     ZStack {
                         if !bleWaiting {
