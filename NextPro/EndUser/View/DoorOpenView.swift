@@ -456,44 +456,44 @@ struct DoorOpenView: View {
             
             
             
-            AceesMessage = "Preparing Scan.."
-            
-            // Create a cancellable work item for delayed monitoring start
-            let workItem = DispatchWorkItem { [weak bleManager] in
-                // Only start monitoring if view is still visible
-                guard isViewVisible else {
-                    print("⚠️ View is no longer visible. Skipping monitoring start.")
-                    return
-                }
-                
-                guard hasDigitalKeyAccess else {
-                    print("🚫 Digital Key Access not allowed. Skipping BLE monitoring.")
-                    return
-                }
-                
-                if let isOn = bleManager?.isBluetoothOn, !isOn {
-                    print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
-                    // showBluetoothAlert = true
-                    isScanningActive = false
-                    return
-                }
-                
-                print("🟢 Auto-open enabled — starting continuous BLE scanning...")
-                
-                // Start continuous scanning
-                bleManager?.startContinuousScanning()
-                isScanningActive = true
-                
-                // Begin monitoring RSSI and auto-open logic
-                monitorAndAutoOpenNearbyDoor()
-                
-            }
-            
-            // Store the work item so it can be cancelled
-            startMonitoringTask = workItem
-            
-            // Schedule the work item with 2-second delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: workItem)
+//           // AceesMessage = "Preparing Scan.."
+//            
+//            // Create a cancellable work item for delayed monitoring start
+//            let workItem = DispatchWorkItem { [weak bleManager] in
+//                // Only start monitoring if view is still visible
+//                guard isViewVisible else {
+//                    print("⚠️ View is no longer visible. Skipping monitoring start.")
+//                    return
+//                }
+//                
+//                guard hasDigitalKeyAccess else {
+//                    print("🚫 Digital Key Access not allowed. Skipping BLE monitoring.")
+//                    return
+//                }
+//                
+//                if let isOn = bleManager?.isBluetoothOn, !isOn {
+//                    print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
+//                    // showBluetoothAlert = true
+//                    isScanningActive = false
+//                    return
+//                }
+//                
+//                print("🟢 Auto-open enabled — starting continuous BLE scanning...")
+//                
+//                // Start continuous scanning
+//                bleManager?.startContinuousScanning()
+//                isScanningActive = true
+//                
+//                // Begin monitoring RSSI and auto-open logic
+//                monitorAndAutoOpenNearbyDoor()
+//                
+//            }
+//            
+//            // Store the work item so it can be cancelled
+//            startMonitoringTask = workItem
+//            
+//            // Schedule the work item with 2-second delay
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: workItem)
         }
         .modernAlert(isPresented: $showDoorErrorAlert) {
               ModernAlertView(
@@ -606,35 +606,53 @@ struct DoorOpenView: View {
         }
         
         
+//        .onChange(of: selectedTab) { newTab in
+//            resetOverlayState()
+//            if newTab == 1 {
+//                // 👉 Switched to Remote Access
+//                stopAllScanningAndMonitoring()
+//            } else {
+//                
+//                guard hasDigitalKeyAccess else {
+//                    print("🚫 Digital Key disabled — BLE not allowed")
+//                    return
+//                }
+//                // 👉 Back to Digital Key
+//                guard isViewVisible else { return }
+//                guard bleManager.isBluetoothOn else {
+//                    AceesMessage = "Bluetooth is Off. Please turn it on."
+//                    return
+//                }
+//                
+//                print("🔄 Restarting BLE scanning (Back to Digital Key)")
+//                
+//                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+//                    bleManager.startContinuousScanning()
+//                    isScanningActive = true
+//                    monitorAndAutoOpenNearbyDoor()
+//                }
+//            }
+//        }
+        
         .onChange(of: selectedTab) { newTab in
             resetOverlayState()
+
             if newTab == 1 {
-                // 👉 Switched to Remote Access
                 stopAllScanningAndMonitoring()
+                AceesMessage = "Remote access selected"
             } else {
-                
-                guard hasDigitalKeyAccess else {
-                    print("🚫 Digital Key disabled — BLE not allowed")
-                    return
-                }
-                // 👉 Back to Digital Key
-                guard isViewVisible else { return }
                 guard bleManager.isBluetoothOn else {
                     AceesMessage = "Bluetooth is Off. Please turn it on."
                     return
                 }
-                
-                print("🔄 Restarting BLE scanning (Back to Digital Key)")
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                    bleManager.startContinuousScanning()
-                    isScanningActive = true
-                    monitorAndAutoOpenNearbyDoor()
+
+                AceesMessage = "Preparing Scan..."
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    startBLEIfPossible()
                 }
             }
         }
-        
-        
+
         
         
         .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
@@ -651,16 +669,37 @@ struct DoorOpenView: View {
         }
         
         
+//        .onReceive(bleManager.$bleState) { state in
+//            if state == .poweredOff {
+//                // showBluetoothAlert = true
+//                AceesMessage = "Bluetooth is Off. Please turn it on."
+//                isScanningActive = false
+//            } else {
+//                //showBluetoothAlert = false
+//            }
+//        }
+        
         .onReceive(bleManager.$bleState) { state in
-            if state == .poweredOff {
-                // showBluetoothAlert = true
+            switch state {
+            case .poweredOff:
+                print("🔴 Bluetooth OFF")
                 AceesMessage = "Bluetooth is Off. Please turn it on."
                 isScanningActive = false
-            } else {
-                //showBluetoothAlert = false
+
+            case .poweredOn:
+                print("🟢 Bluetooth ON")
+                AceesMessage = "Preparing Scan..."
+
+                // Small delay ensures CoreBluetooth is fully ready
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    startBLEIfPossible()
+                }
+
+            default:
+                AceesMessage = "Checking Bluetooth status..."
             }
         }
-        
+
         
         .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in
 //            
@@ -827,6 +866,20 @@ struct DoorOpenView: View {
         isUnauthorise = false
         isRemoteUnlock = false
     }
+    
+    private func startBLEIfPossible() {
+        guard isViewVisible else { return }
+        guard selectedTab == 0 else { return }
+        guard hasDigitalKeyAccess else { return }
+        guard bleManager.isBluetoothOn else { return }
+
+        print("🟢 Starting BLE scanning")
+
+        bleManager.startContinuousScanning()
+        isScanningActive = true
+        monitorAndAutoOpenNearbyDoor()
+    }
+
 
     
     private func handleRemoteOpen(for door: RemoteDoorItem) {
