@@ -114,7 +114,7 @@ struct ProfileEndUserView: View {
                             // Update Password
                             UserProfileRow(title: "Update Password",textColor: .white) {
                                 // Handle password update
-                                if usertype != "" && username != "" {
+                                if username != "" {
                                     navigateToUpdatePass = true
                                 }
                             }
@@ -317,7 +317,7 @@ struct ProfileEndUserView: View {
     }
     
     func loadUserData() {
-        usertype = UserDefaults.standard.string(forKey: "user_type") ?? ""
+       // usertype = UserDefaults.standard.string(forKey: "user_type") ?? ""
         username = UserDefaults.standard.string(forKey: "username") ?? ""
 
     }

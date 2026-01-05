@@ -250,18 +250,10 @@ struct LoginView: View {
                                             // Navigate after a short delay to show the toast
                                             try? await Task.sleep(nanoseconds: 500_000_000)
                                             
-                                            // navigateToCreatePassword = true
-                                            
-                                            isAdmin = (vm.userType == "facility_manager")
+                                            isAdmin = vm.is_admin
                                             
                                             navigateToHome = true
-//                                            if vm.isPasswordReset{
-//                                                navigateToHome = true
-//                                            }
-//                                            else{
-//                                                navigateToCreatePassword = true
-//                                            }
-                                            
+                                          
                                             
                                         } else {
                                             showLoginFailedAlert = true

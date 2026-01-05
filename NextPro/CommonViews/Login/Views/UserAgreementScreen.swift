@@ -328,7 +328,7 @@ struct UserAgreementScreen: View {
             
             await loginVM.login()
             if loginVM.loginSuccess {
-                isAdmin = (loginVM.userType == "facility_manager")
+                isAdmin = loginVM.is_admin
                 navigateToHome = true
             }else{
                 showLoginError = true

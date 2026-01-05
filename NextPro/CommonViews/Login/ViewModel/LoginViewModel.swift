@@ -19,7 +19,7 @@ class LoginViewModel: ObservableObject {
     @Published var loginError = ""
     @Published var isLoading = false
     @Published var loginSuccess = false
-    @Published var userType = ""
+    @Published var is_admin = false
     @Published var userName = ""
     @Published var isPasswordReset = true
 
@@ -75,7 +75,7 @@ class LoginViewModel: ObservableObject {
                 print("✅ Login success")
                 
                 // Update values
-                userType = response.user_type ?? ""
+                is_admin = response.is_admin ?? false
                 userName = response.username ?? ""
                 isPasswordReset = response.is_reset_password ?? true
                 loginSuccess = true
@@ -94,6 +94,7 @@ class LoginViewModel: ObservableObject {
                 UserDefaults.standard.set(response.facility_id ?? "", forKey: "facility_id")
                 UserDefaults.standard.set(response.username ?? "", forKey: "username")
                 UserDefaults.standard.set(response.user_type ?? "", forKey: "user_type")
+                UserDefaults.standard.set(response.is_admin ?? false, forKey: "is_admin")
                 UserDefaults.standard.set(response.is_reset_password ?? true, forKey: "isPssswordReset")
                 UserDefaults.standard.set(true, forKey: "isUserInitialSetupCompleted")
                
@@ -108,10 +109,10 @@ class LoginViewModel: ObservableObject {
                 
                 // Remote  wifi access
                 let hasRemoteWifiAccess = response.is_wifi ?? false
-                UserDefaults.standard.set(hasRemoteAccess, forKey: "remote_wifi")
+                UserDefaults.standard.set(hasRemoteWifiAccess, forKey: "remote_wifi")
                 // Remote access tab
                 let hasRemoteBleAccess = response.is_ble ?? false
-                UserDefaults.standard.set(hasRemoteAccess, forKey: "remote_ble")
+                UserDefaults.standard.set(hasRemoteBleAccess, forKey: "remote_ble")
                 
                
             } else {
