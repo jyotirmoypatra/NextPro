@@ -60,22 +60,25 @@ struct HomeViewAdmin: View {
                     // MARK: - Dynamic Page Content
                     VStack {
                         switch selectedTab {
-//                        case 0:
-//                            AdminFacilityListView()
                         case 0:
-                            Group {
-                                switch adminHomePage {
-                                case .facilityList:
-                                    AdminFacilityListView { facilityName in
-                                        adminHomePage = .facilityDetail(facilityName: facilityName)
-                                    }
-
-                                case .facilityDetail(let name):
-                                    FacilityDetailView(facilityName: name) {
-                                        adminHomePage = .facilityList
-                                    }
-                                }
-                            }
+                            DoorOpenView()
+                                .navigationBarBackButtonHidden(true)
+                                .navigationBarHidden(true)
+                                .interactiveDismissDisabled(true)
+//                        case 0:
+//                            Group {
+//                                switch adminHomePage {
+//                                case .facilityList:
+//                                    AdminFacilityListView { facilityName in
+//                                        adminHomePage = .facilityDetail(facilityName: facilityName)
+//                                    }
+//
+//                                case .facilityDetail(let name):
+//                                    FacilityDetailView(facilityName: name) {
+//                                        adminHomePage = .facilityList
+//                                    }
+//                                }
+//                            }
 
                         case 1:
                             DeviceAdminTabView()

@@ -146,109 +146,132 @@ struct DoorOpenView: View {
                         if selectedTab == 0 && hasDigitalKeyAccess{
                             // Digital Key Tab start
                             
-                            ScrollView(.vertical, showsIndicators: false){
-                                VStack{
-                                    Spacer().frame(height: 20)
+                            if !doorStorage.hasDoor {
+                                VStack(spacing: 12) {
+                                    Image(systemName: "lock.slash")
+
+                                        .font(.system(size: 42))
+                                        .foregroundColor(.gray)
                                     
-                                    VStack(spacing: 20) {
+                                    Text("No Digital Access Doors")
+                                        .font(.custom("Inter-SemiBold", size: 18))
+                                        .foregroundColor(.white)
+                                    
+                                    Text("You do not have any doors available for digital unlocking.")
+                                        .font(.custom("Inter-Regular", size: 14))
+                                        .foregroundColor(.gray)
+                                        .multilineTextAlignment(.center)
+                                        .padding(.horizontal, 30)
+                                }
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .transition(.opacity)
+                            }
+                            else{
+                                
+                                ScrollView(.vertical, showsIndicators: false){
+                                    VStack{
+                                        Spacer().frame(height: 20)
                                         
-                                        // 🪪 Card (centered in the view)
-                                        VStack(spacing: 32) {
-                                            HStack {
-                                                Text(deviceVM.deviceDetails?.organizationName ?? "")
-                                                    .font(.custom("Inter-SemiBold", size: 16))
-                                                    .foregroundColor(.white)
-                                                Spacer()
-                                                Text("NextPro")
-                                                    .font(.custom("Inter-Semibold", size: 16))
-                                                    .foregroundColor(.gray)
-                                            }
+                                        VStack(spacing: 20) {
                                             
-                                            HStack {
-                                                Image("dooricon")
-                                                    .resizable()
-                                                    .scaledToFit()
-                                                    .frame(width: 52, height: 48)
-                                                
-                                                Spacer()
-                                                
-                                                HotspotWaveExact(isActive: $isScanningActive)
-                                                    .frame(width: 60, height: 20)
-                                            }
-                                            
-                                            HStack {
-                                                VStack(alignment: .leading) {
-                                                    //  Text(selectedCard?.userName ?? "")
-                                                    Text(deviceVM.deviceDetails?.userFullName ?? "")
-                                                        .font(.custom("Inter-Regular", size: 12))
-                                                        .foregroundColor(.gray)
-                                                    
-                                                    Text(maskCardNumber(deviceVM.deviceDetails?.digitalCardNumber ?? ""))
-                                                        .font(.custom("Inter-Regular", size: 12))
-                                                        .foregroundColor(.gray)
-                                                    
-                                                }
-                                                
-                                                Spacer()
-                                                
-                                                VStack(alignment: .trailing) {
-                                                    Text("Exp")
-                                                        .font(.custom("Inter-Regular", size: 12))
+                                            // 🪪 Card (centered in the view)
+                                            VStack(spacing: 32) {
+                                                HStack {
+                                                    Text(deviceVM.deviceDetails?.organizationName ?? "")
+                                                        .font(.custom("Inter-SemiBold", size: 16))
                                                         .foregroundColor(.white)
-                                                    //.toFormattedDate(outputFormat: "yyyy")
-                                                    Text(deviceVM.deviceDetails?.cardExpiryDate?.toFormattedDate() ?? "")
-                                                        .font(.custom("Inter-Regular", size: 12))
+                                                    Spacer()
+                                                    Text("NextPro")
+                                                        .font(.custom("Inter-Semibold", size: 16))
                                                         .foregroundColor(.gray)
                                                 }
+                                                
+                                                HStack {
+                                                    Image("dooricon")
+                                                        .resizable()
+                                                        .scaledToFit()
+                                                        .frame(width: 52, height: 48)
+                                                    
+                                                    Spacer()
+                                                    
+                                                    HotspotWaveExact(isActive: $isScanningActive)
+                                                        .frame(width: 60, height: 20)
+                                                }
+                                                
+                                                HStack {
+                                                    VStack(alignment: .leading) {
+                                                        //  Text(selectedCard?.userName ?? "")
+                                                        Text(deviceVM.deviceDetails?.userFullName ?? "")
+                                                            .font(.custom("Inter-Regular", size: 12))
+                                                            .foregroundColor(.gray)
+                                                        
+                                                        Text(maskCardNumber(deviceVM.deviceDetails?.digitalCardNumber ?? ""))
+                                                            .font(.custom("Inter-Regular", size: 12))
+                                                            .foregroundColor(.gray)
+                                                        
+                                                    }
+                                                    
+                                                    Spacer()
+                                                    
+                                                    VStack(alignment: .trailing) {
+                                                        Text("Exp")
+                                                            .font(.custom("Inter-Regular", size: 12))
+                                                            .foregroundColor(.white)
+                                                        //.toFormattedDate(outputFormat: "yyyy")
+                                                        Text(deviceVM.deviceDetails?.cardExpiryDate?.toFormattedDate() ?? "")
+                                                            .font(.custom("Inter-Regular", size: 12))
+                                                            .foregroundColor(.gray)
+                                                    }
+                                                }
                                             }
-                                        }
-                                        .padding(20)
-                                        .frame(maxWidth: .infinity)
-                                        .background(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [
-                                                    Color.white.opacity(0.09),
-                                                    Color.white.opacity(0.06)
-                                                ]),
-                                                startPoint: .top,
-                                                endPoint: .bottom
+                                            .padding(20)
+                                            .frame(maxWidth: .infinity)
+                                            .background(
+                                                LinearGradient(
+                                                    gradient: Gradient(colors: [
+                                                        Color.white.opacity(0.09),
+                                                        Color.white.opacity(0.06)
+                                                    ]),
+                                                    startPoint: .top,
+                                                    endPoint: .bottom
+                                                )
                                             )
-                                        )
-                                        
-                                        .cornerRadius(14)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 14)
-                                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                                        )
-                                        .padding(.horizontal, 10)
-                                        
-                                        
-                                        HStack(spacing: 6) {
-                                            // Image("bluetooth")
-                                            // .frame(width: 30,height: 30)
                                             
-                                            Text(AceesMessage ?? "")
-                                                .font(.custom("Inter-SemiBold", size: 16))
-                                                .foregroundColor(isScanningActive ? .white.opacity(0.5) : .red.opacity(0.8))
-                                                .padding(.horizontal,15)
+                                            .cornerRadius(14)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 14)
+                                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                            )
+                                            .padding(.horizontal, 10)
+                                            
+                                            
+                                            HStack(spacing: 6) {
+                                                // Image("bluetooth")
+                                                // .frame(width: 30,height: 30)
+                                                
+                                                Text(AceesMessage ?? "")
+                                                    .font(.custom("Inter-SemiBold", size: 16))
+                                                    .foregroundColor(isScanningActive ? .white.opacity(0.5) : .red.opacity(0.8))
+                                                    .padding(.horizontal,15)
+                                                
+                                            }
+                                            
+                                            
+                                            HowItWorksView()
+                                            
                                             
                                         }
-                                        
-                                        
-                                        HowItWorksView()
-                                        
                                         
                                     }
+                                    .padding(.bottom, 30)
                                     
-                                }
-                                .padding(.bottom, 30)
-                                
-                            }.transition(.opacity)
-                                .refreshable{
-                                    
-                                    await deviceVM.refreshDeviceDetails()
-                                    
-                                }
+                                }.transition(.opacity)
+                                    .refreshable{
+                                        
+                                        await deviceVM.refreshDeviceDetails()
+                                        
+                                    }
+                            }
                         }
                         
                         // Digital Key Tab end

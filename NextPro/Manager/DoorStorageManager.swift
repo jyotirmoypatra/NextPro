@@ -62,21 +62,45 @@ class DoorStorageManager: ObservableObject {
     @Published var doors: [DoorModelUser] = []
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
+    
+    @Published var hasDoor: Bool = false
+    @Published var doorCount: Int = 0
+
 
     private init() {}
 
     // ✅ Just update doors
-    func updateDoors(_ newDoors: [DoorModelUser]) {
-        doors.removeAll()
-        self.doors = newDoors
-        print("🚪 DoorStorage updated with \(newDoors.count) doors")
-    }
-
-    func clearDoors() {
-        doors.removeAll()
-    }
+//    func updateDoors(_ newDoors: [DoorModelUser]) {
+//        doors.removeAll()
+//        self.doors = newDoors
+//        print("🚪 DoorStorage updated with \(newDoors.count) doors")
+//    }
+//
+//    func clearDoors() {
+//        doors.removeAll()
+//    }
 
     func getDoor(bySN sn: String) -> DoorModelUser? {
         doors.first(where: { $0.devSn == sn })
     }
+    
+    
+    func updateDoors(_ newDoors: [DoorModelUser]) {
+        doors.removeAll()
+        self.doors = newDoors
+
+        doorCount = newDoors.count
+        hasDoor = !newDoors.isEmpty
+
+        print("🚪 DoorStorage updated with \(doorCount) doors")
+        print("🚫 Has Door:", hasDoor)
+    }
+    
+    func clearDoors() {
+        doors.removeAll()
+        doorCount = 0
+        hasDoor = false
+    }
+
+
 }
