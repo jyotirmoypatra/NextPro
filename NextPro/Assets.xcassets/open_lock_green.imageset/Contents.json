@@ -1,17 +1,16 @@
 {
   "images" : [
     {
-      "filename" : "white-ble 2.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "white-ble 1.png",
+      "filename" : "open lock@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "white-ble.png",
+      "filename" : "open lock@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

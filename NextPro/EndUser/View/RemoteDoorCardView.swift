@@ -29,28 +29,36 @@ struct RemoteDoorCardView: View {
     @State private var bleSuccessTask: DispatchWorkItem?
     
     
+    private var isAdmin: Bool {
+        //  UserDefaults.standard.bool(forKey: "is_admin")
+        true
+    }
+    
     private var hasWIFIAccess: Bool {
-       //  UserDefaults.standard.bool(forKey: "remote_wifi")
+        //  UserDefaults.standard.bool(forKey: "remote_wifi")
         true
     }
     private var hasBleAccess: Bool {
         // UserDefaults.standard.bool(forKey: "remote_ble")
-       true
+        true
     }
     
     private var isWifiDisabled: Bool {
         bleWaiting || bleSuccess
     }
-
+    
     private var isBleDisabled: Bool {
         wifiWaiting || wifiSuccess
     }
     
+    private var isDisabledAll: Bool {
+        wifiWaiting || wifiSuccess ||  bleWaiting || bleSuccess
+    }
     private var isStandAloneControllerTC434: Bool {
         door.doorType == "standalone_controller" && door.doorControllerType == "TC434"
     }
-
-
+    
+    
     var body: some View {
         HStack(spacing: 16) {
             
@@ -64,11 +72,18 @@ struct RemoteDoorCardView: View {
                 
                 
                 if wifiWaiting || bleWaiting {
-                    Text("Waiting for response...")
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .font(.custom("Inter-SemiBold", size: 13))
-                        .foregroundColor(.yellow)
-                        .padding(.top, 3)
+                    HStack {
+                        RingSpinner(
+                            ringColor: .yellow,
+                            lineWidth: 1.5,
+                            size: 13
+                        )
+                        Text(bleWaiting ? "Verifying Please Wait..." : "Waiting for response...")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .font(.custom("Inter-SemiBold", size: 13))
+                            .foregroundColor(.yellow)
+                            .padding(.top, 3)
+                    }
                 }
                 
                 if wifiSuccess || bleSuccess {
@@ -80,7 +95,7 @@ struct RemoteDoorCardView: View {
                             .frame(width: 12, height: 12)
                         
                         Text("Door Unlocked!")
-                           .font(.custom("Inter-SemiBold", size: 13))
+                            .font(.custom("Inter-SemiBold", size: 13))
                             .foregroundColor(.green)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -95,90 +110,169 @@ struct RemoteDoorCardView: View {
             HStack(spacing: 18) {
                 
                 
-              //  if hasWIFIAccess {
-                if isStandAloneControllerTC434 {
-                    ZStack {
-                        if !wifiWaiting {
-                            Button {
-                                resetBleState()
-                                startWifiWaiting()
-                                onRemoteOpen()
-                            } label: {
-                                VStack(spacing: 6) {
-                                    Image(wifiSuccess ? "antena_active" : "antenna-signal")
-                                        .resizable()
-                                        .frame(width: 22, height: 22)
-                                    
-                                    Text("Open Door")
-                                        .font(.custom("Inter-Regular", size: 10))
-                                        .foregroundColor(.white)
+                if isAdmin {
+//====================================Admin Part==================================================================//
+                    if hasWIFIAccess || isStandAloneControllerTC434 {
+                        ZStack {
+                          //  if !wifiWaiting {
+                                Button {
+                                    resetBleState()
+                                    startWifiWaiting()
+                                    onRemoteOpen()
+                                } label: {
+                                    VStack(spacing: 6) {
+                                       // Image(wifiSuccess ? "wifi_active" : "wifi")
+                                        Image(systemName: "wifi")
+                                          //  .resizable()
+                                            .font(.system(size: 18))
+                                            .foregroundColor(wifiWaiting ? .yellow : wifiSuccess ? .green : .white)
+                                        
+                                        
+                                        Text("Open Door")
+                                            .font(.custom("Inter-Regular", size: 10))
+                                            .foregroundColor(.white)
+                                    }
                                 }
-                            }
+                           // }
+                            
                         }
+                        .frame(width: 68, height: 58)
+//                        .opacity(isWifiDisabled ? 0.2 : 1.0)
+//                        .allowsHitTesting(!isWifiDisabled)
+                        .opacity(isDisabledAll ? 0.2 : 1.0)
+                        .allowsHitTesting(!isDisabledAll)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(
+                                    Color.white.opacity(isDisabledAll ? 0.11 : 0.3),
+                                    lineWidth: 1
+                                )
+                        )
                         
-                        if wifiWaiting {
-                            RingSpinner(
-                                ringColor: .yellow,
-                                lineWidth: 2.5,
-                                size: 25
+                    }
+                    
+                    if hasBleAccess {
+                        if !isStandAloneControllerTC434 {
+                            
+                            ZStack {
+                               // if !bleWaiting {
+                                    Button {
+                                        resetWifiState()
+                                        startBleWaiting()
+                                        onBleOpen()
+                                    } label: {
+                                        VStack(spacing: 6) {
+                                            Image(bleWaiting ? "bluetooth-yellow" : bleSuccess ? "bluetooth-green" : "bluetooth-white")
+                                             .resizable()
+                                             .frame(width: 22, height: 22)
+                                               
+                                            
+                                            Text("Open Door")
+                                                .font(.custom("Inter-Regular", size: 10))
+                                                .foregroundColor(.white)
+                                        }
+                                    }
+                               // }
+                                
+                            }
+                            .frame(width: 68, height: 58)
+//                            .opacity(isBleDisabled ? 0.2 : 1.0)
+//                            .allowsHitTesting(!isBleDisabled)
+                            .opacity(isDisabledAll ? 0.2 : 1.0)
+                            .allowsHitTesting(!isDisabledAll)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(
+                                        Color.white.opacity(isDisabledAll ? 0.11 : 0.3),
+                                        lineWidth: 1
+                                    )
                             )
+                            
+                            
                         }
                     }
-                    .frame(width: 68, height: 58)
-                    .opacity(isWifiDisabled ? 0.2 : 1.0)
-                    .allowsHitTesting(!isWifiDisabled)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(
-                                Color.white.opacity(isWifiDisabled ? 0.11 : 0.3),
-                                lineWidth: 1
-                            )
-                    )
-
+//====================================Admin Part End==================================================================//
                 }
                 
-               // if hasBleAccess && !isStandAloneControllerTC434 {
-                if !isStandAloneControllerTC434 {
-                   
-                    ZStack {
-                        if !bleWaiting {
-                            Button {
-                                resetWifiState()
-                                startBleWaiting()
-                                onBleOpen()
-                            } label: {
-                                VStack(spacing: 6) {
-                                    Image(bleSuccess ? "bluetooth-blue" : "bluetooth-white")
-                                        .resizable()
-                                        .frame(width: 22, height: 22)
-                                    
-                                    Text("Open Door")
-                                        .font(.custom("Inter-Regular", size: 10))
-                                        .foregroundColor(.white)
+                else{
+//====================================Normal user Part Start==================================================================//
+                    if isStandAloneControllerTC434 {
+                        ZStack {
+                           // if !wifiWaiting {
+                                Button {
+                                    resetBleState()
+                                    startWifiWaiting()
+                                    onRemoteOpen()
+                                } label: {
+                                    VStack(spacing: 6) {
+                                      Image(systemName: wifiSuccess ? "lock.open" : "lock" )
+                                            //.resizable()
+                                            .font(.system(size: 18))
+                                            .foregroundColor(bleWaiting ? .yellow : bleSuccess ? .green : .white)
+                                        
+                                        Text("Open Door")
+                                            .font(.custom("Inter-Regular", size: 10))
+                                            .foregroundColor(.white)
+                                    }
                                 }
-                            }
+                           // }
+                            
                         }
+                        .frame(width: 68, height: 58)
+//                        .opacity(isWifiDisabled ? 0.2 : 1.0)
+//                        .allowsHitTesting(!isWifiDisabled)
+                        .opacity(isDisabledAll ? 0.2 : 1.0)
+                        .allowsHitTesting(!isDisabledAll)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(
+                                    Color.white.opacity(isDisabledAll ? 0.11 : 0.3),
+                                    lineWidth: 1
+                                )
+                        )
                         
-                        if bleWaiting {
-                            RingSpinner(
-                                ringColor: .yellow,
-                                lineWidth: 2.5,
-                                size: 25
-                            )
-                        }
                     }
-                    .frame(width: 68, height: 58)
-                    .opacity(isBleDisabled ? 0.2 : 1.0)
-                    .allowsHitTesting(!isBleDisabled)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(
-                                Color.white.opacity(isBleDisabled ? 0.11 : 0.3),
-                                lineWidth: 1
-                            )
-                    )
-                
-
+                    
+                    
+                    if !isStandAloneControllerTC434 {
+                        
+                        ZStack {
+                          //  if !bleWaiting {
+                                Button {
+                                    resetWifiState()
+                                    startBleWaiting()
+                                    onBleOpen()
+                                } label: {
+                                    VStack(spacing: 6) {
+                                        Image(systemName:  bleSuccess ? "lock.open" : "lock" )
+                                           // .resizable()
+                                            .font(.system(size: 18))
+                                            .foregroundColor(bleWaiting ? .yellow : bleSuccess ? .green : .white)
+                        
+                                        Text("Open Door")
+                                            .font(.custom("Inter-Regular", size: 10))
+                                            .foregroundColor(.white)
+                                    }
+                                }
+                            //}
+                            
+                        }
+                        .frame(width: 68, height: 58)
+//                        .opacity(isBleDisabled ? 0.2 : 1.0)
+//                        .allowsHitTesting(!isBleDisabled)
+                        .opacity(isDisabledAll ? 0.2 : 1.0)
+                        .allowsHitTesting(!isDisabledAll)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(
+                                    Color.white.opacity(isDisabledAll ? 0.11 : 0.3),
+                                    lineWidth: 1
+                                )
+                        )
+                        
+                        
+                    }
+//====================================Normal user Part End==================================================================//
                 }
                 
             }
@@ -294,14 +388,14 @@ struct RemoteDoorCardView: View {
         wifiWaiting = false
         wifiSuccess = false
     }
-
+    
     private func resetBleState() {
         bleWaitTask?.cancel()
         bleSuccessTask?.cancel()
         bleWaiting = false
         bleSuccess = false
     }
-
+    
     
 }
 
