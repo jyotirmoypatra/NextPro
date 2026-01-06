@@ -33,7 +33,7 @@ struct RemoteDoorCardView: View {
     
     private var isAdmin: Bool {
         //  UserDefaults.standard.bool(forKey: "is_admin")
-        false
+        true
     }
     
     private var hasWIFIAccess: Bool {
@@ -132,7 +132,7 @@ struct RemoteDoorCardView: View {
                                         
                                         Text("Open Door")
                                             .font(.custom("Inter-Regular", size: 10))
-                                            .foregroundColor(.white)
+                                            .foregroundColor(wifiWaiting ? .yellow : wifiSuccess ? .green : .white)
                                     }
                                 }
                            // }
@@ -141,7 +141,7 @@ struct RemoteDoorCardView: View {
                         .frame(width: 68, height: 58)
 //                        .opacity(isWifiDisabled ? 0.2 : 1.0)
 //                        .allowsHitTesting(!isWifiDisabled)
-                        .opacity(isDisabledAll ? 0.2 : 1.0)
+                        .opacity(isDisabledAll ? 0.7 : 1.0)
                         .allowsHitTesting(!isDisabledAll)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
@@ -175,7 +175,7 @@ struct RemoteDoorCardView: View {
                                             
                                             Text("Open Door")
                                                 .font(.custom("Inter-Regular", size: 10))
-                                                .foregroundColor(.white)
+                                                .foregroundColor(bleWaiting ? .yellow : bleSuccess ? .green : .white)
                                         }
                                     }
                                // }
@@ -184,7 +184,7 @@ struct RemoteDoorCardView: View {
                             .frame(width: 68, height: 58)
 //                            .opacity(isBleDisabled ? 0.2 : 1.0)
 //                            .allowsHitTesting(!isBleDisabled)
-                            .opacity(isDisabledAll ? 0.2 : 1.0)
+                            .opacity(isDisabledAll ? 0.7 : 1.0)
                             .allowsHitTesting(!isDisabledAll)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
@@ -219,7 +219,7 @@ struct RemoteDoorCardView: View {
                                         
                                         Text("Open Door")
                                             .font(.custom("Inter-Regular", size: 10))
-                                            .foregroundColor(.white)
+                                            .foregroundColor(wifiWaiting ? .yellow : wifiSuccess ? .green : .white)
                                     }
                                 }
                            // }
@@ -228,7 +228,7 @@ struct RemoteDoorCardView: View {
                         .frame(width: 68, height: 58)
 //                        .opacity(isWifiDisabled ? 0.2 : 1.0)
 //                        .allowsHitTesting(!isWifiDisabled)
-                        .opacity(isDisabledAll ? 0.2 : 1.0)
+                        .opacity(isDisabledAll ? 0.7 : 1.0)
                         .allowsHitTesting(!isDisabledAll)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
@@ -261,7 +261,7 @@ struct RemoteDoorCardView: View {
                         
                                         Text("Open Door")
                                             .font(.custom("Inter-Regular", size: 10))
-                                            .foregroundColor(.white)
+                                            .foregroundColor(bleWaiting ? .yellow : bleSuccess ? .green : .white)
                                     }
                                 }
                             //}
@@ -270,7 +270,7 @@ struct RemoteDoorCardView: View {
                         .frame(width: 68, height: 58)
 //                        .opacity(isBleDisabled ? 0.2 : 1.0)
 //                        .allowsHitTesting(!isBleDisabled)
-                        .opacity(isDisabledAll ? 0.2 : 1.0)
+                        .opacity(isDisabledAll ? 0.7 : 1.0)
                         .allowsHitTesting(!isDisabledAll)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
