@@ -145,8 +145,13 @@ struct DoorOpenView: View {
                         
                         if selectedTab == 0 && hasDigitalKeyAccess{
                             // Digital Key Tab start
-                            
-                            if !doorStorage.hasDoor {
+                            if !doorStorage.hasResolvedDoors {
+                                VStack(spacing: 12) {
+                                    ProgressView()
+                                }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .transition(.opacity)
+                            }
+                            else if !doorStorage.hasDoor {
                                 VStack(spacing: 12) {
                                     Image(systemName: "lock.slash")
 
@@ -423,6 +428,8 @@ struct DoorOpenView: View {
             
             await deviceVM.fetchDeviceDetailsIfNeeded()
             if !deviceVM.issuccess && deviceVM.errorMessage != ""{
+                doorStorage.clearDoors()          // sets hasResolvedDoors = false ❌ (we’ll fix below)
+                doorStorage.hasResolvedDoors = true 
                 showDoorErrorAlert = true
             }
             // Make sure deviceDetails is not nil

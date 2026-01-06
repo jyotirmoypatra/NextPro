@@ -64,21 +64,12 @@ class DoorStorageManager: ObservableObject {
     @Published var errorMessage: String? = nil
     
     @Published var hasDoor: Bool = false
+    @Published var hasResolvedDoors: Bool = false
     @Published var doorCount: Int = 0
 
 
     private init() {}
 
-    // ✅ Just update doors
-//    func updateDoors(_ newDoors: [DoorModelUser]) {
-//        doors.removeAll()
-//        self.doors = newDoors
-//        print("🚪 DoorStorage updated with \(newDoors.count) doors")
-//    }
-//
-//    func clearDoors() {
-//        doors.removeAll()
-//    }
 
     func getDoor(bySN sn: String) -> DoorModelUser? {
         doors.first(where: { $0.devSn == sn })
@@ -91,6 +82,7 @@ class DoorStorageManager: ObservableObject {
 
         doorCount = newDoors.count
         hasDoor = !newDoors.isEmpty
+        hasResolvedDoors = true
 
         print("🚪 DoorStorage updated with \(doorCount) doors")
         print("🚫 Has Door:", hasDoor)
@@ -100,6 +92,7 @@ class DoorStorageManager: ObservableObject {
         doors.removeAll()
         doorCount = 0
         hasDoor = false
+        hasResolvedDoors = false
     }
 
 
