@@ -33,7 +33,7 @@ struct RemoteDoorCardView: View {
     
     private var isAdmin: Bool {
         //  UserDefaults.standard.bool(forKey: "is_admin")
-        true
+        false
     }
     
     private var hasWIFIAccess: Bool {
@@ -45,17 +45,50 @@ struct RemoteDoorCardView: View {
         true
     }
     
-    private var isWifiDisabled: Bool {
-        bleWaiting || bleSuccess
-    }
+    //
     
-    private var isBleDisabled: Bool {
+    // MARK: - Button State Helpers
+
+    private var isWifiActive: Bool {
         wifiWaiting || wifiSuccess
     }
-    
-    private var isDisabledAll: Bool {
-        wifiWaiting || wifiSuccess ||  bleWaiting || bleSuccess
+
+    private var isBleActive: Bool {
+        bleWaiting || bleSuccess
     }
+
+    private var wifiOpacity: Double {
+        if isWifiActive { return 0.7 }
+        if isBleActive { return 0.2 }
+        return 1.0
+    }
+
+    private var bleOpacity: Double {
+        if isBleActive { return 0.7 }
+        if isWifiActive { return 0.2 }
+        return 1.0
+    }
+
+    private var wifiHitTesting: Bool {
+        !(isWifiActive || isBleActive)
+    }
+
+    private var bleHitTesting: Bool {
+        !(isBleActive || isWifiActive)
+    }
+    
+    private var wifiBorderOpacity: Double {
+        if isWifiActive { return 0.3 }   // active
+        if isBleActive { return 0.11 }   // disabled by BLE
+        return 0.3                       // idle
+    }
+
+    private var bleBorderOpacity: Double {
+        if isBleActive { return 0.3 }    // active
+        if isWifiActive { return 0.11 }  // disabled by WiFi
+        return 0.3                       // idle
+    }
+
     private var isStandAloneControllerTC434: Bool {
         door.doorType == "standalone_controller" && door.doorControllerType == "TC434"
     }
@@ -123,9 +156,7 @@ struct RemoteDoorCardView: View {
                                     onRemoteOpen()
                                 } label: {
                                     VStack(spacing: 6) {
-                                       // Image(wifiSuccess ? "wifi_active" : "wifi")
                                         Image(systemName: "wifi")
-                                          //  .resizable()
                                             .font(.system(size: 18))
                                             .foregroundColor(wifiWaiting ? .yellow : wifiSuccess ? .green : .white)
                                         
@@ -139,14 +170,13 @@ struct RemoteDoorCardView: View {
                             
                         }
                         .frame(width: 68, height: 58)
-//                        .opacity(isWifiDisabled ? 0.2 : 1.0)
-//                        .allowsHitTesting(!isWifiDisabled)
-                        .opacity(isDisabledAll ? 0.7 : 1.0)
-                        .allowsHitTesting(!isDisabledAll)
+                        .opacity(wifiOpacity)
+                        .allowsHitTesting(wifiHitTesting)
+
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(
-                                    Color.white.opacity(isDisabledAll ? 0.11 : 0.3),
+                                    Color.white.opacity(wifiBorderOpacity),
                                     lineWidth: 1
                                 )
                         )
@@ -182,14 +212,13 @@ struct RemoteDoorCardView: View {
                                 
                             }
                             .frame(width: 68, height: 58)
-//                            .opacity(isBleDisabled ? 0.2 : 1.0)
-//                            .allowsHitTesting(!isBleDisabled)
-                            .opacity(isDisabledAll ? 0.7 : 1.0)
-                            .allowsHitTesting(!isDisabledAll)
+                            .opacity(bleOpacity)
+                            .allowsHitTesting(bleHitTesting)
+
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
                                     .stroke(
-                                        Color.white.opacity(isDisabledAll ? 0.11 : 0.3),
+                                        Color.white.opacity(bleBorderOpacity),
                                         lineWidth: 1
                                     )
                             )
@@ -211,7 +240,6 @@ struct RemoteDoorCardView: View {
                                     onRemoteOpen()
                                 } label: {
                                     VStack(spacing: 6) {
-                                    //  Image(systemName: wifiSuccess ? "lock.open" : "lock" )
                                         Image(wifiWaiting ? "lock-yellow" : wifiSuccess ? "lock-open-green" : "lock-white")
                                             .resizable()
                                             .frame(width: 22, height: 22)
@@ -226,14 +254,13 @@ struct RemoteDoorCardView: View {
                             
                         }
                         .frame(width: 68, height: 58)
-//                        .opacity(isWifiDisabled ? 0.2 : 1.0)
-//                        .allowsHitTesting(!isWifiDisabled)
-                        .opacity(isDisabledAll ? 0.7 : 1.0)
-                        .allowsHitTesting(!isDisabledAll)
+                        .opacity(wifiOpacity)
+                        .allowsHitTesting(wifiHitTesting)
+
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(
-                                    Color.white.opacity(isDisabledAll ? 0.11 : 0.3),
+                                    Color.white.opacity(wifiBorderOpacity),
                                     lineWidth: 1
                                 )
                         )
@@ -268,14 +295,13 @@ struct RemoteDoorCardView: View {
                             
                         }
                         .frame(width: 68, height: 58)
-//                        .opacity(isBleDisabled ? 0.2 : 1.0)
-//                        .allowsHitTesting(!isBleDisabled)
-                        .opacity(isDisabledAll ? 0.7 : 1.0)
-                        .allowsHitTesting(!isDisabledAll)
+                        .opacity(bleOpacity)
+                        .allowsHitTesting(bleHitTesting)
+
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(
-                                    Color.white.opacity(isDisabledAll ? 0.11 : 0.3),
+                                    Color.white.opacity(bleBorderOpacity),
                                     lineWidth: 1
                                 )
                         )
