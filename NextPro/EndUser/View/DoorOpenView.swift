@@ -330,7 +330,7 @@ struct DoorOpenView: View {
                                     .padding(.horizontal, 10)
                                     .padding(.top, 20)
                                     .padding(.bottom, 20)
-                                }
+                                }.id("remote-tab-\(selectedTab)")
                                 .transition(.opacity)
                                 // Remote Access Tab
                                 .refreshable{
@@ -499,6 +499,8 @@ struct DoorOpenView: View {
             // Stop RSSI monitoring timer
             rssiTimer?.invalidate()
             rssiTimer = nil
+            
+            doorManager.clearDoorEvent()
         }
         .onChange(of: scenePhase) { newPhase in
             switch newPhase {
@@ -568,7 +570,12 @@ struct DoorOpenView: View {
         
         .onChange(of: selectedTab) { newTab in
             resetOverlayState()
-
+            doorManager.clearDoorEvent()
+            if newTab != 1 {
+                   //switch tab to reset remote tab view ui
+                    activeDoorKey = nil
+                    successDoorKey = nil
+                }
             if newTab == 1 {
                 stopAllScanningAndMonitoring()
                 AceesMessage = "Remote access selected"

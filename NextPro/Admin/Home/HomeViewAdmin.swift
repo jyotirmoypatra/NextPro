@@ -31,31 +31,31 @@ struct HomeViewAdmin: View {
 
                 VStack(spacing: 0) {
                     // MARK: - Top Bar
-                    if !(selectedTab == 0 && adminHomePage != .facilityList) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("UTL")
-                                    .font(.title2.bold())
-                                    .foregroundColor(.white)
-                                Text("UTL")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            }
-                            Spacer()
-                            
-                            Button(action: {}) {
-                                Image(systemName: "bell")
-                                    .foregroundColor(.white)
-                                
-                                    .background(Color.black.opacity(0.4))
-                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                            }
-                        }
-                        .padding(.horizontal)
-                        .padding(.top, 5) // ✅ fixed padding instead of safeAreaInsets.top
-                        .padding(.bottom, 10) // ✅ fixed padding instead of safeAreaInsets.top
-                        
-                    }
+//                    if !(selectedTab == 0 && adminHomePage != .facilityList) {
+//                        HStack {
+//                            VStack(alignment: .leading, spacing: 4) {
+//                                Text("UTL")
+//                                    .font(.title2.bold())
+//                                    .foregroundColor(.white)
+//                                Text("UTL")
+//                                    .font(.caption)
+//                                    .foregroundColor(.gray)
+//                            }
+//                            Spacer()
+//                            
+//                            Button(action: {}) {
+//                                Image(systemName: "bell")
+//                                    .foregroundColor(.white)
+//                                
+//                                    .background(Color.black.opacity(0.4))
+//                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+//                            }
+//                        }
+//                        .padding(.horizontal)
+//                        .padding(.top, 5) // ✅ fixed padding instead of safeAreaInsets.top
+//                        .padding(.bottom, 10) // ✅ fixed padding instead of safeAreaInsets.top
+//                        
+//                    }
 
                     // MARK: - Dynamic Page Content
                     VStack {
@@ -86,7 +86,8 @@ struct HomeViewAdmin: View {
                                 .navigationBarHidden(true)
                                 .interactiveDismissDisabled(true)
                         case 2:
-                            AdminProfileTabView()
+                         //   AdminProfileTabView()
+                            ProfileEndUserView()
                                 .navigationBarBackButtonHidden(true)
                                 .navigationBarHidden(true)
                                 .interactiveDismissDisabled(true)

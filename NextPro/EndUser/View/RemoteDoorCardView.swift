@@ -80,7 +80,7 @@ struct RemoteDoorCardView: View {
                             lineWidth: 1.5,
                             size: 13
                         )
-                        Text(bleWaiting ? "Verifying Please Wait..." : "Waiting for response...")
+                        Text("Verifying Please Wait...")
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .font(.custom("Inter-SemiBold", size: 13))
                             .foregroundColor(.yellow)
