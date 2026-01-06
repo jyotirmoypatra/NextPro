@@ -211,10 +211,11 @@ struct RemoteDoorCardView: View {
                                     onRemoteOpen()
                                 } label: {
                                     VStack(spacing: 6) {
-                                      Image(systemName: wifiSuccess ? "lock.open" : "lock" )
-                                            //.resizable()
-                                            .font(.system(size: 18))
-                                            .foregroundColor(bleWaiting ? .yellow : bleSuccess ? .green : .white)
+                                    //  Image(systemName: wifiSuccess ? "lock.open" : "lock" )
+                                        Image(wifiWaiting ? "lock-yellow" : wifiSuccess ? "lock-open-green" : "lock-white")
+                                            .resizable()
+                                            .frame(width: 22, height: 22)
+                                              
                                         
                                         Text("Open Door")
                                             .font(.custom("Inter-Regular", size: 10))
@@ -254,10 +255,9 @@ struct RemoteDoorCardView: View {
                                     onBleOpen()
                                 } label: {
                                     VStack(spacing: 6) {
-                                        Image(systemName:  bleSuccess ? "lock.open" : "lock" )
-                                           // .resizable()
-                                            .font(.system(size: 18))
-                                            .foregroundColor(bleWaiting ? .yellow : bleSuccess ? .green : .white)
+                                        Image(bleWaiting ? "lock-yellow" : bleSuccess ? "lock-open-green" : "lock-white")
+                                            .resizable()
+                                            .frame(width: 22, height: 22)
                         
                                         Text("Open Door")
                                             .font(.custom("Inter-Regular", size: 10))

@@ -10,7 +10,7 @@ import SwiftUI
 struct SplashScreen: View {
     var body: some View {
         GeometryReader { geometry in
-            Image("Splash")
+            Image("SplashImg")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: geometry.size.width, height: geometry.size.height) // match screen exactly
