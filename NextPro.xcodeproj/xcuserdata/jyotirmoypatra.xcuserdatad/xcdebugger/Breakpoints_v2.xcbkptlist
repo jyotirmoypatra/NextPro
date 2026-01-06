@@ -462,38 +462,6 @@
             filePath = "NextPro/EndUser/View/DoorOpenView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "712"
-            endingLineNumber = "712"
-            landmarkName = "body"
-            landmarkType = "24">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "6BA62E05-EA86-47A4-A908-D1669DF417FD"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "NextPro/EndUser/View/DoorOpenView.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "713"
-            endingLineNumber = "713"
-            landmarkName = "body"
-            landmarkType = "24">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "153247CA-F4FB-41DD-8DE9-C5774B49B3A5"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "NextPro/EndUser/View/DoorOpenView.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
             startingLineNumber = "714"
             endingLineNumber = "714"
             landmarkName = "body"
@@ -503,7 +471,7 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "B64C1DBC-09DA-4AD9-9671-BE92EABD9076"
+            uuid = "6BA62E05-EA86-47A4-A908-D1669DF417FD"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
@@ -519,6 +487,38 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
+            uuid = "153247CA-F4FB-41DD-8DE9-C5774B49B3A5"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "NextPro/EndUser/View/DoorOpenView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "716"
+            endingLineNumber = "716"
+            landmarkName = "body"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "B64C1DBC-09DA-4AD9-9671-BE92EABD9076"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "NextPro/EndUser/View/DoorOpenView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "717"
+            endingLineNumber = "717"
+            landmarkName = "body"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
             uuid = "6BFC42C1-5891-40C6-B558-22E1E5C26309"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
@@ -526,8 +526,8 @@
             filePath = "NextPro/EndUser/View/DoorOpenView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "746"
-            endingLineNumber = "746"
+            startingLineNumber = "748"
+            endingLineNumber = "748"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -542,8 +542,8 @@
             filePath = "NextPro/EndUser/View/DoorOpenView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "754"
-            endingLineNumber = "754"
+            startingLineNumber = "756"
+            endingLineNumber = "756"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -558,8 +558,8 @@
             filePath = "NextPro/EndUser/View/DoorOpenView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "753"
-            endingLineNumber = "753"
+            startingLineNumber = "755"
+            endingLineNumber = "755"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -574,8 +574,8 @@
             filePath = "NextPro/EndUser/View/DoorOpenView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "780"
-            endingLineNumber = "780"
+            startingLineNumber = "782"
+            endingLineNumber = "782"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -590,8 +590,8 @@
             filePath = "NextPro/EndUser/View/DoorOpenView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "782"
-            endingLineNumber = "782"
+            startingLineNumber = "784"
+            endingLineNumber = "784"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -606,8 +606,8 @@
             filePath = "NextPro/EndUser/View/DoorOpenView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "788"
-            endingLineNumber = "788"
+            startingLineNumber = "790"
+            endingLineNumber = "790"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>

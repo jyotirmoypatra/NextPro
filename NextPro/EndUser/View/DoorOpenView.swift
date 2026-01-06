@@ -309,6 +309,8 @@ struct DoorOpenView: View {
                                                 door: door,
                                                 successKey: $successDoorKey,
                                                 activeDoorKey: $activeDoorKey,
+                                                isBluetoothOn: .constant(bleManager.isBluetoothOn), 
+                                                showBluetoothAlert: $showBluetoothAlert,
                                                 onRemoteOpen: {
                                                     activeDoorKey = door.key
                                                     handleRemoteOpen(for: door)

@@ -11,6 +11,8 @@ struct RemoteDoorCardView: View {
     let door: RemoteDoorItem
     @Binding var successKey: String?
     @Binding var activeDoorKey: String?
+    @Binding var isBluetoothOn: Bool
+    @Binding var showBluetoothAlert: Bool
     let onRemoteOpen: () -> Void
     let onBleOpen: () -> Void
     
@@ -31,7 +33,7 @@ struct RemoteDoorCardView: View {
     
     private var isAdmin: Bool {
         //  UserDefaults.standard.bool(forKey: "is_admin")
-        true
+        false
     }
     
     private var hasWIFIAccess: Bool {
@@ -157,6 +159,10 @@ struct RemoteDoorCardView: View {
                             ZStack {
                                // if !bleWaiting {
                                     Button {
+                                        guard isBluetoothOn else {
+                                                showBluetoothAlert = true
+                                                return
+                                            }
                                         resetWifiState()
                                         startBleWaiting()
                                         onBleOpen()
@@ -239,6 +245,10 @@ struct RemoteDoorCardView: View {
                         ZStack {
                           //  if !bleWaiting {
                                 Button {
+                                    guard isBluetoothOn else {
+                                            showBluetoothAlert = true
+                                            return
+                                        }
                                     resetWifiState()
                                     startBleWaiting()
                                     onBleOpen()
