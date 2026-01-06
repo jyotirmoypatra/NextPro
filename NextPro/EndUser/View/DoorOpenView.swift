@@ -416,7 +416,7 @@ struct DoorOpenView: View {
             }
             
         }
-        .background(Color.black.opacity(0.4))
+       // .background(Color.black.opacity(0.4))
         .task{
             
             //            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
@@ -462,58 +462,9 @@ struct DoorOpenView: View {
             isViewVisible = true
             
             mqttManager.connect()
-            
-            
-            
-//           // AceesMessage = "Preparing Scan.."
-//            
-//            // Create a cancellable work item for delayed monitoring start
-//            let workItem = DispatchWorkItem { [weak bleManager] in
-//                // Only start monitoring if view is still visible
-//                guard isViewVisible else {
-//                    print("⚠️ View is no longer visible. Skipping monitoring start.")
-//                    return
-//                }
-//                
-//                guard hasDigitalKeyAccess else {
-//                    print("🚫 Digital Key Access not allowed. Skipping BLE monitoring.")
-//                    return
-//                }
-//                
-//                if let isOn = bleManager?.isBluetoothOn, !isOn {
-//                    print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
-//                    // showBluetoothAlert = true
-//                    isScanningActive = false
-//                    return
-//                }
-//                
-//                print("🟢 Auto-open enabled — starting continuous BLE scanning...")
-//                
-//                // Start continuous scanning
-//                bleManager?.startContinuousScanning()
-//                isScanningActive = true
-//                
-//                // Begin monitoring RSSI and auto-open logic
-//                monitorAndAutoOpenNearbyDoor()
-//                
-//            }
-//            
-//            // Store the work item so it can be cancelled
-//            startMonitoringTask = workItem
-//            
-//            // Schedule the work item with 2-second delay
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: workItem)
+      
         }
-        .modernAlert(isPresented: $showDoorErrorAlert) {
-              ModernAlertView(
-                  title: "Error!",
-                  message: deviceVM.errorMessage,
-                  isSuccess: false,
-                  buttonTitle: "OK"
-              ) { showDoorErrorAlert = false
-                 
-              }
-        }
+        
         .onAppear {
             // Load access flags from UserDefaults
             //            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
@@ -613,35 +564,7 @@ struct DoorOpenView: View {
                 break
             }
         }
-        
-        
-//        .onChange(of: selectedTab) { newTab in
-//            resetOverlayState()
-//            if newTab == 1 {
-//                // 👉 Switched to Remote Access
-//                stopAllScanningAndMonitoring()
-//            } else {
-//                
-//                guard hasDigitalKeyAccess else {
-//                    print("🚫 Digital Key disabled — BLE not allowed")
-//                    return
-//                }
-//                // 👉 Back to Digital Key
-//                guard isViewVisible else { return }
-//                guard bleManager.isBluetoothOn else {
-//                    AceesMessage = "Bluetooth is Off. Please turn it on."
-//                    return
-//                }
-//                
-//                print("🔄 Restarting BLE scanning (Back to Digital Key)")
-//                
-//                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-//                    bleManager.startContinuousScanning()
-//                    isScanningActive = true
-//                    monitorAndAutoOpenNearbyDoor()
-//                }
-//            }
-//        }
+
         
         .onChange(of: selectedTab) { newTab in
             resetOverlayState()
@@ -662,31 +585,6 @@ struct DoorOpenView: View {
             }
         }
 
-        
-        
-        .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
-            
-            BluetoothAlertView(
-                onCancel: { showBluetoothAlert = false },
-                openSettings: {
-                    if let url = URL(string: "App-Prefs:root=Bluetooth"),
-                       UIApplication.shared.canOpenURL(url) {
-                        UIApplication.shared.open(url)
-                    }
-                }
-            )
-        }
-        
-        
-//        .onReceive(bleManager.$bleState) { state in
-//            if state == .poweredOff {
-//                // showBluetoothAlert = true
-//                AceesMessage = "Bluetooth is Off. Please turn it on."
-//                isScanningActive = false
-//            } else {
-//                //showBluetoothAlert = false
-//            }
-//        }
         
         .onReceive(bleManager.$bleState) { state in
             switch state {
@@ -711,17 +609,7 @@ struct DoorOpenView: View {
 
         
         .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in
-//            
-//            guard
-//                let info = notification.userInfo,
-//                let rawUserID = info["userID"],
-//                let userid = (rawUserID as? NSNumber)?.intValue
-//                    ?? (rawUserID as? Int)
-//                    ?? Int(rawUserID as? String ?? ""),
-//                // 👇 core rule
-//                let deviceUserId = deviceVM.deviceDetails?.deviceUserId,
-//                (userid == 0 || userid == deviceUserId)
-//            else { return }
+
             
             guard
                 let info = notification.userInfo,
@@ -862,6 +750,30 @@ struct DoorOpenView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 doorManager.clearDoorEvent()
             }
+        }
+        
+        .modernAlert(isPresented: $showDoorErrorAlert) {
+              ModernAlertView(
+                  title: "Error!",
+                  message: deviceVM.errorMessage,
+                  isSuccess: false,
+                  buttonTitle: "OK"
+              ) { showDoorErrorAlert = false
+                 
+              }
+        }
+        
+        .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
+            
+            BluetoothAlertView(
+                onCancel: { showBluetoothAlert = false },
+                openSettings: {
+                    if let url = URL(string: "App-Prefs:root=Bluetooth"),
+                       UIApplication.shared.canOpenURL(url) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+            )
         }
     }
     
@@ -1110,18 +1022,7 @@ struct DoorOpenView: View {
         animationResetTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0, execute: task)
     }
-    
-    
-//    func speakText(_ text: String) {
-//        let utterance = AVSpeechUtterance(string: text)
-//        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-//        utterance.rate = 0.42                // slightly slower, smooth pace
-//        utterance.pitchMultiplier = 0.95     // a bit lower pitch, soft and natural
-//        utterance.volume = 0.9               // gentle loudness
-//        utterance.postUtteranceDelay = 0.1   // small pause after speaking
-//        
-//        speechSynthesizer.speak(utterance)
-//    }
+
     
     func speakText(_ text: String) {
         SpeechManager.shared.speak(text)
