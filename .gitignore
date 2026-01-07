@@ -1,0 +1,74 @@
+# =========================
+# macOS
+# =========================
+.DS_Store
+
+# =========================
+# Xcode
+# =========================
+build/
+DerivedData/
+xcuserdata/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+
+# =========================
+# Swift Package Manager
+# =========================
+.build/
+Packages/
+
+# =========================
+# CocoaPods
+# =========================
+Pods/
+
+# =========================
+# Carthage
+# =========================
+Carthage/Build/
+
+# =========================
+# Fastlane
+# =========================
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# =========================
+# Logs & Temp
+# =========================
+*.log
+*.tmp
+*.swp
+
+# =========================
+# Playgrounds
+# =========================
+timeline.xctimeline
+playground.xcworkspace
+
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.*
+*.pem
+*.key
+
+# =========================
+# Archives & Artifacts
+# =========================
+*.ipa
+*.dSYM
+*.dSYM.zip
+*.xcarchive
+
+# =========================
+# Crashlytics
+# =========================
+crashlytics-build.properties
