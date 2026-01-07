@@ -46,6 +46,7 @@ class DeviceDetailsViewModel: ObservableObject {
             do {
                 let response = try await network.deviceDetails(userID: userId)
                 self.deviceDetails = response
+                issuccess=true
                 saveDetailsLocally(response)
                 updateAndSubscribeAllDevices()
             } catch {

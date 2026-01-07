@@ -25,7 +25,7 @@ struct APIConfig {
         static let editUserProfile = "/api/facility-user/user/update/"
         static let validateEmail = "/api/facility-user/validate-email/"
         static let aggremntAccept = "/api/facility-user/update-agreement/"
-        static let adminAssignDeviceList = "/api/facility-user/admin/assign-device/"
+        static let adminAssignDeviceList = "/api/facility/user/configure-device-list/"
     }
     
     

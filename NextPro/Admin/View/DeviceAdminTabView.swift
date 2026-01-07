@@ -7,26 +7,9 @@
 
 import SwiftUI
 
-struct DeviceModel: Identifiable, Hashable {
-    let id = UUID()
-    let title: String
-    let doorName: String
-    let status: String
-}
-
-let sampledevices: [DeviceModel] = [
-  
-    DeviceModel(title: "TC434(266253636)",doorName: "UTL-3S/DOOR1", status: "ONLINE"),
-    DeviceModel(title: "TC434(266253636)",doorName: "UTL-3S/DOOR1", status: "ONLINE"),
-    DeviceModel(title: "TC434(266253636)",doorName: "UTL-3S/DOOR1", status: "OFFLINE"),
-    DeviceModel(title: "TC434(266253636)",doorName: "UTL-3S/DOOR1", status: "ONLINE"),
-]
-
-
 struct DeviceAdminTabView: View {
     @StateObject private var assignDeviceVM = AssignedDeviceViewModel()
-    let devices =  sampledevices
-    
+    @State private var showAssignDeviceVMErrorAlert = false
     @State private var navigateToDeviceScanView = false
     
     var body: some View {
@@ -82,8 +65,22 @@ struct DeviceAdminTabView: View {
         .navigationDestination(isPresented: $navigateToDeviceScanView) {
             OnboardPageDeviceScanView()
         }
+        .internetOverlay() 
         .task{
             await assignDeviceVM.fetchAssignDevice()
+            if !assignDeviceVM.issuccess && assignDeviceVM.errorMessage != nil{
+                showAssignDeviceVMErrorAlert = true
+            }
+        }
+        .modernAlert(isPresented: $showAssignDeviceVMErrorAlert) {
+              ModernAlertView(
+                  title: "Error!",
+                  message: assignDeviceVM.errorMessage ?? "Something went wrong!",
+                  isSuccess: false,
+                  buttonTitle: "OK"
+              ) { showAssignDeviceVMErrorAlert = false
+                 
+              }
         }
     }
 }

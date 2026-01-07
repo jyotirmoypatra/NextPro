@@ -9,6 +9,7 @@ import SwiftUI
 
 struct HomeViewAdmin: View {
     @State private var selectedTab = 0
+    private let tabBarHeight: CGFloat = 55
     enum AdminHomeSubPage:Equatable {
         case facilityList
         case facilityDetail(facilityName: String)
@@ -64,7 +65,10 @@ struct HomeViewAdmin: View {
                             DoorOpenView()
                                 .navigationBarBackButtonHidden(true)
                                 .navigationBarHidden(true)
-                                .interactiveDismissDisabled(true)
+                                .frame(
+                                                maxWidth: .infinity,
+                                                maxHeight: .infinity
+                                            )
 //                        case 0:
 //                            Group {
 //                                switch adminHomePage {
@@ -84,58 +88,55 @@ struct HomeViewAdmin: View {
                             DeviceAdminTabView()
                                 .navigationBarBackButtonHidden(true)
                                 .navigationBarHidden(true)
-                                .interactiveDismissDisabled(true)
+                                .frame(height: geo.size.height - tabBarHeight)
                         case 2:
                          //   AdminProfileTabView()
                             ProfileEndUserView()
                                 .navigationBarBackButtonHidden(true)
                                 .navigationBarHidden(true)
-                                .interactiveDismissDisabled(true)
-//                            ProfileEndUserView()
-//                                .navigationBarBackButtonHidden(true)
-//                                .navigationBarHidden(true)
+                                .frame(height: geo.size.height - tabBarHeight)
                         default:
                             EmptyView()
                         }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .transition(.opacity)
                     .animation(.easeInOut(duration: 0.25), value: selectedTab)
 
-                    // MARK: - Custom Bottom Tab Bar
-                    Divider()
-                        .background(Color.white.opacity(0.15))
-                    HStack {
-                        TabBarItemUser(
-                            title: "Home",
-                            activeIcon: "home-active",
-                            inactiveIcon: "home-inactive",
-                            isSelected: selectedTab == 0
-                        )
-                        .onTapGesture { selectedTab = 0 }
-
-                        Spacer()
-
-                        TabBarItemUser(
-                            title: "Devices",
-                            activeIcon: "multi-window-active",
-                            inactiveIcon: "multi-window-inactive",
-                            isSelected: selectedTab == 1
-                        )
-                        .onTapGesture { selectedTab = 1 }
-
-                        Spacer()
-
-                        TabBarItemUser(
-                            title: "Profile",
-                            activeIcon: "profile-circle-active",
-                            inactiveIcon: "profile-circle-inactive",
-                            isSelected: selectedTab == 2
-                        )
-                        .onTapGesture { selectedTab = 2 }
+                    VStack(spacing: 10){
+                        Divider()
+                            .background(Color.white.opacity(0.15))
+                        HStack {
+                            TabBarItemUser(
+                                title: "Home",
+                                activeIcon: "home-active",
+                                inactiveIcon: "home-inactive",
+                                isSelected: selectedTab == 0
+                            )
+                            .onTapGesture { selectedTab = 0 }
+                            
+                            Spacer()
+                            
+                            TabBarItemUser(
+                                title: "Devices",
+                                activeIcon: "multi-window-active",
+                                inactiveIcon: "multi-window-inactive",
+                                isSelected: selectedTab == 1
+                            )
+                            .onTapGesture { selectedTab = 1 }
+                            
+                            Spacer()
+                            
+                            TabBarItemUser(
+                                title: "Profile",
+                                activeIcon: "profile-circle-active",
+                                inactiveIcon: "profile-circle-inactive",
+                                isSelected: selectedTab == 2
+                            )
+                            .onTapGesture { selectedTab = 2 }
+                        }
+                        .padding(.horizontal, 30)
                     }
-                    .padding(.horizontal, 30)
-                    .padding(.vertical, 20)
+                    .frame(height: tabBarHeight)
                     .background(Color.black.opacity(0.9))
                     .ignoresSafeArea(edges: .bottom)
                 }
