@@ -34,16 +34,45 @@ struct DeviceAdminTabView: View {
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        if let devices = assignDeviceVM.assignDeviceDetails?.devices {
-                            ForEach(devices) { item in
-                                    DeviceCardView(device: item)
-                                }
+                        if assignDeviceVM.alredayConfiguredDeviceList.isEmpty {
+                            VStack(spacing: 14) {
+                                Image(systemName: "gearshape.slash")
+                                    .font(.system(size: 44))
+                                    .foregroundColor(.gray.opacity(0.8))
+
+                                Text("No Configured Devices Found")
+                                    .font(.custom("Inter-SemiBold", size: 18))
+                                    .foregroundColor(.white)
+
+                                Text("You haven’t configured any devices yet.\nTap “Configure device” to get started.")
+                                    .font(.custom("Inter-Regular", size: 14))
+                                    .foregroundColor(.gray)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 32)
+                            }
+                            .padding(.top,60)
+
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .transition(.opacity)
+                        } else {
+                            ForEach(assignDeviceVM.alredayConfiguredDeviceList) { item in
+                                DeviceCardView(device: item)
+                            }
                         }
+
                         Spacer()
                     }
                     .padding(.horizontal, 10)
                     .padding(.top, 10)
                 }
+                .refreshable {
+                    await assignDeviceVM.fetchAssignDevice()
+
+                    if let error = assignDeviceVM.errorMessage, !error.isEmpty {
+                        showAssignDeviceVMErrorAlert = true
+                    }
+                }
+
             }
             .padding(.top,10)
             
@@ -65,13 +94,15 @@ struct DeviceAdminTabView: View {
         .navigationDestination(isPresented: $navigateToDeviceScanView) {
             OnboardPageDeviceScanView()
         }
-        .internetOverlay() 
-        .task{
+        .internetOverlay()
+        .task {
             await assignDeviceVM.fetchAssignDevice()
-            if !assignDeviceVM.issuccess && assignDeviceVM.errorMessage != nil{
+
+            if let error = assignDeviceVM.errorMessage, !error.isEmpty {
                 showAssignDeviceVMErrorAlert = true
             }
         }
+
         .modernAlert(isPresented: $showAssignDeviceVMErrorAlert) {
               ModernAlertView(
                   title: "Error!",
@@ -96,12 +127,12 @@ struct DeviceCardView: View {
                 .frame(width: 33, height: 33)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(device.serial )
+                Text(device.modelName)
                     .font(.custom("Inter-SemiBold", size: 16))
                     .foregroundColor(.white)
                     .lineLimit(2)
 
-                Text(device.modelName)
+                Text("Serial No : \(device.serial)")
                     .font(.custom("Inter-Regular", size: 14))
                     .foregroundColor(.gray.opacity(0.9))
                     .lineLimit(2)

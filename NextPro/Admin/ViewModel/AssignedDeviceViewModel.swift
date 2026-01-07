@@ -14,42 +14,61 @@ final class AssignedDeviceViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var issuccess = false
+    @Published var hasLoadedOnce = false
     @Published var assignDeviceDetails: AssignDeviceListResponse?
-
+    @Published var alredayConfiguredDeviceList: [AssignDevice] = []
     private let networkManager = NetworkManager.shared
+    private var fetchTask: Task<Void, Never>?
 
-  
     func fetchAssignDevice() async {
+        //  Cancel previous fetch if any
+        fetchTask?.cancel()
 
-//        guard networkManager.hasInternet else {
-//            errorMessage = "No internet connection"
-//            return
-//        }
+        fetchTask = Task { @MainActor in
+            errorMessage = nil
+            isLoading = true
+            
+            defer { isLoading = false }
 
-        guard let userId = UserDefaults.standard.string(forKey: "user_id") else {
-            errorMessage = "User ID missing"
-            print("user id missing")
-            return
-        }
-
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-
-        do {
-            let response = try await networkManager.AssignDeviceList(userID: userId)
-
-            if response.status {
-                assignDeviceDetails = response
-                issuccess = true
-            } else {
-                errorMessage = response.message
+            guard let userId = UserDefaults.standard.string(forKey: "user_id") else {
+                errorMessage = "User ID missing!"
+                return
             }
 
-        } catch {
-            errorMessage = error.localizedDescription
+            do {
+                let response = try await networkManager.AssignDeviceList(userID: userId)
+
+                if response.status {
+                    assignDeviceDetails = response
+                    issuccess = true
+                    
+                    //stored alredy configured deviced
+                    alredayConfiguredDeviceList.removeAll()
+                    let allDevices = response.devices ?? []
+                    alredayConfiguredDeviceList = allDevices.filter {
+                        $0.isConfigured == true
+                    }
+                    
+                } else {
+                    errorMessage = response.message
+                }
+
+            } catch is CancellationError {
+               // Ignore Swift concurrency cancellation
+               return
+
+           } catch let error as NSError where error.code == NSURLErrorCancelled {
+               // Ignore URLSession (-999) cancellation
+               return
+
+           } catch {
+               errorMessage = error.localizedDescription
+           }
         }
+
+        await fetchTask?.value
     }
+
 }
 
 
