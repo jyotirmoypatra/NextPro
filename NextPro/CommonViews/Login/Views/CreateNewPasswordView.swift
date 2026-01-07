@@ -60,7 +60,6 @@ struct CreateNewPasswordView: View {
                         
                     }
                     .padding(.horizontal)
-                    .padding(.bottom, 10)
                     // .background(Color.black)
                     .frame(maxWidth: .infinity, alignment: .top)
                     .zIndex(999)
@@ -69,11 +68,18 @@ struct CreateNewPasswordView: View {
                     
                     ScrollView { // ✅ Add ScrollView to manage height & keyboard
                         VStack(spacing: 25) {
-                            Spacer()
+                          Spacer().frame(height: 10)
                             
                             // Header
                             VStack(spacing: 5) {
                                 // Text(comingFrom == "login" ? "CREATE YOUR ACCOUNT" : "UPDATE YOUR PASSWORD")
+                                if (comingFrom == "validate_email"){
+                                    Image("zylx")
+                                        .resizable()
+                                        .frame(width: 110, height: 110)
+                                        .padding(.bottom,20)
+                                }
+                                
                                 Text(
                                     comingFrom == "validate_email" ? "CREATE YOUR ACCOUNT" :
                                         comingFrom == "user_profile" ? "UPDATE YOUR PASSWORD" :
@@ -124,7 +130,6 @@ struct CreateNewPasswordView: View {
                             
                             
                         }
-                        .padding(.top,10)
                         .padding(.horizontal, 10)
                         
                     } .keyboardAware()

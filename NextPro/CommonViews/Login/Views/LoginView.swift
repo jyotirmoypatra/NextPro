@@ -63,10 +63,14 @@ struct LoginView: View {
                     // Scrollable Fields
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(spacing: 25) {
-                            Spacer().frame(height: 40)
+                           Spacer().frame(height: 15)
                             
                             // Header
                             VStack(spacing: 5) {
+                                Image("zylx")
+                                 .resizable()
+                                 .frame(width: 110, height: 110)
+                                 .padding(.bottom,20)
                              
                                 Text(isUserInitialSetupDone ? "LOG IN TO YOUR ACCOUNT" : "SETUP YOUR ACCOUNT")
                                     .font(.custom("Inter-SemiBold", size: 20))
