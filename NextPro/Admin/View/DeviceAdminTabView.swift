@@ -93,8 +93,7 @@ struct DeviceAdminTabView: View {
         }
         .navigationBarHidden(true)
         .navigationDestination(isPresented: $navigateToDeviceScanView) {
-           // OnboardPageDeviceScanView()
-            StartConfigureDeviceListView(devices: assignDeviceVM.assignDeviceDetails?.devices ?? [])
+            SelectDeviceView(devices: assignDeviceVM.assignDeviceDetails?.devices ?? [])
         }
         .internetOverlay()
         .task {

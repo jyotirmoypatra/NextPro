@@ -8,11 +8,11 @@
 import SwiftUI
 import CoreBluetooth
 
-struct StartConfigureDeviceListView: View {
+struct SelectDeviceView: View {
     let devices: [AssignDevice]
     @Environment(\.dismiss) private var dismiss
     @State private var navigateToWiFiListView = false
-    @State private var selectedDeviceSN: String? = nil
+    @State private var selectedDevice: AssignDevice? = nil
     
     var body: some View {
         GeometryReader { geometry in
@@ -110,12 +110,15 @@ struct StartConfigureDeviceListView: View {
                                 ForEach(devices) { item in
                                     DeviceItemCardView(
                                         device: item,
-                                        isSelected: selectedDeviceSN == item.serial
+                                        isSelected: selectedDevice?.serial == item.serial
                                     ) {
-                                        // ✅ SINGLE SELECTION
-                                        selectedDeviceSN = item.serial
+                                        // ✅ Store FULL DEVICE
+                                        withAnimation(.easeInOut(duration: 0.15)) {
+                                            selectedDevice = item
+                                        }
                                     }
                                 }
+
 
                                 
                             }
@@ -126,7 +129,7 @@ struct StartConfigureDeviceListView: View {
             
                     // Next button
                     Button(action: {
-                        guard selectedDeviceSN != nil else { return }
+                        guard selectedDevice != nil else { return }
                         navigateToWiFiListView = true
                     }) {
                         Text("Next")
@@ -134,12 +137,12 @@ struct StartConfigureDeviceListView: View {
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
                             .padding()
-                        
                     }
-                    .background(selectedDeviceSN == nil ? Color.gray : Color.white)
-                    .cornerRadius(12)           // ← APPLY HERE
-                    .disabled(selectedDeviceSN == nil)
+                    .background(selectedDevice == nil ? Color.gray : Color.white)
+                    .cornerRadius(12)
+                    .disabled(selectedDevice == nil)
                     .padding(.bottom, 20)
+
                     
                     
                     
@@ -149,12 +152,12 @@ struct StartConfigureDeviceListView: View {
             }
         }
 
-    
-
-        
         .navigationDestination(isPresented: $navigateToWiFiListView) {
-            OnboardPageWiFiListView(selectedDeviceSN: selectedDeviceSN ?? "")
+            if let selectedDevice {
+                SelectWiFiView(selectedDevice: selectedDevice)
+            }
         }
+
         .navigationBarBackButtonHidden(true)
     }
 }
