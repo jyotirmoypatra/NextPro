@@ -33,7 +33,7 @@ struct RemoteDoorCardView: View {
     
     private var isAdmin: Bool {
         //  UserDefaults.standard.bool(forKey: "is_admin")
-        false
+        true
     }
     
     private var hasWIFIAccess: Bool {
