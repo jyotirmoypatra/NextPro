@@ -36,7 +36,7 @@ struct DeviceAdminTabView: View {
                     VStack(alignment: .leading, spacing: 20) {
                         if assignDeviceVM.alredayConfiguredDeviceList.isEmpty {
                             VStack(spacing: 14) {
-                                Image(systemName: "gearshape.slash")
+                                Image(systemName: "tray")
                                     .font(.system(size: 44))
                                     .foregroundColor(.gray.opacity(0.8))
 
@@ -58,6 +58,7 @@ struct DeviceAdminTabView: View {
                             ForEach(assignDeviceVM.alredayConfiguredDeviceList) { item in
                                 DeviceCardView(device: item)
                             }
+                            
                         }
 
                         Spacer()
@@ -92,7 +93,8 @@ struct DeviceAdminTabView: View {
         }
         .navigationBarHidden(true)
         .navigationDestination(isPresented: $navigateToDeviceScanView) {
-            OnboardPageDeviceScanView()
+           // OnboardPageDeviceScanView()
+            StartConfigureDeviceListView(devices: assignDeviceVM.assignDeviceDetails?.devices ?? [])
         }
         .internetOverlay()
         .task {
