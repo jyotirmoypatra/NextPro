@@ -17,7 +17,7 @@ class CreateNewPasswordViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage = ""
     @Published var updateSuccess = false
-    let network = NetworkManager.shared
+    let networkManager = NetworkManager.shared
     
     let fullPasswordPolicyMessage = """
     Password must meet the following requirements:
@@ -33,7 +33,7 @@ class CreateNewPasswordViewModel: ObservableObject {
         
         
         // Internet check
-        guard network.hasInternet else {
+        guard networkManager.hasInternet else {
             errorMessage = "No internet connection."
             return
         }
@@ -71,7 +71,7 @@ class CreateNewPasswordViewModel: ObservableObject {
         
 
         do {
-            let response = try await NetworkManager.shared.updatePassword(
+            let response = try await networkManager.updatePassword(
                 newPassword: newPassword,
                 confirmPassword: confirmPassword,
                 userName: username

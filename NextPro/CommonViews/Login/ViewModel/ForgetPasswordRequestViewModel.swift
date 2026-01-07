@@ -15,12 +15,11 @@ class ForgetPasswordRequestViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String = ""
     @Published var success: Bool = false
-    let network = NetworkManager.shared
     private let networkManager = NetworkManager.shared
 
     func sendRequest() async {
         
-        guard network.hasInternet else {
+        guard networkManager.hasInternet else {
             errorMessage = "No internet connection."
             return
         }

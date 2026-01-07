@@ -22,11 +22,10 @@ class UploadProfileImgViewModel: ObservableObject {
     @Published var errorMessage = ""
     private let networkManager = NetworkManager.shared
 
-    let network = NetworkManager.shared
     
     func UploadImg() async {
         
-        guard network.hasInternet else {
+        guard networkManager.hasInternet else {
             errorMessage = "No internet connection."
             return
         }

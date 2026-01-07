@@ -693,6 +693,64 @@ class NetworkManager: ObservableObject {
             throw APIError.network(error.localizedDescription)
         }
     }
+    
+    // MARK: - AssignDevice list admin
+    func AssignDeviceList(userID: String) async throws -> AssignDeviceListResponse {
+
+        let urlString = APIConfig.url(APIConfig.Endpoints.adminAssignDeviceList)
+        guard let url = URL(string: urlString) else {
+            throw APIError.invalidURL
+        }
+
+        print("URL: \(urlString)")
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+
+        let params: [String: Any] = [
+            "user_id" : userID,
+        ]
+
+        print("Request Params: \(params)")
+        request.httpBody = try JSONSerialization.data(withJSONObject: params)
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            // Debug Response
+            if let json = String(data: data, encoding: .utf8) {
+                print("📥 Device Details Response:\n\(json)")
+            }
+
+            guard let http = response as? HTTPURLResponse else {
+                throw APIError.invalidResponse
+            }
+
+            // Handle non-200 HTTP Codes (400, 404, 500...)
+            guard (200...299).contains(http.statusCode) else {
+                let message = extractErrorMessage(from: data) ?? "Something went wrong."
+                throw APIError.serverError(code: http.statusCode, message: message)
+            }
+
+            // Decode response
+            let decoded = try JSONDecoder().decode(AssignDeviceListResponse.self, from: data)
+
+            // Backend returns success = false even with 200
+            if decoded.status == false {
+                throw APIError.backend(message: decoded.message ?? "Something went wrong!")
+            }
+
+            return decoded
+
+        } catch let error as APIError {
+            throw error
+        } catch {
+            print("❌ ERROR REASON:", error)
+               print("❌ LOCALIZED DESCRIPTION:", error.localizedDescription)
+            throw APIError.network(error.localizedDescription)
+        }
+    }
 
 }
 

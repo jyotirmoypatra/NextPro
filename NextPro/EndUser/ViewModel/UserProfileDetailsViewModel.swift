@@ -26,11 +26,10 @@ class UserProfileDetailsViewModel: ObservableObject {
     private let networkManager = NetworkManager.shared
     @Published var isFailedDueToNoInternet = false
 
-    let network = NetworkManager.shared
     
     func fetchUserProfile() async {
         
-        guard network.hasInternet else {
+        guard networkManager.hasInternet else {
            errorMessage = ""
             isFailedDueToNoInternet = true
             return

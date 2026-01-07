@@ -18,12 +18,11 @@ class UserProfileEditViewModel: ObservableObject {
     @Published var errorMessage = ""
     private let networkManager = NetworkManager.shared
     @Published var editSuccess = false
-    let network = NetworkManager.shared
     
     func editProfile(fullName:String, phoneNo:String) async {
        
 
-        guard network.hasInternet else {
+        guard networkManager.hasInternet else {
             errorMessage = "No internet connection."
             return
         }

@@ -24,6 +24,7 @@ let sampledevices: [DeviceModel] = [
 
 
 struct DeviceAdminTabView: View {
+    @StateObject private var assignDeviceVM = AssignedDeviceViewModel()
     let devices =  sampledevices
     
     @State private var navigateToDeviceScanView = false
@@ -50,10 +51,9 @@ struct DeviceAdminTabView: View {
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        ForEach(devices) { item in
-                            DeviceCardView(device: item)
-                                .onTapGesture {
-                                    // onSelect(item)
+                        if let devices = assignDeviceVM.assignDeviceDetails?.devices {
+                            ForEach(devices) { item in
+                                    DeviceCardView(device: item)
                                 }
                         }
                         Spacer()
@@ -63,17 +63,34 @@ struct DeviceAdminTabView: View {
                 }
             }
             .padding(.top,10)
+            
+            if assignDeviceVM.isLoading {
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                    
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(1.8)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
+            }
+            
         }
         .navigationBarHidden(true)
         .navigationDestination(isPresented: $navigateToDeviceScanView) {
             OnboardPageDeviceScanView()
+        }
+        .task{
+            await assignDeviceVM.fetchAssignDevice()
         }
     }
 }
 
 
 struct DeviceCardView: View {
-    let device: DeviceModel
+    let device: AssignDevice
 
     var body: some View {
         HStack(spacing: 16) {
@@ -82,12 +99,12 @@ struct DeviceCardView: View {
                 .frame(width: 33, height: 33)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(device.title)
+                Text(device.serial )
                     .font(.custom("Inter-SemiBold", size: 16))
                     .foregroundColor(.white)
                     .lineLimit(2)
 
-                Text(device.doorName)
+                Text(device.modelName)
                     .font(.custom("Inter-Regular", size: 14))
                     .foregroundColor(.gray.opacity(0.9))
                     .lineLimit(2)
@@ -95,11 +112,11 @@ struct DeviceCardView: View {
 
             Spacer()
 
-            Text(device.status)
+            Text("OFFLINE")
                 .font(.custom("Inter-SemiBold", size: 10))
                 .foregroundColor(.white)
                 .padding(6)
-                .background(device.status == "ONLINE" ? Color.green : Color.red)
+                .background("OFFLINE" == "ONLINE" ? Color.green : Color.red)
                 .cornerRadius(6)
         }
         .padding(20)

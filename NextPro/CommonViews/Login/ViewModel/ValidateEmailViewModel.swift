@@ -21,7 +21,7 @@ class ValidateEmailViewModel: ObservableObject {
     @Published var isPasswordReset = true
     @Published var isAggrementAccept = false
 
-    let network = NetworkManager.shared
+    let networkManager = NetworkManager.shared
 
     func validate() async {
 
@@ -30,7 +30,7 @@ class ValidateEmailViewModel: ObservableObject {
         let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
 
         // Internet check
-        guard network.hasInternet else {
+        guard networkManager.hasInternet else {
            validateEmailError = "Please check your internet and try again."
             return
         }
@@ -47,7 +47,7 @@ class ValidateEmailViewModel: ObservableObject {
         isLoading = true
 
         do {
-            let response = try await network.ValidateEmail(email: trimmedEmail)
+            let response = try await networkManager.ValidateEmail(email: trimmedEmail)
 
             isLoading = false
             

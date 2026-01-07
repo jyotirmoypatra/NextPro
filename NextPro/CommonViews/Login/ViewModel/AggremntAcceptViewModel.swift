@@ -19,7 +19,7 @@ class AggremntAcceptViewModel: ObservableObject {
     @Published var Successflag = false
   
 
-    let network = NetworkManager.shared
+    let networkManager = NetworkManager.shared
 
     func accept() async {
 
@@ -27,7 +27,7 @@ class AggremntAcceptViewModel: ObservableObject {
 
 
         // Internet check
-        guard network.hasInternet else {
+        guard networkManager.hasInternet else {
             ErrorMessage = "Please check your internet and try again."
             return
         }
@@ -43,7 +43,7 @@ class AggremntAcceptViewModel: ObservableObject {
         isLoading = true
 
         do {
-            let response = try await network.AggremntAccept(userEmail: userEmail, isAccepted: isAggrementAccepted)
+            let response = try await networkManager.AggremntAccept(userEmail: userEmail, isAccepted: isAggrementAccepted)
 
             isLoading = false
             

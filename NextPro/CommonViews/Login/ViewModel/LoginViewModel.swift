@@ -23,7 +23,7 @@ class LoginViewModel: ObservableObject {
     @Published var userName = ""
     @Published var isPasswordReset = true
 
-    let network = NetworkManager.shared
+    let networkManager = NetworkManager.shared
     let fullPasswordPolicyMessage = """
     Password must meet the following requirements:
     • Minimum 8 characters
@@ -42,7 +42,7 @@ class LoginViewModel: ObservableObject {
         
         
         // Internet check
-        guard network.hasInternet else {
+        guard networkManager.hasInternet else {
             loginError = "No internet connection."
             return
         }
@@ -66,7 +66,7 @@ class LoginViewModel: ObservableObject {
         isLoading = true
 
         do {
-            let response = try await network.login(email: trimmedEmail, password: trimmedPassword)
+            let response = try await networkManager.login(email: trimmedEmail, password: trimmedPassword)
 
             isLoading = false
             

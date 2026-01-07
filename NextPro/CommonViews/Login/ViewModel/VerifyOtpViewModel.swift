@@ -23,7 +23,7 @@ class VerifyOtpViewModel: ObservableObject {
     @Published var success = false
 
     
-    private let network = NetworkManager.shared
+    private let networkManager = NetworkManager.shared
 
     
 
@@ -37,7 +37,7 @@ class VerifyOtpViewModel: ObservableObject {
         print("email:\(emailId)")
         print("email:\(otpCode)")
         
-        guard network.hasInternet else {
+        guard networkManager.hasInternet else {
             errorMessage = "No internet connection."
             return
         }
@@ -55,7 +55,7 @@ class VerifyOtpViewModel: ObservableObject {
         print("email:\(otpCode)")
         
         do {
-            let response = try await network.requestVerifyOtp(email: emailId, otp: otpCode)
+            let response = try await networkManager.requestVerifyOtp(email: emailId, otp: otpCode)
             print("✅ OTP Verified Successfully: \(response.message)")
             success = true
         } catch {
