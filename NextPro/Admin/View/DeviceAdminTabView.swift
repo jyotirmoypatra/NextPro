@@ -15,7 +15,7 @@ struct DeviceAdminTabView: View {
     
     var body: some View {
         ZStack {
-            VStack{
+            VStack(spacing: 10){
                 
                 HStack {
                     Text("Devices")
@@ -53,10 +53,27 @@ struct DeviceAdminTabView: View {
                     }
                    
                 }
+                .frame(maxWidth: .infinity)
                 .padding()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(
+                             Color.white.opacity(0.2),
+                            lineWidth: 1
+                        )
+                )
+               
+                
+                HStack{
+                    Text("Configured device")
+                        .font(.custom("Inter-SemiBold", size: 16))
+                        .foregroundColor(.white)
+                    
+                }.frame(maxWidth:.infinity, alignment: .leading)
+                    .padding(.top, 20)
                 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
+                    VStack(alignment: .leading, spacing: 15) {
 
                         if !assignDeviceVM.alredayConfiguredDeviceList.isEmpty {
                             ForEach(assignDeviceVM.alredayConfiguredDeviceList) { item in
@@ -64,13 +81,9 @@ struct DeviceAdminTabView: View {
                             }
                         }
 
-//                        // 🔑 THIS IS THE IMPORTANT PART
-//                        Color.clear
-//                            .frame(minHeight: 400)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 10)
-                    .padding(.top, 10)
+                    .padding(.top, 2)
                 }
                 .refreshable {
                     pullToRefresh = true
@@ -83,6 +96,7 @@ struct DeviceAdminTabView: View {
 
 
             }
+            .padding(.horizontal,10)
             
             
             if assignDeviceVM.isLoading && !pullToRefresh{
@@ -165,15 +179,15 @@ struct DeviceCardView: View {
                 .frame(width: 33, height: 33)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(device.modelName)
+                Text("\(device.modelName) (\(device.serial))")
                     .font(.custom("Inter-SemiBold", size: 16))
                     .foregroundColor(.white)
                     .lineLimit(2)
 
-                Text("Serial No : \(device.serial)")
-                    .font(.custom("Inter-Regular", size: 14))
-                    .foregroundColor(.gray.opacity(0.9))
-                    .lineLimit(2)
+//                Text("Serial No : \(device.serial)")
+//                    .font(.custom("Inter-Regular", size: 14))
+//                    .foregroundColor(.gray.opacity(0.9))
+//                    .lineLimit(2)
             }
 
             Spacer()
@@ -185,7 +199,7 @@ struct DeviceCardView: View {
                 .background(device.status == "ONLINE" ? Color.green : Color.red)
                 .cornerRadius(6)
         }
-        .padding(20)
+        .padding(15)
         .background(Color.white.opacity(0.08))
         .cornerRadius(14)
         .overlay(

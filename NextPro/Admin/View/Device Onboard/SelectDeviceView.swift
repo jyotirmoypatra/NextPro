@@ -13,8 +13,11 @@ struct SelectDeviceView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var navigateToWiFiListView = false
     @State private var selectedDevice: AssignDevice? = nil
+    @StateObject private var bleManager = BLEManager()
     @State private var isCheckingDevice = false
     @State private var showDeviceOfflineAlert = false
+    @State private var alertMessage = ""
+    @State private var icon = ""
     
     var body: some View {
         GeometryReader { geometry in
@@ -166,6 +169,20 @@ struct SelectDeviceView: View {
                     
                 }
                 .padding(.horizontal, 10)
+                
+                if showDeviceOfflineAlert {
+                   
+                    DeviceOfflineAlertView(
+                        message: alertMessage, 
+                        icon: icon
+                    ) {
+                        withAnimation {
+                            showDeviceOfflineAlert = false
+                        }
+                    }
+                    .zIndex(10)
+                }
+
             }
         }
 
@@ -176,24 +193,33 @@ struct SelectDeviceView: View {
         }
 
         .navigationBarBackButtonHidden(true)
-        .modernAlert(isPresented: $showDeviceOfflineAlert) {
-              ModernAlertView(
-                  title: "Error!",
-                  message: "Selected Device is currently not powered on.Please turn on the device to proceed",
-                  isSuccess: false,
-                  buttonTitle: "OK"
-              ) { showDeviceOfflineAlert = false
-                 
-              }
+        
+        .onReceive(bleManager.$bleState) { state in
+            if state == .poweredOff {
+                icon = "bluetooth-red"
+                alertMessage = "Bluetooth is turned off.\nPlease enable Bluetooth to proceed."
+            }
         }
+    }
+    
+    private var isBluetoothOff: Bool {
+        bleManager.bleState == .poweredOff
     }
     
     private func checkDeviceSignalAndProceed() {
         guard selectedDevice != nil else { return }
 
+        // STEP 1: Bluetooth check FIRST
+        if isBluetoothOff {
+            icon = "bluetooth-red"   // your bluetooth icon asset
+            alertMessage = "Bluetooth is turned off.\nPlease enable Bluetooth to proceed."
+            showDeviceOfflineAlert = true
+            return
+        }
+
+        // STEP 2: Continue with device check
         isCheckingDevice = true
 
-        // 🔹 Build LibDevModel
         let devModel = LibDevModel()
         devModel.devSn = selectedDevice?.serial
         devModel.devMac = selectedDevice?.mac
@@ -205,23 +231,26 @@ struct SelectDeviceView: View {
                 isCheckingDevice = false
 
                 if ret == 0, let rssi = msgDict?["signal"] as? NSNumber {
-                    print("✅ Device RSSI:", rssi)
-
-                    // Device reachable → go next
+                    print("Device RSSI:", rssi)
                     navigateToWiFiListView = true
                 } else {
-                    print("❌ Device not reachable")
+                    icon = "power-off"
+                    alertMessage =
+                    "The selected device is currently not powered on.\nPlease turn on the device to proceed."
                     showDeviceOfflineAlert = true
                 }
             }
         }
 
         if ret != 0 {
-            // Immediate failure (Bluetooth off / invalid params)
             isCheckingDevice = false
+            icon = "power-off"
+            alertMessage =
+            "The selected device is currently not powered on.\nPlease turn on the device to proceed."
             showDeviceOfflineAlert = true
         }
     }
+
 }
 
 
@@ -242,20 +271,20 @@ struct DeviceItemCardView: View {
                     .frame(width: 33, height: 33)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(device.modelName)
+                    Text("\(device.modelName) (\(device.serial))")
                         .font(.custom("Inter-SemiBold", size: 16))
                         .foregroundColor(.white)
                         .lineLimit(2)
 
-                    Text("Serial No : \(device.serial)")
-                        .font(.custom("Inter-Regular", size: 14))
-                        .foregroundColor(.gray.opacity(0.9))
-                        .lineLimit(2)
+//                    Text("Serial No : \(device.serial)")
+//                        .font(.custom("Inter-Regular", size: 14))
+//                        .foregroundColor(.gray.opacity(0.9))
+//                        .lineLimit(2)
                 }
 
                 Spacer()
 
-                // ✅ CHECKBOX / RADIO
+                // CHECKBOX
                 Image(systemName: isSelected ? "checkmark.square.fill" : "square")
                     .font(.system(size: 22))
                     .foregroundColor(isSelected ? .white : .gray)
@@ -276,5 +305,49 @@ struct DeviceItemCardView: View {
             )
         }
         .buttonStyle(.plain)
+    }
+}
+
+struct DeviceOfflineAlertView: View {
+    let message: String
+    let icon: String
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            // Background dim
+            Color.black.opacity(0.9)
+                .ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                // Icon
+                Image(icon)
+                    .resizable()
+                    .frame(width: 48,height: 48)
+
+                // Message
+                Text(message)
+                    .font(.custom("Inter-Regular", size: 14))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+
+                // OK Button
+                Button(action: onDismiss) {
+                    Text("OK")
+                        .font(.custom("Inter-SemiBold", size: 16))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.white)
+                        .cornerRadius(10)
+                }
+            }
+            .padding(25)
+            .background(Color(hex: "#292929"))
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .shadow(radius: 20)
+            .padding(.horizontal, 30)
+        }
+        .transition(.opacity)
     }
 }
