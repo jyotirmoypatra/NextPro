@@ -18,7 +18,7 @@ struct DeviceAdminTabView: View {
             VStack{
                 
                 HStack {
-                    Text("Profile")
+                    Text("Devices")
                         .font(.custom("Inter-SemiBold", size: 18))
                         .foregroundColor(.white)
 

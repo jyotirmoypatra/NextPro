@@ -10,6 +10,11 @@ import SwiftUI
 struct HomeViewAdmin: View {
     @State private var selectedTab = 0
     private let tabBarHeight: CGFloat = 55
+    
+    init(initialTab: Int = 0) {
+           _selectedTab = State(initialValue: initialTab)
+       }
+    
     enum AdminHomeSubPage:Equatable {
         case facilityList
         case facilityDetail(facilityName: String)
