@@ -129,7 +129,7 @@ struct RemoteDoorCardView: View {
                             .foregroundColor(.green)
                             .frame(width: 12, height: 12)
                         
-                        Text("Door Unlocked!")
+                        Text("Access Granted!")
                             .font(.custom("Inter-SemiBold", size: 13))
                             .foregroundColor(.green)
                             .multilineTextAlignment(.leading)

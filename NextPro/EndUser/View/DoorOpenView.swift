@@ -692,8 +692,10 @@ struct DoorOpenView: View {
                     guard let sn = sn, let doorId = doorId else { return }
                     successDoorKey = "\(sn)_\(doorId)"
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    speakText(remoteAccessMessage)
-                    overlayMessage = remoteAccessMessage
+//                    speakText(remoteAccessMessage)
+//                    overlayMessage = remoteAccessMessage
+                    speakText(accessGrantedMessage)
+                    overlayMessage = accessGrantedMessage
                 }else{
                     animateSuccess()
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -709,8 +711,10 @@ struct DoorOpenView: View {
                 guard let sn = sn, let doorId = doorId else { return }
                 successDoorKey = "\(sn)_\(doorId)"
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-                speakText(remoteAccessMessage)
-                overlayMessage = remoteAccessMessage
+//                speakText(remoteAccessMessage)
+//                overlayMessage = remoteAccessMessage
+                speakText(accessGrantedMessage)
+                overlayMessage = accessGrantedMessage
                 
             }
             else if type == 126 {
@@ -723,8 +727,10 @@ struct DoorOpenView: View {
                 guard let sn = sn, let doorId = doorId else { return }
                 successDoorKey = "\(sn)_\(doorId)"
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-                speakText(remoteAccessMessage)
-                overlayMessage = remoteAccessMessage
+//                speakText(remoteAccessMessage)
+//                overlayMessage = remoteAccessMessage
+                speakText(accessGrantedMessage)
+                overlayMessage = accessGrantedMessage
                 
             }
             else if let type = type, deniedTypes.contains(type) {

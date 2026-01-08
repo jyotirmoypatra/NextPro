@@ -21,9 +21,9 @@ struct DeviceAdminTabView: View {
                     Text("Devices")
                         .font(.custom("Inter-SemiBold", size: 18))
                         .foregroundColor(.white)
-
+                    
                     Spacer()
-
+                    
                     Button(action: {
                         // Notification action
                     }) {
@@ -46,24 +46,24 @@ struct DeviceAdminTabView: View {
                             .font(.system(size: 16))
                             .foregroundColor(.white)
                             .fontWeight(.bold)
-                          
+                        
                         Text("Configure device")
                             .font(.custom("Inter-SemiBold", size: 16))
                             .foregroundColor(.white)
                     }
-                   
+                    
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
                         .stroke(
-                             Color.white.opacity(0.2),
+                            Color.white.opacity(0.2),
                             lineWidth: 1
                         )
                 )
-               
                 
+                if !assignDeviceVM.alredayConfiguredDeviceList.isEmpty {
                 HStack{
                     Text("Configured device")
                         .font(.custom("Inter-SemiBold", size: 16))
@@ -71,6 +71,8 @@ struct DeviceAdminTabView: View {
                     
                 }.frame(maxWidth:.infinity, alignment: .leading)
                     .padding(.top, 20)
+                
+                 }
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 15) {
@@ -114,7 +116,7 @@ struct DeviceAdminTabView: View {
             }
             
             
-            if assignDeviceVM.alredayConfiguredDeviceList.isEmpty {
+             if !assignDeviceVM.isLoading && assignDeviceVM.alredayConfiguredDeviceList.isEmpty {
                 ZStack {
                 VStack(spacing: 14) {
                     Image("smartphone")
@@ -151,7 +153,7 @@ struct DeviceAdminTabView: View {
             }
         }
         .onDisappear {
-            assignDeviceVM.stopHeartbeat()   // ✅ REQUIRED
+            assignDeviceVM.stopHeartbeat()   
             print("Heartbeat stopped!!!!!")
         }
 
