@@ -11,6 +11,8 @@ struct DeviceAdminTabView: View {
     @StateObject private var assignDeviceVM = AssignedDeviceViewModel()
     @State private var showAssignDeviceVMErrorAlert = false
     @State private var navigateToDeviceScanView = false
+    @State private var navigateToDeviceInfoView = false
+    @State private var selectedDevice: AssignDevice?
     @State private var pullToRefresh = false
     
     var body: some View {
@@ -35,7 +37,6 @@ struct DeviceAdminTabView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                 }
-                .padding(.horizontal)
                 .padding(.bottom, 12)
                 .padding(.top, 16)
                 Button(action: {
@@ -80,6 +81,10 @@ struct DeviceAdminTabView: View {
                         if !assignDeviceVM.alredayConfiguredDeviceList.isEmpty {
                             ForEach(assignDeviceVM.alredayConfiguredDeviceList) { item in
                                 DeviceCardView(device: item)
+                                    .onTapGesture {
+                                                selectedDevice = item
+                                                navigateToDeviceInfoView = true
+                                            }
                             }
                         }
 
@@ -144,6 +149,12 @@ struct DeviceAdminTabView: View {
         .navigationDestination(isPresented: $navigateToDeviceScanView) {
             SelectDeviceView(devices: assignDeviceVM.assignDeviceDetails?.devices ?? [])
         }
+        .navigationDestination(isPresented: $navigateToDeviceInfoView) {
+            if let device = selectedDevice {
+                DeviceInformationView(selectedDevice: device)
+            }
+        }
+
         .internetOverlay()
         .task {
             await assignDeviceVM.fetchAssignDevice()

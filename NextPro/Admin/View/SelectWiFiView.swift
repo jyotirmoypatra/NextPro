@@ -1,5 +1,5 @@
 ////
-////  OnboardPageWiFiListView.swift
+////  SelectWiFiView.swift
 ////  NextPro
 ////
 ////  Created by JYOTIRMOY PATRA on 29/10/25.

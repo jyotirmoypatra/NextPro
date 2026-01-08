@@ -48,8 +48,7 @@ struct SuccessConnctionView: View {
                             .foregroundColor(.white)
                             .font(.custom("Inter-Bold", size: 16))
                     )
-                    .padding(.horizontal, 5)
-                    .padding(.top, 5)
+                    .padding(.top, 10)
                     
                     Spacer()
                     

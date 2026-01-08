@@ -58,7 +58,6 @@ struct ProfileEndUserView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                 }
-                .padding(.horizontal)
                 .padding(.top, 16)
                 .padding(.bottom, 12)
 
@@ -197,7 +196,7 @@ struct ProfileEndUserView: View {
                             RoundedRectangle(cornerRadius: 14)
                                 .stroke(Color.white.opacity(0.1), lineWidth: 1)
                         )
-                        .padding(.horizontal, 10)
+                       
                     }
                     .padding(.bottom, 30)
                 }
@@ -207,7 +206,7 @@ struct ProfileEndUserView: View {
                         await viewModel.fetchUserProfile()
                     }
                 }
-            }
+            }.padding(.horizontal,10)
             
             if viewModel.isLoading {
                 ZStack {

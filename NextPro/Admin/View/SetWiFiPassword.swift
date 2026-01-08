@@ -1,5 +1,5 @@
 //
-//  OnboardPageWifiPasswordView.swift
+//  SetWiFiPassword.swift
 //  NextPro
 //
 //  Created by JYOTIRMOY PATRA on 29/10/25.

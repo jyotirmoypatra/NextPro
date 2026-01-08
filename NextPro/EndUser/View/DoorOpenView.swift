@@ -115,7 +115,6 @@ struct DoorOpenView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                 }
-                .padding(.horizontal)
                 .padding(.top, 16)
                 .padding(.bottom, 12)
                 
@@ -249,7 +248,7 @@ struct DoorOpenView: View {
                                                 RoundedRectangle(cornerRadius: 14)
                                                     .stroke(Color.white.opacity(0.1), lineWidth: 1)
                                             )
-                                            .padding(.horizontal, 10)
+                                           // .padding(.horizontal, 10)
                                             
                                             
                                             HStack(spacing: 6) {
@@ -329,7 +328,7 @@ struct DoorOpenView: View {
                                             )
                                         }
                                     }
-                                    .padding(.horizontal, 10)
+                                   // .padding(.horizontal, 10)
                                     .padding(.top, 20)
                                     .padding(.bottom, 20)
                                 }.id("remote-tab-\(selectedTab)")
@@ -348,6 +347,7 @@ struct DoorOpenView: View {
                 }
                 
             }.frame(maxHeight: .infinity, alignment: .top)
+                .padding(.horizontal,10)
             
             // 🔒 Lock + Progress ring OVERLAY (positioned at center with full-screen background)
             if isOpening || progress > 0 || ringColor != .white {
