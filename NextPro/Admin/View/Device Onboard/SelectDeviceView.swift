@@ -207,7 +207,7 @@ struct SelectDeviceView: View {
     }
     
     private func checkDeviceSignalAndProceed() {
-        guard selectedDevice != nil else { return }
+        guard let device = selectedDevice else { return }
 
         // STEP 1: Bluetooth check FIRST
         if isBluetoothOff {
@@ -218,37 +218,47 @@ struct SelectDeviceView: View {
         }
 
         // STEP 2: Continue with device check
+       
+
+        let isTCDevice = device.modelName.uppercased().hasPrefix("TC")
+        
+        if isTCDevice {
+               navigateToWiFiListView = true
+               return
+        }
+            
         isCheckingDevice = true
-
-        let devModel = LibDevModel()
-        devModel.devSn = selectedDevice?.serial
-        devModel.devMac = selectedDevice?.mac
-        devModel.eKey = selectedDevice?.key
-        devModel.devType = Int32(selectedDevice?.devType ?? 13)
-
-        let ret = LibDevModel.getDeviceSignal(devModel) { ret, msgDict in
-            DispatchQueue.main.async {
-                isCheckingDevice = false
-
-                if ret == 0, let rssi = msgDict?["signal"] as? NSNumber {
-                    print("Device RSSI:", rssi)
-                    navigateToWiFiListView = true
-                } else {
-                    icon = "power-off"
-                    alertMessage =
-                    "The selected device is currently not powered on.\nPlease turn on the device to proceed."
-                    showDeviceOfflineAlert = true
+        
+            let devModel = LibDevModel()
+            devModel.devSn = device.serial
+            devModel.devMac = device.mac
+            devModel.eKey = device.key
+            devModel.devType = Int32(device.devType ?? 13)
+            
+            let ret = LibDevModel.getDeviceSignal(devModel) { ret, msgDict in
+                DispatchQueue.main.async {
+                    isCheckingDevice = false
+                    
+                    if ret == 0, let rssi = msgDict?["signal"] as? NSNumber {
+                        print("Device RSSI:", rssi)
+                        navigateToWiFiListView = true
+                    } else {
+                        icon = "power-off"
+                        alertMessage =
+                        "The selected device is currently not powered on.\nPlease turn on the device to proceed."
+                        showDeviceOfflineAlert = true
+                    }
                 }
             }
-        }
-
-        if ret != 0 {
-            isCheckingDevice = false
-            icon = "power-off"
-            alertMessage =
-            "The selected device is currently not powered on.\nPlease turn on the device to proceed."
-            showDeviceOfflineAlert = true
-        }
+            
+            if ret != 0 {
+                isCheckingDevice = false
+                icon = "power-off"
+                alertMessage =
+                "The selected device is currently not powered on.\nPlease turn on the device to proceed."
+                showDeviceOfflineAlert = true
+            }
+        
     }
 
 }

@@ -65,8 +65,7 @@ struct SetWiFiPassword: View {
                             .foregroundColor(.white)
                             .font(.custom("Inter-Bold", size: 16))
                     )
-                    .padding(.horizontal, 5)
-                    .padding(.top, 5)
+                    .padding(.top, 10)
                     
                     
                     // Password section
@@ -80,40 +79,46 @@ struct SetWiFiPassword: View {
                                 .font(.system(size: 14))
                                 .foregroundColor(.red)
                         }
+                    
                         
                         ZStack(alignment: .trailing) {
-                                Group {
-                                    if showPassword {
-                                        TextField("Enter Password", text: $password)
-                                            .textContentType(.password)
-                                            .disableAutocorrection(true)
-                                            .autocapitalization(.none)
-                                            .frame(height: 35)
-                                            .foregroundColor(.white)
-                                    } else {
-                                        SecureField("Enter Password", text: $password)
-                                            .textContentType(.password)
-                                            .disableAutocorrection(true)
-                                            .autocapitalization(.none)
-                                           .frame(height: 35)
-                                           .foregroundColor(.white)
-                                    }
+                            ZStack(alignment: .leading) {
+                                if password.isEmpty {
+                                    Text("Enter Password")
+                                        .foregroundColor(Color.white.opacity(0.5))
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .padding(.leading, 14)
                                 }
-                                .padding(12)
-                                .background(Color.white.opacity(0.15))
-                                .cornerRadius(8)
-                                .foregroundColor(.white)
                                 
-                                // 👁️ Eye icon toggle
-                                Button(action: { showPassword.toggle() }) {
-                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                                        .foregroundColor(.white.opacity(0.8))
+                                if showPassword {
+                                    TextField("", text: $password)
+                                        .foregroundColor(.white)
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .padding(.horizontal, 14)
+                                        .frame(height: 50)
+                                        .autocapitalization(.none)
+                                        .disableAutocorrection(true)
+                                } else {
+                                    SecureField("", text: $password)
+                                        .foregroundColor(.white)
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .padding(.horizontal, 14)
+                                        .frame(height: 50)
+                                        .autocapitalization(.none)
+                                        .disableAutocorrection(true)
                                 }
-                                .padding(.trailing, 12)
                             }
+                            .background(Color.white.opacity(0.15))
+                            .cornerRadius(10)
+                            
+                            Button(action: { showPassword.toggle() }) {
+                                Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                    .foregroundColor(.white.opacity(0.8))
+                            }
+                            .padding(.trailing, 14)
+                        }
                     }
                     .padding(.top, 30)
-                    .padding(.horizontal, 10)
                     
                    
                     
@@ -153,9 +158,8 @@ struct SetWiFiPassword: View {
                             .padding()
                     }
                     .background(isConfiguring || password.isEmpty ? Color.gray : Color.white)
-                    .cornerRadius(12)   // ← APPLY AFTER background
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 30)
+                    .cornerRadius(12)   
+                    .padding(.bottom, 10)
                     .disabled(isConfiguring || password.isEmpty)
                     .navigationDestination(isPresented: $navigateToSuccessView) {
                          // Assuming SuccessConnctionView is defined elsewhere
