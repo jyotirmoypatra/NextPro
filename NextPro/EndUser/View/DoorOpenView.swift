@@ -61,6 +61,8 @@ struct DoorOpenView: View {
     
     @State private var hasDigitalKeyAccess: Bool = false
     @State private var hasRemoteAccess: Bool = false
+    @State private var pullToRefresh: Bool = false
+    
     
     
     var body: some View {
@@ -272,9 +274,9 @@ struct DoorOpenView: View {
                                     
                                 }.transition(.opacity)
                                     .refreshable{
-                                        
+                                        pullToRefresh = true
                                         await deviceVM.refreshDeviceDetails()
-                                        
+                                        pullToRefresh = false
                                     }
                             }
                         }
@@ -334,8 +336,9 @@ struct DoorOpenView: View {
                                 .transition(.opacity)
                                 // Remote Access Tab
                                 .refreshable{
-                                    
+                                    pullToRefresh = true
                                     await deviceVM.refreshDeviceDetails()
+                                    pullToRefresh = false
                                     
                                 }
                             }
@@ -402,7 +405,7 @@ struct DoorOpenView: View {
                 .zIndex(10)
             }
             
-            if deviceVM.isLoading {
+            if deviceVM.isLoading && !pullToRefresh{
                 ZStack {
                     Color.black.opacity(0.4)
                         .ignoresSafeArea()
@@ -419,17 +422,17 @@ struct DoorOpenView: View {
        // .background(Color.black.opacity(0.4))
         .task{
             
-            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
-            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
+//            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
+//            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
             
 
             
             await deviceVM.fetchDeviceDetailsIfNeeded()
-            if !deviceVM.issuccess && deviceVM.errorMessage != ""{
-                doorStorage.clearDoors()          // sets hasResolvedDoors = false ❌ (we’ll fix below)
-                doorStorage.hasResolvedDoors = true 
-                showDoorErrorAlert = true
-            }
+//            if !deviceVM.issuccess && deviceVM.errorMessage != ""{
+//                doorStorage.clearDoors()          // sets hasResolvedDoors = false ❌ (we’ll fix below)
+//                doorStorage.hasResolvedDoors = true 
+//                showDoorErrorAlert = true
+//            }
             // Make sure deviceDetails is not nil
             print("Controller Serials:", deviceVM.allControllerSerials)
             
@@ -498,6 +501,14 @@ struct DoorOpenView: View {
             
             doorManager.clearDoorEvent()
         }
+        .onChange(of: deviceVM.errorMessage) { message in
+            guard !message.isEmpty else { return }
+
+            doorStorage.clearDoors()
+            doorStorage.hasResolvedDoors = true
+            showDoorErrorAlert = true
+        }
+
         .onChange(of: scenePhase) { newPhase in
             switch newPhase {
             case .background:
@@ -853,16 +864,13 @@ struct DoorOpenView: View {
     private var DoorTabSection: some View {
         VStack(spacing: 0) {
             HStack {
-                if hasDigitalKeyAccess {
+                if hasDigitalKeyAccess && hasRemoteAccess {
                     Button(action: { withAnimation { selectedTab = 0 } }) {
                         Text("Digital Access")
                             .font(.custom("Inter-Bold", size: 15))
                             .foregroundColor(selectedTab == 0 ? .white : .gray)
                             .frame(maxWidth: .infinity)
                     }
-                }
-                
-                if hasRemoteAccess {
                     Button(action: { withAnimation { selectedTab = 1 } }) {
                         Text("Remote Access")
                             .font(.custom("Inter-Bold", size: 15))
@@ -870,9 +878,13 @@ struct DoorOpenView: View {
                             .frame(maxWidth: .infinity)
                     }
                 }
+                
+//                if hasRemoteAccess {
+//                  
+//                }
             }
             .padding(.horizontal, 15)
-            .padding(.top, 15)
+            .padding(.top,(hasDigitalKeyAccess && hasRemoteAccess) ? 15 : 0)
             
             ZStack(alignment: selectedTab == 0 ? .leading : .trailing) {
                 Rectangle()
@@ -886,11 +898,11 @@ struct DoorOpenView: View {
                         .animation(.easeInOut(duration: 0.07), value: selectedTab)
                         .padding(.horizontal,20)
                 } else {
-                    Rectangle()
-                        .fill(Color.white)
-                        .frame(width: UIScreen.main.bounds.width - 40, height: 2)
-                        .animation(.easeInOut(duration: 0.07), value: selectedTab)
-                        .padding(.horizontal,20)
+//                    Rectangle()
+//                        .fill(Color.white)
+//                        .frame(width: UIScreen.main.bounds.width - 40, height: 2)
+//                        .animation(.easeInOut(duration: 0.07), value: selectedTab)
+//                        .padding(.horizontal,20)
                 }
             }
             .padding(.top, 10)

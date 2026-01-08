@@ -472,7 +472,7 @@ class DeviceDetailsViewModel: ObservableObject {
         UserDefaults.standard.removeObject(forKey: "device_details")
         deviceDetails = nil
         allControllerSerials = []
-
+        standaloneControllerList = []
         // 🔁 Force reload
         await fetchDeviceDetailsIfNeeded(force: true)
     }
