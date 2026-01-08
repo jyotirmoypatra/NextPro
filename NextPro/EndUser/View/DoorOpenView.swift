@@ -419,12 +419,10 @@ struct DoorOpenView: View {
        // .background(Color.black.opacity(0.4))
         .task{
             
-            //            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
-            //            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
+            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
+            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
             
-            hasDigitalKeyAccess = true
-            hasRemoteAccess = true
-            
+
             
             await deviceVM.fetchDeviceDetailsIfNeeded()
             if !deviceVM.issuccess && deviceVM.errorMessage != ""{
@@ -467,11 +465,9 @@ struct DoorOpenView: View {
         
         .onAppear {
             // Load access flags from UserDefaults
-            //            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
-            //            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
+            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
+            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
             
-            hasDigitalKeyAccess = true
-            hasRemoteAccess = true
             
             // Automatically select first available tab
             if hasDigitalKeyAccess {
