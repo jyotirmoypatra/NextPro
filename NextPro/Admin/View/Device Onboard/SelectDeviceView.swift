@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreBluetooth
+import Combine
 
 struct SelectDeviceView: View {
     let devices: [AssignDevice]
@@ -18,6 +19,10 @@ struct SelectDeviceView: View {
     @State private var showDeviceOfflineAlert = false
     @State private var alertMessage = ""
     @State private var icon = ""
+    @State private var tcScanTask: Task<Void, Never>?
+    @State private var tcScanTimeoutTask: Task<Void, Never>?
+    @State private var tcDeviceFound = false
+
     
     var body: some View {
         GeometryReader { geometry in
@@ -222,10 +227,11 @@ struct SelectDeviceView: View {
 
         let isTCDevice = device.modelName.uppercased().hasPrefix("TC")
         
-        if isTCDevice {
-               navigateToWiFiListView = true
-               return
-        }
+        // TC434 → BLE proximity scan (20s)
+            if isTCDevice {
+                startTC434Scan(serial: device.serial)
+                return
+            }
             
         isCheckingDevice = true
         
@@ -260,6 +266,67 @@ struct SelectDeviceView: View {
             }
         
     }
+    private func startTC434Scan(serial: String) {
+        isCheckingDevice = true
+        tcDeviceFound = false
+
+        // Cancel old tasks
+        tcScanTask?.cancel()
+        tcScanTimeoutTask?.cancel()
+
+        bleManager.startScanning()
+
+        // 🔍 Scan task
+        tcScanTask = Task { @MainActor in
+            for await devices in bleManager.$devices.values {
+                for peripheral in devices {
+                    let name = (peripheral.name ?? "")
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                    if name.contains(serial) {
+                        print("TC434 detected via BLE:", name)
+
+                        tcDeviceFound = true
+                        stopTCScan()
+
+                        navigateToWiFiListView = true
+                        return
+                    }
+                }
+            }
+        }
+
+        // ⏱ Timeout task (ONLY if not found)
+        tcScanTimeoutTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 15_000_000_000)
+
+            guard !tcDeviceFound else {
+                return   // device already found → do nothing
+            }
+
+            stopTCScan()
+
+            icon = "power-off"
+            alertMessage =
+            "The selected device is currently not powered on.\nPlease turn on the device to proceed."
+            showDeviceOfflineAlert = true
+        }
+    }
+
+    
+    private func stopTCScan() {
+        tcScanTask?.cancel()
+        tcScanTimeoutTask?.cancel()
+
+        tcScanTask = nil
+        tcScanTimeoutTask = nil
+
+        bleManager.stopScanning()
+        isCheckingDevice = false
+    }
+
+
+
 
 }
 
