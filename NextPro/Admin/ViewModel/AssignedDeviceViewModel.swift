@@ -19,6 +19,20 @@ final class AssignedDeviceViewModel: ObservableObject {
     @Published var alredayConfiguredDeviceList: [AssignDevice] = []
     private let networkManager = NetworkManager.shared
     private var fetchTask: Task<Void, Never>?
+    
+    private var heartbeatMap: [String: Date] = [:]
+    private var heartbeatTimer: Timer?
+
+    init() {
+        observeHeartbeat()
+       // startHeartbeatTimer()
+    }
+    
+    deinit {
+        heartbeatTimer?.invalidate()
+        NotificationCenter.default.removeObserver(self)
+    }
+
 
     func fetchAssignDevice() async {
         //  Cancel previous fetch if any
@@ -46,8 +60,10 @@ final class AssignedDeviceViewModel: ObservableObject {
                     alredayConfiguredDeviceList.removeAll()
                     let allDevices = response.devices ?? []
                     alredayConfiguredDeviceList = allDevices.filter {
-                        $0.isConfigured == true
+                        $0.isConfigured == false
                     }
+                    // ✅ START HEARTBEAT TIMER HERE
+                        startHeartbeatTimer()
                     
                 } else {
                     errorMessage = response.message
@@ -68,7 +84,85 @@ final class AssignedDeviceViewModel: ObservableObject {
 
         await fetchTask?.value
     }
+    
+  
+    private func observeHeartbeat() {
+        NotificationCenter.default.addObserver(
+            forName: .deviceHeartbeatReceived,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let sn = notification.userInfo?["sn"] as? String else { return }
 
+            // save last heartbeat time
+            self?.heartbeatMap[sn] = Date()
+
+            // mark ONLINE immediately
+            self?.updateDeviceStatus(sn: sn, status: "ONLINE")
+        }
+    }
+    
+    private func startHeartbeatTimer() {
+        heartbeatTimer?.invalidate()
+
+        heartbeatTimer = Timer.scheduledTimer(
+            withTimeInterval: 7,
+            repeats: true
+        ) { [weak self] _ in
+            self?.checkAllDevicesHeartbeat()
+        }
+    }
+
+
+    private func checkAllDevicesHeartbeat() {
+        let now = Date()
+
+        for device in alredayConfiguredDeviceList {
+
+            // 1️⃣ ENSURE SUBSCRIPTION
+            MQTTManager.shared.subscribeIfNeeded(sn: device.serial)
+
+            // 2️⃣ SEND HEARTBEAT COMMAND
+            MQTTManager.shared.sendHeartbeatCheck(to: device.serial)
+
+            // 3️⃣ OFFLINE CHECK
+            if let last = heartbeatMap[device.serial] {
+                let diff = now.timeIntervalSince(last)
+
+                // ⏱ safer timeout = 2 cycles (14s)
+                if diff > 8 {
+                    updateDeviceStatus(sn: device.serial, status: "OFFLINE")
+                }
+            } else {
+                updateDeviceStatus(sn: device.serial, status: "OFFLINE")
+            }
+        }
+    }
+
+
+    private func updateDeviceStatus(sn: String, status: String) {
+
+        guard let index = alredayConfiguredDeviceList.firstIndex(where: {
+            $0.serial == sn
+        }) else { return }
+
+        let old = alredayConfiguredDeviceList[index]
+
+        let updated = AssignDevice(
+            serial: old.serial,
+            mac: old.mac,
+            key: old.key,
+            modelName: old.modelName,
+            isConfigured: old.isConfigured,
+            openType: old.openType,
+            devType: old.devType,
+            status: status
+        )
+
+        alredayConfiguredDeviceList[index] = updated
+    }
+
+    
 }
 
 

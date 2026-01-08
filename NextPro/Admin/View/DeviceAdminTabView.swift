@@ -96,7 +96,7 @@ struct DeviceAdminTabView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
-                .allowsHitTesting(false) // 🔑 FIX
+                .allowsHitTesting(false) 
             }
             
             
@@ -120,7 +120,7 @@ struct DeviceAdminTabView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
-                .allowsHitTesting(false) // 🔑 FIX
+                .allowsHitTesting(false)
             }
             
         }
@@ -174,11 +174,11 @@ struct DeviceCardView: View {
 
             Spacer()
 
-            Text("OFFLINE")
+            Text(device.status ?? "OFFLINE")
                 .font(.custom("Inter-SemiBold", size: 10))
                 .foregroundColor(.white)
                 .padding(6)
-                .background("OFFLINE" == "ONLINE" ? Color.green : Color.red)
+                .background(device.status == "ONLINE" ? Color.green : Color.red)
                 .cornerRadius(6)
         }
         .padding(20)

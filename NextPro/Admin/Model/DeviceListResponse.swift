@@ -21,6 +21,7 @@ struct AssignDevice: Codable, Identifiable  {
     let isConfigured: Bool?
     let openType: Int?
     let devType: Int?
+    let status: String?
     var id: String { serial  }
 
     enum CodingKeys: String, CodingKey {
@@ -31,5 +32,6 @@ struct AssignDevice: Codable, Identifiable  {
         case isConfigured = "is_configured"
         case openType = "open_type"
         case devType = "dev_type"
+        case status
     }
 }

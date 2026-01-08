@@ -205,3 +205,6 @@ extension String {
     }
 }
 
+extension Notification.Name {
+    static let deviceHeartbeatReceived = Notification.Name("deviceHeartbeatReceived")
+}

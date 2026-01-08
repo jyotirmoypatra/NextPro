@@ -149,6 +149,42 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
             print("🔁 Re-subscribed:", topic)
         }
     }
+    
+    // MARK: - Subscribe if not already subscribed (Heartbeat)
+    func subscribeIfNeeded(sn: String) {
+        let topic = "up/\(sn)/rtdata"
+
+        // Prevent duplicate subscription
+        guard !subscribedTopics.contains(topic) else {
+            return
+        }
+
+        subscribedTopics.insert(topic)
+        mqtt?.subscribe(topic, qos: .qos1)
+        print("📡 MQTT subscribed to \(topic)")
+    }
+
+    
+    // MARK: - Heartbeat Check (Force Device to Send Heartbeat)
+    func sendHeartbeatCheck(to deviceSN: String) {
+        let topic = "down/\(deviceSN)"
+
+        let payload: [String: Any] = [
+            "commandid": 1,
+            "operation": "PUT",
+            "resource": "device/control?cmd=heartbeat"
+        ]
+
+        guard let data = try? JSONSerialization.data(withJSONObject: payload, options: []),
+              let message = String(data: data, encoding: .utf8) else {
+            print("❌ Failed to encode heartbeat command")
+            return
+        }
+
+        mqtt?.publish(topic, withString: message, qos: .qos1)
+        print("💓 Heartbeat check sent to \(deviceSN)")
+    }
+
 
     
     func mqtt(_ mqtt: CocoaMQTT, didReceiveMessage message: CocoaMQTTMessage, id: UInt16) {
@@ -206,6 +242,15 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
 
             case "heartbeat":
                 print("💓 Heartbeat received (Topic: \(topic))")
+
+                if let sn = json?["SN"] as? String {
+                    NotificationCenter.default.post(
+                        name: .deviceHeartbeatReceived,
+                        object: nil,
+                        userInfo: ["sn": sn]
+                    )
+                }
+
 
             default:
                 print("ℹ️ Unhandled resource type: \(resource) (Topic: \(topic))")
