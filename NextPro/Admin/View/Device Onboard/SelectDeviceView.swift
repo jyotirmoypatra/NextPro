@@ -13,6 +13,8 @@ struct SelectDeviceView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var navigateToWiFiListView = false
     @State private var selectedDevice: AssignDevice? = nil
+    @State private var isCheckingDevice = false
+    @State private var showDeviceOfflineAlert = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -130,14 +132,28 @@ struct SelectDeviceView: View {
             
                     // Next button
                     Button(action: {
-                        guard selectedDevice != nil else { return }
-                        navigateToWiFiListView = true
+//                        guard selectedDevice != nil else { return }
+                       // navigateToWiFiListView = true
+                        checkDeviceSignalAndProceed()
                     }) {
-                        Text("Next")
-                            .font(.custom("Inter-Bold", size: 16))
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity)
-                            .padding()
+                        if isCheckingDevice {
+                                HStack(spacing: 10) {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .black))
+
+                                    Text("Checking device...")
+                                        .font(.custom("Inter-SemiBold", size: 15))
+                                        .foregroundColor(.black)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                            } else {
+                                Text("Next")
+                                    .font(.custom("Inter-Bold", size: 16))
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                            }
                     }
                     .background(selectedDevice == nil ? Color.gray : Color.white)
                     .cornerRadius(12)
@@ -160,6 +176,51 @@ struct SelectDeviceView: View {
         }
 
         .navigationBarBackButtonHidden(true)
+        .modernAlert(isPresented: $showDeviceOfflineAlert) {
+              ModernAlertView(
+                  title: "Error!",
+                  message: "Selected Device is currently not powered on.Please turn on the device to proceed",
+                  isSuccess: false,
+                  buttonTitle: "OK"
+              ) { showDeviceOfflineAlert = false
+                 
+              }
+        }
+    }
+    
+    private func checkDeviceSignalAndProceed() {
+        guard selectedDevice != nil else { return }
+
+        isCheckingDevice = true
+
+        // 🔹 Build LibDevModel
+        let devModel = LibDevModel()
+        devModel.devSn = selectedDevice?.serial
+        devModel.devMac = selectedDevice?.mac
+        devModel.eKey = selectedDevice?.key
+        devModel.devType = Int32(selectedDevice?.devType ?? 13)
+
+        let ret = LibDevModel.getDeviceSignal(devModel) { ret, msgDict in
+            DispatchQueue.main.async {
+                isCheckingDevice = false
+
+                if ret == 0, let rssi = msgDict?["signal"] as? NSNumber {
+                    print("✅ Device RSSI:", rssi)
+
+                    // Device reachable → go next
+                    navigateToWiFiListView = true
+                } else {
+                    print("❌ Device not reachable")
+                    showDeviceOfflineAlert = true
+                }
+            }
+        }
+
+        if ret != 0 {
+            // Immediate failure (Bluetooth off / invalid params)
+            isCheckingDevice = false
+            showDeviceOfflineAlert = true
+        }
     }
 }
 
