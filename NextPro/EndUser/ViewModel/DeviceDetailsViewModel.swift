@@ -152,9 +152,9 @@ class DeviceDetailsViewModel: ObservableObject {
 //            {
 //              "controller_id": "66dbd6-c4b7-4002-a593-1d2f3c137320",
 //              "controller_name": "Lockheed Martin : Main Gate",
-//              "controller_serial": "4282184653",
-//              "controller_mac": "a0:76:4e:5a:ae:a2",
-//              "controller_key": "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
+//              "controller_serial": "4282184678",
+//              "controller_mac": "00:76:4e:67:ae:a2",
+//              "controller_key": "ad8fufbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
 //              "controller_model": "BC220",
 //              "controller_comm_type": null,
 //              "controller_type": "Controller",
@@ -170,8 +170,8 @@ class DeviceDetailsViewModel: ObservableObject {
 //                    {
 //                      "controller_id": "66dbd6-c4b7-4002-a593-1d2f3c137320",
 //                      "controller_name": "Main Gate",
-//                      "controller_serial": "4282184653",
-//                      "controller_mac": "a0:76:4e:5a:ae:a2",
+//                      "controller_serial": "8667676888",
+//                      "controller_mac": "80:76:78:5a:ae:a2",
 //                      "controller_key": "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
 //                      "controller_model": "TC434",
 //                      "controller_comm_type": null,

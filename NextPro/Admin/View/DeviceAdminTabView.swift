@@ -136,6 +136,10 @@ struct DeviceAdminTabView: View {
                 showAssignDeviceVMErrorAlert = true
             }
         }
+        .onDisappear {
+            assignDeviceVM.stopHeartbeat()   // ✅ REQUIRED
+            print("Heartbeat stopped!!!!!")
+        }
 
         .modernAlert(isPresented: $showAssignDeviceVMErrorAlert) {
               ModernAlertView(

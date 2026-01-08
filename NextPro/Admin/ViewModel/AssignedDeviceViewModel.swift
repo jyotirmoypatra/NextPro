@@ -21,16 +21,25 @@ final class AssignedDeviceViewModel: ObservableObject {
     private var fetchTask: Task<Void, Never>?
     
     private var heartbeatMap: [String: Date] = [:]
-    private var heartbeatTimer: Timer?
+    private var heartbeatTask: Task<Void, Never>?
 
     init() {
         observeHeartbeat()
-       // startHeartbeatTimer()
     }
     
-    deinit {
-        heartbeatTimer?.invalidate()
-        NotificationCenter.default.removeObserver(self)
+    
+
+    private func startHeartbeatLoop() {
+        heartbeatTask?.cancel()
+
+        heartbeatTask = Task { @MainActor in
+            while !Task.isCancelled {
+                checkAllDevicesHeartbeat()
+
+                // ⏱ wait 7 seconds
+                try? await Task.sleep(nanoseconds: 7_000_000_000)
+            }
+        }
     }
 
 
@@ -62,8 +71,8 @@ final class AssignedDeviceViewModel: ObservableObject {
                     alredayConfiguredDeviceList = allDevices.filter {
                         $0.isConfigured == false
                     }
-                    // ✅ START HEARTBEAT TIMER HERE
-                        startHeartbeatTimer()
+                    // START HEARTBEAT TIMER HERE
+                    startHeartbeatLoop()
                     
                 } else {
                     errorMessage = response.message
@@ -84,36 +93,56 @@ final class AssignedDeviceViewModel: ObservableObject {
 
         await fetchTask?.value
     }
+
+    deinit {
+        heartbeatTask?.cancel()
+        NotificationCenter.default.removeObserver(self)
+    }
+    func stopHeartbeat() {
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
+    }
     
-  
+//    private func observeHeartbeat() {
+//        NotificationCenter.default.addObserver(
+//            forName: .deviceHeartbeatReceived,
+//            object: nil,
+//            queue: .main
+//        ) { [weak self] notification in
+//            guard
+//                let self,
+//                let sn = notification.userInfo?["sn"] as? String
+//            else { return }
+//
+//            self.heartbeatMap[sn] = Date()
+//            self.updateDeviceStatus(sn: sn, status: "ONLINE")
+//        }
+//    }
+    
+    
+    
     private func observeHeartbeat() {
         NotificationCenter.default.addObserver(
             forName: .deviceHeartbeatReceived,
             object: nil,
-            queue: .main
+            queue: nil   // ← important
         ) { [weak self] notification in
-            guard let sn = notification.userInfo?["sn"] as? String else { return }
+            guard
+                let self,
+                let sn = notification.userInfo?["sn"] as? String
+            else { return }
 
-            // save last heartbeat time
-            self?.heartbeatMap[sn] = Date()
-
-            // mark ONLINE immediately
-            self?.updateDeviceStatus(sn: sn, status: "ONLINE")
+            Task {
+                await MainActor.run {
+                    self.heartbeatMap[sn] = Date()
+                    self.updateDeviceStatus(sn: sn, status: "ONLINE")
+                }
+            }
         }
     }
+
+
     
-    private func startHeartbeatTimer() {
-        heartbeatTimer?.invalidate()
-
-        heartbeatTimer = Timer.scheduledTimer(
-            withTimeInterval: 7,
-            repeats: true
-        ) { [weak self] _ in
-            self?.checkAllDevicesHeartbeat()
-        }
-    }
-
-
     private func checkAllDevicesHeartbeat() {
         let now = Date()
 
