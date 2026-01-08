@@ -11,10 +11,33 @@ struct DeviceAdminTabView: View {
     @StateObject private var assignDeviceVM = AssignedDeviceViewModel()
     @State private var showAssignDeviceVMErrorAlert = false
     @State private var navigateToDeviceScanView = false
+    @State private var pullToRefresh = false
     
     var body: some View {
         ZStack {
             VStack{
+                
+                HStack {
+                    Text("Profile")
+                        .font(.custom("Inter-SemiBold", size: 18))
+                        .foregroundColor(.white)
+
+                    Spacer()
+
+                    Button(action: {
+                        // Notification action
+                    }) {
+                        Image(systemName: "bell")
+                            .font(.system(size: 18))
+                            .foregroundColor(.white)
+                            .padding(10)
+                            .background(Color.white.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 12)
+                .padding(.top, 16)
                 Button(action: {
                     navigateToDeviceScanView = true
                 }) {
@@ -34,50 +57,35 @@ struct DeviceAdminTabView: View {
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        if assignDeviceVM.alredayConfiguredDeviceList.isEmpty {
-                            VStack(spacing: 14) {
-                                Image(systemName: "tray")
-                                    .font(.system(size: 44))
-                                    .foregroundColor(.gray.opacity(0.8))
 
-                                Text("No Configured Devices Found")
-                                    .font(.custom("Inter-SemiBold", size: 18))
-                                    .foregroundColor(.white)
-
-                                Text("You haven’t configured any devices yet.\nTap “Configure device” to get started.")
-                                    .font(.custom("Inter-Regular", size: 14))
-                                    .foregroundColor(.gray)
-                                    .multilineTextAlignment(.center)
-                                    .padding(.horizontal, 32)
-                            }
-                            .padding(.top,60)
-
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .transition(.opacity)
-                        } else {
+                        if !assignDeviceVM.alredayConfiguredDeviceList.isEmpty {
                             ForEach(assignDeviceVM.alredayConfiguredDeviceList) { item in
                                 DeviceCardView(device: item)
                             }
-                            
                         }
 
-                        Spacer()
+//                        // 🔑 THIS IS THE IMPORTANT PART
+//                        Color.clear
+//                            .frame(minHeight: 400)
                     }
+                    .frame(maxWidth: .infinity)
                     .padding(.horizontal, 10)
                     .padding(.top, 10)
                 }
                 .refreshable {
+                    pullToRefresh = true
                     await assignDeviceVM.fetchAssignDevice()
-
+                    pullToRefresh = false
                     if let error = assignDeviceVM.errorMessage, !error.isEmpty {
                         showAssignDeviceVMErrorAlert = true
                     }
                 }
 
+
             }
-            .padding(.top,10)
             
-            if assignDeviceVM.isLoading {
+            
+            if assignDeviceVM.isLoading && !pullToRefresh{
                 ZStack {
                     Color.black.opacity(0.4)
                         .ignoresSafeArea()
@@ -88,6 +96,31 @@ struct DeviceAdminTabView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
+                .allowsHitTesting(false) // 🔑 FIX
+            }
+            
+            
+            if assignDeviceVM.alredayConfiguredDeviceList.isEmpty {
+                ZStack {
+                VStack(spacing: 14) {
+                    Image("smartphone")
+                        .resizable()
+                        .frame(width: 50, height: 50)
+
+                    Text("No Configured Devices Found")
+                        .font(.custom("Inter-SemiBold", size: 16))
+                        .foregroundColor(.white)
+
+                    Text("You haven’t configured any devices yet.\nTap “Configure device” to get started.")
+                        .font(.custom("Inter-Regular", size: 14))
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
+                .allowsHitTesting(false) // 🔑 FIX
             }
             
         }

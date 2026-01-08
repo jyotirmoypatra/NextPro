@@ -36,7 +36,7 @@ struct SelectWiFiView: View {
                 
                 Color.black.opacity(0.9)
                     .ignoresSafeArea()
-                VStack(spacing: 25,) {
+                VStack(spacing: 15) {
                     
                     HStack {
                         Button(action: {
@@ -65,7 +65,8 @@ struct SelectWiFiView: View {
                             .font(.custom("Inter-Bold", size: 16))
                     )
                     .padding(.horizontal, 5)
-                    .padding(.top, 5)
+                    .padding(.top, 10)
+                    .padding(.bottom, 15)
                     
                     
                     VStack(spacing: 15) {
@@ -84,8 +85,8 @@ struct SelectWiFiView: View {
                             .foregroundColor(Color.white.opacity(0.5))
                             .multilineTextAlignment(.center)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 30)
+                    .frame(maxWidth: .infinity)   
+                    .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.white.opacity(0.11))
@@ -163,7 +164,7 @@ struct SelectWiFiView: View {
                     .background(selectedWiFiIndex == nil ? Color.gray : Color.white)
                     .cornerRadius(12)
                     .disabled(selectedWiFiIndex == nil)
-                    .padding(.bottom, 30)
+                    .padding(.bottom, 10)
                     .navigationDestination(isPresented: $navigateToWifiPassword) {
                         if let index = selectedWiFiIndex {
                             SetWiFiPassword(

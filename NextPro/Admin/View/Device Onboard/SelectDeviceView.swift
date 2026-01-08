@@ -27,7 +27,7 @@ struct SelectDeviceView: View {
                 Color.black.opacity(0.9)
                     .ignoresSafeArea()
                 
-                VStack(spacing: 25) {
+                VStack(spacing: 15) {
                     HStack {
                         // LEFT: Back Button
                         Button(action: {
@@ -57,7 +57,8 @@ struct SelectDeviceView: View {
                             .font(.custom("Inter-Bold", size: 16))
                     )
                     .padding(.horizontal, 5)
-                    .padding(.top, 5)
+                    .padding(.top, 10)
+                    .padding(.bottom, 15)
                     
                     VStack(spacing: 15) {
                         Image("socket-plug")
@@ -123,7 +124,7 @@ struct SelectDeviceView: View {
                                 
                             }
                         }
-                      
+                        .padding(.top, 10)
                     }
                     
             
@@ -141,7 +142,7 @@ struct SelectDeviceView: View {
                     .background(selectedDevice == nil ? Color.gray : Color.white)
                     .cornerRadius(12)
                     .disabled(selectedDevice == nil)
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 10)
 
                     
                     
@@ -198,7 +199,7 @@ struct DeviceItemCardView: View {
                     .font(.system(size: 22))
                     .foregroundColor(isSelected ? .white : .gray)
             }
-            .padding(20)
+            .padding(15)
             .background(
                 isSelected
                 ? Color.white.opacity(0.15)
