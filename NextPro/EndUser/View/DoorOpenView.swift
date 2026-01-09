@@ -694,12 +694,12 @@ struct DoorOpenView: View {
                             message: grantedBase
                     )
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    speakText(accessGrantedMessage)
+                    speakText(accessGrantedMessage + " - " + accessGreetingMessage)
                 }else{
                     animateSuccess()
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                     AceesMessage =  accessGrantedMessage
-                    speakText(accessGrantedMessage)
+                    speakText(accessGrantedMessage + " - " + accessGreetingMessage)
                     overlayMessage = accessGrantedMessage
                 }
                 
@@ -719,7 +719,7 @@ struct DoorOpenView: View {
                     animateSuccess()
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                     AceesMessage =  accessGrantedMessage
-                    speakText(accessGrantedMessage)
+                    speakText(accessGrantedMessage + " - " + accessGreetingMessage)
                     overlayMessage = accessGrantedMessage
                 }
             }
@@ -732,7 +732,7 @@ struct DoorOpenView: View {
                         message: grantedBase
                     )
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-                speakText(accessGrantedMessage)
+                speakText(accessGrantedMessage + " - " + accessGreetingMessage)
             }
             else if let type = type, deniedTypes.contains(type) {
                 if isRemoteUnlock{
@@ -956,7 +956,7 @@ struct DoorOpenView: View {
         }
         
         accessGrantedMessage =
-        prefix + grantedBase + " - " + accessGreetingMessage
+        prefix + grantedBase
         
         accessDeniedMessage =
         prefix + deniedBase
