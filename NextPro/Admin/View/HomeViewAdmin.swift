@@ -15,11 +15,11 @@ struct HomeViewAdmin: View {
            _selectedTab = State(initialValue: initialTab)
        }
     
-    enum AdminHomeSubPage:Equatable {
-        case facilityList
-        case facilityDetail(facilityName: String)
-    }
-    @State private var adminHomePage: AdminHomeSubPage = .facilityList
+//    enum AdminHomeSubPage:Equatable {
+//        case facilityList
+//        case facilityDetail(facilityName: String)
+//    }
+//    @State private var adminHomePage: AdminHomeSubPage = .facilityList
 
     var body: some View {
         GeometryReader { geo in
@@ -148,11 +148,11 @@ struct HomeViewAdmin: View {
                 .frame(width: geo.size.width, height: geo.size.height)
                 
                 //for reset tab again
-                .onChange(of: selectedTab) { newValue in
-                    if newValue == 0 {
-                        adminHomePage = .facilityList
-                    }
-                }
+//                .onChange(of: selectedTab) { newValue in
+//                    if newValue == 0 {
+//                        adminHomePage = .facilityList
+//                    }
+//                }
 
             }
         }

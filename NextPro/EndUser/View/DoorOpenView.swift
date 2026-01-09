@@ -52,6 +52,8 @@ struct DoorOpenView: View {
     
     @State private var successDoorKey: String?
     @State private var activeDoorKey: String? = nil
+    @State private var remoteMqttResult: RemoteMQTTResult?
+
 
 
 
@@ -313,9 +315,9 @@ struct DoorOpenView: View {
                                         ForEach(deviceVM.standaloneControllerList) { door in
                                             RemoteDoorCardView(
                                                 door: door,
-                                                successKey: $successDoorKey,
                                                 activeDoorKey: $activeDoorKey,
-                                                isBluetoothOn: .constant(bleManager.isBluetoothOn), 
+                                                mqttResult: $remoteMqttResult,
+                                                isBluetoothOn: .constant(bleManager.isBluetoothOn),
                                                 showBluetoothAlert: $showBluetoothAlert,
                                                 onRemoteOpen: {
                                                     activeDoorKey = door.key
@@ -640,25 +642,20 @@ struct DoorOpenView: View {
 
                 let deviceUserId = deviceVM.deviceDetails?.deviceUserId,
                 let digitalCardString = deviceVM.deviceDetails?.digitalCardNumber,
-                let digitalCardNumber = Int(digitalCardString),   // 🔥 FIX
+                let digitalCardNumber = Int(digitalCardString),
 
                 (
                     (userid == 0 && cardNumber == 999_999_999) ||
                     (userid == 0 && cardNumber == 0) ||
                     (userid == deviceUserId) ||
-                    (userid != 0 && cardNumber == digitalCardNumber)
+                    (userid != 0 && cardNumber == digitalCardNumber) ||
+                    
+                    (userid == 0 && (info["sn"] as? String).map { deviceVM.allControllerSerials.contains($0)} == true)
                 )
             else {
                 return
             }
 
-
-
-                // ✅ Print both values after guard succeeds
-                print("✅ MQTT userID:", userid)
-                print("✅ Device userID:", deviceUserId)
-            
-            // ⛔ Ignore MQTT if not within active window
             guard DoorManager.shared.shouldProcessMQTTEvent() else {
                 print("🚫 MQTT ignored — outside 20s active window")
                 return
@@ -687,63 +684,69 @@ struct DoorOpenView: View {
             
             if type == 0 {
                 
-                
                 if isRemoteUnlock{
                     guard let sn = sn, let doorId = doorId else { return }
-                    successDoorKey = "\(sn)_\(doorId)"
+                    
+                    let key = "\(sn)_\(doorId)"
+                        remoteMqttResult = RemoteMQTTResult(
+                            doorKey: key,
+                            isSuccess: true,
+                            message: grantedBase
+                    )
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
-//                    speakText(remoteAccessMessage)
-//                    overlayMessage = remoteAccessMessage
                     speakText(accessGrantedMessage)
-                    overlayMessage = accessGrantedMessage
                 }else{
                     animateSuccess()
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    
                     AceesMessage =  accessGrantedMessage
                     speakText(accessGrantedMessage)
                     overlayMessage = accessGrantedMessage
-                    print("succes event recievd")
                 }
                 
             }
-            else if type == 19 {
+            else if type == 19 { //ble unlock
                 guard let sn = sn, let doorId = doorId else { return }
-                successDoorKey = "\(sn)_\(doorId)"
+                let key = "\(sn)_\(doorId)"
+                    remoteMqttResult = RemoteMQTTResult(
+                        doorKey: key,
+                        isSuccess: true,
+                        message: grantedBase
+                    )
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-//                speakText(remoteAccessMessage)
-//                overlayMessage = remoteAccessMessage
                 speakText(accessGrantedMessage)
-                overlayMessage = accessGrantedMessage
-                
             }
-            else if type == 126 {
-                print("Ignore event-device startup")
-                return
-                
-            }
-            
-            else if type == 8 {
+            else if type == 8 { //wifi unlock
                 guard let sn = sn, let doorId = doorId else { return }
-                successDoorKey = "\(sn)_\(doorId)"
+                let key = "\(sn)_\(doorId)"
+                    remoteMqttResult = RemoteMQTTResult(
+                        doorKey: key,
+                        isSuccess: true,
+                        message: grantedBase
+                    )
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-//                speakText(remoteAccessMessage)
-//                overlayMessage = remoteAccessMessage
                 speakText(accessGrantedMessage)
-                overlayMessage = accessGrantedMessage
-                
             }
             else if let type = type, deniedTypes.contains(type) {
-                // ✅ ONLY real denial codes come here
-                animateFailure()
-                UINotificationFeedbackGenerator().notificationOccurred(.error)
-                AceesMessage = accessDeniedMessage
-                overlayMessage = accessDeniedMessage
-                speakText(accessDeniedMessage)
+                if isRemoteUnlock{
+                    guard let sn = sn, let doorId = doorId else { return }
+                    let key = "\(sn)_\(doorId)"
+                    remoteMqttResult = RemoteMQTTResult(
+                        doorKey: key,
+                        isSuccess: false,
+                        message: deniedBase
+                    )
+                    speakText(accessDeniedMessage)
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                }else{
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                    AceesMessage = accessDeniedMessage
+                    overlayMessage = accessDeniedMessage
+                    speakText(accessDeniedMessage)
+                    animateFailure()
+                }
                 
             }
             else {
-                // 🚫 Ignore all other events
                 print("Ignored door event type:", type ?? -1)
                 return
             }

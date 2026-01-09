@@ -7,15 +7,25 @@
 import SwiftUI
 
 
+struct RemoteMQTTResult: Equatable {
+    let doorKey: String
+    let isSuccess: Bool
+    let message: String
+}
+
+
 struct RemoteDoorCardView: View {
     let door: RemoteDoorItem
-    @Binding var successKey: String?
     @Binding var activeDoorKey: String?
+    @Binding var mqttResult: RemoteMQTTResult?
     @Binding var isBluetoothOn: Bool
     @Binding var showBluetoothAlert: Bool
     let onRemoteOpen: () -> Void
     let onBleOpen: () -> Void
-    
+
+    @State private var isResultSuccess: Bool = false
+    @State private var statusMessage: String = ""
+
     
     @State private var wifiWaiting = false
     @State private var bleWaiting = false
@@ -123,17 +133,32 @@ struct RemoteDoorCardView: View {
                 
                 if wifiSuccess || bleSuccess {
                     HStack {
-                        Image(systemName: "checkmark")
-                            .resizable()
-                            .scaledToFit()
-                            .foregroundColor(.green)
-                            .frame(width: 12, height: 12)
-                        
-                        Text("Access Granted!")
-                            .font(.custom("Inter-SemiBold", size: 13))
-                            .foregroundColor(.green)
-                            .multilineTextAlignment(.leading)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if isResultSuccess{
+                            Image(systemName: "checkmark")
+                                .resizable()
+                                .scaledToFit()
+                                .foregroundColor(.green)
+                                .frame(width: 12, height: 12)
+                            
+                            Text(statusMessage)
+                                .font(.custom("Inter-SemiBold", size: 13))
+                                .foregroundColor(.green)
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }else{
+                            Image(systemName: "xmark")
+                                .resizable()
+                                .scaledToFit()
+                                .foregroundColor(.red)
+                                .frame(width: 12, height: 12)
+                            
+                            Text(statusMessage)
+                                .font(.custom("Inter-SemiBold", size: 13))
+                                .foregroundColor(.red)
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
                     }
                 }
                 
@@ -158,12 +183,12 @@ struct RemoteDoorCardView: View {
                                     VStack(spacing: 6) {
                                         Image(systemName: "wifi")
                                             .font(.system(size: 18))
-                                            .foregroundColor(wifiWaiting ? .yellow : wifiSuccess ? .green : .white)
+                                            .foregroundColor(wifiWaiting ? .yellow : wifiSuccess && isResultSuccess ? .green : wifiSuccess && !isResultSuccess ? .red : .white)
                                         
                                         
                                         Text("Open Door")
                                             .font(.custom("Inter-Regular", size: 10))
-                                            .foregroundColor(wifiWaiting ? .yellow : wifiSuccess ? .green : .white)
+                                            .foregroundColor(wifiWaiting ? .yellow : wifiSuccess && isResultSuccess ? .green : wifiSuccess && !isResultSuccess ? .red : .white)
                                     }
                                 }
                            // }
@@ -176,7 +201,8 @@ struct RemoteDoorCardView: View {
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(
-                                    Color.white.opacity(wifiBorderOpacity),
+                                    wifiWaiting ? .yellow.opacity(wifiBorderOpacity) : wifiSuccess && isResultSuccess ? .green.opacity(wifiBorderOpacity) : wifiSuccess && !isResultSuccess ? .red.opacity(wifiBorderOpacity) : .white.opacity(wifiBorderOpacity),
+                                   
                                     lineWidth: 1
                                 )
                         )
@@ -198,14 +224,14 @@ struct RemoteDoorCardView: View {
                                         onBleOpen()
                                     } label: {
                                         VStack(spacing: 6) {
-                                            Image(bleWaiting ? "bluetooth-yellow" : bleSuccess ? "bluetooth-green" : "bluetooth-white")
+                                            Image(bleWaiting ? "bluetooth-yellow" : bleSuccess && isResultSuccess ? "bluetooth-green" :  bleSuccess && !isResultSuccess ? "bluetooth-red" : "bluetooth-white")
                                              .resizable()
                                              .frame(width: 22, height: 22)
                                                
                                             
                                             Text("Open Door")
                                                 .font(.custom("Inter-Regular", size: 10))
-                                                .foregroundColor(bleWaiting ? .yellow : bleSuccess ? .green : .white)
+                                                .foregroundColor(bleWaiting ? .yellow : bleSuccess && isResultSuccess ? .green : bleSuccess && !isResultSuccess ? .red : .white)
                                         }
                                     }
                                // }
@@ -218,7 +244,7 @@ struct RemoteDoorCardView: View {
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
                                     .stroke(
-                                        Color.white.opacity(bleBorderOpacity),
+                                        bleWaiting ? .yellow.opacity(bleBorderOpacity) : bleSuccess && isResultSuccess ? .green.opacity(bleBorderOpacity) : bleSuccess && !isResultSuccess ? .red.opacity(bleBorderOpacity) : .white.opacity(bleBorderOpacity),
                                         lineWidth: 1
                                     )
                             )
@@ -240,14 +266,14 @@ struct RemoteDoorCardView: View {
                                     onRemoteOpen()
                                 } label: {
                                     VStack(spacing: 6) {
-                                        Image(wifiWaiting ? "lock-yellow" : wifiSuccess ? "lock-open-green" : "lock-white")
+                                        Image(wifiWaiting ? "lock-yellow" : wifiSuccess && isResultSuccess ? "lock-open-green" :  wifiSuccess && !isResultSuccess ? "lock-white" : "lock-white")
                                             .resizable()
                                             .frame(width: 22, height: 22)
                                               
                                         
                                         Text("Open Door")
                                             .font(.custom("Inter-Regular", size: 10))
-                                            .foregroundColor(wifiWaiting ? .yellow : wifiSuccess ? .green : .white)
+                                            .foregroundColor(wifiWaiting ? .yellow : wifiSuccess && isResultSuccess ? .green : wifiSuccess && !isResultSuccess ? .red : .white)
                                     }
                                 }
                            // }
@@ -260,7 +286,7 @@ struct RemoteDoorCardView: View {
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(
-                                    Color.white.opacity(wifiBorderOpacity),
+                                    wifiWaiting ? .yellow.opacity(wifiBorderOpacity) : wifiSuccess && isResultSuccess ? .green.opacity(wifiBorderOpacity) : wifiSuccess && !isResultSuccess ? .red.opacity(wifiBorderOpacity) : .white.opacity(wifiBorderOpacity),
                                     lineWidth: 1
                                 )
                         )
@@ -282,13 +308,13 @@ struct RemoteDoorCardView: View {
                                     onBleOpen()
                                 } label: {
                                     VStack(spacing: 6) {
-                                        Image(bleWaiting ? "lock-yellow" : bleSuccess ? "lock-open-green" : "lock-white")
+                                        Image(bleWaiting ? "lock-yellow" : bleSuccess && isResultSuccess ? "lock-open-green" :  bleSuccess && isResultSuccess ? "lock-white" : "lock-white")
                                             .resizable()
                                             .frame(width: 22, height: 22)
                         
                                         Text("Open Door")
                                             .font(.custom("Inter-Regular", size: 10))
-                                            .foregroundColor(bleWaiting ? .yellow : bleSuccess ? .green : .white)
+                                            .foregroundColor(bleWaiting ? .yellow : bleSuccess && isResultSuccess ? .green : bleSuccess && !isResultSuccess ? .red : .white)
                                     }
                                 }
                             //}
@@ -301,7 +327,7 @@ struct RemoteDoorCardView: View {
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(
-                                    Color.white.opacity(bleBorderOpacity),
+                                    bleWaiting ? .yellow.opacity(bleBorderOpacity) : bleSuccess && isResultSuccess ? .green.opacity(bleBorderOpacity) : bleSuccess && !isResultSuccess ? .red.opacity(bleBorderOpacity) : .white.opacity(bleBorderOpacity),
                                     lineWidth: 1
                                 )
                         )
@@ -326,10 +352,14 @@ struct RemoteDoorCardView: View {
                 .stroke(Color.white.opacity(0.15), lineWidth: 1)
         )
         
-        .onChange(of: successKey) { key in
-            guard key == door.key else { return }
+        
+        .onChange(of: mqttResult) { result in
+            guard let result else { return }
+            guard result.doorKey == door.key else { return }
             
-            // 🔥 Decide success type based on active waiting state
+            isResultSuccess = result.isSuccess
+            statusMessage = result.message
+            
             if wifiWaiting {
                 showWifiSuccess()
             } else if bleWaiting {
@@ -337,9 +367,10 @@ struct RemoteDoorCardView: View {
             }
             
             DispatchQueue.main.async {
-                successKey = nil
+                mqttResult = nil
             }
         }
+
         
         
         
@@ -375,7 +406,7 @@ struct RemoteDoorCardView: View {
         let task = DispatchWorkItem {
             wifiSuccess = false
             DispatchQueue.main.async {
-                activeDoorKey = nil   // 👈 unlock other cards
+                activeDoorKey = nil   // unlock other cards
             }
         }
         
@@ -410,7 +441,7 @@ struct RemoteDoorCardView: View {
         let task = DispatchWorkItem {
             bleSuccess = false
             DispatchQueue.main.async {
-                activeDoorKey = nil   // 👈 unlock other cards
+                activeDoorKey = nil   // unlock other cards
             }
         }
         
@@ -423,6 +454,7 @@ struct RemoteDoorCardView: View {
         wifiSuccessTask?.cancel()
         wifiWaiting = false
         wifiSuccess = false
+        mqttResult = nil
     }
     
     private func resetBleState() {
@@ -430,6 +462,7 @@ struct RemoteDoorCardView: View {
         bleSuccessTask?.cancel()
         bleWaiting = false
         bleSuccess = false
+        mqttResult = nil
     }
     
     
