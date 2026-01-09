@@ -17,7 +17,6 @@ struct DoorOpenView: View {
     @StateObject private var deviceVM = DeviceDetailsViewModel()
     @StateObject private var doorManager = DoorManager.shared
     @StateObject private var bleManager = BLEManager()
-  //  private let speechSynthesizer = AVSpeechSynthesizer()
     @State private var animateWave = false
     @State private var showBluetoothAlert = false
     @State private var isAutoOpenEnabled = false
@@ -54,9 +53,6 @@ struct DoorOpenView: View {
     @State private var activeDoorKey: String? = nil
     @State private var remoteMqttResult: RemoteMQTTResult?
 
-
-
-
     @State private var selectedTab = 0
     @State private var isRemoteUnlock = false
     @State private var showDoorErrorAlert = false
@@ -64,7 +60,6 @@ struct DoorOpenView: View {
     @State private var hasDigitalKeyAccess: Bool = false
     @State private var hasRemoteAccess: Bool = false
     @State private var pullToRefresh: Bool = false
-    
     
     
     var body: some View {
@@ -83,6 +78,7 @@ struct DoorOpenView: View {
                             .font(.system(size: 15, weight: .semibold))
                     }
                     .padding(.bottom,8)
+                    .padding(.horizontal,10)
                     .frame(maxWidth: .infinity)
                     .background(Color.red)
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -119,6 +115,7 @@ struct DoorOpenView: View {
                 }
                 .padding(.top, 16)
                 .padding(.bottom, 12)
+                .padding(.horizontal,10)
                 
                 if !hasRemoteAccess && !hasDigitalKeyAccess {
                     
@@ -137,6 +134,7 @@ struct DoorOpenView: View {
                             .padding(.horizontal, 30)
                         
                     }
+                    .padding(.horizontal,10)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .transition(.opacity)
                     
@@ -157,7 +155,7 @@ struct DoorOpenView: View {
                             else if !doorStorage.hasDoor {
                                 VStack(spacing: 12) {
                                     Image(systemName: "lock.slash")
-
+                                    
                                         .font(.system(size: 42))
                                         .foregroundColor(.gray)
                                     
@@ -173,112 +171,174 @@ struct DoorOpenView: View {
                                 }
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .transition(.opacity)
+                                .padding(.horizontal,10)
                             }
                             else{
-                                
-                                ScrollView(.vertical, showsIndicators: false){
-                                    VStack{
-                                        Spacer().frame(height: 20)
+                                ZStack {
+                                    ScrollView(.vertical, showsIndicators: false){
                                         
-                                        VStack(spacing: 20) {
+                                        VStack{
+                                            Spacer().frame(height: 20)
                                             
-                                            // 🪪 Card (centered in the view)
-                                            VStack(spacing: 32) {
-                                                HStack {
-                                                    Text(deviceVM.deviceDetails?.organizationName ?? "")
-                                                        .font(.custom("Inter-SemiBold", size: 16))
-                                                        .foregroundColor(.white)
-                                                    Spacer()
-                                                    Text("NextPro")
-                                                        .font(.custom("Inter-Semibold", size: 16))
-                                                        .foregroundColor(.gray)
-                                                }
+                                            VStack(spacing: 20) {
                                                 
-                                                HStack {
-                                                    Image("dooricon")
-                                                        .resizable()
-                                                        .scaledToFit()
-                                                        .frame(width: 52, height: 48)
-                                                    
-                                                    Spacer()
-                                                    
-                                                    HotspotWaveExact(isActive: $isScanningActive)
-                                                        .frame(width: 60, height: 20)
-                                                }
-                                                
-                                                HStack {
-                                                    VStack(alignment: .leading) {
-                                                        //  Text(selectedCard?.userName ?? "")
-                                                        Text(deviceVM.deviceDetails?.userFullName ?? "")
-                                                            .font(.custom("Inter-Regular", size: 12))
-                                                            .foregroundColor(.gray)
-                                                        
-                                                        Text(maskCardNumber(deviceVM.deviceDetails?.digitalCardNumber ?? ""))
-                                                            .font(.custom("Inter-Regular", size: 12))
-                                                            .foregroundColor(.gray)
-                                                        
-                                                    }
-                                                    
-                                                    Spacer()
-                                                    
-                                                    VStack(alignment: .trailing) {
-                                                        Text("Exp")
-                                                            .font(.custom("Inter-Regular", size: 12))
+                                                // 🪪 Card (centered in the view)
+                                                VStack(spacing: 32) {
+                                                    HStack {
+                                                        Text(deviceVM.deviceDetails?.organizationName ?? "")
+                                                            .font(.custom("Inter-SemiBold", size: 16))
                                                             .foregroundColor(.white)
-                                                        //.toFormattedDate(outputFormat: "yyyy")
-                                                        Text(deviceVM.deviceDetails?.cardExpiryDate?.toFormattedDate() ?? "")
-                                                            .font(.custom("Inter-Regular", size: 12))
+                                                        Spacer()
+                                                        Text("NextPro")
+                                                            .font(.custom("Inter-Semibold", size: 16))
                                                             .foregroundColor(.gray)
                                                     }
+                                                    
+                                                    HStack {
+                                                        Image("dooricon")
+                                                            .resizable()
+                                                            .scaledToFit()
+                                                            .frame(width: 52, height: 48)
+                                                        
+                                                        Spacer()
+                                                        
+                                                        HotspotWaveExact(isActive: $isScanningActive)
+                                                            .frame(width: 60, height: 20)
+                                                    }
+                                                    
+                                                    HStack {
+                                                        VStack(alignment: .leading) {
+                                                            //  Text(selectedCard?.userName ?? "")
+                                                            Text(deviceVM.deviceDetails?.userFullName ?? "")
+                                                                .font(.custom("Inter-Regular", size: 12))
+                                                                .foregroundColor(.gray)
+                                                            
+                                                            Text(maskCardNumber(deviceVM.deviceDetails?.digitalCardNumber ?? ""))
+                                                                .font(.custom("Inter-Regular", size: 12))
+                                                                .foregroundColor(.gray)
+                                                            
+                                                        }
+                                                        
+                                                        Spacer()
+                                                        
+                                                        VStack(alignment: .trailing) {
+                                                            Text("Exp")
+                                                                .font(.custom("Inter-Regular", size: 12))
+                                                                .foregroundColor(.white)
+                                                            //.toFormattedDate(outputFormat: "yyyy")
+                                                            Text(deviceVM.deviceDetails?.cardExpiryDate?.toFormattedDate() ?? "")
+                                                                .font(.custom("Inter-Regular", size: 12))
+                                                                .foregroundColor(.gray)
+                                                        }
+                                                    }
                                                 }
-                                            }
-                                            .padding(20)
-                                            .frame(maxWidth: .infinity)
-                                            .background(
-                                                LinearGradient(
-                                                    gradient: Gradient(colors: [
-                                                        Color.white.opacity(0.09),
-                                                        Color.white.opacity(0.06)
-                                                    ]),
-                                                    startPoint: .top,
-                                                    endPoint: .bottom
+                                                .padding(20)
+                                                .frame(maxWidth: .infinity)
+                                                .background(
+                                                    LinearGradient(
+                                                        gradient: Gradient(colors: [
+                                                            Color.white.opacity(0.09),
+                                                            Color.white.opacity(0.06)
+                                                        ]),
+                                                        startPoint: .top,
+                                                        endPoint: .bottom
+                                                    )
                                                 )
-                                            )
-                                            
-                                            .cornerRadius(14)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 14)
-                                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                                            )
-                                           // .padding(.horizontal, 10)
-                                            
-                                            
-                                            HStack(spacing: 6) {
-                                                // Image("bluetooth")
-                                                // .frame(width: 30,height: 30)
                                                 
-                                                Text(AceesMessage ?? "")
-                                                    .font(.custom("Inter-SemiBold", size: 16))
-                                                    .foregroundColor(isScanningActive ? .white.opacity(0.5) : .red.opacity(0.8))
-                                                    .padding(.horizontal,15)
+                                                .cornerRadius(14)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 14)
+                                                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                                )
+                                               
+                                                
+                                                
+                                                HStack(spacing: 6) {
+                                        
+                                                    Text(AceesMessage ?? "")
+                                                        .font(.custom("Inter-SemiBold", size: 16))
+                                                        .foregroundColor(isScanningActive ? .white.opacity(0.5) : .red.opacity(0.8))
+                                                        .padding(.horizontal,15)
+                                                    
+                                                }
+                                                
+                                                
+                                                HowItWorksView()
+                                                
                                                 
                                             }
-                                            
-                                            
-                                            HowItWorksView()
-                                            
                                             
                                         }
+                                        .padding(.horizontal,10)
+                                        .padding(.bottom, 30)
+                                        
                                         
                                     }
-                                    .padding(.bottom, 30)
-                                    
-                                }.transition(.opacity)
+                                    .transition(.opacity)
                                     .refreshable{
                                         pullToRefresh = true
                                         await deviceVM.refreshDeviceDetails()
                                         pullToRefresh = false
                                     }
+                                    
+                                    if isOpening || progress > 0 || ringColor != .white {
+                                        ZStack {
+                                            // Full-screen black background
+                                            Color.black.opacity(0.96)
+                                                .ignoresSafeArea()
+                                            
+                                            // Lock icon and progress ring in the center
+                                            VStack(spacing: 16) {
+                                                ZStack {
+                                                    Circle()
+                                                        .fill(Color.black)
+                                                        .frame(width: 80, height: 80)
+                                                    
+                                                    Circle()
+                                                        .trim(from: 0, to: progress)
+                                                        .stroke(
+                                                            ringColor,
+                                                            style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                                                        )
+                                                        .frame(width: 80, height: 80)
+                                                        .rotationEffect(.degrees(-90))
+                                                        .animation(.easeInOut(duration: 1.0), value: progress)
+                                                    
+                                                    Image(systemName: lockIcon)
+                                                        .foregroundColor(ringColor)
+                                                        .font(.system(size: 36, weight: .semibold))
+                                                        .scaleEffect(isOpening ? 1.15 : 1.0)
+                                                        .animation(.spring(), value: isOpening)
+                                                    
+                                                    if isUnauthorise {
+                                                        Rectangle()
+                                                            .fill(Color.red)
+                                                            .frame(width: 70, height: 6)   // thickness = 6
+                                                            .rotationEffect(.degrees(45)) // diagonal slash
+                                                    }
+                                                }
+                                                .shadow(color: ringColor.opacity(0.4), radius: 10, x: 0, y: 5)
+                                                
+                                                // Status Message
+                                                
+                                                Text(overlayMessage)
+                                                    .font(.custom("Inter-SemiBold", size: 18))
+                                                    .foregroundColor(ringColor)
+                                                    .padding(.horizontal,10)
+                                                    .id(overlayMessage)
+                                                    .transition(.opacity)
+                                                    .animation(.easeInOut(duration: 0.25), value: overlayMessage)
+                                                
+                                            }
+                                        }
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                        .transition(.opacity)
+                                        .ignoresSafeArea()
+                                        .zIndex(10)
+                                        
+                                    }
+                                }
+                                
                             }
                         }
                         
@@ -305,6 +365,7 @@ struct DoorOpenView: View {
                                 }
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .transition(.opacity)
+                                .padding(.horizontal,10)
                             }
                             
                             else
@@ -330,12 +391,12 @@ struct DoorOpenView: View {
                                             )
                                         }
                                     }
-                                   // .padding(.horizontal, 10)
+                                    .padding(.horizontal, 10)
                                     .padding(.top, 20)
                                     .padding(.bottom, 20)
-                                }.id("remote-tab-\(selectedTab)")
-                                .transition(.opacity)
-                                // Remote Access Tab
+                                }
+                                .id("remote-tab-\(selectedTab)")
+                                    .transition(.opacity)
                                 .refreshable{
                                     pullToRefresh = true
                                     await deviceVM.refreshDeviceDetails()
@@ -349,63 +410,8 @@ struct DoorOpenView: View {
                 }
                 
             }.frame(maxHeight: .infinity, alignment: .top)
-                .padding(.horizontal,10)
             
-            // 🔒 Lock + Progress ring OVERLAY (positioned at center with full-screen background)
-            if isOpening || progress > 0 || ringColor != .white {
-                ZStack {
-                    // Full-screen black background
-                    Color.black.opacity(0.96)
-                        .ignoresSafeArea()
-                    
-                    // Lock icon and progress ring in the center
-                    VStack(spacing: 16) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.black)
-                                .frame(width: 80, height: 80)
-                            
-                            Circle()
-                                .trim(from: 0, to: progress)
-                                .stroke(
-                                    ringColor,
-                                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                                )
-                                .frame(width: 80, height: 80)
-                                .rotationEffect(.degrees(-90))
-                                .animation(.easeInOut(duration: 1.0), value: progress)
-                            
-                            Image(systemName: lockIcon)
-                                .foregroundColor(ringColor)
-                                .font(.system(size: 36, weight: .semibold))
-                                .scaleEffect(isOpening ? 1.15 : 1.0)
-                                .animation(.spring(), value: isOpening)
-                            
-                            if isUnauthorise {
-                                Rectangle()
-                                    .fill(Color.red)
-                                    .frame(width: 70, height: 6)   // thickness = 6
-                                    .rotationEffect(.degrees(45)) // diagonal slash
-                            }
-                        }
-                        .shadow(color: ringColor.opacity(0.4), radius: 10, x: 0, y: 5)
-                        
-                        // Status Message
-                        
-                        Text(overlayMessage)
-                            .font(.custom("Inter-SemiBold", size: 18))
-                            .foregroundColor(ringColor)
-                            .padding(.horizontal,10)
-                            .id(overlayMessage)
-                            .transition(.opacity)
-                            .animation(.easeInOut(duration: 0.25), value: overlayMessage)
-
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .transition(.opacity)
-                .zIndex(10)
-            }
+            
             
             if deviceVM.isLoading && !pullToRefresh{
                 ZStack {
@@ -421,21 +427,16 @@ struct DoorOpenView: View {
             }
             
         }
-       // .background(Color.black.opacity(0.4))
+         .background(Color.black.opacity(0.4))
         .task{
-            
-//            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
-//            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
-            
-
-            
+           
             await deviceVM.fetchDeviceDetailsIfNeeded()
-//            if !deviceVM.issuccess && deviceVM.errorMessage != ""{
-//                doorStorage.clearDoors()          // sets hasResolvedDoors = false ❌ (we’ll fix below)
-//                doorStorage.hasResolvedDoors = true 
-//                showDoorErrorAlert = true
-//            }
-            // Make sure deviceDetails is not nil
+            //            if !deviceVM.issuccess && deviceVM.errorMessage != ""{
+            //                doorStorage.clearDoors()          // sets hasResolvedDoors = false ❌ (we’ll fix below)
+            //                doorStorage.hasResolvedDoors = true
+            //                showDoorErrorAlert = true
+            //            }
+          
             print("Controller Serials:", deviceVM.allControllerSerials)
             
             
@@ -465,7 +466,7 @@ struct DoorOpenView: View {
             isViewVisible = true
             
             mqttManager.connect()
-      
+            
         }
         
         .onAppear {
@@ -505,12 +506,12 @@ struct DoorOpenView: View {
         }
         .onChange(of: deviceVM.errorMessage) { message in
             guard !message.isEmpty else { return }
-
+            
             doorStorage.clearDoors()
             doorStorage.hasResolvedDoors = true
             showDoorErrorAlert = true
         }
-
+        
         .onChange(of: scenePhase) { newPhase in
             switch newPhase {
             case .background:
@@ -537,9 +538,9 @@ struct DoorOpenView: View {
                 }
                 
                 guard selectedTab == 0 else {
-                       print("🚫 Remote Access tab active — BLE restart blocked")
-                       return
-                   }
+                    print("🚫 Remote Access tab active — BLE restart blocked")
+                    return
+                }
                 guard hasDigitalKeyAccess else {
                     print("🚫 Digital Key disabled — BLE restart blocked")
                     return
@@ -575,16 +576,16 @@ struct DoorOpenView: View {
                 break
             }
         }
-
+        
         
         .onChange(of: selectedTab) { newTab in
             resetOverlayState()
             doorManager.clearDoorEvent()
             if newTab != 1 {
-                   //switch tab to reset remote tab view ui
-                    activeDoorKey = nil
-                    successDoorKey = nil
-                }
+                //switch tab to reset remote tab view ui
+                activeDoorKey = nil
+                successDoorKey = nil
+            }
             if newTab == 1 {
                 stopAllScanningAndMonitoring()
                 AceesMessage = "Remote access selected"
@@ -593,14 +594,14 @@ struct DoorOpenView: View {
                     AceesMessage = "Bluetooth is Off. Please turn it on."
                     return
                 }
-
+                
                 AceesMessage = "Preparing Scan..."
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                     startBLEIfPossible()
                 }
             }
         }
-
+        
         
         .onReceive(bleManager.$bleState) { state in
             switch state {
@@ -608,59 +609,59 @@ struct DoorOpenView: View {
                 print("🔴 Bluetooth OFF")
                 AceesMessage = "Bluetooth is Off. Please turn it on."
                 isScanningActive = false
-
+                
             case .poweredOn:
                 print("🟢 Bluetooth ON")
                 AceesMessage = "Preparing Scan..."
-
+                
                 // Small delay ensures CoreBluetooth is fully ready
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     startBLEIfPossible()
                 }
-
+                
             default:
                 AceesMessage = "Checking Bluetooth status..."
             }
         }
-
+        
         
         .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in
-
+            
             
             guard
                 let info = notification.userInfo,
                 let rawUserID = info["userID"],
                 let rawcardNumber = info["cardnumber"],
-
-                let cardNumber = (rawcardNumber as? NSNumber)?.intValue
+                
+                    let cardNumber = (rawcardNumber as? NSNumber)?.intValue
                     ?? (rawcardNumber as? Int)
                     ?? Int(rawcardNumber as? String ?? ""),
-
-                let userid = (rawUserID as? NSNumber)?.intValue
+                
+                    let userid = (rawUserID as? NSNumber)?.intValue
                     ?? (rawUserID as? Int)
                     ?? Int(rawUserID as? String ?? ""),
-
-                let deviceUserId = deviceVM.deviceDetails?.deviceUserId,
+                
+                    let deviceUserId = deviceVM.deviceDetails?.deviceUserId,
                 let digitalCardString = deviceVM.deviceDetails?.digitalCardNumber,
                 let digitalCardNumber = Int(digitalCardString),
-
-                (
-                    (userid == 0 && cardNumber == 999_999_999) ||
-                    (userid == 0 && cardNumber == 0) ||
-                    (userid == deviceUserId) ||
-                    (userid != 0 && cardNumber == digitalCardNumber) ||
-                    
-                    (userid == 0 && (info["sn"] as? String).map { deviceVM.allControllerSerials.contains($0)} == true)
-                )
+                
+                    (
+                        (userid == 0 && cardNumber == 999_999_999) ||
+                        (userid == 0 && cardNumber == 0) ||
+                        (userid == deviceUserId) ||
+                        (userid != 0 && cardNumber == digitalCardNumber) ||
+                        
+                        (userid == 0 && (info["sn"] as? String).map { deviceVM.allControllerSerials.contains($0)} == true)
+                    )
             else {
                 return
             }
-
+            
             guard DoorManager.shared.shouldProcessMQTTEvent() else {
                 print("🚫 MQTT ignored — outside 20s active window")
                 return
             }
-
+            
             
             let type = info["type"] as? Int
             doorId = info["doorID"] as? Int
@@ -688,10 +689,10 @@ struct DoorOpenView: View {
                     guard let sn = sn, let doorId = doorId else { return }
                     
                     let key = "\(sn)_\(doorId)"
-                        remoteMqttResult = RemoteMQTTResult(
-                            doorKey: key,
-                            isSuccess: true,
-                            message: grantedBase
+                    remoteMqttResult = RemoteMQTTResult(
+                        doorKey: key,
+                        isSuccess: true,
+                        message: grantedBase
                     )
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                     speakText(accessGrantedMessage + " - " + accessGreetingMessage)
@@ -726,11 +727,11 @@ struct DoorOpenView: View {
             else if type == 8 { //wifi unlock
                 guard let sn = sn, let doorId = doorId else { return }
                 let key = "\(sn)_\(doorId)"
-                    remoteMqttResult = RemoteMQTTResult(
-                        doorKey: key,
-                        isSuccess: true,
-                        message: grantedBase
-                    )
+                remoteMqttResult = RemoteMQTTResult(
+                    doorKey: key,
+                    isSuccess: true,
+                    message: grantedBase
+                )
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 speakText(accessGrantedMessage + " - " + accessGreetingMessage)
             }
@@ -784,14 +785,14 @@ struct DoorOpenView: View {
         }
         
         .modernAlert(isPresented: $showDoorErrorAlert) {
-              ModernAlertView(
-                  title: "Error!",
-                  message: deviceVM.errorMessage,
-                  isSuccess: false,
-                  buttonTitle: "OK"
-              ) { showDoorErrorAlert = false
-                 
-              }
+            ModernAlertView(
+                title: "Error!",
+                message: deviceVM.errorMessage,
+                isSuccess: false,
+                buttonTitle: "OK"
+            ) { showDoorErrorAlert = false
+                
+            }
         }
         
         .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
@@ -824,15 +825,15 @@ struct DoorOpenView: View {
         guard selectedTab == 0 else { return }
         guard hasDigitalKeyAccess else { return }
         guard bleManager.isBluetoothOn else { return }
-
+        
         print("🟢 Starting BLE scanning")
-
+        
         bleManager.startContinuousScanning()
         isScanningActive = true
         monitorAndAutoOpenNearbyDoor()
     }
-
-
+    
+    
     
     private func handleRemoteOpen(for door: RemoteDoorItem) {
         print("🌐 Remote open tapped for:", door.doorName)
@@ -857,25 +858,25 @@ struct DoorOpenView: View {
     }
     
     
-        private func handleBLEOpen(for door: RemoteDoorItem) {
-            print("📡 BLE open tapped for:", door.doorName)
-    
-            // Ensure BLE is on
-            guard bleManager.isBluetoothOn else {
-                showBluetoothAlert = true
-                return
-            }
-    
-            DoorManager.shared.activateMQTTWindow()
-            isRemoteUnlock = true
-            // Open via BLE
-            guard let sensor = door.sensorDetails else {
-                print("❌ Sensor details missing for door:", door.id)
-                return
-            }
-            doorManager.openSelectedDoor(sensor)
-
+    private func handleBLEOpen(for door: RemoteDoorItem) {
+        print("📡 BLE open tapped for:", door.doorName)
+        
+        // Ensure BLE is on
+        guard bleManager.isBluetoothOn else {
+            showBluetoothAlert = true
+            return
         }
+        
+        DoorManager.shared.activateMQTTWindow()
+        isRemoteUnlock = true
+        // Open via BLE
+        guard let sensor = door.sensorDetails else {
+            print("❌ Sensor details missing for door:", door.id)
+            return
+        }
+        doorManager.openSelectedDoor(sensor)
+        
+    }
     
     
     private var DoorTabSection: some View {
@@ -896,9 +897,9 @@ struct DoorOpenView: View {
                     }
                 }
                 
-//                if hasRemoteAccess {
-//                  
-//                }
+                //                if hasRemoteAccess {
+                //
+                //                }
             }
             .padding(.horizontal, 15)
             .padding(.top,(hasDigitalKeyAccess && hasRemoteAccess) ? 15 : 0)
@@ -915,15 +916,15 @@ struct DoorOpenView: View {
                         .animation(.easeInOut(duration: 0.07), value: selectedTab)
                         .padding(.horizontal,20)
                 } else {
-//                    Rectangle()
-//                        .fill(Color.white)
-//                        .frame(width: UIScreen.main.bounds.width - 40, height: 2)
-//                        .animation(.easeInOut(duration: 0.07), value: selectedTab)
-//                        .padding(.horizontal,20)
+                    //                    Rectangle()
+                    //                        .fill(Color.white)
+                    //                        .frame(width: UIScreen.main.bounds.width - 40, height: 2)
+                    //                        .animation(.easeInOut(duration: 0.07), value: selectedTab)
+                    //                        .padding(.horizontal,20)
                 }
             }
             .padding(.top, 10)
-            .padding(.bottom, 10)
+            //.padding(.bottom, 10)
         }
     }
     
@@ -942,7 +943,7 @@ struct DoorOpenView: View {
         AceesMessage = "Scanning paused"
         
     }
- 
+    
     
     private func updateVoiceMessages(for doorName: String?) {
         let cleanName = doorName?
@@ -1003,13 +1004,13 @@ struct DoorOpenView: View {
     // ❌ Failure → red, then reset
     func animateFailure() {
         animationResetTask?.cancel()
-        isRemoteUnlock = false 
+        isRemoteUnlock = false
         withAnimation(.easeInOut(duration: 0.3)) {
             ringColor = .red
             lockIcon = "xmark"
             isOpening = false
             progress = 1.0
-           // overlayMessage = isRemoteUnlock ? "Remote Unlock Failed" : accessDeniedMessage
+            // overlayMessage = isRemoteUnlock ? "Remote Unlock Failed" : accessDeniedMessage
             
         }
         scheduleReset()
@@ -1054,12 +1055,12 @@ struct DoorOpenView: View {
         animationResetTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0, execute: task)
     }
-
+    
     
     func speakText(_ text: String) {
         SpeechManager.shared.speak(text)
     }
-
+    
     
     func monitorAndAutoOpenNearbyDoor() {
         AceesMessage = "Walk closer to the door"
