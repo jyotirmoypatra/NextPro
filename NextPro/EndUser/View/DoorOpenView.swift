@@ -705,15 +705,23 @@ struct DoorOpenView: View {
                 
             }
             else if type == 19 { //ble unlock
-                guard let sn = sn, let doorId = doorId else { return }
-                let key = "\(sn)_\(doorId)"
+                if isRemoteUnlock{
+                    guard let sn = sn, let doorId = doorId else { return }
+                    let key = "\(sn)_\(doorId)"
                     remoteMqttResult = RemoteMQTTResult(
                         doorKey: key,
                         isSuccess: true,
                         message: grantedBase
                     )
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
-                speakText(accessGrantedMessage)
+                    speakText(accessGrantedMessage)
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                }else{
+                    animateSuccess()
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    AceesMessage =  accessGrantedMessage
+                    speakText(accessGrantedMessage)
+                    overlayMessage = accessGrantedMessage
+                }
             }
             else if type == 8 { //wifi unlock
                 guard let sn = sn, let doorId = doorId else { return }

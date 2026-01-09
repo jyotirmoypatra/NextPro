@@ -223,50 +223,50 @@ struct SelectDeviceView: View {
         }
 
         // STEP 2: Continue with device check
-       
+        startDeviceScan(serial: device.serial)
 
-        let isTCDevice = device.modelName.uppercased().hasPrefix("TC")
-        
-        // TC434 → BLE proximity scan (20s)
-            if isTCDevice {
-                startTC434Scan(serial: device.serial)
-                return
-            }
-            
-        isCheckingDevice = true
-        
-            let devModel = LibDevModel()
-            devModel.devSn = device.serial
-            devModel.devMac = device.mac
-            devModel.eKey = device.key
-            devModel.devType = Int32(device.devType ?? 13)
-            
-            let ret = LibDevModel.getDeviceSignal(devModel) { ret, msgDict in
-                DispatchQueue.main.async {
-                    isCheckingDevice = false
-                    
-                    if ret == 0, let rssi = msgDict?["signal"] as? NSNumber {
-                        print("Device RSSI:", rssi)
-                        navigateToWiFiListView = true
-                    } else {
-                        icon = "power-off"
-                        alertMessage =
-                        "The selected device is currently not powered on.\nPlease turn on the device to proceed."
-                        showDeviceOfflineAlert = true
-                    }
-                }
-            }
-            
-            if ret != 0 {
-                isCheckingDevice = false
-                icon = "power-off"
-                alertMessage =
-                "The selected device is currently not powered on.\nPlease turn on the device to proceed."
-                showDeviceOfflineAlert = true
-            }
+//        let isTCDevice = device.modelName.uppercased().hasPrefix("TC")
+//        
+//        // TC434 → BLE proximity scan (20s)
+//            if isTCDevice {
+//                startDeviceScan(serial: device.serial)
+//                return
+//            }
+//            
+//        isCheckingDevice = true
+//        
+//            let devModel = LibDevModel()
+//            devModel.devSn = device.serial
+//            devModel.devMac = device.mac
+//            devModel.eKey = device.key
+//            devModel.devType = Int32(device.devType ?? 13)
+//            
+//            let ret = LibDevModel.getDeviceSignal(devModel) { ret, msgDict in
+//                DispatchQueue.main.async {
+//                    isCheckingDevice = false
+//                    
+//                    if ret == 0, let rssi = msgDict?["signal"] as? NSNumber {
+//                        print("Device RSSI:", rssi)
+//                        navigateToWiFiListView = true
+//                    } else {
+//                        icon = "power-off"
+//                        alertMessage =
+//                        "The selected device is currently not powered on.\nPlease turn on the device to proceed."
+//                        showDeviceOfflineAlert = true
+//                    }
+//                }
+//            }
+//            
+//            if ret != 0 {
+//                isCheckingDevice = false
+//                icon = "power-off"
+//                alertMessage =
+//                "The selected device is currently not powered on.\nPlease turn on the device to proceed."
+//                showDeviceOfflineAlert = true
+//            }
         
     }
-    private func startTC434Scan(serial: String) {
+    private func startDeviceScan(serial: String) {
         isCheckingDevice = true
         tcDeviceFound = false
 
