@@ -43,7 +43,7 @@ struct RemoteDoorCardView: View {
     
     private var isAdmin: Bool {
         //  UserDefaults.standard.bool(forKey: "is_admin")
-        true
+        false
     }
     
     private var hasWIFIAccess: Bool {
@@ -266,7 +266,7 @@ struct RemoteDoorCardView: View {
                                     onRemoteOpen()
                                 } label: {
                                     VStack(spacing: 6) {
-                                        Image(wifiWaiting ? "lock-yellow" : wifiSuccess && isResultSuccess ? "lock-open-green" :  wifiSuccess && !isResultSuccess ? "lock-white" : "lock-white")
+                                        Image(wifiWaiting ? "lock-yellow" : wifiSuccess && isResultSuccess ? "lock-open-green" :  wifiSuccess && !isResultSuccess ? "lock-red" : "lock-white")
                                             .resizable()
                                             .frame(width: 22, height: 22)
                                               
@@ -308,7 +308,7 @@ struct RemoteDoorCardView: View {
                                     onBleOpen()
                                 } label: {
                                     VStack(spacing: 6) {
-                                        Image(bleWaiting ? "lock-yellow" : bleSuccess && isResultSuccess ? "lock-open-green" :  bleSuccess && isResultSuccess ? "lock-white" : "lock-white")
+                                        Image(bleWaiting ? "lock-yellow" : bleSuccess && isResultSuccess ? "lock-open-green" :  bleSuccess && isResultSuccess ? "lock-red" : "lock-white")
                                             .resizable()
                                             .frame(width: 22, height: 22)
                         
