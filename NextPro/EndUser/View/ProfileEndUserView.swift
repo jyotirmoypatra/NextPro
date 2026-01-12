@@ -259,8 +259,19 @@ struct ProfileEndUserView: View {
                 .navigationBarHidden(true)
                 .interactiveDismissDisabled(true)
         }
-        .onReceive(NetworkManager.shared.$hasInternet) { internet in
-            if internet == true {
+//        .onReceive(NetworkManager.shared.$hasInternet) { internet in
+//            if internet == true {
+//                Task {
+//                    await viewModel.fetchUserProfile()
+//                }
+//            }
+//        }
+        
+        .onReceive(NetworkManager.shared.$hasInternet) { hasInternet in
+            guard hasInternet else { return }
+
+            // Retry ONLY if previous failure was due to no internet
+            if viewModel.isFailedDueToNoInternet {
                 Task {
                     await viewModel.fetchUserProfile()
                 }
