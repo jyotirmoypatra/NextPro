@@ -69,8 +69,8 @@ struct LoginView: View {
                             VStack(spacing: 5) {
                                 Image("zylx")
                                  .resizable()
-                                 .frame(width: 110, height: 110)
-                                 .padding(.bottom,20)
+                                 .frame(width: 240, height: 93)
+                                 .padding(.bottom,40)
                              
                                 Text(isUserInitialSetupDone ? "LOG IN TO YOUR ACCOUNT" : "SETUP YOUR ACCOUNT")
                                     .font(.custom("Inter-SemiBold", size: 20))

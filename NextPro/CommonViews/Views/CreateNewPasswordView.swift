@@ -76,8 +76,8 @@ struct CreateNewPasswordView: View {
                                 if (comingFrom == "validate_email"){
                                     Image("zylx")
                                         .resizable()
-                                        .frame(width: 110, height: 110)
-                                        .padding(.bottom,20)
+                                        .frame(width: 240, height: 93)
+                                        .padding(.bottom,40)
                                 }
                                 
                                 Text(
