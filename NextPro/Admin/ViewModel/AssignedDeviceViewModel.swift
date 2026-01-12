@@ -77,9 +77,9 @@ final class AssignedDeviceViewModel: ObservableObject {
                     
                     //stored alredy configured deviced
                     alredayConfiguredDeviceList.removeAll()
-                    let allDevices = response.devices ?? []
+                    let allDevices = response.data ?? []
                     alredayConfiguredDeviceList = allDevices.filter {
-                        $0.isConfigured == false
+                        $0.isConfigured == true
                     }
                     // START HEARTBEAT TIMER HERE
                     startHeartbeatLoop()

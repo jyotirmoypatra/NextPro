@@ -1079,49 +1079,49 @@ class NetworkManager: ObservableObject {
 //        }
 //    }
 
-    func AssignDeviceList(userID: String) async throws -> AssignDeviceListResponse {
-
-        let url = URL(string: APIConfig.url(APIConfig.Endpoints.adminAssignDeviceList))!
-
-        return try await performRequest(
-            url: url,
-            method: "POST",
-            body: [
-                "user_id": userID
-            ],
-            responseType: AssignDeviceListResponse.self
-        )
-    }
-
-    
-//    func AssignDeviceList(
-//        userID: String,
-//        page: Int = 1,
-//        pageSize: Int = 10
-//    ) async throws -> AssignDeviceListResponse {
+//    func AssignDeviceList(userID: String) async throws -> AssignDeviceListResponse {
 //
-//        var components = URLComponents(
-//            string: APIConfig.url(APIConfig.Endpoints.adminConfigureDeviceList)
-//        )!
+//        let url = URL(string: APIConfig.url(APIConfig.Endpoints.adminAssignDeviceList))!
 //
-//        components.queryItems = [
-//            URLQueryItem(name: "user_id", value: userID),
-//            URLQueryItem(name: "page", value: "\(page)"),
-//            URLQueryItem(name: "page_size", value: "\(pageSize)")
-//        ]
-//
-//        guard let url = components.url else {
-//            throw APIError.invalidURL
-//        }
-//
-//        print("Admin Device list Api called----")
 //        return try await performRequest(
 //            url: url,
-//            method: "GET",
-//            requiresAuth: true,
+//            method: "POST",
+//            body: [
+//                "user_id": userID
+//            ],
 //            responseType: AssignDeviceListResponse.self
 //        )
 //    }
+
+    
+   func AssignDeviceList(
+        userID: String,
+        page: Int = 1,
+        pageSize: Int = 10
+    ) async throws -> AssignDeviceListResponse {
+
+        var components = URLComponents(
+            string: APIConfig.url(APIConfig.Endpoints.adminConfigureDeviceList)
+        )!
+
+        components.queryItems = [
+            URLQueryItem(name: "user_id", value: userID),
+            URLQueryItem(name: "page", value: "\(page)"),
+            URLQueryItem(name: "page_size", value: "\(pageSize)")
+        ]
+
+        guard let url = components.url else {
+            throw APIError.invalidURL
+        }
+
+        print("Admin Device list Api called----")
+        return try await performRequest(
+            url: url,
+            method: "GET",
+            requiresAuth: true,
+            responseType: AssignDeviceListResponse.self
+        )
+    }
 
 
     

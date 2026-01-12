@@ -75,8 +75,8 @@ class LoginViewModel: ObservableObject {
                 print("✅ Login success")
                 
                 // Update values
-               // is_admin = response.is_admin ?? false
-                is_admin = true
+                is_admin = response.is_admin ?? false
+                //is_admin = true
                 userName = response.username ?? ""
                 isPasswordReset = response.is_reset_password ?? true
                 loginSuccess = true
@@ -95,8 +95,8 @@ class LoginViewModel: ObservableObject {
                 UserDefaults.standard.set(response.facility_id ?? "", forKey: "facility_id")
                 UserDefaults.standard.set(response.username ?? "", forKey: "username")
                 UserDefaults.standard.set(response.user_type ?? "", forKey: "user_type")
-               // UserDefaults.standard.set(response.is_admin ?? false, forKey: "is_admin")
-                UserDefaults.standard.set(true, forKey: "is_admin")
+                UserDefaults.standard.set(response.is_admin ?? false, forKey: "is_admin")
+                //UserDefaults.standard.set(true, forKey: "is_admin")
                 UserDefaults.standard.set(response.is_reset_password ?? true, forKey: "isPssswordReset")
                 UserDefaults.standard.set(true, forKey: "isUserInitialSetupCompleted")
                

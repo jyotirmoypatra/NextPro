@@ -147,7 +147,7 @@ struct DeviceAdminTabView: View {
         }
         .navigationBarHidden(true)
         .navigationDestination(isPresented: $navigateToDeviceScanView) {
-            SelectDeviceView(devices: assignDeviceVM.assignDeviceDetails?.devices ?? [])
+            SelectDeviceView(devices: assignDeviceVM.assignDeviceDetails?.data ?? [])
         }
         .navigationDestination(isPresented: $navigateToDeviceInfoView) {
             if let device = selectedDevice {

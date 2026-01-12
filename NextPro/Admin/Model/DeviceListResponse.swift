@@ -9,7 +9,7 @@ import Foundation
 struct AssignDeviceListResponse: Codable {
     let status: Bool
     let message: String
-    let devices: [AssignDevice]?
+    let data: [AssignDevice]?
 }
 
 struct AssignDevice: Codable, Identifiable  {
