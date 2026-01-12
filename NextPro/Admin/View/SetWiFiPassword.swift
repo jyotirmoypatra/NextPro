@@ -11,16 +11,18 @@ import SwiftUI
 struct SetWiFiPassword: View {
     var selectedDevice: AssignDevice
     var selectedWiFiNetwork: String
-
-    @State private var showAdvanced = true
+    
+    @StateObject private var successVM = SuccessConfigViewModel()
     @State private var navigateToSuccessView = false
     @Environment(\.dismiss) private var dismiss
     @State private var password = ""
     @State private var port = "6010"
     @State private var isConfiguring = false
     @State private var showPassword = false
+    @State private var showError = false
     @State private var statusMessage = ""
-   
+    @State private var loadingMessage = ""
+    
     
     var body: some View {
         // Use GeometryReader to define a fixed, full-screen container
@@ -47,15 +49,15 @@ struct SetWiFiPassword: View {
                                 Image(systemName: "chevron.left")
                                     .font(.system(size: 18, weight: .semibold))
                                     .foregroundColor(.white)
-
+                                
                                 Text("Back")
                                     .foregroundColor(.white)
                                     .font(.custom("Inter-SemiBold", size: 16))
                             }
                         }
-
+                        
                         Spacer()
-
+                        
                         Image(systemName: "info.circle")
                             .resizable()
                             .frame(width: 24, height: 24)
@@ -79,7 +81,7 @@ struct SetWiFiPassword: View {
                                 .font(.system(size: 14))
                                 .foregroundColor(.red)
                         }
-                    
+                        
                         
                         ZStack(alignment: .trailing) {
                             ZStack(alignment: .leading) {
@@ -120,7 +122,7 @@ struct SetWiFiPassword: View {
                     }
                     .padding(.top, 30)
                     
-                   
+                    
                     
                     // Loading / Status Message
                     if isConfiguring {
@@ -130,7 +132,7 @@ struct SetWiFiPassword: View {
                                 lineWidth: 3,
                                 size: 50
                             )
-                            Text("You are almost there!")
+                            Text(loadingMessage)
                                 .font(.custom("Inter-Medium", size: 16))
                                 .foregroundColor(.white)
                                 .multilineTextAlignment(.center)
@@ -138,16 +140,9 @@ struct SetWiFiPassword: View {
                         }.padding(.top,20)
                     }
                     
-                    if !statusMessage.isEmpty {
-                        Text(statusMessage)
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
-                    
                     Spacer() // Pushes everything above it to the top
                     
-        
+                    
                     Button {
                         configureWiFi()
                     } label: {
@@ -158,7 +153,7 @@ struct SetWiFiPassword: View {
                             .padding()
                     }
                     .background(isConfiguring || password.isEmpty ? Color.gray : Color.white)
-                    .cornerRadius(12)   
+                    .cornerRadius(12)
                     .padding(.bottom, 10)
                     .disabled(isConfiguring || password.isEmpty)
                     .navigationDestination(isPresented: $navigateToSuccessView) {
@@ -181,6 +176,15 @@ struct SetWiFiPassword: View {
         }
         .navigationBarBackButtonHidden(true)
         .ignoresSafeArea(.keyboard, edges: .bottom) // The key to stop resize
+        
+        .modernAlert(isPresented: $showError) {
+            ModernAlertView(
+                title: "Error!",
+                message: statusMessage,
+                isSuccess: false,
+                buttonTitle: "OK"
+            ) { showError = false }
+        }
     }
     // MARK: - WiFi Configuration
     private func configureWiFi() {
@@ -188,23 +192,60 @@ struct SetWiFiPassword: View {
             statusMessage = "Please enter Wi-Fi password."
             return
         }
-
+        
         isConfiguring = true
-        //statusMessage = "Configuring Wi-Fi for device..."
-
+        statusMessage = ""
+        loadingMessage = "You are almost there!"
+        
         WiFiConfigureManager.configureDeviceWiFi(
             device: selectedDevice,
             wifiName: selectedWiFiNetwork,
             wifiPassword: password,
         ) { success, message in
-            isConfiguring = false
-            statusMessage = message
             
-            if success {
-                navigateToSuccessView = true
+            Task { @MainActor in
+                
+                statusMessage = message
+                loadingMessage = message
+                // ⏱ 1 second delay HERE
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                
+                if success {
+                    // navigateToSuccessView = true
+                    //WiFi configured → now call API
+                    loadingMessage = "Saving Device Configuration to Cloud..."
+                    
+                    await successVM.successConfig(
+                        isSuccess: true,
+                        deviceSerial: selectedDevice.serial
+                    )
+                    
+                    if successVM.success && successVM.errorMessage == nil {
+                        isConfiguring = false
+                        loadingMessage = ""
+                        navigateToSuccessView = true
+                        
+                    } else {
+                        isConfiguring = false
+                        loadingMessage = ""
+                        statusMessage = successVM.errorMessage ?? "Something went wrong"
+                        showError = true
+                    }
+                    //  }
+                }else{
+                    // WiFi failed
+                    
+                    isConfiguring = false
+                    loadingMessage = ""
+                    statusMessage = message
+                    showError = true
+                    
+                    
+                    
+                }
             }
         }
     }
-
+    
 }
 

@@ -751,6 +751,62 @@ class NetworkManager: ObservableObject {
             throw APIError.network(error.localizedDescription)
         }
     }
+    
+    func successDeviceConfig(isSuccess: Bool, deviceSerial:String) async throws -> successDeviceConfigResposne {
+
+        let urlString = APIConfig.url(APIConfig.Endpoints.successWifiConfig)
+        print("🔗 URL: \(urlString)")
+
+        guard let url = URL(string: urlString) else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+
+        let params:[String: Any] = [
+            "is_configured": isSuccess,
+            "device_serial" :  deviceSerial
+        ] 
+        print("📤 Params: \(params)")
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: params)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("📥 Success Wifi Config Response JSON:\n\(jsonString)")
+            }
+
+            guard let http = response as? HTTPURLResponse else {
+                throw APIError.invalidResponse
+            }
+
+            // Handle non-200 responses
+            guard (200...299).contains(http.statusCode) else {
+                let message = extractErrorMessage(from: data) ?? "Something went wrong."
+                throw APIError.serverError(code: http.statusCode, message: message)
+            }
+
+            // Decode always
+            let decoded = try JSONDecoder().decode(successDeviceConfigResposne.self, from: data)
+
+            // Backend sometimes gives 200 with status=false
+            if decoded.status == false {
+                throw APIError.backend(message: decoded.message)
+            }
+
+            return decoded
+
+        } catch let err as APIError {
+            throw err
+        } catch {
+            throw APIError.network(error.localizedDescription)
+        }
+    }
+
 
 }
 

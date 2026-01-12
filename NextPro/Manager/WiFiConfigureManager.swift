@@ -87,14 +87,14 @@ class WiFiConfigureManager {
                         print("   msg:", wifiMsg ?? [:])
 
                         if wifiRet == 0 {
-                            completion(true, "✅ TC device WiFi configured successfully")
+                            completion(true, "Wi-Fi credentials sent to device")
                         } else {
-                            completion(false, "❌ TC WiFi config failed (code \(wifiRet))")
+                            completion(false, "WiFi config failed (code \(wifiRet))")
                         }
                     }
 
                     if wifiStartRet != 0 {
-                        completion(false, "❌ Failed to start WiFi config (code \(wifiStartRet))")
+                        completion(false, "Failed to start WiFi config (code \(wifiStartRet))")
                     }
                 }
 
@@ -105,7 +105,7 @@ class WiFiConfigureManager {
             }
 
             if startRet != 0 {
-                completion(false, "❌ Failed to start server IP config (code \(startRet))")
+                completion(false, "Failed to start server IP config (code \(startRet))")
             }
 
             return
@@ -130,7 +130,7 @@ class WiFiConfigureManager {
             print("   msg:", msgDict ?? [:])
 
             if retCode == 0 {
-                completion(true, "✅ Wi-Fi configured successfully")
+                completion(true, "Wi-Fi credentials sent to device")
             } else {
 
                 let errorMsg: String
@@ -144,12 +144,12 @@ class WiFiConfigureManager {
                 default: errorMsg = "Error code \(retCode)"
                 }
 
-                completion(false, "❌ Wi-Fi config failed: \(errorMsg)")
+                completion(false, "Wi-Fi config failed: \(errorMsg)")
             }
         }
 
         if ret != 0 {
-            completion(false, "❌ Failed to start Wi-Fi config (code \(ret))")
+            completion(false, "Failed to start Wi-Fi config (code \(ret))")
         }
     }
 }

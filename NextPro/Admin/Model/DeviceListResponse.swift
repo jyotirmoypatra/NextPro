@@ -35,3 +35,9 @@ struct AssignDevice: Codable, Identifiable  {
         case status
     }
 }
+
+
+struct successDeviceConfigResposne: Codable {
+    let status: Bool
+    let message: String
+}
