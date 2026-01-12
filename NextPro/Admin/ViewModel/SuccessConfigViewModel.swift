@@ -18,19 +18,24 @@ class SuccessConfigViewModel: ObservableObject {
     private let networkManager = NetworkManager.shared
 
     
-    func successConfig(isSuccess: Bool,deviceSerial: String) async {
+    func successConfig(isSuccess: Bool,deviceSerial: String,wifiSSid:String,wifiPass:String) async {
         
         guard networkManager.hasInternet else {
             errorMessage = "No internet connection."
             return
         }
 
+        guard let userId = UserDefaults.standard.string(forKey: "user_id") else {
+            errorMessage = "User ID missing!"
+            return
+        }
+        
         isLoading = true
         errorMessage = nil
         
 
         do {
-            let response = try await networkManager.successDeviceConfig(isSuccess: isSuccess,deviceSerial:deviceSerial)
+            let response = try await networkManager.successDeviceConfig(userId: userId, isSuccess: isSuccess, deviceSerial: deviceSerial, ssid: wifiSSid, password: wifiPass)
             print("✅ Device Config Successfully: \(response.message)")
             success = true
         } catch {

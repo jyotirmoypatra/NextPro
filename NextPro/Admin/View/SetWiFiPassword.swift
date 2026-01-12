@@ -217,7 +217,9 @@ struct SetWiFiPassword: View {
                     
                     await successVM.successConfig(
                         isSuccess: true,
-                        deviceSerial: selectedDevice.serial
+                        deviceSerial: selectedDevice.serial,
+                        wifiSSid: selectedWiFiNetwork,
+                        wifiPass: password
                     )
                     
                     if successVM.success && successVM.errorMessage == nil {

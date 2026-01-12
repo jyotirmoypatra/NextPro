@@ -752,7 +752,7 @@ class NetworkManager: ObservableObject {
         }
     }
     
-    func successDeviceConfig(isSuccess: Bool, deviceSerial:String) async throws -> successDeviceConfigResposne {
+    func successDeviceConfig(userId:String,isSuccess: Bool, deviceSerial:String,ssid:String,password:String) async throws -> successDeviceConfigResposne {
 
         let urlString = APIConfig.url(APIConfig.Endpoints.successWifiConfig)
         print("🔗 URL: \(urlString)")
@@ -765,9 +765,13 @@ class NetworkManager: ObservableObject {
         request.httpMethod = "POST"
 
         let params:[String: Any] = [
+            "user_id" : userId,
+            "device_serial" :  deviceSerial,
+            "wifi_ssid_name" : ssid,
+            "wifi_password": password,
             "is_configured": isSuccess,
-            "device_serial" :  deviceSerial
-        ] 
+            
+        ]
         print("📤 Params: \(params)")
 
         request.httpBody = try JSONSerialization.data(withJSONObject: params)
