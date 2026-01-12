@@ -75,8 +75,8 @@ class LoginViewModel: ObservableObject {
                 print("✅ Login success")
                 
                 // Update values
-                is_admin = response.is_admin ?? false
-               // is_admin = true
+               // is_admin = response.is_admin ?? false
+                is_admin = true
                 userName = response.username ?? ""
                 isPasswordReset = response.is_reset_password ?? true
                 loginSuccess = true

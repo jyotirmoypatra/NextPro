@@ -15,6 +15,7 @@ final class AssignedDeviceViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var issuccess = false
     @Published var hasLoadedOnce = false
+    @Published var isFailedDueToNoInternet = false
     @Published var assignDeviceDetails: AssignDeviceListResponse?
     @Published var alredayConfiguredDeviceList: [AssignDevice] = []
     private let networkManager = NetworkManager.shared
@@ -48,6 +49,15 @@ final class AssignedDeviceViewModel: ObservableObject {
         fetchTask?.cancel()
 
         fetchTask = Task { @MainActor in
+            
+            guard networkManager.hasInternet else {
+               errorMessage = nil
+                isFailedDueToNoInternet = true
+                return
+            }
+            
+            
+            isFailedDueToNoInternet = false
             errorMessage = nil
             isLoading = true
             

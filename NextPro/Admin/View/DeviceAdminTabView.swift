@@ -168,16 +168,32 @@ struct DeviceAdminTabView: View {
             print("Heartbeat stopped!!!!!")
         }
 
-        .modernAlert(isPresented: $showAssignDeviceVMErrorAlert) {
-              ModernAlertView(
-                  title: "Error!",
-                  message: assignDeviceVM.errorMessage ?? "Something went wrong!",
-                  isSuccess: false,
-                  buttonTitle: "OK"
-              ) { showAssignDeviceVMErrorAlert = false
-                 
-              }
+        .onReceive(NetworkManager.shared.$hasInternet) { hasInternet in
+            guard hasInternet else { return }
+
+            // Retry ONLY if previous failure was due to no internet
+            if assignDeviceVM.isFailedDueToNoInternet {
+                Task {
+                    await assignDeviceVM.fetchAssignDevice()
+                }
+            }
         }
+
+        .modernAlert(
+                isPresented: Binding(
+                    get: { showAssignDeviceVMErrorAlert && !assignDeviceVM.isFailedDueToNoInternet },
+                    set: { showAssignDeviceVMErrorAlert = $0 }
+                )
+            ) {
+                ModernAlertView(
+                    title: "Error!",
+                    message: assignDeviceVM.errorMessage ?? "Something went wrong!",
+                    isSuccess: false,
+                    buttonTitle: "OK"
+                ) {
+                    showAssignDeviceVMErrorAlert = false
+                }
+            }
     }
 }
 
