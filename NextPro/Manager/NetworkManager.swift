@@ -111,6 +111,7 @@ class NetworkManager: ObservableObject {
         responseType: T.Type
     ) async throws -> T {
 
+        print("API : \n----> \(url)")
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")

@@ -61,7 +61,8 @@ struct DoorOpenView: View {
     @State private var hasRemoteAccess: Bool = false
     @State private var pullToRefresh: Bool = false
     
-    
+    @State private var didReceiveResponse = false
+
     var body: some View {
         ZStack {
             
@@ -662,7 +663,7 @@ struct DoorOpenView: View {
                 return
             }
             
-            
+            didReceiveResponse = true
             let type = info["type"] as? Int
             doorId = info["doorID"] as? Int
             let sn = info["sn"] as? String
@@ -809,6 +810,16 @@ struct DoorOpenView: View {
         }
     }
     
+//    private func resetOverlayState() {
+//        animationResetTask?.cancel()
+//        isOpening = false
+//        progress = 0
+//        ringColor = .white
+//        lockIcon = "lock.fill"
+//        overlayMessage = ""
+//        isUnauthorise = false
+//        isRemoteUnlock = false
+//    }
     private func resetOverlayState() {
         animationResetTask?.cancel()
         isOpening = false
@@ -818,7 +829,9 @@ struct DoorOpenView: View {
         overlayMessage = ""
         isUnauthorise = false
         isRemoteUnlock = false
+        AceesMessage = "Walk closer to the door."
     }
+
     
     private func startBLEIfPossible() {
         guard isViewVisible else { return }
@@ -974,7 +987,7 @@ struct DoorOpenView: View {
         
         // Cancel previous reset (important)
         animationResetTask?.cancel()
-        
+        didReceiveResponse = false
         
         withAnimation(.easeInOut(duration: 0.3)) {
             ringColor = .yellow
@@ -986,8 +999,34 @@ struct DoorOpenView: View {
         withAnimation(.linear(duration: 1.5)) {
             progress = 1.0
         }
-        scheduleReset()
+        //scheduleReset()
+        scheduleTimeoutCheck()
     }
+    func scheduleTimeoutCheck() {
+        animationResetTask?.cancel()
+
+        let task = DispatchWorkItem {
+            // ❌ No response received in 5 sec
+            guard !didReceiveResponse else { return }
+
+            withAnimation(.easeInOut(duration: 0.3)) {
+                ringColor = .red
+                lockIcon = "xmark"
+                overlayMessage = "No response received from the door"
+                isOpening = false
+                progress = 1.0
+            }
+
+            // Reset after 2 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                resetOverlayState()
+            }
+        }
+
+        animationResetTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0, execute: task)
+    }
+
     func animateSuccess() {
         
         animationResetTask?.cancel()
@@ -1001,7 +1040,7 @@ struct DoorOpenView: View {
         scheduleReset()
     }
     
-    // ❌ Failure → red, then reset
+    // Failure → red, then reset
     func animateFailure() {
         animationResetTask?.cancel()
         isRemoteUnlock = false
@@ -1101,7 +1140,7 @@ struct DoorOpenView: View {
                 rssiTimer = nil
                 
                 // Restart monitoring after 5 seconds
-                DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 7.0) {
                     bleManager.startContinuousScanning()
                     isScanningActive = true
                     monitorAndAutoOpenNearbyDoor()
@@ -1137,7 +1176,7 @@ struct DoorOpenView: View {
                 }
                 
                 // Restart scanning after 5 seconds
-                DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 7.0) {
                     bleManager.startContinuousScanning()
                     isScanningActive = true
                     monitorAndAutoOpenNearbyDoor()

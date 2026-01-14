@@ -62,18 +62,18 @@ struct LoginView: View {
                     
                     // Scrollable Fields
                     ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 25) {
+                        VStack(spacing: 15) {
                            Spacer().frame(height: 15)
                             
                             // Header
                             VStack(spacing: 5) {
                                 Image("zylx")
                                  .resizable()
-                                 .frame(width: 240, height: 93)
+                                 .frame(width: 315, height: 120)
                                  .padding(.bottom,40)
                              
                                 Text(isUserInitialSetupDone ? "LOG IN TO YOUR ACCOUNT" : "SETUP YOUR ACCOUNT")
-                                    .font(.custom("Inter-SemiBold", size: 20))
+                                    .font(.custom("Inter-SemiBold", size: 16))
                                     .foregroundColor(.white)
                                 
                                 if !isUserInitialSetupDone {
@@ -89,7 +89,7 @@ struct LoginView: View {
                                         .foregroundColor(Color.gray.opacity(0.8))
                                 }
                             }
-                            .padding(.bottom, 40)
+                            .padding(.bottom, 20)
                             
                             // Email Field
                             VStack(alignment: .leading, spacing: 6) {

@@ -12,6 +12,7 @@ struct APIConfig {
     
     // MARK: - Base URL
     static let baseURL = "https://devapi.nextprotechnologies.com"
+   // static let baseURL = "https://stageapi.nextprotechnologies.com"
     
     // MARK: - Endpoints
     struct Endpoints {

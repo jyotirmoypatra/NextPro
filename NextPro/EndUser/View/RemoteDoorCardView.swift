@@ -42,17 +42,17 @@ struct RemoteDoorCardView: View {
     
     
     private var isAdmin: Bool {
-        //  UserDefaults.standard.bool(forKey: "is_admin")
-        true
+       UserDefaults.standard.bool(forKey: "is_admin")
+      //  true
     }
     
     private var hasWIFIAccess: Bool {
-        //  UserDefaults.standard.bool(forKey: "remote_wifi")
-        true
+        UserDefaults.standard.bool(forKey: "remote_wifi")
+       // true
     }
     private var hasBleAccess: Bool {
-        // UserDefaults.standard.bool(forKey: "remote_ble")
-        true
+         UserDefaults.standard.bool(forKey: "remote_ble")
+        //true
     }
     
     //
@@ -384,15 +384,34 @@ struct RemoteDoorCardView: View {
         wifiWaiting = true
         wifiSuccess = false
         
+        isResultSuccess = false
+        statusMessage = ""
+        
         wifiWaitTask?.cancel()
         
+//        let task = DispatchWorkItem {
+//            wifiWaiting = false
+//            activeDoorKey = nil
+//        }
+//        
+//        wifiWaitTask = task
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 7, execute: task)
         let task = DispatchWorkItem {
-            wifiWaiting = false
-            activeDoorKey = nil
-        }
-        
-        wifiWaitTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 7, execute: task)
+                // ⏱️ 7 sec timeout
+                wifiWaiting = false
+                wifiSuccess = true          // show result UI
+                isResultSuccess = false     //failure
+                statusMessage = "No response received from the door"
+
+                // reset after 3 sec
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    resetWifiState()
+                    activeDoorKey = nil
+                }
+            }
+
+            wifiWaitTask = task
+            DispatchQueue.main.asyncAfter(deadline: .now() + 7, execute: task)
     }
     
     private func showWifiSuccess() {
@@ -418,16 +437,33 @@ struct RemoteDoorCardView: View {
     private func startBleWaiting() {
         bleWaiting = true
         bleSuccess = false
-        
+        isResultSuccess = false
+            statusMessage = ""
         bleWaitTask?.cancel()
         
+//        let task = DispatchWorkItem {
+//            bleWaiting = false
+//            activeDoorKey = nil
+//        }
+//        
+//        bleWaitTask = task
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: task)
         let task = DispatchWorkItem {
-            bleWaiting = false
-            activeDoorKey = nil
-        }
-        
-        bleWaitTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: task)
+                // ⏱️ 10 sec timeout (BLE slower)
+                bleWaiting = false
+                bleSuccess = true           // show result UI
+                isResultSuccess = false     // failure
+                statusMessage = "No response received from the door"
+
+                // reset after 3 sec
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    resetBleState()
+                    activeDoorKey = nil
+                }
+            }
+
+            bleWaitTask = task
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: task)
     }
     
     private func showBleSuccess() {
