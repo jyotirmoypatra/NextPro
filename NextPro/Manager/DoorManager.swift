@@ -38,7 +38,9 @@ class DoorManager: NSObject, ObservableObject, CBCentralManagerDelegate {
     private var currentProcessingDoorSn: String?
     private var currentProcessingDoorID: Int32?
     
-    
+    @Published var deviceConfig: DeviceInfo?
+
+
     private var mqttActiveTimer: DispatchWorkItem?
     private(set) var isMQTTWindowActive: Bool = false
     
@@ -244,6 +246,101 @@ class DoorManager: NSObject, ObservableObject, CBCentralManagerDelegate {
         print("✅ All SDK callbacks registered successfully")
     }
     
+    // MARK: - Get Device Info (CLEAN & SAFE)
+    func getDeviceInfo(for door: DoorModelUser) {
+
+        print("📡 Getting device info for: \(door.name)")
+
+        isProcessing = true
+        statusMessage = "Reading device info..."
+        errorMessage = nil
+
+        let devModel = LibDevModel()
+        devModel.devSn = door.devSn
+        devModel.devMac = door.devMac
+        devModel.devType = door.devType
+        devModel.eKey = door.eKey
+
+        let ret = LibDevModel.getDeviceConfig(
+            devModel,
+            andGetDeviceConfigCallBack: { [weak manager = self] ret, msgDict in
+                guard let manager = manager else { return }
+
+                DispatchQueue.main.async {
+
+                    manager.isProcessing = false
+
+                    guard ret == 0, let dict = msgDict else {
+                        manager.statusMessage = "Failed to load device info"
+                        manager.errorMessage = "SDK error code: \(ret)"
+                        print("❌ getDeviceConfig failed: \(ret)")
+                        return
+                    }
+
+                    print("✅ Device info received:")
+                    dict.forEach { print("   • \($0): \($1)") }
+
+                    let info = DeviceInfo(
+                        devSn: door.devSn,
+                       // devType: Int(door.devType),
+                        devType: self.intValue(dict["devType"]) ?? Int(door.devType),
+                        doorNo: self.intValue(dict["doorNo"] ),
+
+                        firmwareVersion: dict["version"] as? String,
+                        deviceTime: dict["date"] as? String,
+                        batteryPercent: self.intValue(dict["electricity"]) ?? 0 ,
+
+                        cardCount: self.intValue(dict["cardCount"]),
+                        maxCardCount: self.intValue(dict["maxCardCount"]),
+                        userCount: self.intValue(dict["userCount"]),
+
+                        openTime: self.intValue(dict["openTime"]),
+                        wiegandFormat: self.intValue(dict["wgfmt"] ),
+                        lockSwitch: self.intValue(dict["lockSwitch"]),
+
+                        serverIP: dict["serverIP"] as? String,
+                        serverPort: self.intValue(dict["serverPort"]),
+                        wifiName: dict["WiFiName"] as? String,
+                        wifiPassword: dict["WiFiPwd"] as? String,
+
+                        functionFlags: dict["function"]
+                    )
+
+                    manager.deviceConfig = info
+                    manager.statusMessage = "Device info loaded"
+
+                    print("📊 Parsed DeviceInfo:")
+                    print("   Firmware: \(info.firmwareVersion ?? "-")")
+                    print("   Cards: \(info.cardCount ?? 0)/\(info.maxCardCount ?? 0)")
+                    print("   Users: \(info.userCount ?? 0)")
+                    print("   Battery: \(info.batteryPercent ?? 0)%")
+                    print("   Server: \(info.serverIP ?? "-"):\(info.serverPort ?? 0)")
+                    print("   WiFi: \(info.wifiName ?? "-")")
+                    print("   Time: \(info.deviceTime ?? "-")")
+                }
+            }
+        )
+
+        if ret != 0 {
+            isProcessing = false
+            statusMessage = "Failed to request device info"
+            errorMessage = "SDK returned error: \(ret)"
+            print("❌ getDeviceConfig INIT failed: \(ret)")
+        }
+    }
+    private func intValue(_ value: Any?) -> Int? {
+        if let int = value as? Int {
+            return int
+        }
+        if let number = value as? NSNumber {
+            return number.intValue
+        }
+        if let string = value as? String {
+            return Int(string)
+        }
+        return nil
+    }
+
     
     // MARK: - Open Selected Door
     func openSelectedDoor(_ door: DoorModelUser) {
@@ -326,7 +423,7 @@ class DoorManager: NSObject, ObservableObject, CBCentralManagerDelegate {
     
 
        /// Call this whenever a door open command is triggered
-       func activateMQTTWindow(duration: TimeInterval = 20) {
+       func activateMQTTWindow(duration: TimeInterval = 10) {
            // Cancel previous timer
            mqttActiveTimer?.cancel()
 

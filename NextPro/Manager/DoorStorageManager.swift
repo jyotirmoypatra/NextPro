@@ -97,3 +97,35 @@ class DoorStorageManager: ObservableObject {
 
 
 }
+
+struct DeviceInfo {
+
+    // Identity
+    let devSn: String
+    let devType: Int
+    let doorNo: Int?
+
+    // Firmware & status
+    let firmwareVersion: String?
+    let deviceTime: String?
+    let batteryPercent: Int?
+
+    // Capacity
+    let cardCount: Int?
+    let maxCardCount: Int?
+    let userCount: Int?
+
+    // Door config
+    let openTime: Int?
+    let wiegandFormat: Int?
+    let lockSwitch: Int?
+
+    // Network
+    let serverIP: String?
+    let serverPort: Int?
+    let wifiName: String?
+    let wifiPassword: String?
+
+    // Raw flags (future-proof)
+    let functionFlags: Any?
+}
