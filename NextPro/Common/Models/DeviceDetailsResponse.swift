@@ -174,6 +174,13 @@ struct SensorlessDoor: Codable {
 
 struct ServerTimeResponse: Codable {
     
-    let status: Bool
-    let datetime: String?
+    let serverDateTime: String?
+    let serverTimezone: String?
+    let localTimezone: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case serverDateTime = "server_datetime"
+        case serverTimezone = "server_timezone"
+        case localTimezone = "local_timezone"
+    }
 }

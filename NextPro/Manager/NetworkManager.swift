@@ -1226,6 +1226,7 @@ class NetworkManager: ObservableObject {
         return try await performRequest(
             url: url,
             method: "GET",
+            requiresAuth: true,
             responseType: ServerTimeResponse.self
         )
     }

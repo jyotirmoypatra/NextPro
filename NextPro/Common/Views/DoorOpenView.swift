@@ -814,16 +814,84 @@ struct DoorOpenView: View {
         }
     }
     
-//    private func resetOverlayState() {
-//        animationResetTask?.cancel()
-//        isOpening = false
-//        progress = 0
-//        ringColor = .white
-//        lockIcon = "lock.fill"
-//        overlayMessage = ""
-//        isUnauthorise = false
-//        isRemoteUnlock = false
-//    }
+    func isWithinAccessWindow() -> Bool {
+
+        guard
+            let currentTime = serverTimeVM.localServerDate,
+            let localTZID = serverTimeVM.localTimeZoneID,
+            let accessTZ = TimeZone(identifier: localTZID),
+            let startDateStr = deviceVM.startDate,
+            let endDateStr = deviceVM.endDate,
+            let startTimeStr = deviceVM.startTime,
+            let endTimeStr = deviceVM.endTime
+        else {
+            print("⚠️ Missing access window data")
+            return false
+        }
+
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = accessTZ   // ✅ CRITICAL
+
+        // --- Date parsing ---
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.timeZone = accessTZ
+
+        guard
+            let startDate = dateFormatter.date(from: startDateStr),
+            let endDate = dateFormatter.date(from: endDateStr)
+        else {
+            print("❌ Invalid date format")
+            return false
+        }
+
+        // --- Time parsing ---
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "HH:mm"
+        timeFormatter.timeZone = accessTZ
+
+        guard
+            let startTime = timeFormatter.date(from: startTimeStr),
+            let endTime = timeFormatter.date(from: endTimeStr)
+        else {
+            print("❌ Invalid time format")
+            return false
+        }
+
+        // --- Combine date + time in SAME timezone ---
+        guard
+            let startDateTime = calendar.date(
+                bySettingHour: calendar.component(.hour, from: startTime),
+                minute: calendar.component(.minute, from: startTime),
+                second: 0,
+                of: startDate
+            ),
+            let endDateTime = calendar.date(
+                bySettingHour: calendar.component(.hour, from: endTime),
+                minute: calendar.component(.minute, from: endTime),
+                second: 59,
+                of: endDate
+            )
+        else {
+            return false
+        }
+
+        // --- Debug (readable) ---
+        let debugFormatter = DateFormatter()
+        debugFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        debugFormatter.timeZone = accessTZ
+
+        print("🧭 Access Window:",
+              debugFormatter.string(from: startDateTime),
+              "→",
+              debugFormatter.string(from: endDateTime))
+
+        print("🕒 Current Server Time:",
+              debugFormatter.string(from: currentTime))
+
+        return currentTime >= startDateTime && currentTime <= endDateTime
+    }
+
     
     
     private func startFetchServerTime() {
@@ -912,6 +980,15 @@ struct DoorOpenView: View {
             print("❌ Sensor details missing for door:", door.id)
             return
         }
+        guard isWithinAccessWindow() else {
+            print("⛔ Outside allowed time window")
+            AceesMessage = "Access denied. Time Restricted"
+            speakText("Access denied. Time Restricted")
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+
+            return
+        }
+
         doorManager.openSelectedDoor(sensor)
         
     }
@@ -1080,6 +1157,20 @@ struct DoorOpenView: View {
         scheduleReset()
     }
     
+    func animateFailureOutSideTime() {
+        animationResetTask?.cancel()
+        isRemoteUnlock = false
+        withAnimation(.easeInOut(duration: 0.3)) {
+            ringColor = .red
+            lockIcon = "clock.badge.exclamationmark"
+            isOpening = false
+            progress = 1.0
+            // overlayMessage = isRemoteUnlock ? "Remote Unlock Failed" : accessDeniedMessage
+            
+        }
+        scheduleReset()
+    }
+    
     func unauthorised() {
         animationResetTask?.cancel()
         isUnauthorise = true
@@ -1153,9 +1244,6 @@ struct DoorOpenView: View {
             if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
                 // ✅ Authorized door
                 print("🚪 Door nearby! Opening \(door.name)...")
-                doorManager.openSelectedDoor(door)
-                // ✅ Activate 20s MQTT window
-                DoorManager.shared.activateMQTTWindow()
                 
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 isScanningActive = false
@@ -1163,6 +1251,32 @@ struct DoorOpenView: View {
                 bleManager.stopMonitoringDevice()
                 timer.invalidate()
                 rssiTimer = nil
+                
+                guard isWithinAccessWindow() else {
+                    print("⛔ Outside allowed time window")
+
+                    overlayMessage = "Access denied. Time Restricted."
+                    AceesMessage = "Outside time period"
+
+                    animateFailureOutSideTime()
+                    speakText("Access denied. Time Restricted.")
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                    
+                    // Restart monitoring after 5 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 7.0) {
+                        bleManager.startContinuousScanning()
+                        isScanningActive = true
+                        monitorAndAutoOpenNearbyDoor()
+                    }
+
+                    return
+                }
+
+                
+                doorManager.openSelectedDoor(door)
+                // ✅ Activate 20s MQTT window
+                DoorManager.shared.activateMQTTWindow()
+                
                 
                 // Restart monitoring after 5 seconds
                 DispatchQueue.main.asyncAfter(deadline: .now() + 7.0) {
