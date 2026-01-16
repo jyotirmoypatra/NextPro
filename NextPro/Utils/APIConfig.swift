@@ -11,8 +11,8 @@ import Foundation
 struct APIConfig {
     
     // MARK: - Base URL
-    static let baseURL = "https://devapi.nextprotechnologies.com"
-   // static let baseURL = "https://stageapi.nextprotechnologies.com"
+  // static let baseURL = "https://devapi.nextprotechnologies.com"
+static let baseURL = "https://stageapi.nextprotechnologies.com"
     
     // MARK: - Endpoints
     struct Endpoints {
@@ -29,6 +29,7 @@ struct APIConfig {
         static let adminAssignDeviceList = "/api/facility/user/configure-device-list/"
         static let adminConfigureDeviceList = "/api/wifi-configuration/"
         static let successWifiConfig = "/api/wifi-configuration/"
+        static let serverDateTime = "/api/authentication/server-datetime/"
     }
     
     

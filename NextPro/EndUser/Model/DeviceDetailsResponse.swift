@@ -163,3 +163,9 @@ struct SensorlessDoor: Codable {
         case doorNumber = "door_number"
     }
 }
+
+struct ServerTimeResponse: Codable {
+    
+    let status: Bool
+    let datetime: String?
+}

@@ -111,7 +111,8 @@ class NetworkManager: ObservableObject {
         responseType: T.Type
     ) async throws -> T {
 
-        print("API : \n----> \(url)")
+        print("\(url)")
+        print("\(body)")
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -1214,6 +1215,18 @@ class NetworkManager: ObservableObject {
             ],
             requiresAuth: true,
             responseType: successDeviceConfigResposne.self
+        )
+    }
+    
+    
+    func serverTime() async throws -> ServerTimeResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.serverDateTime))!
+        print("Server Time Api called----------------")
+        return try await performRequest(
+            url: url,
+            method: "GET",
+            responseType: ServerTimeResponse.self
         )
     }
 

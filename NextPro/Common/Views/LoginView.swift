@@ -29,7 +29,7 @@ struct LoginView: View {
     @State private var emailToSend = ""
 
     @State private var isUserInitialSetupDone = false
-    
+    @StateObject private var serverTimeVM = ServerTimeViewModel()
     
     init(isUserInitialSetupCompleted: Bool,prefilledEmail: String = "") {
             self.isUserInitialSetupCompleted = isUserInitialSetupCompleted
