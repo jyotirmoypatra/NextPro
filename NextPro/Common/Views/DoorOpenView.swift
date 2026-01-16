@@ -1049,7 +1049,7 @@ struct DoorOpenView: View {
         }
 
         animationResetTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0, execute: task)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 7.0, execute: task)
     }
 
     func animateSuccess() {
@@ -1117,7 +1117,7 @@ struct DoorOpenView: View {
         }
         
         animationResetTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0, execute: task)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 7.0, execute: task)
     }
     
     
