@@ -22,6 +22,11 @@ class DeviceDetailsViewModel: ObservableObject {
     @Published var standaloneControllerList: [RemoteDoorItem] = []
     private let network = NetworkManager.shared
     private var fetchTask: Task<Void, Never>?
+    
+    @Published var startTime : String?
+    @Published var endTime : String?
+    @Published var startDate: String?
+    @Published var endDate : String?
 
     func fetchDeviceDetailsIfNeeded(force: Bool = false) async {
         // 🔴 Cancel previous fetch if any
@@ -46,6 +51,10 @@ class DeviceDetailsViewModel: ObservableObject {
             do {
                 let response = try await network.deviceDetails(userID: userId)
                 self.deviceDetails = response
+                startDate = response.startDate
+                endDate = response.endDate
+                startTime = response.startTime
+                endTime = response.endTime
                 issuccess=true
                 saveDetailsLocally(response)
                 updateAndSubscribeAllDevices()
@@ -220,7 +229,10 @@ class DeviceDetailsViewModel: ObservableObject {
         if let data = UserDefaults.standard.data(forKey: "device_details"),
            let decoded = try? JSONDecoder().decode(DeviceDetailsResponse.self, from: data) {
             self.deviceDetails = decoded
-            
+            startDate = self.deviceDetails?.startDate
+            endDate = self.deviceDetails?.endDate
+            startTime = self.deviceDetails?.startTime
+            endTime = self.deviceDetails?.endTime
             updateAndSubscribeAllDevices()
             issuccess = true
             

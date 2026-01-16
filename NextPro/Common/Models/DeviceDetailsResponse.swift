@@ -18,6 +18,10 @@ struct DeviceDetailsResponse: Codable {
     let physicalCardNumber: String?
     let digitalCardNumber: String?
     let cardExpiryDate: String?
+    let startDate: String?
+    let endDate: String?
+    let startTime: String?
+    let endTime: String?
     let controllers: [Controller]?
     let standaloneAllInOne: [Standalone_All_In_One_Door]?
     let standaloneController: [StandaloneController]?
@@ -32,6 +36,10 @@ struct DeviceDetailsResponse: Codable {
         case physicalCardNumber = "physical_card_number"
         case digitalCardNumber = "digital_card_number"
         case cardExpiryDate = "card_expiry_date"
+        case startDate = "start_date"
+        case endDate = "end_date"
+        case startTime = "start_time"
+        case endTime = "end_time"
         case controllers = "controllers"
         case standaloneAllInOne = "standalone_all_in_one"
         case standaloneController = "standalone_controller"
