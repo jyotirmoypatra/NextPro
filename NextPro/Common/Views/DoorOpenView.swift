@@ -815,6 +815,11 @@ struct DoorOpenView: View {
     }
     
     func isWithinAccessWindow() -> Bool {
+        
+        if !network.hasInternet {
+                print("⚠️ No internet — bypassing access window check")
+                return true
+            }
 
         guard
             let currentTime = serverTimeVM.localServerDate,
