@@ -56,13 +56,13 @@ class UserProfileDetailsViewModel: ObservableObject {
                 isSuccess = true
                 // Assign response to UI (no UserDefaults save)
                 fullName = response.data.full_name ?? ""
-                phoneNumber = response.data.phone_number ?? ""
+                phoneNumber = response.data.phone ?? ""
                 email = response.data.email ?? ""
-                accountStatus = response.data.status
+                accountStatus = response.data.status ?? ""
                 organization = response.data.organization ?? ""
                 image_url = response.data.image_url ?? ""
             }else{
-                errorMessage = response.message
+                errorMessage = response.message ?? "Something Went Wrong"
             }
 
         } catch {
