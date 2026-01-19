@@ -28,6 +28,7 @@ struct NextProApp: App {
 
     init() {
         UIRefreshControl.appearance().tintColor = .white
+        ServerTimeService.shared.start(forceImmediate: true)
     }
 
     var body: some Scene {
@@ -37,7 +38,7 @@ struct NextProApp: App {
                     switch phase {
                     case .active:
                         print("☀️ App active — start server time")
-                        ServerTimeService.shared.start()
+                        ServerTimeService.shared.start(forceImmediate: true)
 
                     case .background:
                         print("🌙 App background — stop server time")

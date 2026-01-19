@@ -500,7 +500,6 @@ struct DoorOpenView: View {
             }
         }
         .onDisappear {
-           // stopFetchServerTime()
             print("🛑 DoorOpenView disappeared — stopping all BLE and timers")
             
             // Mark view as not visible
@@ -534,7 +533,6 @@ struct DoorOpenView: View {
             switch newPhase {
             case .background:
                 print("🌙 App went to background — stopping BLE scanning and monitoring")
-               // stopFetchServerTime()
                 // Stop all BLE activities
                 bleManager.stopContinuousScanning()
                 bleManager.stopMonitoringDevice()
@@ -827,10 +825,10 @@ struct DoorOpenView: View {
         }
     }
     
-
-
+    //check startdatetime  to  EnddateTime slot--------
     func isWithinAccessWindow() -> Bool {
 
+        // 🔓 Offline → allow access
         if !network.hasInternet {
             print("⚠️ No internet — bypassing access window check")
             return true
@@ -838,8 +836,8 @@ struct DoorOpenView: View {
 
         guard
             let currentTime = serverTimeVM.localServerDate,
-            let localTZID = serverTimeVM.localTimeZoneID,
-            let accessTZ = TimeZone(identifier: localTZID),
+            let tzID = serverTimeVM.localTimeZoneID,
+            let accessTZ = TimeZone(identifier: tzID),
             let startDateStr = deviceVM.startDate,
             let endDateStr = deviceVM.endDate,
             let startTimeStr = deviceVM.startTime,
@@ -852,10 +850,12 @@ struct DoorOpenView: View {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = accessTZ
 
+        // --- Date formatter ---
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         dateFormatter.timeZone = accessTZ
 
+        // --- Time formatter ---
         let timeFormatter = DateFormatter()
         timeFormatter.dateFormat = "HH:mm"
         timeFormatter.timeZone = accessTZ
@@ -870,52 +870,110 @@ struct DoorOpenView: View {
             return false
         }
 
-        // ✅ Date range check
-        let isDateValid =
-            currentTime >= startDate &&
-            currentTime <= endDate
+        // Combine start date + start time
+        guard let startDateTime = calendar.date(
+            bySettingHour: calendar.component(.hour, from: startTime),
+            minute: calendar.component(.minute, from: startTime),
+            second: 0,
+            of: startDate
+        ) else { return false }
 
-        // ✅ Time window check (daily)
-        let now = calendar.dateComponents([.hour, .minute], from: currentTime)
-        let currentMinutes = (now.hour ?? 0) * 60 + (now.minute ?? 0)
+        // Combine end date + end time
+        guard let endDateTime = calendar.date(
+            bySettingHour: calendar.component(.hour, from: endTime),
+            minute: calendar.component(.minute, from: endTime),
+            second: 59,
+            of: endDate
+        ) else { return false }
 
-        let startMinutes =
-            calendar.component(.hour, from: startTime) * 60 +
-            calendar.component(.minute, from: startTime)
+        // 🔍 Debug
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        df.timeZone = accessTZ
 
-        let endMinutes =
-            calendar.component(.hour, from: endTime) * 60 +
-            calendar.component(.minute, from: endTime)
+        print("🧭 Access Window:",
+              df.string(from: startDateTime),
+              "→",
+              df.string(from: endDateTime))
 
-        let isTimeValid =
-            currentMinutes >= startMinutes &&
-            currentMinutes <= endMinutes
+        print("🕒 Current Time:",
+              df.string(from: currentTime))
 
-        print("🧭 Date valid:", isDateValid)
-        print("⏰ Time valid:", isTimeValid)
-
-        return isDateValid && isTimeValid
+        //  SINGLE comparison (correct)
+        return currentTime >= startDateTime && currentTime <= endDateTime
     }
 
+
+//check date range and also time slot--------
+//    func isWithinAccessWindow() -> Bool {
+//
+//        if !network.hasInternet {
+//            print("⚠️ No internet — bypassing access window check")
+//            return true
+//        }
+//
+//        guard
+//            let currentTime = serverTimeVM.localServerDate,
+//            let localTZID = serverTimeVM.localTimeZoneID,
+//            let accessTZ = TimeZone(identifier: localTZID),
+//            let startDateStr = deviceVM.startDate,
+//            let endDateStr = deviceVM.endDate,
+//            let startTimeStr = deviceVM.startTime,
+//            let endTimeStr = deviceVM.endTime
+//        else {
+//            print("⚠️ Missing access window data")
+//            return false
+//        }
+//
+//        var calendar = Calendar(identifier: .gregorian)
+//        calendar.timeZone = accessTZ
+//
+//        let dateFormatter = DateFormatter()
+//        dateFormatter.dateFormat = "yyyy-MM-dd"
+//        dateFormatter.timeZone = accessTZ
+//
+//        let timeFormatter = DateFormatter()
+//        timeFormatter.dateFormat = "HH:mm"
+//        timeFormatter.timeZone = accessTZ
+//
+//        guard
+//            let startDate = dateFormatter.date(from: startDateStr),
+//            let endDate = dateFormatter.date(from: endDateStr),
+//            let startTime = timeFormatter.date(from: startTimeStr),
+//            let endTime = timeFormatter.date(from: endTimeStr)
+//        else {
+//            print("❌ Invalid date/time format")
+//            return false
+//        }
+//
+//        //  Date range check
+//        let isDateValid =
+//            currentTime >= startDate &&
+//            currentTime <= endDate
+//
+//        // Time window check (daily)
+//        let now = calendar.dateComponents([.hour, .minute], from: currentTime)
+//        let currentMinutes = (now.hour ?? 0) * 60 + (now.minute ?? 0)
+//
+//        let startMinutes =
+//            calendar.component(.hour, from: startTime) * 60 +
+//            calendar.component(.minute, from: startTime)
+//
+//        let endMinutes =
+//            calendar.component(.hour, from: endTime) * 60 +
+//            calendar.component(.minute, from: endTime)
+//
+//        let isTimeValid =
+//            currentMinutes >= startMinutes &&
+//            currentMinutes <= endMinutes
+//
+//        print("🧭 Date valid:", isDateValid)
+//        print("⏰ Time valid:", isTimeValid)
+//
+//        return isDateValid && isTimeValid
+//    }
     
-//    private func startFetchServerTime() {
-//            // Prevent multiple tasks
-//            guard pollingTask == nil else { return }
-//        print("Start Fetching Server Time")
-//            pollingTask = Task {
-//                while !Task.isCancelled {
-//                    await serverTimeVM.getTime()
-//
-//                    try? await Task.sleep(nanoseconds: 5 * 1_000_000_000)
-//                }
-//            }
-//        }
-//
-//        private func stopFetchServerTime() {
-//            pollingTask?.cancel()
-//            pollingTask = nil
-//            print("Stop Fetching Server Time")
-//        }
+
     
     private func resetOverlayState() {
         animationResetTask?.cancel()

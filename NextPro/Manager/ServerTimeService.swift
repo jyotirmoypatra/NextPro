@@ -25,19 +25,32 @@ final class ServerTimeService: ObservableObject {
 
 
 extension ServerTimeService {
-
-    func start() {
+    func start(forceImmediate: Bool = false) {
         guard pollingTask == nil else { return }
 
-        pollingTask = Task {
-            while !Task.isCancelled {
+        pollingTask = Task(priority: .userInitiated) {
+
+            if forceImmediate {
+                print("Server Time Fetch Immidiatly")
+                await fetchTime()   // immediate refresh
+            }
+
+            //  Fast retry ONLY if no value yet
+            while !Task.isCancelled && localServerDate == nil {
                 await fetchTime()
-                try? await Task.sleep(nanoseconds: 5 * 1_000_000_000)
+                try? await Task.sleep(nanoseconds: 500_000_000)
+            }
+
+            // ⏱ Normal polling
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
+                await fetchTime()
             }
         }
 
-        print("🟢 ServerTimeService started")
+        print("🟢 ServerTimeService started (forceImmediate: \(forceImmediate))")
     }
+
 
     func stop() {
         pollingTask?.cancel()
