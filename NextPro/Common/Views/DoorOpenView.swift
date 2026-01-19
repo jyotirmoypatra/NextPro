@@ -183,6 +183,16 @@ struct DoorOpenView: View {
                                         VStack{
                                             Spacer().frame(height: 20)
                                             
+                                            if let date = serverTimeVM.localServerDate {
+                                                Text(date.toReadableString(
+                                                    format: "dd MMM yyyy, hh:mm a",
+                                                    timeZoneID: serverTimeVM.localTimeZoneID
+                                                ))
+                                                .font(.custom("Inter-Regular", size: 14))
+                                                .foregroundColor(.gray)
+                                            }
+
+                                            
                                             VStack(spacing: 20) {
                                                 
                                                 // 🪪 Card (centered in the view)
@@ -814,12 +824,95 @@ struct DoorOpenView: View {
         }
     }
     
+//    func isWithinAccessWindow() -> Bool {
+//        
+//        if !network.hasInternet {
+//                print("⚠️ No internet — bypassing access window check")
+//                return true
+//            }
+//
+//        guard
+//            let currentTime = serverTimeVM.localServerDate,
+//            let localTZID = serverTimeVM.localTimeZoneID,
+//            let accessTZ = TimeZone(identifier: localTZID),
+//            let startDateStr = deviceVM.startDate,
+//            let endDateStr = deviceVM.endDate,
+//            let startTimeStr = deviceVM.startTime,
+//            let endTimeStr = deviceVM.endTime
+//        else {
+//            print("⚠️ Missing access window data")
+//            return false
+//        }
+//
+//        var calendar = Calendar(identifier: .gregorian)
+//        calendar.timeZone = accessTZ   // ✅ CRITICAL
+//
+//        // --- Date parsing ---
+//        let dateFormatter = DateFormatter()
+//        dateFormatter.dateFormat = "yyyy-MM-dd"
+//        dateFormatter.timeZone = accessTZ
+//
+//        guard
+//            let startDate = dateFormatter.date(from: startDateStr),
+//            let endDate = dateFormatter.date(from: endDateStr)
+//        else {
+//            print("❌ Invalid date format")
+//            return false
+//        }
+//
+//        // --- Time parsing ---
+//        let timeFormatter = DateFormatter()
+//        timeFormatter.dateFormat = "HH:mm"
+//        timeFormatter.timeZone = accessTZ
+//
+//        guard
+//            let startTime = timeFormatter.date(from: startTimeStr),
+//            let endTime = timeFormatter.date(from: endTimeStr)
+//        else {
+//            print("❌ Invalid time format")
+//            return false
+//        }
+//
+//        // --- Combine date + time in SAME timezone ---
+//        guard
+//            let startDateTime = calendar.date(
+//                bySettingHour: calendar.component(.hour, from: startTime),
+//                minute: calendar.component(.minute, from: startTime),
+//                second: 0,
+//                of: startDate
+//            ),
+//            let endDateTime = calendar.date(
+//                bySettingHour: calendar.component(.hour, from: endTime),
+//                minute: calendar.component(.minute, from: endTime),
+//                second: 59,
+//                of: endDate
+//            )
+//        else {
+//            return false
+//        }
+//
+//        // --- Debug (readable) ---
+//        let debugFormatter = DateFormatter()
+//        debugFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+//        debugFormatter.timeZone = accessTZ
+//
+//        print("🧭 Access Window:",
+//              debugFormatter.string(from: startDateTime),
+//              "→",
+//              debugFormatter.string(from: endDateTime))
+//
+//        print("🕒 Current Server Time:",
+//              debugFormatter.string(from: currentTime))
+//
+//        return currentTime >= startDateTime && currentTime <= endDateTime
+//    }
+
     func isWithinAccessWindow() -> Bool {
-        
+
         if !network.hasInternet {
-                print("⚠️ No internet — bypassing access window check")
-                return true
-            }
+            print("⚠️ No internet — bypassing access window check")
+            return true
+        }
 
         guard
             let currentTime = serverTimeVM.localServerDate,
@@ -835,69 +928,53 @@ struct DoorOpenView: View {
         }
 
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = accessTZ   // ✅ CRITICAL
+        calendar.timeZone = accessTZ
 
-        // --- Date parsing ---
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         dateFormatter.timeZone = accessTZ
 
-        guard
-            let startDate = dateFormatter.date(from: startDateStr),
-            let endDate = dateFormatter.date(from: endDateStr)
-        else {
-            print("❌ Invalid date format")
-            return false
-        }
-
-        // --- Time parsing ---
         let timeFormatter = DateFormatter()
         timeFormatter.dateFormat = "HH:mm"
         timeFormatter.timeZone = accessTZ
 
         guard
+            let startDate = dateFormatter.date(from: startDateStr),
+            let endDate = dateFormatter.date(from: endDateStr),
             let startTime = timeFormatter.date(from: startTimeStr),
             let endTime = timeFormatter.date(from: endTimeStr)
         else {
-            print("❌ Invalid time format")
+            print("❌ Invalid date/time format")
             return false
         }
 
-        // --- Combine date + time in SAME timezone ---
-        guard
-            let startDateTime = calendar.date(
-                bySettingHour: calendar.component(.hour, from: startTime),
-                minute: calendar.component(.minute, from: startTime),
-                second: 0,
-                of: startDate
-            ),
-            let endDateTime = calendar.date(
-                bySettingHour: calendar.component(.hour, from: endTime),
-                minute: calendar.component(.minute, from: endTime),
-                second: 59,
-                of: endDate
-            )
-        else {
-            return false
-        }
+        // ✅ Date range check
+        let isDateValid =
+            currentTime >= startDate &&
+            currentTime <= endDate
 
-        // --- Debug (readable) ---
-        let debugFormatter = DateFormatter()
-        debugFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        debugFormatter.timeZone = accessTZ
+        // ✅ Time window check (daily)
+        let now = calendar.dateComponents([.hour, .minute], from: currentTime)
+        let currentMinutes = (now.hour ?? 0) * 60 + (now.minute ?? 0)
 
-        print("🧭 Access Window:",
-              debugFormatter.string(from: startDateTime),
-              "→",
-              debugFormatter.string(from: endDateTime))
+        let startMinutes =
+            calendar.component(.hour, from: startTime) * 60 +
+            calendar.component(.minute, from: startTime)
 
-        print("🕒 Current Server Time:",
-              debugFormatter.string(from: currentTime))
+        let endMinutes =
+            calendar.component(.hour, from: endTime) * 60 +
+            calendar.component(.minute, from: endTime)
 
-        return currentTime >= startDateTime && currentTime <= endDateTime
+        let isTimeValid =
+            currentMinutes >= startMinutes &&
+            currentMinutes <= endMinutes
+
+        print("🧭 Date valid:", isDateValid)
+        print("⏰ Time valid:", isTimeValid)
+
+        return isDateValid && isTimeValid
     }
 
-    
     
     private func startFetchServerTime() {
             // Prevent multiple tasks

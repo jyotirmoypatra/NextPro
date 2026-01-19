@@ -186,7 +186,7 @@ extension String {
     /// Converts a date string to formatted display string
     /// Example: "2026-01-10T21:26" → "10 Jan 2026"
     /// .toFormattedDate(outputFormat: "yyyy")
-    func toFormattedDate(
+    func toFormattedDateTime(
         inputFormat: String = "yyyy-MM-dd'T'HH:mm",
         outputFormat: String = "dd MMM yyyy"
     ) -> String {
@@ -203,8 +203,47 @@ extension String {
         outputFormatter.dateFormat = outputFormat
         return outputFormatter.string(from: date)
     }
+    
+    func toFormattedDate(
+        inputFormat: String = "yyyy-MM-dd",
+        outputFormat: String = "dd MMM yyyy"
+    ) -> String {
+
+        let inputFormatter = DateFormatter()
+        inputFormatter.dateFormat = inputFormat
+        inputFormatter.locale = Locale(identifier: "en_US_POSIX")
+
+        guard let date = inputFormatter.date(from: self) else {
+            return ""
+        }
+
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = outputFormat
+        return outputFormatter.string(from: date)
+    }
+
 }
 
 extension Notification.Name {
     static let deviceHeartbeatReceived = Notification.Name("deviceHeartbeatReceived")
+}
+
+
+extension Date {
+    func toReadableString(
+        format: String = "dd MMM yyyy, hh:mm a",
+        timeZoneID: String? = nil
+    ) -> String {
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = format
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+
+        if let id = timeZoneID,
+           let tz = TimeZone(identifier: id) {
+            formatter.timeZone = tz
+        }
+
+        return formatter.string(from: self)
+    }
 }
