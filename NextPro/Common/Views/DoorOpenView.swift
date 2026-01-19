@@ -17,7 +17,7 @@ struct DoorOpenView: View {
     @StateObject private var deviceVM = DeviceDetailsViewModel()
     @StateObject private var doorManager = DoorManager.shared
     @StateObject private var bleManager = BLEManager()
-    @StateObject private var serverTimeVM = ServerTimeViewModel()
+    @StateObject private var serverTimeVM = ServerTimeService.shared
     @State private var pollingTask: Task<Void, Never>?
     @State private var animateWave = false
     @State private var showBluetoothAlert = false
@@ -486,7 +486,7 @@ struct DoorOpenView: View {
         }
         
         .onAppear {
-            startFetchServerTime()
+           // startFetchServerTime()
             // Load access flags from UserDefaults
             hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
             hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
@@ -500,7 +500,7 @@ struct DoorOpenView: View {
             }
         }
         .onDisappear {
-            stopFetchServerTime()
+           // stopFetchServerTime()
             print("🛑 DoorOpenView disappeared — stopping all BLE and timers")
             
             // Mark view as not visible
@@ -534,7 +534,7 @@ struct DoorOpenView: View {
             switch newPhase {
             case .background:
                 print("🌙 App went to background — stopping BLE scanning and monitoring")
-                stopFetchServerTime()
+               // stopFetchServerTime()
                 // Stop all BLE activities
                 bleManager.stopContinuousScanning()
                 bleManager.stopMonitoringDevice()
@@ -548,7 +548,7 @@ struct DoorOpenView: View {
                 
             case .active:
                 print("☀️ App became active — restarting BLE scanning and monitoring")
-                startFetchServerTime()
+               // startFetchServerTime()
                 // Only restart if view is still visible
                 guard isViewVisible else {
                     print("⚠️ View is not visible. Skipping BLE restart.")
@@ -898,24 +898,24 @@ struct DoorOpenView: View {
     }
 
     
-    private func startFetchServerTime() {
-            // Prevent multiple tasks
-            guard pollingTask == nil else { return }
-        print("Start Fetching Server Time")
-            pollingTask = Task {
-                while !Task.isCancelled {
-                    await serverTimeVM.getTime()
-
-                    try? await Task.sleep(nanoseconds: 5 * 1_000_000_000)
-                }
-            }
-        }
-
-        private func stopFetchServerTime() {
-            pollingTask?.cancel()
-            pollingTask = nil
-            print("Stop Fetching Server Time")
-        }
+//    private func startFetchServerTime() {
+//            // Prevent multiple tasks
+//            guard pollingTask == nil else { return }
+//        print("Start Fetching Server Time")
+//            pollingTask = Task {
+//                while !Task.isCancelled {
+//                    await serverTimeVM.getTime()
+//
+//                    try? await Task.sleep(nanoseconds: 5 * 1_000_000_000)
+//                }
+//            }
+//        }
+//
+//        private func stopFetchServerTime() {
+//            pollingTask?.cancel()
+//            pollingTask = nil
+//            print("Stop Fetching Server Time")
+//        }
     
     private func resetOverlayState() {
         animationResetTask?.cancel()
