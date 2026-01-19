@@ -511,16 +511,12 @@ struct DoorOpenView: View {
             ?? ""
             
             
-            
-            
-            isViewVisible = true
-            
             mqttManager.connect()
             
         }
         
         .onAppear {
-           // startFetchServerTime()
+            isViewVisible = true
             // Load access flags from UserDefaults
             hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
             hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
@@ -580,7 +576,7 @@ struct DoorOpenView: View {
                 
             case .active:
                 print("☀️ App became active — restarting BLE scanning and monitoring")
-               // startFetchServerTime()
+
                 // Only restart if view is still visible
                 guard isViewVisible else {
                     print("⚠️ View is not visible. Skipping BLE restart.")
@@ -620,7 +616,6 @@ struct DoorOpenView: View {
                 
             case .inactive:
                 print("⏸️ App became inactive")
-                // Optional: You can handle inactive state if needed
                 
             @unknown default:
                 break
@@ -651,7 +646,23 @@ struct DoorOpenView: View {
                 }
             }
         }
-        
+        .onReceive(NotificationCenter.default.publisher(
+            for: UIApplication.didEnterBackgroundNotification
+        )) { _ in
+            print("🌙 didEnterBackground — force stop BLE")
+
+            bleManager.stopContinuousScanning()
+            bleManager.stopMonitoringDevice()
+            bleManager.stopScanning()
+            isScanningActive = false
+
+            rssiTimer?.invalidate()
+            rssiTimer = nil
+
+            AceesMessage = "Preparing Scan.."
+            
+        }
+
         
         .onReceive(bleManager.$bleState) { state in
             switch state {
@@ -1295,11 +1306,26 @@ struct DoorOpenView: View {
     func monitorAndAutoOpenNearbyDoor() {
         AceesMessage = "Walk closer to the door"
         rssiTimer?.invalidate()
+        rssiTimer = nil
         
-        rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+       // rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+        let bleManager = self.bleManager
+        let doorStorage = self.doorStorage
+      
+
+        rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak bleManager, weak doorStorage] timer in
+
+            guard
+               isViewVisible,
+               let bleManager = bleManager,
+               let doorStorage = doorStorage
+           else {
+               timer.invalidate()
+               return
+           }
             // 1️⃣ Find the closest device (BLEManager already filters for Thimmo devices only)
             let nearbyDevices = bleManager.devices.compactMap { peripheral -> (peripheral: CBPeripheral, rssi: Int)? in
-                let name = (peripheral.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+               // let name = (peripheral.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                 let rssi = bleManager.monitoredDeviceRSSI ?? bleManager.deviceLastRSSI[peripheral.identifier] ?? -100
                 
                 return (peripheral, rssi)
@@ -1314,10 +1340,10 @@ struct DoorOpenView: View {
             print("🎯 Closest device: \(name) with RSSI: \(rssi)")
             
             // Only act if RSSI is strong
-            guard rssi > -40 && rssi < 0 else { return }
+            guard rssi > -45 && rssi < 0 else { return }
             
             if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
-                // ✅ Authorized door
+                // Authorized door
                 print("🚪 Door nearby! Opening \(door.name)...")
                 
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -1329,16 +1355,17 @@ struct DoorOpenView: View {
                 
                 guard isWithinAccessWindow() else {
                     print("⛔ Outside allowed time window")
+                    DispatchQueue.main.async {
+                        overlayMessage = "Access denied. Time Restricted."
+                        AceesMessage = "Access denied. Time Restricted."
+                        animateFailureOutSideTime()
+                        speakText("Access denied. Time Restricted.")
+                        UINotificationFeedbackGenerator().notificationOccurred(.error)
+                    }
 
-                    overlayMessage = "Access denied. Time Restricted."
-                    AceesMessage = "Outside time period"
-
-                    animateFailureOutSideTime()
-                    speakText("Access denied. Time Restricted.")
-                    UINotificationFeedbackGenerator().notificationOccurred(.error)
                     
                     // Restart monitoring after 5 seconds
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 7.0) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                         bleManager.startContinuousScanning()
                         isScanningActive = true
                         monitorAndAutoOpenNearbyDoor()
@@ -1349,7 +1376,7 @@ struct DoorOpenView: View {
 
                 
                 doorManager.openSelectedDoor(door)
-                // ✅ Activate 20s MQTT window
+                //  Activate 20s MQTT window
                 DoorManager.shared.activateMQTTWindow()
                 
                 
@@ -1361,7 +1388,7 @@ struct DoorOpenView: View {
                 }
             }
             else {
-                // ⚠️ Unauthorized Thimmo device
+                //  Unauthorized Thimmo device
                 print("🚫 Unauthorized Thimmo device nearby: \(name)")
                 
                 bleManager.stopScanning()
