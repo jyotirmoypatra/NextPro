@@ -400,6 +400,9 @@ struct DoorOpenView: View {
                                                 onBleOpen: {
                                                     activeDoorKey = door.key
                                                     handleBLEOpen(for: door)
+                                                },
+                                                canOpenDoor: {
+                                                        isWithinAccessWindow()
                                                 }
                                             )
                                         }
@@ -824,88 +827,7 @@ struct DoorOpenView: View {
         }
     }
     
-//    func isWithinAccessWindow() -> Bool {
-//        
-//        if !network.hasInternet {
-//                print("⚠️ No internet — bypassing access window check")
-//                return true
-//            }
-//
-//        guard
-//            let currentTime = serverTimeVM.localServerDate,
-//            let localTZID = serverTimeVM.localTimeZoneID,
-//            let accessTZ = TimeZone(identifier: localTZID),
-//            let startDateStr = deviceVM.startDate,
-//            let endDateStr = deviceVM.endDate,
-//            let startTimeStr = deviceVM.startTime,
-//            let endTimeStr = deviceVM.endTime
-//        else {
-//            print("⚠️ Missing access window data")
-//            return false
-//        }
-//
-//        var calendar = Calendar(identifier: .gregorian)
-//        calendar.timeZone = accessTZ   // ✅ CRITICAL
-//
-//        // --- Date parsing ---
-//        let dateFormatter = DateFormatter()
-//        dateFormatter.dateFormat = "yyyy-MM-dd"
-//        dateFormatter.timeZone = accessTZ
-//
-//        guard
-//            let startDate = dateFormatter.date(from: startDateStr),
-//            let endDate = dateFormatter.date(from: endDateStr)
-//        else {
-//            print("❌ Invalid date format")
-//            return false
-//        }
-//
-//        // --- Time parsing ---
-//        let timeFormatter = DateFormatter()
-//        timeFormatter.dateFormat = "HH:mm"
-//        timeFormatter.timeZone = accessTZ
-//
-//        guard
-//            let startTime = timeFormatter.date(from: startTimeStr),
-//            let endTime = timeFormatter.date(from: endTimeStr)
-//        else {
-//            print("❌ Invalid time format")
-//            return false
-//        }
-//
-//        // --- Combine date + time in SAME timezone ---
-//        guard
-//            let startDateTime = calendar.date(
-//                bySettingHour: calendar.component(.hour, from: startTime),
-//                minute: calendar.component(.minute, from: startTime),
-//                second: 0,
-//                of: startDate
-//            ),
-//            let endDateTime = calendar.date(
-//                bySettingHour: calendar.component(.hour, from: endTime),
-//                minute: calendar.component(.minute, from: endTime),
-//                second: 59,
-//                of: endDate
-//            )
-//        else {
-//            return false
-//        }
-//
-//        // --- Debug (readable) ---
-//        let debugFormatter = DateFormatter()
-//        debugFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-//        debugFormatter.timeZone = accessTZ
-//
-//        print("🧭 Access Window:",
-//              debugFormatter.string(from: startDateTime),
-//              "→",
-//              debugFormatter.string(from: endDateTime))
-//
-//        print("🕒 Current Server Time:",
-//              debugFormatter.string(from: currentTime))
-//
-//        return currentTime >= startDateTime && currentTime <= endDateTime
-//    }
+
 
     func isWithinAccessWindow() -> Bool {
 
@@ -1024,17 +946,6 @@ struct DoorOpenView: View {
     
     
     private func handleRemoteOpen(for door: RemoteDoorItem) {
-        print("🌐 Remote open tapped for:", door.doorName)
-        
-        // 1️⃣ Ensure MQTT is connected
-        //        MQTTManager.shared.connect()
-        //
-        //        // 2️⃣ Subscribe to this device (optional but recommended)
-        //        MQTTManager.shared.subscribeToDevice(
-        //            door.devSn,
-        //            model: "BC220" // or door.model if you have it
-        //        )
-        // ✅ Activate 20s MQTT window
         DoorManager.shared.activateMQTTWindow()
         isRemoteUnlock = true
         MQTTManager.shared.sendOpenDoorCommand(
@@ -1060,14 +971,6 @@ struct DoorOpenView: View {
         // Open via BLE
         guard let sensor = door.sensorDetails else {
             print("❌ Sensor details missing for door:", door.id)
-            return
-        }
-        guard isWithinAccessWindow() else {
-            print("⛔ Outside allowed time window")
-            AceesMessage = "Access denied. Time Restricted"
-            speakText("Access denied. Time Restricted")
-            UINotificationFeedbackGenerator().notificationOccurred(.error)
-
             return
         }
 
@@ -1294,9 +1197,7 @@ struct DoorOpenView: View {
     }
     
     
-    func speakText(_ text: String) {
-        SpeechManager.shared.speak(text)
-    }
+   
     
     
     func monitorAndAutoOpenNearbyDoor() {

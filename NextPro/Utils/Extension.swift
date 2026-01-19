@@ -247,3 +247,7 @@ extension Date {
         return formatter.string(from: self)
     }
 }
+
+func speakText(_ text: String) {
+    SpeechManager.shared.speak(text)
+}

@@ -22,6 +22,8 @@ struct RemoteDoorCardView: View {
     @Binding var showBluetoothAlert: Bool
     let onRemoteOpen: () -> Void
     let onBleOpen: () -> Void
+    
+    let canOpenDoor: () -> Bool
 
     @State private var isResultSuccess: Bool = false
     @State private var statusMessage: String = ""
@@ -176,6 +178,12 @@ struct RemoteDoorCardView: View {
                         ZStack {
                           //  if !wifiWaiting {
                                 Button {
+                                    activeDoorKey = door.key
+                                    guard canOpenDoor() else {
+                                            showTimeRestrictedAndReset(isWifi: true)
+                                            return
+                                       }
+                                    
                                     resetBleState()
                                     startWifiWaiting()
                                     onRemoteOpen()
@@ -215,10 +223,17 @@ struct RemoteDoorCardView: View {
                             ZStack {
                                // if !bleWaiting {
                                     Button {
+                                        activeDoorKey = door.key
                                         guard isBluetoothOn else {
                                                 showBluetoothAlert = true
                                                 return
                                             }
+                                        
+                                        guard canOpenDoor() else {
+                                            showTimeRestrictedAndReset(isWifi: false)
+                                                return
+                                            }
+                                        
                                         resetWifiState()
                                         startBleWaiting()
                                         onBleOpen()
@@ -261,6 +276,11 @@ struct RemoteDoorCardView: View {
                         ZStack {
                            // if !wifiWaiting {
                                 Button {
+                                    activeDoorKey = door.key
+                                    guard canOpenDoor() else {
+                                        showTimeRestrictedAndReset(isWifi: true)
+                                           return
+                                       }
                                     resetBleState()
                                     startWifiWaiting()
                                     onRemoteOpen()
@@ -301,6 +321,11 @@ struct RemoteDoorCardView: View {
                                 Button {
                                     guard isBluetoothOn else {
                                             showBluetoothAlert = true
+                                            return
+                                        }
+                                    activeDoorKey = door.key
+                                    guard canOpenDoor() else {
+                                        showTimeRestrictedAndReset(isWifi: false)
                                             return
                                         }
                                     resetWifiState()
@@ -501,6 +526,32 @@ struct RemoteDoorCardView: View {
         mqttResult = nil
     }
     
+    
+    private func showTimeRestrictedAndReset(isWifi: Bool) {
+        UINotificationFeedbackGenerator().notificationOccurred(.error)
+        speakText("Access denied. Time Restricted")
+        statusMessage = "Access denied. Time Restricted"
+        isResultSuccess = false
+
+        if isWifi {
+            wifiWaiting = false
+            wifiSuccess = true
+        } else {
+            bleWaiting = false
+            bleSuccess = true
+        }
+
+        // ⏱ Auto reset after 3 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            if isWifi {
+                resetWifiState()
+            } else {
+                resetBleState()
+            }
+            activeDoorKey = nil
+        }
+    }
+
     
 }
 
