@@ -108,7 +108,8 @@ class NetworkManager: ObservableObject {
         method: String,
         body: [String: Any]? = nil,
         requiresAuth: Bool = false,
-        responseType: T.Type
+        responseType: T.Type,
+        retry: Bool = false
     ) async throws -> T {
 
         print("\(url)")
@@ -139,11 +140,39 @@ class NetworkManager: ObservableObject {
             throw APIError.invalidResponse
         }
 
+       
+
+        
+        // 🔴 Access token expired
+           if http.statusCode == 401, retry {
+               print("🔁 Access token expired. Refreshing...")
+
+               let refreshResponse = try await refressToken()
+
+               if let newAccess = refreshResponse.access {
+                   KeychainManager.shared.save(newAccess, forKey: "access_token")
+               }
+
+               if let newRefresh = refreshResponse.refresh {
+                   KeychainManager.shared.save(newRefresh, forKey: "refresh_token")
+               }
+
+               // 🔁 Retry original request once
+               return try await performRequest(
+                   url: url,
+                   method: method,
+                   body: body,
+                   requiresAuth: requiresAuth,
+                   responseType: responseType,
+                   retry: false
+               )
+           }
+        
         guard (200...299).contains(http.statusCode) else {
             let message = extractErrorMessage(from: data) ?? "Something went wrong."
             throw APIError.serverError(code: http.statusCode, message: message)
         }
-
+        
         let decoded = try JSONDecoder().decode(T.self, from: data)
 
         // Handle backend `status == false`
@@ -548,7 +577,8 @@ class NetworkManager: ObservableObject {
                 "user_id": userID
             ],
             requiresAuth: true,
-            responseType: DeviceDetailsResponse.self
+            responseType: DeviceDetailsResponse.self,
+            retry: true
         )
     }
 
@@ -777,7 +807,8 @@ class NetworkManager: ObservableObject {
                 "id": id
             ],
             requiresAuth: true,
-            responseType: UserProfileResponse.self
+            responseType: UserProfileResponse.self,
+            retry: true
         )
     }
 
@@ -860,7 +891,8 @@ class NetworkManager: ObservableObject {
                 "image": base64
             ],
             requiresAuth: true,
-            responseType: UploadProfileImgResponseModel.self
+            responseType: UploadProfileImgResponseModel.self,
+            retry: true
         )
     }
 
@@ -945,7 +977,8 @@ class NetworkManager: ObservableObject {
                 "phone_number": phone
             ],
             requiresAuth: true,
-            responseType: UserEditProfileResponse.self
+            responseType: UserEditProfileResponse.self,
+            retry: true
         )
     }
 
@@ -1121,7 +1154,8 @@ class NetworkManager: ObservableObject {
             url: url,
             method: "GET",
             requiresAuth: true,
-            responseType: AssignDeviceListResponse.self
+            responseType: AssignDeviceListResponse.self,
+            retry: true
         )
     }
 
@@ -1214,7 +1248,8 @@ class NetworkManager: ObservableObject {
                 "is_configured": isSuccess
             ],
             requiresAuth: true,
-            responseType: successDeviceConfigResposne.self
+            responseType: successDeviceConfigResposne.self,
+            retry: true
         )
     }
     
@@ -1227,11 +1262,36 @@ class NetworkManager: ObservableObject {
             url: url,
             method: "GET",
             requiresAuth: true,
-            responseType: ServerTimeResponse.self
+            responseType: ServerTimeResponse.self,
+            retry: true
+        )
+    }
+
+    
+    func refressToken() async throws -> RefreshTokenResponse {
+
+        guard let refreshToken = KeychainManager.shared.get("refresh_token"),
+              !refreshToken.isEmpty else {
+            throw APIError.unAuthorized
+        }
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.refreshToken))!
+        print("🔄 Refresh token Api called")
+
+        return try await performRequest(
+            url: url,
+            method: "POST",
+            body: [
+                "refresh": refreshToken
+            ],
+            responseType: RefreshTokenResponse.self
         )
     }
 
 
 }
 
-
+struct RefreshTokenResponse: Codable {
+    let access: String?
+    let refresh: String?
+}

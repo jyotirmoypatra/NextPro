@@ -30,6 +30,7 @@ static let baseURL = "https://stageapi.nextprotechnologies.com"
         static let adminConfigureDeviceList = "/api/wifi-configuration/"
         static let successWifiConfig = "/api/wifi-configuration/"
         static let serverDateTime = "/api/authentication/server-datetime/"
+        static let refreshToken = "/api/authentication/token/refresh/"
     }
     
     
