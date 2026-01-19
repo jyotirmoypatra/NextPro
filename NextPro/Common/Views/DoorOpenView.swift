@@ -775,7 +775,7 @@ struct DoorOpenView: View {
                 print("Ignored door event type:", type ?? -1)
                 return
             }
-            
+            doorManager.closeMQTTWindow()
             doorManager.clearDoorEvent()
         }
         

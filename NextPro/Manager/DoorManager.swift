@@ -444,6 +444,12 @@ class DoorManager: NSObject, ObservableObject, CBCentralManagerDelegate {
        func shouldProcessMQTTEvent() -> Bool {
            return isMQTTWindowActive
        }
+    func closeMQTTWindow() {
+        mqttActiveTimer?.cancel()
+        mqttActiveTimer = nil
+        isMQTTWindowActive = false
+        print("🔒 MQTT window CLOSED (response received)")
+    }
 
     
     // MARK: - Scan and Open Nearest Door
