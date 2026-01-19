@@ -15,6 +15,10 @@ struct UserProfileData: Decodable {
     let created_at: String?
     let updated_at: String?
     let image_url: String?
+    let is_digital: Bool?
+    let is_remote: Bool?
+    let is_wifi: Bool?
+    let is_ble: Bool?
 }
 
 struct UserProfileResponse: Decodable {

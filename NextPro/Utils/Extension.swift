@@ -188,7 +188,7 @@ extension String {
     /// .toFormattedDate(outputFormat: "yyyy")
     func toFormattedDateTime(
         inputFormat: String = "yyyy-MM-dd'T'HH:mm",
-        outputFormat: String = "dd MMM yyyy"
+        outputFormat: String = "yyyy/MMM/dd"
     ) -> String {
         
         let inputFormatter = DateFormatter()
@@ -206,7 +206,7 @@ extension String {
     
     func toFormattedDate(
         inputFormat: String = "yyyy-MM-dd",
-        outputFormat: String = "dd MMM yyyy"
+        outputFormat: String = "yyyy/MMM/dd"
     ) -> String {
 
         let inputFormatter = DateFormatter()

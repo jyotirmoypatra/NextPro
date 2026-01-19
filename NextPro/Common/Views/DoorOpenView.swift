@@ -218,7 +218,32 @@ struct DoorOpenView: View {
                                                         HotspotWaveExact(isActive: $isScanningActive)
                                                             .frame(width: 60, height: 20)
                                                     }
-                                                    
+//                                                    
+//                                                    HStack {
+//                                                        VStack(alignment: .leading) {
+//                                                            //  Text(selectedCard?.userName ?? "")
+//                                                            Text(deviceVM.deviceDetails?.userFullName ?? "")
+//                                                                .font(.custom("Inter-Regular", size: 12))
+//                                                                .foregroundColor(.gray)
+//                                                            
+//                                                            Text(maskCardNumber(deviceVM.deviceDetails?.digitalCardNumber ?? ""))
+//                                                                .font(.custom("Inter-Regular", size: 12))
+//                                                                .foregroundColor(.gray)
+//                                                            
+//                                                        }
+//                                                        
+//                                                        Spacer()
+//                                                        
+//                                                        VStack(alignment: .trailing) {
+//                                                            Text("Exp")
+//                                                                .font(.custom("Inter-Regular", size: 12))
+//                                                                .foregroundColor(.white)
+//                                                            //.toFormattedDate(outputFormat: "yyyy")
+//                                                            Text(deviceVM.deviceDetails?.cardExpiryDate?.toFormattedDate() ?? "")
+//                                                                .font(.custom("Inter-Regular", size: 12))
+//                                                                .foregroundColor(.gray)
+//                                                        }
+//                                                    }
                                                     HStack {
                                                         VStack(alignment: .leading) {
                                                             //  Text(selectedCard?.userName ?? "")
@@ -231,15 +256,24 @@ struct DoorOpenView: View {
                                                                 .foregroundColor(.gray)
                                                             
                                                         }
-                                                        
                                                         Spacer()
-                                                        
-                                                        VStack(alignment: .trailing) {
-                                                            Text("Exp")
+                                                        VStack(alignment: .leading) {
+                                                            Text("VALID FROM")
                                                                 .font(.custom("Inter-Regular", size: 12))
-                                                                .foregroundColor(.white)
-                                                            //.toFormattedDate(outputFormat: "yyyy")
-                                                            Text(deviceVM.deviceDetails?.cardExpiryDate?.toFormattedDate() ?? "")
+                                                                .foregroundColor(.gray)
+                                                          
+                                                            Text("\(deviceVM.deviceDetails?.startDate ?? ""), \(deviceVM.deviceDetails?.startTime ?? "")")
+                                                                .font(.custom("Inter-Regular", size: 12))
+                                                                .foregroundColor(.gray)
+
+                                                        }
+                                                        Spacer()
+                                                        VStack(alignment: .leading) {
+                                                            Text("VALID TO")
+                                                                .font(.custom("Inter-Regular", size: 12))
+                                                                .foregroundColor(.gray)
+                                                           
+                                                            Text("\(deviceVM.deviceDetails?.endDate ?? ""), \(deviceVM.deviceDetails?.endTime ?? "")")
                                                                 .font(.custom("Inter-Regular", size: 12))
                                                                 .foregroundColor(.gray)
                                                         }
