@@ -266,13 +266,21 @@ struct LoginView: View {
                                 
                                 
                             }) {
-                                Text("LOG IN")
-                                    .font(.custom("Inter-SemiBold", size: 16))
-                                    .foregroundColor(.black)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color.white)
-                                    .cornerRadius(10)
+                                VStack {
+                                    Text("Access at Light Speed")
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.bottom,10)
+                                    Text("LOG IN")
+                                        .font(.custom("Inter-SemiBold", size: 16))
+                                        .foregroundColor(.black)
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background(Color.white)
+                                        .cornerRadius(10)
+                                    
+                                }
                             }
                             
                         }else{
