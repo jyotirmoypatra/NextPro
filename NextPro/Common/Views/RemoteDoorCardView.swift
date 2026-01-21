@@ -24,6 +24,7 @@ struct RemoteDoorCardView: View {
     let onBleOpen: () -> Void
     
     let canOpenDoor: () -> Bool
+    @State private var deniedBase = ""
 
     @State private var isResultSuccess: Bool = false
     @State private var statusMessage: String = ""
@@ -395,6 +396,12 @@ struct RemoteDoorCardView: View {
                 mqttResult = nil
             }
         }
+        .onAppear{
+            deniedBase =
+            UserDefaults.standard.string(forKey: "voice_denied")
+            ?? VoiceMessageDefaults.denied.first?.text
+            ?? "Access denied"
+        }
 
         
         
@@ -529,8 +536,9 @@ struct RemoteDoorCardView: View {
     
     private func showTimeRestrictedAndReset(isWifi: Bool) {
         UINotificationFeedbackGenerator().notificationOccurred(.error)
-        speakText("Access denied. Time Restricted")
-        statusMessage = "Access denied. Time Restricted"
+       
+        speakText("\(deniedBase). Time Restricted")
+        statusMessage = "\(deniedBase). Time Restricted"
         isResultSuccess = false
 
         if isWifi {

@@ -218,34 +218,9 @@ struct DoorOpenView: View {
                                                         HotspotWaveExact(isActive: $isScanningActive)
                                                             .frame(width: 60, height: 20)
                                                     }
-//                                                    
-//                                                    HStack {
-//                                                        VStack(alignment: .leading) {
-//                                                            //  Text(selectedCard?.userName ?? "")
-//                                                            Text(deviceVM.deviceDetails?.userFullName ?? "")
-//                                                                .font(.custom("Inter-Regular", size: 12))
-//                                                                .foregroundColor(.gray)
-//                                                            
-//                                                            Text(maskCardNumber(deviceVM.deviceDetails?.digitalCardNumber ?? ""))
-//                                                                .font(.custom("Inter-Regular", size: 12))
-//                                                                .foregroundColor(.gray)
-//                                                            
-//                                                        }
-//                                                        
-//                                                        Spacer()
-//                                                        
-//                                                        VStack(alignment: .trailing) {
-//                                                            Text("Exp")
-//                                                                .font(.custom("Inter-Regular", size: 12))
-//                                                                .foregroundColor(.white)
-//                                                            //.toFormattedDate(outputFormat: "yyyy")
-//                                                            Text(deviceVM.deviceDetails?.cardExpiryDate?.toFormattedDate() ?? "")
-//                                                                .font(.custom("Inter-Regular", size: 12))
-//                                                                .foregroundColor(.gray)
-//                                                        }
-//                                                    }
+                                                    
                                                     HStack {
-                                                        VStack(alignment: .leading) {
+                                                        VStack(alignment: .leading,spacing: 2) {
                                                             //  Text(selectedCard?.userName ?? "")
                                                             Text(deviceVM.deviceDetails?.userFullName ?? "")
                                                                 .font(.custom("Inter-Regular", size: 12))
@@ -256,28 +231,20 @@ struct DoorOpenView: View {
                                                                 .foregroundColor(.gray)
                                                             
                                                         }
+                                                        
                                                         Spacer()
-                                                        VStack(alignment: .leading) {
-                                                            Text("VALID FROM")
+                                                        
+                                                        VStack(alignment: .trailing, spacing: 2) {
+                                                            Text("Exp")
                                                                 .font(.custom("Inter-Regular", size: 12))
-                                                                .foregroundColor(.gray)
-                                                          
-                                                            Text("\(deviceVM.deviceDetails?.startDate ?? ""), \(deviceVM.deviceDetails?.startTime ?? "")")
-                                                                .font(.custom("Inter-Regular", size: 12))
-                                                                .foregroundColor(.gray)
-
-                                                        }
-                                                        Spacer()
-                                                        VStack(alignment: .leading) {
-                                                            Text("VALID TO")
-                                                                .font(.custom("Inter-Regular", size: 12))
-                                                                .foregroundColor(.gray)
-                                                           
-                                                            Text("\(deviceVM.deviceDetails?.endDate ?? ""), \(deviceVM.deviceDetails?.endTime ?? "")")
+                                                                .foregroundColor(.white)
+                                                            //.toFormattedDate(outputFormat: "yyyy")
+                                                            Text(deviceVM.deviceDetails?.endDate ?? "")
                                                                 .font(.custom("Inter-Regular", size: 12))
                                                                 .foregroundColor(.gray)
                                                         }
                                                     }
+
                                                 }
                                                 .padding(20)
                                                 .frame(maxWidth: .infinity)
@@ -331,7 +298,7 @@ struct DoorOpenView: View {
                                     if isOpening || progress > 0 || ringColor != .white {
                                         ZStack {
                                             // Full-screen black background
-                                            Color.black.opacity(0.96)
+                                            Color.black.opacity(0.98)
                                                 .ignoresSafeArea()
                                             
                                             // Lock icon and progress ring in the center
@@ -1356,10 +1323,10 @@ struct DoorOpenView: View {
                 guard isWithinAccessWindow() else {
                     print("⛔ Outside allowed time window")
                     DispatchQueue.main.async {
-                        overlayMessage = "Access denied. Time Restricted."
-                        AceesMessage = "Access denied. Time Restricted."
+                        overlayMessage = "\(deniedBase). Time Restricted"
+                        AceesMessage = "\(deniedBase). Time Restricted"
                         animateFailureOutSideTime()
-                        speakText("Access denied. Time Restricted.")
+                        speakText("\(deniedBase). Time Restricted")
                         UINotificationFeedbackGenerator().notificationOccurred(.error)
                     }
 
