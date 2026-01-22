@@ -70,11 +70,9 @@ struct CreateNewPasswordView: View {
                     .frame(maxWidth: .infinity, alignment: .top)
                     .zIndex(999)
                     
-                    
-                    ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: false) { // Add ScrollView to manage height & keyboard
                         VStack(spacing: 15) {
-                          Spacer().frame(height: 200)
+                          Spacer().frame(height: 15)
                             
                             // Header
                             VStack(spacing: 5) {
@@ -213,15 +211,8 @@ struct CreateNewPasswordView: View {
                         .padding(.horizontal, 10)
                         
                     }
-                    .onChange(of: focusedField) { field in
-                           guard let field else { return }
-                           withAnimation(.easeInOut(duration: 0.25)) {
-                               proxy.scrollTo(field, anchor: .center)
-                           }
-                       }
-
-
-                }
+                    .keyboardAware()
+                 
                 } .padding(.bottom, 100)
                 
                 // Bottom Button
