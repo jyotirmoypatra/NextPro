@@ -192,12 +192,20 @@ struct EditProfileView: View {
                                     }
                                     
                                     TextField("", text: Binding(
+//                                        get: {
+//                                            phoneNumber.formattedUSPhone()   // show formatted
+//                                        },
+//                                        set: { newValue in
+//                                            phoneNumber = newValue.filter { $0.isNumber } // store only digits
+//                                        }
+                                        
                                         get: {
-                                            phoneNumber.formattedUSPhone()   // show formatted
-                                        },
-                                        set: { newValue in
-                                            phoneNumber = newValue.filter { $0.isNumber } // store only digits
-                                        }
+                                                phoneNumber.formattedUSPhone()
+                                            },
+                                            set: { newValue in
+                                                let digits = newValue.filter { $0.isNumber }
+                                                phoneNumber = String(digits.prefix(10))
+                                            }
                                     ))
                                     .foregroundColor(.white)
                                     .font(.custom("Inter-Regular", size: 16))
