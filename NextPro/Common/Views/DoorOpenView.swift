@@ -54,7 +54,7 @@ struct DoorOpenView: View {
     @State private var successDoorKey: String?
     @State private var activeDoorKey: String? = nil
     @State private var remoteMqttResult: RemoteMQTTResult?
-
+    
     @State private var selectedTab = 0
     @State private var isRemoteUnlock = false
     @State private var showDoorErrorAlert = false
@@ -64,7 +64,7 @@ struct DoorOpenView: View {
     @State private var pullToRefresh: Bool = false
     
     @State private var didReceiveResponse = false
-
+    
     var body: some View {
         ZStack {
             
@@ -149,40 +149,13 @@ struct DoorOpenView: View {
                         
                         if selectedTab == 0 && hasDigitalKeyAccess{
                             // Digital Key Tab start
-                            if !doorStorage.hasResolvedDoors {
-                                VStack(spacing: 12) {
-                                    ProgressView()
-                                }.frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .transition(.opacity)
-                            }
-                            else if !doorStorage.hasDoor {
-                                VStack(spacing: 12) {
-                                    Image(systemName: "lock.slash")
+                            
+                            ZStack {
+                                ScrollView(.vertical, showsIndicators: false){
                                     
-                                        .font(.system(size: 42))
-                                        .foregroundColor(.gray)
-                                    
-                                    Text("No Digital Access Doors")
-                                        .font(.custom("Inter-SemiBold", size: 18))
-                                        .foregroundColor(.white)
-                                    
-                                    Text("You do not have any doors available for digital unlocking.")
-                                        .font(.custom("Inter-Regular", size: 14))
-                                        .foregroundColor(.gray)
-                                        .multilineTextAlignment(.center)
-                                        .padding(.horizontal, 30)
-                                }
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .transition(.opacity)
-                                .padding(.horizontal,10)
-                            }
-                            else{
-                                ZStack {
-                                    ScrollView(.vertical, showsIndicators: false){
+                                    VStack{
+                                        Spacer().frame(height: 20)
                                         
-                                        VStack{
-                                            Spacer().frame(height: 20)
-                                            
 //                                            if let date = serverTimeVM.localServerDate {
 //                                                Text(date.toReadableString(
 //                                                    format: "dd MMM yyyy, hh:mm a",
@@ -191,8 +164,36 @@ struct DoorOpenView: View {
 //                                                .font(.custom("Inter-Regular", size: 14))
 //                                                .foregroundColor(.gray)
 //                                            }
-
-                                            
+                                        
+                                        if !doorStorage.hasResolvedDoors {
+                                            VStack(spacing: 12) {
+                                                ProgressView()
+                                            }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                                                .transition(.opacity)
+                                        }
+                                        else if !doorStorage.hasDoor {
+                                            VStack(spacing: 12) {
+                                                Image(systemName: "lock.slash")
+                                                
+                                                    .font(.system(size: 42))
+                                                    .foregroundColor(.gray)
+                                                
+                                                Text("No Digital Access Doors")
+                                                    .font(.custom("Inter-SemiBold", size: 18))
+                                                    .foregroundColor(.white)
+                                                
+                                                Text("You do not have any doors available for digital unlocking.")
+                                                    .font(.custom("Inter-Regular", size: 14))
+                                                    .foregroundColor(.gray)
+                                                    .multilineTextAlignment(.center)
+                                                    .padding(.horizontal, 30)
+                                            }
+                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                            .transition(.opacity)
+                                            .padding(.horizontal,10)
+                                            .padding(.top,80)
+                                        }
+                                        else {
                                             VStack(spacing: 20) {
                                                 
                                                 // 🪪 Card (centered in the view)
@@ -244,7 +245,7 @@ struct DoorOpenView: View {
                                                                 .foregroundColor(.gray)
                                                         }
                                                     }
-
+                                                    
                                                 }
                                                 .padding(20)
                                                 .frame(maxWidth: .infinity)
@@ -264,11 +265,11 @@ struct DoorOpenView: View {
                                                     RoundedRectangle(cornerRadius: 14)
                                                         .stroke(Color.white.opacity(0.1), lineWidth: 1)
                                                 )
-                                               
+                                                
                                                 
                                                 
                                                 HStack(spacing: 6) {
-                                        
+                                                    
                                                     Text(AceesMessage ?? "")
                                                         .font(.custom("Inter-SemiBold", size: 16))
                                                         .foregroundColor(isScanningActive ? .white.opacity(0.5) : .red.opacity(0.8))
@@ -281,79 +282,79 @@ struct DoorOpenView: View {
                                                 
                                                 
                                             }
-                                            
                                         }
-                                        .padding(.horizontal,10)
-                                        .padding(.bottom, 30)
-                                        
                                         
                                     }
-                                    .transition(.opacity)
-                                    .refreshable{
-                                        pullToRefresh = true
-                                        await deviceVM.refreshDeviceDetails()
-                                        pullToRefresh = false
-                                    }
+                                    .padding(.horizontal,10)
+                                    .padding(.bottom, 30)
                                     
-                                    if isOpening || progress > 0 || ringColor != .white {
-                                        ZStack {
-                                            // Full-screen black background
-                                            Color.black.opacity(0.98)
-                                                .ignoresSafeArea()
-                                            
-                                            // Lock icon and progress ring in the center
-                                            VStack(spacing: 16) {
-                                                ZStack {
-                                                    Circle()
-                                                        .fill(Color.black)
-                                                        .frame(width: 80, height: 80)
-                                                    
-                                                    Circle()
-                                                        .trim(from: 0, to: progress)
-                                                        .stroke(
-                                                            ringColor,
-                                                            style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                                                        )
-                                                        .frame(width: 80, height: 80)
-                                                        .rotationEffect(.degrees(-90))
-                                                        .animation(.easeInOut(duration: 1.0), value: progress)
-                                                    
-                                                    Image(systemName: lockIcon)
-                                                        .foregroundColor(ringColor)
-                                                        .font(.system(size: 36, weight: .semibold))
-                                                        .scaleEffect(isOpening ? 1.15 : 1.0)
-                                                        .animation(.spring(), value: isOpening)
-                                                    
-                                                    if isUnauthorise {
-                                                        Rectangle()
-                                                            .fill(Color.red)
-                                                            .frame(width: 70, height: 6)   // thickness = 6
-                                                            .rotationEffect(.degrees(45)) // diagonal slash
-                                                    }
-                                                }
-                                                .shadow(color: ringColor.opacity(0.4), radius: 10, x: 0, y: 5)
-                                                
-                                                // Status Message
-                                                
-                                                Text(overlayMessage)
-                                                    .font(.custom("Inter-SemiBold", size: 18))
-                                                    .foregroundColor(ringColor)
-                                                    .padding(.horizontal,10)
-                                                    .id(overlayMessage)
-                                                    .transition(.opacity)
-                                                    .animation(.easeInOut(duration: 0.25), value: overlayMessage)
-                                                
-                                            }
-                                        }
-                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                        .transition(.opacity)
-                                        .ignoresSafeArea()
-                                        .zIndex(10)
-                                        
-                                    }
+                                    
+                                }
+                                .transition(.opacity)
+                                .refreshable{
+                                    pullToRefresh = true
+                                    await deviceVM.refreshDeviceDetails()
+                                    pullToRefresh = false
                                 }
                                 
+                                if isOpening || progress > 0 || ringColor != .white {
+                                    ZStack {
+                                        // Full-screen black background
+                                        Color.black.opacity(0.98)
+                                            .ignoresSafeArea()
+                                        
+                                        // Lock icon and progress ring in the center
+                                        VStack(spacing: 16) {
+                                            ZStack {
+                                                Circle()
+                                                    .fill(Color.black)
+                                                    .frame(width: 80, height: 80)
+                                                
+                                                Circle()
+                                                    .trim(from: 0, to: progress)
+                                                    .stroke(
+                                                        ringColor,
+                                                        style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                                                    )
+                                                    .frame(width: 80, height: 80)
+                                                    .rotationEffect(.degrees(-90))
+                                                    .animation(.easeInOut(duration: 1.0), value: progress)
+                                                
+                                                Image(systemName: lockIcon)
+                                                    .foregroundColor(ringColor)
+                                                    .font(.system(size: 36, weight: .semibold))
+                                                    .scaleEffect(isOpening ? 1.15 : 1.0)
+                                                    .animation(.spring(), value: isOpening)
+                                                
+                                                if isUnauthorise {
+                                                    Rectangle()
+                                                        .fill(Color.red)
+                                                        .frame(width: 70, height: 6)   // thickness = 6
+                                                        .rotationEffect(.degrees(45)) // diagonal slash
+                                                }
+                                            }
+                                            .shadow(color: ringColor.opacity(0.4), radius: 10, x: 0, y: 5)
+                                            
+                                            // Status Message
+                                            
+                                            Text(overlayMessage)
+                                                .font(.custom("Inter-SemiBold", size: 18))
+                                                .foregroundColor(ringColor)
+                                                .padding(.horizontal,10)
+                                                .id(overlayMessage)
+                                                .transition(.opacity)
+                                                .animation(.easeInOut(duration: 0.25), value: overlayMessage)
+                                            
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .transition(.opacity)
+                                    .ignoresSafeArea()
+                                    .zIndex(10)
+                                    
+                                }
                             }
+                            
                         }
                         
                         // Digital Key Tab end
@@ -361,31 +362,30 @@ struct DoorOpenView: View {
                         else if selectedTab == 1 && hasRemoteAccess
                         {
                             
-                            if deviceVM.standaloneControllerList.isEmpty {
-                                VStack(spacing: 12) {
-                                    Image(systemName: "wifi.slash")
-                                        .font(.system(size: 42))
-                                        .foregroundColor(.gray)
-                                    
-                                    Text("No Remote Access Doors")
-                                        .font(.custom("Inter-SemiBold", size: 18))
-                                        .foregroundColor(.white)
-                                    
-                                    Text("You do not have any doors available for remote unlocking.")
-                                        .font(.custom("Inter-Regular", size: 14))
-                                        .foregroundColor(.gray)
-                                        .multilineTextAlignment(.center)
-                                        .padding(.horizontal, 30)
-                                }
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .transition(.opacity)
-                                .padding(.horizontal,10)
-                            }
                             
-                            else
-                            {
-                                // Remote Access Tab
-                                ScrollView(.vertical, showsIndicators: false) {
+                            // Remote Access Tab
+                            ScrollView(.vertical, showsIndicators: false) {
+                                if deviceVM.standaloneControllerList.isEmpty {
+                                    VStack(spacing: 12) {
+                                        Image(systemName: "wifi.slash")
+                                            .font(.system(size: 42))
+                                            .foregroundColor(.gray)
+                                        
+                                        Text("No Remote Access Doors")
+                                            .font(.custom("Inter-SemiBold", size: 18))
+                                            .foregroundColor(.white)
+                                        
+                                        Text("You do not have any doors available for remote unlocking.")
+                                            .font(.custom("Inter-Regular", size: 14))
+                                            .foregroundColor(.gray)
+                                            .multilineTextAlignment(.center)
+                                            .padding(.horizontal, 30)
+                                    }
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .transition(.opacity)
+                                    .padding(.horizontal,10)
+                                    .padding(.top,80)
+                                } else {
                                     VStack(alignment: .leading, spacing: 20) {
                                         ForEach(deviceVM.standaloneControllerList) { door in
                                             RemoteDoorCardView(
@@ -403,7 +403,7 @@ struct DoorOpenView: View {
                                                     handleBLEOpen(for: door)
                                                 },
                                                 canOpenDoor: {
-                                                        isWithinAccessWindow()
+                                                    isWithinAccessWindow()
                                                 }
                                             )
                                         }
@@ -412,15 +412,16 @@ struct DoorOpenView: View {
                                     .padding(.top, 20)
                                     .padding(.bottom, 20)
                                 }
-                                .id("remote-tab-\(selectedTab)")
-                                    .transition(.opacity)
-                                .refreshable{
-                                    pullToRefresh = true
-                                    await deviceVM.refreshDeviceDetails()
-                                    pullToRefresh = false
-                                    
-                                }
                             }
+                            .id("remote-tab-\(selectedTab)")
+                            .transition(.opacity)
+                            .refreshable{
+                                pullToRefresh = true
+                                await deviceVM.refreshDeviceDetails()
+                                pullToRefresh = false
+                                
+                            }
+                            
                         }
                         
                     }.animation(.easeInOut(duration: 0.6), value: selectedTab)
@@ -444,16 +445,16 @@ struct DoorOpenView: View {
             }
             
         }
-         .background(Color.black.opacity(0.4))
+        .background(Color.black.opacity(0.4))
         .task{
-           
+            
             await deviceVM.fetchDeviceDetailsIfNeeded()
             //            if !deviceVM.issuccess && deviceVM.errorMessage != ""{
             //                doorStorage.clearDoors()          // sets hasResolvedDoors = false ❌ (we’ll fix below)
             //                doorStorage.hasResolvedDoors = true
             //                showDoorErrorAlert = true
             //            }
-          
+            
             print("Controller Serials:", deviceVM.allControllerSerials)
             
             
@@ -543,7 +544,7 @@ struct DoorOpenView: View {
                 
             case .active:
                 print("☀️ App became active — restarting BLE scanning and monitoring")
-
+                
                 // Only restart if view is still visible
                 guard isViewVisible else {
                     print("⚠️ View is not visible. Skipping BLE restart.")
@@ -617,19 +618,19 @@ struct DoorOpenView: View {
             for: UIApplication.didEnterBackgroundNotification
         )) { _ in
             print("🌙 didEnterBackground — force stop BLE")
-
+            
             bleManager.stopContinuousScanning()
             bleManager.stopMonitoringDevice()
             bleManager.stopScanning()
             isScanningActive = false
-
+            
             rssiTimer?.invalidate()
             rssiTimer = nil
-
+            
             AceesMessage = "Preparing Scan.."
             
         }
-
+        
         
         .onReceive(bleManager.$bleState) { state in
             switch state {
@@ -839,13 +840,13 @@ struct DoorOpenView: View {
     
     //check startdatetime  to  EnddateTime slot--------
     func isWithinAccessWindow() -> Bool {
-
+        
         // 🔓 Offline → allow access
         if !network.hasInternet {
             print("⚠️ No internet — bypassing access window check")
             return true
         }
-
+        
         guard
             let currentTime = serverTimeVM.localServerDate,
             let tzID = serverTimeVM.localTimeZoneID,
@@ -858,20 +859,20 @@ struct DoorOpenView: View {
             print("⚠️ Missing access window data")
             return false
         }
-
+        
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = accessTZ
-
+        
         // --- Date formatter ---
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         dateFormatter.timeZone = accessTZ
-
+        
         // --- Time formatter ---
         let timeFormatter = DateFormatter()
         timeFormatter.dateFormat = "HH:mm"
         timeFormatter.timeZone = accessTZ
-
+        
         guard
             let startDate = dateFormatter.date(from: startDateStr),
             let endDate = dateFormatter.date(from: endDateStr),
@@ -881,7 +882,7 @@ struct DoorOpenView: View {
             print("❌ Invalid date/time format")
             return false
         }
-
+        
         // Combine start date + start time
         guard let startDateTime = calendar.date(
             bySettingHour: calendar.component(.hour, from: startTime),
@@ -889,7 +890,7 @@ struct DoorOpenView: View {
             second: 0,
             of: startDate
         ) else { return false }
-
+        
         // Combine end date + end time
         guard let endDateTime = calendar.date(
             bySettingHour: calendar.component(.hour, from: endTime),
@@ -897,95 +898,95 @@ struct DoorOpenView: View {
             second: 59,
             of: endDate
         ) else { return false }
-
+        
         // 🔍 Debug
         let df = DateFormatter()
         df.dateFormat = "yyyy-MM-dd HH:mm:ss"
         df.timeZone = accessTZ
-
+        
         print("🧭 Access Window:",
               df.string(from: startDateTime),
               "→",
               df.string(from: endDateTime))
-
+        
         print("🕒 Current Time:",
               df.string(from: currentTime))
-
+        
         //  SINGLE comparison (correct)
         return currentTime >= startDateTime && currentTime <= endDateTime
     }
-
-
-//check date range and also time slot--------
-//    func isWithinAccessWindow() -> Bool {
-//
-//        if !network.hasInternet {
-//            print("⚠️ No internet — bypassing access window check")
-//            return true
-//        }
-//
-//        guard
-//            let currentTime = serverTimeVM.localServerDate,
-//            let localTZID = serverTimeVM.localTimeZoneID,
-//            let accessTZ = TimeZone(identifier: localTZID),
-//            let startDateStr = deviceVM.startDate,
-//            let endDateStr = deviceVM.endDate,
-//            let startTimeStr = deviceVM.startTime,
-//            let endTimeStr = deviceVM.endTime
-//        else {
-//            print("⚠️ Missing access window data")
-//            return false
-//        }
-//
-//        var calendar = Calendar(identifier: .gregorian)
-//        calendar.timeZone = accessTZ
-//
-//        let dateFormatter = DateFormatter()
-//        dateFormatter.dateFormat = "yyyy-MM-dd"
-//        dateFormatter.timeZone = accessTZ
-//
-//        let timeFormatter = DateFormatter()
-//        timeFormatter.dateFormat = "HH:mm"
-//        timeFormatter.timeZone = accessTZ
-//
-//        guard
-//            let startDate = dateFormatter.date(from: startDateStr),
-//            let endDate = dateFormatter.date(from: endDateStr),
-//            let startTime = timeFormatter.date(from: startTimeStr),
-//            let endTime = timeFormatter.date(from: endTimeStr)
-//        else {
-//            print("❌ Invalid date/time format")
-//            return false
-//        }
-//
-//        //  Date range check
-//        let isDateValid =
-//            currentTime >= startDate &&
-//            currentTime <= endDate
-//
-//        // Time window check (daily)
-//        let now = calendar.dateComponents([.hour, .minute], from: currentTime)
-//        let currentMinutes = (now.hour ?? 0) * 60 + (now.minute ?? 0)
-//
-//        let startMinutes =
-//            calendar.component(.hour, from: startTime) * 60 +
-//            calendar.component(.minute, from: startTime)
-//
-//        let endMinutes =
-//            calendar.component(.hour, from: endTime) * 60 +
-//            calendar.component(.minute, from: endTime)
-//
-//        let isTimeValid =
-//            currentMinutes >= startMinutes &&
-//            currentMinutes <= endMinutes
-//
-//        print("🧭 Date valid:", isDateValid)
-//        print("⏰ Time valid:", isTimeValid)
-//
-//        return isDateValid && isTimeValid
-//    }
     
-
+    
+    //check date range and also time slot--------
+    //    func isWithinAccessWindow() -> Bool {
+    //
+    //        if !network.hasInternet {
+    //            print("⚠️ No internet — bypassing access window check")
+    //            return true
+    //        }
+    //
+    //        guard
+    //            let currentTime = serverTimeVM.localServerDate,
+    //            let localTZID = serverTimeVM.localTimeZoneID,
+    //            let accessTZ = TimeZone(identifier: localTZID),
+    //            let startDateStr = deviceVM.startDate,
+    //            let endDateStr = deviceVM.endDate,
+    //            let startTimeStr = deviceVM.startTime,
+    //            let endTimeStr = deviceVM.endTime
+    //        else {
+    //            print("⚠️ Missing access window data")
+    //            return false
+    //        }
+    //
+    //        var calendar = Calendar(identifier: .gregorian)
+    //        calendar.timeZone = accessTZ
+    //
+    //        let dateFormatter = DateFormatter()
+    //        dateFormatter.dateFormat = "yyyy-MM-dd"
+    //        dateFormatter.timeZone = accessTZ
+    //
+    //        let timeFormatter = DateFormatter()
+    //        timeFormatter.dateFormat = "HH:mm"
+    //        timeFormatter.timeZone = accessTZ
+    //
+    //        guard
+    //            let startDate = dateFormatter.date(from: startDateStr),
+    //            let endDate = dateFormatter.date(from: endDateStr),
+    //            let startTime = timeFormatter.date(from: startTimeStr),
+    //            let endTime = timeFormatter.date(from: endTimeStr)
+    //        else {
+    //            print("❌ Invalid date/time format")
+    //            return false
+    //        }
+    //
+    //        //  Date range check
+    //        let isDateValid =
+    //            currentTime >= startDate &&
+    //            currentTime <= endDate
+    //
+    //        // Time window check (daily)
+    //        let now = calendar.dateComponents([.hour, .minute], from: currentTime)
+    //        let currentMinutes = (now.hour ?? 0) * 60 + (now.minute ?? 0)
+    //
+    //        let startMinutes =
+    //            calendar.component(.hour, from: startTime) * 60 +
+    //            calendar.component(.minute, from: startTime)
+    //
+    //        let endMinutes =
+    //            calendar.component(.hour, from: endTime) * 60 +
+    //            calendar.component(.minute, from: endTime)
+    //
+    //        let isTimeValid =
+    //            currentMinutes >= startMinutes &&
+    //            currentMinutes <= endMinutes
+    //
+    //        print("🧭 Date valid:", isDateValid)
+    //        print("⏰ Time valid:", isTimeValid)
+    //
+    //        return isDateValid && isTimeValid
+    //    }
+    
+    
     
     private func resetOverlayState() {
         animationResetTask?.cancel()
@@ -998,7 +999,7 @@ struct DoorOpenView: View {
         isRemoteUnlock = false
         AceesMessage = "Walk closer to the door."
     }
-
+    
     
     private func startBLEIfPossible() {
         guard isViewVisible else { return }
@@ -1043,7 +1044,7 @@ struct DoorOpenView: View {
             print("❌ Sensor details missing for door:", door.id)
             return
         }
-
+        
         doorManager.openSelectedDoor(sensor)
         
     }
@@ -1161,11 +1162,11 @@ struct DoorOpenView: View {
     }
     func scheduleTimeoutCheck() {
         animationResetTask?.cancel()
-
+        
         let task = DispatchWorkItem {
             // ❌ No response received in 5 sec
             guard !didReceiveResponse else { return }
-
+            
             withAnimation(.easeInOut(duration: 0.3)) {
                 ringColor = .red
                 lockIcon = "xmark"
@@ -1173,17 +1174,17 @@ struct DoorOpenView: View {
                 isOpening = false
                 progress = 1.0
             }
-
+            
             // Reset after 2 seconds
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                 resetOverlayState()
             }
         }
-
+        
         animationResetTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + 7.0, execute: task)
     }
-
+    
     func animateSuccess() {
         
         animationResetTask?.cancel()
@@ -1267,7 +1268,7 @@ struct DoorOpenView: View {
     }
     
     
-   
+    
     
     
     func monitorAndAutoOpenNearbyDoor() {
@@ -1275,24 +1276,24 @@ struct DoorOpenView: View {
         rssiTimer?.invalidate()
         rssiTimer = nil
         
-       // rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+        // rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
         let bleManager = self.bleManager
         let doorStorage = self.doorStorage
-      
-
+        
+        
         rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak bleManager, weak doorStorage] timer in
-
+            
             guard
-               isViewVisible,
-               let bleManager = bleManager,
-               let doorStorage = doorStorage
-           else {
-               timer.invalidate()
-               return
-           }
+                isViewVisible,
+                let bleManager = bleManager,
+                let doorStorage = doorStorage
+            else {
+                timer.invalidate()
+                return
+            }
             // 1️⃣ Find the closest device (BLEManager already filters for Thimmo devices only)
             let nearbyDevices = bleManager.devices.compactMap { peripheral -> (peripheral: CBPeripheral, rssi: Int)? in
-               // let name = (peripheral.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                // let name = (peripheral.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                 let rssi = bleManager.monitoredDeviceRSSI ?? bleManager.deviceLastRSSI[peripheral.identifier] ?? -100
                 
                 return (peripheral, rssi)
@@ -1329,7 +1330,7 @@ struct DoorOpenView: View {
                         speakText("\(deniedBase). Time Restricted")
                         UINotificationFeedbackGenerator().notificationOccurred(.error)
                     }
-
+                    
                     
                     // Restart monitoring after 5 seconds
                     DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
@@ -1337,10 +1338,10 @@ struct DoorOpenView: View {
                         isScanningActive = true
                         monitorAndAutoOpenNearbyDoor()
                     }
-
+                    
                     return
                 }
-
+                
                 
                 doorManager.openSelectedDoor(door)
                 //  Activate 20s MQTT window
