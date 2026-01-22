@@ -30,6 +30,14 @@ struct LoginView: View {
 
     @State private var isUserInitialSetupDone = false
     
+    enum Field: Hashable {
+        case email
+        case password
+    }
+
+    @FocusState private var focusedField: Field?
+
+    
     init(isUserInitialSetupCompleted: Bool,prefilledEmail: String = "") {
             self.isUserInitialSetupCompleted = isUserInitialSetupCompleted
             _isUserInitialSetupDone = State(initialValue: isUserInitialSetupCompleted)
@@ -50,107 +58,51 @@ struct LoginView: View {
                         .ignoresSafeArea()
                     
                     VStack{
-                    
-                        HStack {
                         
+                        HStack {
+                            
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 10)
                         .frame(maxWidth: .infinity, alignment: .top)
                         .zIndex(999)
-                    
-                    // Scrollable Fields
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 15) {
-                           Spacer().frame(height: 10)
-                            
-                            // Header
-                            VStack(spacing: 5) {
-                                Image("zylx")
-                                 .resizable()
-                                 .frame(width: 315, height: 120)
-                                 .padding(.bottom,40)
-                             
-                                Text(isUserInitialSetupDone ? "LOG IN TO YOUR ACCOUNT" : "SETUP YOUR ACCOUNT")
-                                    .font(.custom("Inter-SemiBold", size: 15))
-                                    .foregroundColor(.white)
+                        
+                        // Scrollable Fields
+                        ScrollViewReader { proxy in
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(spacing: 15) {
+                                Spacer().frame(height: 15)
                                 
-                                if !isUserInitialSetupDone {
-                                    Text("Enter your register email to continue")
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .foregroundColor(Color.gray.opacity(0.8))
-                                }
-                                
-                                
-                                if isUserInitialSetupDone {
-                                    Text("WELCOME!")
-                                        .font(.custom("Inter-Regular", size: 15))
-                                        .foregroundColor(Color.gray.opacity(0.8))
-                                }
-                            }
-                            .padding(.bottom, 20)
-                            
-                            // Email Field
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack(spacing: 0) {
-                                    Text("Email Address")
-                                        .font(.custom("Inter-Medium", size: 16))
+                                // Header
+                                VStack(spacing: 5) {
+                                    Image("zylx")
+                                        .resizable()
+                                        .frame(width: 315, height: 120)
+                                        .padding(.bottom,40)
+                                    
+                                    Text(isUserInitialSetupDone ? "LOG IN TO YOUR ACCOUNT" : "SETUP YOUR ACCOUNT")
+                                        .font(.custom("Inter-SemiBold", size: 15))
                                         .foregroundColor(.white)
-                                    Text(" *")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.red)
-                                }
-                                
-                                ZStack(alignment: .leading) {
+                                    
+                                    if !isUserInitialSetupDone {
+                                        Text("Enter your register email to continue")
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .foregroundColor(Color.gray.opacity(0.8))
+                                    }
+                                    
+                                    
                                     if isUserInitialSetupDone {
-                                        if vm.email.isEmpty {
-                                            Text("Enter Email Address")
-                                                .foregroundColor(Color.white.opacity(0.5))
-                                                .font(.custom("Inter-Regular", size: 16))
-                                                .padding(.leading, 14)
-                                                .onAppear {
-                                                    if !didPrefillEmail, !prefilledEmail.isEmpty {
-                                                        vm.email = prefilledEmail
-                                                        didPrefillEmail = true
-                                                    }
-                                                }
-                                        }
-                                        
-                                        TextField("", text: $vm.email)
-                                            .foregroundColor(.white)
-                                            .font(.custom("Inter-Regular", size: 16))
-                                            .padding(.horizontal, 14)
-                                            .frame(height: 50)
-                                            .background(Color.white.opacity(0.15))
-                                            .cornerRadius(10)
-                                            .autocapitalization(.none)
-                                            .disableAutocorrection(true)
-                                    }else{   // fresh account
-                                        if validateVM.email.isEmpty {
-                                            Text("Enter Email Address")
-                                                .foregroundColor(Color.white.opacity(0.5))
-                                                .font(.custom("Inter-Regular", size: 16))
-                                                .padding(.leading, 14)
-                                        }
-                                        
-                                        TextField("", text: $validateVM.email)
-                                            .foregroundColor(.white)
-                                            .font(.custom("Inter-Regular", size: 16))
-                                            .padding(.horizontal, 14)
-                                            .frame(height: 50)
-                                            .background(Color.white.opacity(0.15))
-                                            .cornerRadius(10)
-                                            .autocapitalization(.none)
-                                            .disableAutocorrection(true)
+                                        Text("WELCOME!")
+                                            .font(.custom("Inter-Regular", size: 15))
+                                            .foregroundColor(Color.gray.opacity(0.8))
                                     }
                                 }
-                            }
-                            
-                            // Password Field
-                            if  isUserInitialSetupDone {
+                                .padding(.bottom, 20)
+                                
+                                // Email Field
                                 VStack(alignment: .leading, spacing: 6) {
                                     HStack(spacing: 0) {
-                                        Text("Password")
+                                        Text("Email Address")
                                             .font(.custom("Inter-Medium", size: 16))
                                             .foregroundColor(.white)
                                         Text(" *")
@@ -158,68 +110,142 @@ struct LoginView: View {
                                             .foregroundColor(.red)
                                     }
                                     
-                                    ZStack(alignment: .trailing) {
-                                        ZStack(alignment: .leading) {
-                                            if vm.password.isEmpty {
-                                                Text("Enter Password")
+                                    ZStack(alignment: .leading) {
+                                        if isUserInitialSetupDone {
+                                            if vm.email.isEmpty {
+                                                Text("Enter Email Address")
+                                                    .foregroundColor(Color.white.opacity(0.5))
+                                                    .font(.custom("Inter-Regular", size: 16))
+                                                    .padding(.leading, 14)
+                                                    .onAppear {
+                                                        if !didPrefillEmail, !prefilledEmail.isEmpty {
+                                                            vm.email = prefilledEmail
+                                                            didPrefillEmail = true
+                                                        }
+                                                    }
+                                            }
+                                            
+                                            TextField("", text: $vm.email)
+                                                .foregroundColor(.white)
+                                                .font(.custom("Inter-Regular", size: 16))
+                                                .padding(.horizontal, 14)
+                                                .frame(height: 50)
+                                                .background(Color.white.opacity(0.15))
+                                                .cornerRadius(10)
+                                                .autocapitalization(.none)
+                                                .disableAutocorrection(true)
+                                                .focused($focusedField, equals: .email)
+                                                
+                                        }else{   // fresh account
+                                            if validateVM.email.isEmpty {
+                                                Text("Enter Email Address")
                                                     .foregroundColor(Color.white.opacity(0.5))
                                                     .font(.custom("Inter-Regular", size: 16))
                                                     .padding(.leading, 14)
                                             }
                                             
-                                            if showPassword {
-                                                TextField("", text: $vm.password)
-                                                    .foregroundColor(.white)
-                                                    .font(.custom("Inter-Regular", size: 16))
-                                                    .padding(.horizontal, 14)
-                                                    .frame(height: 50)
-                                                    .autocapitalization(.none)
-                                                    .disableAutocorrection(true)
-                                            } else {
-                                                SecureField("", text: $vm.password)
-                                                    .foregroundColor(.white)
-                                                    .font(.custom("Inter-Regular", size: 16))
-                                                    .padding(.horizontal, 14)
-                                                    .frame(height: 50)
-                                                    .autocapitalization(.none)
-                                                    .disableAutocorrection(true)
-                                            }
+                                            TextField("", text: $validateVM.email)
+                                                .foregroundColor(.white)
+                                                .font(.custom("Inter-Regular", size: 16))
+                                                .padding(.horizontal, 14)
+                                                .frame(height: 50)
+                                                .background(Color.white.opacity(0.15))
+                                                .cornerRadius(10)
+                                                .autocapitalization(.none)
+                                                .disableAutocorrection(true)
+                                                .focused($focusedField, equals: .email)
+                                                
                                         }
-                                        .background(Color.white.opacity(0.15))
-                                        .cornerRadius(10)
-                                        
-                                        Button(action: { showPassword.toggle() }) {
-                                            Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                                                .foregroundColor(.white.opacity(0.8))
-                                        }
-                                        .padding(.trailing, 14)
                                     }
-                                    
                                 }
-                            }
-                            
-                            HStack {
-                                Spacer()
+                                .id(Field.email)
                                 
-                                if isUserInitialSetupDone {
+                                // Password Field
+                                if  isUserInitialSetupDone {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        HStack(spacing: 0) {
+                                            Text("Password")
+                                                .font(.custom("Inter-Medium", size: 16))
+                                                .foregroundColor(.white)
+                                            Text(" *")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.red)
+                                        }
+                                        
+                                        ZStack(alignment: .trailing) {
+                                            ZStack(alignment: .leading) {
+                                                if vm.password.isEmpty {
+                                                    Text("Enter Password")
+                                                        .foregroundColor(Color.white.opacity(0.5))
+                                                        .font(.custom("Inter-Regular", size: 16))
+                                                        .padding(.leading, 14)
+                                                }
+                                                
+                                                if showPassword {
+                                                    TextField("", text: $vm.password)
+                                                        .foregroundColor(.white)
+                                                        .font(.custom("Inter-Regular", size: 16))
+                                                        .padding(.horizontal, 14)
+                                                        .frame(height: 50)
+                                                        .autocapitalization(.none)
+                                                        .disableAutocorrection(true)
+                                                        .focused($focusedField, equals: .password)
+                                                       
+                                                } else {
+                                                    SecureField("", text: $vm.password)
+                                                        .foregroundColor(.white)
+                                                        .font(.custom("Inter-Regular", size: 16))
+                                                        .padding(.horizontal, 14)
+                                                        .frame(height: 50)
+                                                        .autocapitalization(.none)
+                                                        .disableAutocorrection(true)
+                                                        .focused($focusedField, equals: .password)
+                                                      
+                                                }
+                                            }
+                                            .background(Color.white.opacity(0.15))
+                                            .cornerRadius(10)
+                                            
+                                            Button(action: { showPassword.toggle() }) {
+                                                Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                                    .foregroundColor(.white.opacity(0.8))
+                                            }
+                                            .padding(.trailing, 14)
+                                        }
+                                        
+                                    }
+                                    .id(Field.password)
+                                }
+                                
+                                HStack {
+                                    Spacer()
                                     
-                                    Button(action: {
+                                    if isUserInitialSetupDone {
                                         
-                                        navigateToResetPassword = true
-                                        
-                                    }) {
-                                        Text("Forgot Password ?")
-                                            .font(.custom("Inter-Regular", size: 14))
-                                            .foregroundColor(.white)
-                                            .padding(.top, 6)
+                                        Button(action: {
+                                            focusedField = nil
+                                            navigateToResetPassword = true
+                                            
+                                        }) {
+                                            Text("Forgot Password ?")
+                                                .font(.custom("Inter-Regular", size: 14))
+                                                .foregroundColor(.white)
+                                                .padding(.top, 6)
+                                        }
                                     }
                                 }
+                                
+                                Spacer().frame(height: 150)  // Prevent cut-off
                             }
-                            
-                            Spacer().frame(height: 150)  // Prevent cut-off
-                        }
-                        .padding(.horizontal, 10)
-                    } .keyboardAware()
+                            .padding(.horizontal, 10)
+                        } //.keyboardAware()
+                        .onChange(of: focusedField) { field in
+                               guard let field else { return }
+                               withAnimation(.easeInOut(duration: 0.25)) {
+                                   proxy.scrollTo(field, anchor: .center)
+                               }
+                           }
+                    }
                 }.padding(.bottom, 100)
 
                     // FOOTER - Fixed at Bottom

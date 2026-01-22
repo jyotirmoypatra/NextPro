@@ -14,6 +14,11 @@ struct ResetPassword: View {
     @StateObject private var toastManager = ToastManager.shared
     @StateObject private var viewModel = ForgetPasswordRequestViewModel()
     @State private var showFailedAlert = false
+    enum ResetField: Hashable {
+        case emailId
+    }
+
+    @FocusState private var focusedField: ResetField?
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
@@ -38,62 +43,71 @@ struct ResetPassword: View {
                     .zIndex(999)
                     
                     // Scrollable Content
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 15) {
-                            Spacer().frame(height: 10)
-                            
-                            // Header Text
-                            VStack(spacing: 5) {
-                                Image("zylx")
-                                 .resizable()
-                                 .frame(width: 315, height: 120)
-                                 .padding(.bottom,40)
+                    ScrollViewReader { proxy in
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(spacing: 15) {
+                                Spacer().frame(height: 10)
                                 
-                                Text("RESET YOUR PASSWORD")
-                                    .font(.custom("Inter-SemiBold", size: 16))
-                                    .foregroundColor(.white)
-                                Text("Enter the email associated with your account, and we'll send you a code to reset your password securely.")
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .foregroundColor(Color.gray.opacity(0.8))
-                                    .multilineTextAlignment(.center)
-                            }
-                            .padding(.bottom, 40)
-                            
-                            // Email Field
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack(spacing: 0) {
-                                    Text("Email Address")
-                                        .font(.custom("Inter-Medium", size: 16))
+                                // Header Text
+                                VStack(spacing: 5) {
+                                    Image("zylx")
+                                        .resizable()
+                                        .frame(width: 315, height: 120)
+                                        .padding(.bottom,40)
+                                    
+                                    Text("RESET YOUR PASSWORD")
+                                        .font(.custom("Inter-SemiBold", size: 16))
                                         .foregroundColor(.white)
-                                    Text(" *")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.red)
+                                    Text("Enter the email associated with your account, and we'll send you a code to reset your password securely.")
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .foregroundColor(Color.gray.opacity(0.8))
+                                        .multilineTextAlignment(.center)
                                 }
+                                .padding(.bottom, 40)
                                 
-                                ZStack(alignment: .leading) {
-                                    if viewModel.email.isEmpty {
-                                        Text("Enter Email")
-                                            .font(.custom("Inter-Regular", size: 16))
-                                            .foregroundColor(Color.white.opacity(0.5))
-                                            .padding(.leading, 14)
+                                // Email Field
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack(spacing: 0) {
+                                        Text("Email Address")
+                                            .font(.custom("Inter-Medium", size: 16))
+                                            .foregroundColor(.white)
+                                        Text(" *")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.red)
                                     }
                                     
-                                    TextField("", text: $viewModel.email)
-                                        .foregroundColor(.white)
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .padding(.horizontal, 14)
-                                        .frame(height: 50)
-                                        .background(Color.white.opacity(0.15))
-                                        .cornerRadius(10)
-                                        .autocapitalization(.none)
-                                        .disableAutocorrection(true)
-                                }
+                                    ZStack(alignment: .leading) {
+                                        if viewModel.email.isEmpty {
+                                            Text("Enter Email")
+                                                .font(.custom("Inter-Regular", size: 16))
+                                                .foregroundColor(Color.white.opacity(0.5))
+                                                .padding(.leading, 14)
+                                        }
+                                        
+                                        TextField("", text: $viewModel.email)
+                                            .foregroundColor(.white)
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .padding(.horizontal, 14)
+                                            .frame(height: 50)
+                                            .background(Color.white.opacity(0.15))
+                                            .cornerRadius(10)
+                                            .autocapitalization(.none)
+                                            .disableAutocorrection(true)
+                                            .focused($focusedField, equals: .emailId)
+                                    }
+                                } .id(ResetField.emailId)
+                                
+                                Spacer().frame(height: 150)  // Prevent cut-off
                             }
-                            
-                            Spacer().frame(height: 150)  // Prevent cut-off
+                            .padding(.horizontal, 10)
                         }
-                        .padding(.horizontal, 10)
-                    }.keyboardAware()
+                        .onChange(of: focusedField) { field in
+                               guard let field else { return }
+                               withAnimation(.easeInOut(duration: 0.25)) {
+                                   proxy.scrollTo(field, anchor: .center)
+                               }
+                           }
+                    }
                 }.padding(.bottom, 100)
                 // FOOTER - Fixed at Bottom
                 VStack(spacing: 16) {
