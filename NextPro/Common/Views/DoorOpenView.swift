@@ -183,14 +183,14 @@ struct DoorOpenView: View {
                                         VStack{
                                             Spacer().frame(height: 20)
                                             
-                                            if let date = serverTimeVM.localServerDate {
-                                                Text(date.toReadableString(
-                                                    format: "dd MMM yyyy, hh:mm a",
-                                                    timeZoneID: serverTimeVM.localTimeZoneID
-                                                ))
-                                                .font(.custom("Inter-Regular", size: 14))
-                                                .foregroundColor(.gray)
-                                            }
+//                                            if let date = serverTimeVM.localServerDate {
+//                                                Text(date.toReadableString(
+//                                                    format: "dd MMM yyyy, hh:mm a",
+//                                                    timeZoneID: serverTimeVM.localTimeZoneID
+//                                                ))
+//                                                .font(.custom("Inter-Regular", size: 14))
+//                                                .foregroundColor(.gray)
+//                                            }
 
                                             
                                             VStack(spacing: 20) {

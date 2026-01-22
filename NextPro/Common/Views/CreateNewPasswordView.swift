@@ -66,18 +66,18 @@ struct CreateNewPasswordView: View {
                     
                     
                     
-                    ScrollView { // ✅ Add ScrollView to manage height & keyboard
-                        VStack(spacing: 25) {
-                          Spacer().frame(height: 10)
+                    ScrollView { // Add ScrollView to manage height & keyboard
+                        VStack(spacing: 15) {
+                          Spacer().frame(height: 5)
                             
                             // Header
                             VStack(spacing: 5) {
                                 // Text(comingFrom == "login" ? "CREATE YOUR ACCOUNT" : "UPDATE YOUR PASSWORD")
                                 if (comingFrom == "validate_email"){
                                     Image("zylx")
-                                        .resizable()
-                                        .frame(width: 240, height: 93)
-                                        .padding(.bottom,40)
+                                     .resizable()
+                                     .frame(width: 315, height: 120)
+                                     .padding(.bottom,40)
                                 }
                                 
                                 Text(
@@ -86,7 +86,7 @@ struct CreateNewPasswordView: View {
                                         comingFrom == "forgetPassword" ? "RESET YOUR PASSWORD" :
                                         "" // fallback
                                 )
-                                .font(.custom("Inter-SemiBold", size: 20))
+                                .font(.custom("Inter-SemiBold", size: 16))
                                 .foregroundColor(.white)
                                 Text("Create a secure password for your account")
                                     .font(.custom("Inter-Regular", size: 16))

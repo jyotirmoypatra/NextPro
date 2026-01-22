@@ -39,13 +39,18 @@ struct ResetPassword: View {
                     
                     // Scrollable Content
                     ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 25) {
-                            Spacer().frame(height: 40)
+                        VStack(spacing: 15) {
+                            Spacer().frame(height: 10)
                             
                             // Header Text
                             VStack(spacing: 5) {
+                                Image("zylx")
+                                 .resizable()
+                                 .frame(width: 315, height: 120)
+                                 .padding(.bottom,40)
+                                
                                 Text("RESET YOUR PASSWORD")
-                                    .font(.custom("Inter-SemiBold", size: 20))
+                                    .font(.custom("Inter-SemiBold", size: 16))
                                     .foregroundColor(.white)
                                 Text("Enter the email associated with your account, and we'll send you a code to reset your password securely.")
                                     .font(.custom("Inter-Regular", size: 16))

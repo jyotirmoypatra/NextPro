@@ -62,7 +62,7 @@ struct LoginView: View {
                     // Scrollable Fields
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(spacing: 15) {
-                           Spacer().frame(height: 15)
+                           Spacer().frame(height: 10)
                             
                             // Header
                             VStack(spacing: 5) {
@@ -72,7 +72,7 @@ struct LoginView: View {
                                  .padding(.bottom,40)
                              
                                 Text(isUserInitialSetupDone ? "LOG IN TO YOUR ACCOUNT" : "SETUP YOUR ACCOUNT")
-                                    .font(.custom("Inter-SemiBold", size: 16))
+                                    .font(.custom("Inter-SemiBold", size: 15))
                                     .foregroundColor(.white)
                                 
                                 if !isUserInitialSetupDone {
@@ -84,7 +84,7 @@ struct LoginView: View {
                                 
                                 if isUserInitialSetupDone {
                                     Text("WELCOME!")
-                                        .font(.custom("Inter-Regular", size: 16))
+                                        .font(.custom("Inter-Regular", size: 15))
                                         .foregroundColor(Color.gray.opacity(0.8))
                                 }
                             }
@@ -337,7 +337,7 @@ struct LoginView: View {
                                 
                             }){
                                 Text("VERIFY EMAIL")
-                                    .font(.custom("Inter-SemiBold", size: 16))
+                                    .font(.custom("Inter-SemiBold", size: 15))
                                     .foregroundColor(.black)
                                     .frame(maxWidth: .infinity)
                                     .padding()

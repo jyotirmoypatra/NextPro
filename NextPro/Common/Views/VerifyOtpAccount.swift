@@ -63,7 +63,7 @@ struct VerifyOtpAccount: View {
                     // Header Text
                     VStack(spacing: 5) {
                         Text("VERIFY ACCOUNT")
-                            .font(.custom("Inter-SemiBold", size: 20))
+                            .font(.custom("Inter-SemiBold", size: 16))
                             .foregroundColor(.white)
                         Text("We sent a verification code to the email you entered.")
                             .font(.custom("Inter-Regular", size: 16))
