@@ -128,20 +128,20 @@ struct ProfileEndUserView: View {
 
                            
 
-                            Divider().background(Color.white.opacity(0.15))
-                                .padding(.horizontal,20)
-
-                            // Notifications Toggle
-                            HStack {
-                                Text("Notifications")
-                                    .font(.custom("Inter-Medium", size: 16))
-                                    .foregroundColor(.white)
-                                Spacer()
-                                Toggle("", isOn: $notificationsEnabled)
-                                    .labelsHidden()
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 30) // consistent with other rows
+//                            Divider().background(Color.white.opacity(0.15))
+//                                .padding(.horizontal,20)
+//
+//                            // Notifications Toggle
+//                            HStack {
+//                                Text("Notifications")
+//                                    .font(.custom("Inter-Medium", size: 16))
+//                                    .foregroundColor(.white)
+//                                Spacer()
+//                                Toggle("", isOn: $notificationsEnabled)
+//                                    .labelsHidden()
+//                            }
+//                            .padding(.horizontal, 20)
+//                            .padding(.vertical, 30) // consistent with other rows
                             
                            
                             
@@ -465,7 +465,7 @@ struct  DeleteConfirmationSheet: View {
                 Divider().background(colorScheme == .dark ? .white.opacity(0.3) : .black.opacity(0.3))
                 
                 Button(action: {
-                   
+                    dismiss()
                 }) {
                     Text("YES, DELETE MY ACCOUNT")
                         .font(.custom("Inter-Bold", size: 16))
@@ -504,16 +504,76 @@ struct  DeleteConfirmationSheet: View {
 }
 
 
+//struct ProfileImageView: View {
+//    let imageUrl: String?
+//    let size: CGFloat = 100
+//    
+//    @State private var isLoading: Bool = true
+//
+//    var body: some View {
+//        ZStack {
+//
+//            // Shimmer placeholder while loading
+//            if isLoading {
+//                Circle()
+//                    .fill(Color.gray.opacity(0.3))
+//                    .frame(width: size, height: size)
+//                    .overlay(
+//                        ShimmerView()
+//                            .frame(width: size, height: size)
+//                            .clipShape(Circle())
+//                    )
+//            } else {
+//                // Fallback placeholder if image fails
+//                Image(systemName: "person.circle.fill")
+//                    .resizable()
+//                    .scaledToFill()
+//                    .foregroundColor(.gray.opacity(0.6))
+//                    .frame(width: size, height: size)
+//            }
+//
+//            // Remote image loader
+//            if let urlString = imageUrl,
+//               let url = URL(string: urlString) {
+//
+//                WebImage(url: url)
+//                    .onSuccess { _, _, _ in
+//                        DispatchQueue.main.async {
+//                            withAnimation { isLoading = false }
+//                        }
+//                    }
+//                    .onFailure { _ in
+//                        DispatchQueue.main.async {
+//                            withAnimation { isLoading = false }
+//                        }
+//                    }
+//                    .resizable()
+//                    .scaledToFill()
+//                    .frame(width: size, height: size)
+//                    .clipShape(Circle())
+//            }
+//        }
+//        .clipShape(Circle())
+//        .overlay(
+//            Circle().stroke(Color.white.opacity(0.7), lineWidth: 1)
+//        )
+//        .shadow(radius: 6)
+//        // Reset shimmer when URL changes
+//                .onChange(of: imageUrl) { _ in
+//                    isLoading = true
+//                }
+//    }
+//}
 struct ProfileImageView: View {
     let imageUrl: String?
     let size: CGFloat = 100
-    
-    @State private var isLoading: Bool = true
+
+    @State private var isLoading: Bool = false
 
     var body: some View {
         ZStack {
 
-            // Shimmer placeholder while loading
+            // ✅ Shimmer only when loading VALID image
             if isLoading {
                 Circle()
                     .fill(Color.gray.opacity(0.3))
@@ -524,7 +584,7 @@ struct ProfileImageView: View {
                             .clipShape(Circle())
                     )
             } else {
-                // Fallback placeholder if image fails
+                // ✅ Placeholder (invalid URL or failure)
                 Image(systemName: "person.circle.fill")
                     .resizable()
                     .scaledToFill()
@@ -532,19 +592,22 @@ struct ProfileImageView: View {
                     .frame(width: size, height: size)
             }
 
-            // Remote image loader
+            // ✅ Remote image loader (only if URL valid)
             if let urlString = imageUrl,
-               let url = URL(string: urlString) {
+               let url = URL(string: urlString),
+               !urlString.isEmpty {
 
                 WebImage(url: url)
                     .onSuccess { _, _, _ in
                         DispatchQueue.main.async {
-                            withAnimation { isLoading = false }
-                        }
+                                withAnimation {
+                                    isLoading = false
+                                }
+                            }
                     }
                     .onFailure { _ in
-                        DispatchQueue.main.async {
-                            withAnimation { isLoading = false }
+                        withAnimation {
+                            isLoading = false
                         }
                     }
                     .resizable()
@@ -558,10 +621,23 @@ struct ProfileImageView: View {
             Circle().stroke(Color.white.opacity(0.7), lineWidth: 1)
         )
         .shadow(radius: 6)
-        // Reset shimmer when URL changes
-                .onChange(of: imageUrl) { _ in
-                    isLoading = true
-                }
+        .onAppear {
+            updateLoadingState()
+        }
+        .onChange(of: imageUrl) { _ in
+            updateLoadingState()
+        }
+    }
+
+    // MARK: - URL validation
+    private func updateLoadingState() {
+        if let urlString = imageUrl,
+           let _ = URL(string: urlString),
+           !urlString.isEmpty {
+            isLoading = true
+        } else {
+            isLoading = false
+        }
     }
 }
 
