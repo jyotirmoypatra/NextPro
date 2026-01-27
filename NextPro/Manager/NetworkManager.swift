@@ -1268,6 +1268,45 @@ class NetworkManager: ObservableObject {
     }
 
     
+    func fetchUserList(
+        userId: String,
+    ) async throws -> UsersResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.fetchUsersList))!
+        print("SuccessConfig wifi Api called----")
+        return try await performRequest(
+            url: url,
+            method: "POST",
+            body: [
+                "user_id": userId,
+                "source" : "app"
+                
+            ],
+            requiresAuth: true,
+            responseType: UsersResponse.self,
+            retry: true
+        )
+    }
+    
+    func addNewUser(
+        userId: String,
+    ) async throws -> UsersResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.addNewUser))!
+        print("SuccessConfig wifi Api called----")
+        return try await performRequest(
+            url: url,
+            method: "POST",
+            body: [
+                "user_id": userId,
+                
+            ],
+            requiresAuth: true,
+            responseType: UsersResponse.self,
+            retry: true
+        )
+    }
+    
     func refressToken() async throws -> RefreshTokenResponse {
 
         guard let refreshToken = KeychainManager.shared.get("refresh_token"),

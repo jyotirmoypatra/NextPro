@@ -11,6 +11,7 @@ struct ProfileEndUserView: View {
     @State private var notificationsEnabled = true
     @State private var navigateToUpdatePass = false
     @State private var navigateToEditProfile = false
+    @State private var navigateToUserManagement = false
     @State private var username = ""
     @State private var usertype = ""
     @State private var fullName = ""
@@ -34,6 +35,8 @@ struct ProfileEndUserView: View {
     
     
     @State private var showFullImage = false
+    
+    @State private var isAdmin = false
     
    
     var body: some View {
@@ -120,6 +123,16 @@ struct ProfileEndUserView: View {
                             
                             Divider().background(Color.white.opacity(0.15))
                                 .padding(.horizontal,20)
+                            
+                            if isAdmin {
+                                
+                                UserProfileRow(title: "User Management" , textColor: .white) {
+                                    navigateToUserManagement = true
+                                }
+                                
+                                Divider().background(Color.white.opacity(0.15))
+                                    .padding(.horizontal,20)
+                            }
                             
                             UserProfileRow(title: "Voice Message" , textColor: .white) {
                                 // Handle support action
@@ -259,6 +272,13 @@ struct ProfileEndUserView: View {
                 .navigationBarHidden(true)
                 .interactiveDismissDisabled(true)
         }
+        
+        .navigationDestination(isPresented: $navigateToUserManagement) {
+           UserManagementView()
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
+                .interactiveDismissDisabled(true)
+        }
 //        .onReceive(NetworkManager.shared.$hasInternet) { internet in
 //            if internet == true {
 //                Task {
@@ -285,6 +305,7 @@ struct ProfileEndUserView: View {
             }
         }
         .onAppear {
+            isAdmin = UserDefaults.standard.bool(forKey: "is_admin") ?? false
             Task {
                 loadUserData()
                 await viewModel.fetchUserProfile()

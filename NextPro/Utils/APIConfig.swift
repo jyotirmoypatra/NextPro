@@ -31,6 +31,9 @@ static let baseURL = "https://devapi.nextprotechnologies.com"
         static let successWifiConfig = "/api/wifi-configuration/"
         static let serverDateTime = "/api/authentication/server-datetime/"
         static let refreshToken = "/api/authentication/token/refresh/"
+        
+        static let fetchUsersList = "/api/facility-manager/filter-list/"
+        static let addNewUser = "/api/facility-manager/add/"
     }
     
     
