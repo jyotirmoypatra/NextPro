@@ -70,7 +70,7 @@ struct UserManagementView: View {
                                 .fontWeight(.bold)
                             
                             Text("Add User")
-                                .font(.custom("Inter-SemiBold", size: 16))
+                                .font(.custom("Inter-SemiBold", size: 18))
                                 .foregroundColor(.white)
                         }
                         
@@ -211,32 +211,94 @@ struct UserManagementView: View {
     }
 }
 
+//
+//struct UsersCardView: View {
+//    let user: User
+//
+//    var body: some View {
+//        HStack(spacing: 16) {
+//            Image("user-square")
+//                .resizable()
+//                .frame(width: 30, height: 30)
+//
+//            VStack(alignment: .leading, spacing: 2) {
+//                Text("\(user.fullName)")
+//                    .font(.custom("Inter-SemiBold", size: 16))
+//                    .foregroundColor(.white)
+//                    .lineLimit(2)
+//
+//            }
+//
+//            Spacer()
+//
+//        }
+//        .padding(15)
+//        .background(Color.white.opacity(0.08))
+//        .cornerRadius(14)
+//        .overlay(
+//            RoundedRectangle(cornerRadius: 14)
+//                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+//        )
+//    }
+//}
+
 
 struct UsersCardView: View {
     let user: User
 
     var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: "person.fill")
-                .font(.system(size: 20))
-                .foregroundColor(.gray)
+        HStack(spacing: 14) {
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("\(user.fullName)")
+            // Profile Icon
+            Image("user-square")
+                .resizable()
+                .renderingMode(.template)
+                .foregroundColor(.white)
+                .frame(width: 34, height: 34)
+
+            // Name + Subtitle
+            VStack(alignment: .leading, spacing: 4) {
+                Text(user.fullName)
                     .font(.custom("Inter-SemiBold", size: 16))
                     .foregroundColor(.white)
-                    .lineLimit(2)
 
+                Text("Schedule")
+                    .font(.custom("Inter-Regular", size: 13))
+                    .foregroundColor(.white.opacity(0.6))
             }
 
             Spacer()
 
+            // Edit Button
+            Button {
+                print("Edit tapped")
+            } label: {
+                Text("Edit")
+                    .font(.custom("Inter-SemiBold", size: 12))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.white, lineWidth: 1)
+                    )
+            }
         }
-        .padding(15)
-        .background(Color.white.opacity(0.08))
-        .cornerRadius(14)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(0.12),
+                    Color.white.opacity(0.05)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .cornerRadius(16)
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
+            RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.white.opacity(0.15), lineWidth: 1)
         )
     }

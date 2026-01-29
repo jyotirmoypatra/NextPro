@@ -23,31 +23,23 @@ struct AddUserView: View {
     @State private var digitalAccess = false
     @State private var remoteAccess = false
 
-    @State private var showAccessTypePicker = false
 
     @State private var isOneTimeAccess: Bool = true
     @State private var isScheduledAccess: Bool = false
 
-    // One-time
-    @State private var showOneTimeDatePicker = false
     @State private var showStartTimePicker = false
     @State private var showEndTimePicker = false
     
-    @State private var oneTimeDate = Date()
-    @State private var oneTimeStartTime = Date()
-    @State private var oneTimeEndTime = Date()
+    @State private var accessStartTime = Date()
+    @State private var accessEndTime = Date()
 
-    // Scheduled
-    @State private var showScheduleStartDatePicker = false
-    @State private var showScheduleEndDatePicker = false
-    @State private var showScheduleStartTimePicker = false
-    @State private var showScheduleEndTimePicker = false
 
-    
-    @State private var scheduleStartDate = Date()
-    @State private var scheduleEndDate = Date()
-    @State private var scheduleStartTime = Date()
-    @State private var scheduleEndTime = Date()
+    @State private var showStartDatePicker = false
+    @State private var showEndDatePicker = false
+
+    @State private var accessStartDate = Date()
+    @State private var accessEndDate = Date()
+
 
     @State private var selectedWeekdays: Set<Int> = []   // 1 = Sun ... 7 = Sat
 
@@ -112,44 +104,20 @@ struct AddUserView: View {
                             )
 
                             LabeledTextField(
-                                title: "Email",
+                                title: "Phone Number",
+                                placeholder: "Enter phone",
+                                text: $phone,
+                               
+                            )
+                            
+                            LabeledTextField(
+                                title: "Email ID",
                                 placeholder: "Enter email",
                                 isRequired: true,
                                 text: $email,
                                 
                             )
 
-                            LabeledTextField(
-                                title: "User Name",
-                                placeholder: "Enter username",
-                                isRequired: true,
-                                text: $username,
-                               
-                            )
-
-                            LabeledTextField(
-                                title: "Password",
-                                placeholder: "Enter password",
-                                isRequired: true,
-                                text: $password,
-                                isSecure: true,
-                               
-                            )
-
-                            LabeledTextField(
-                                title: "NFC Card ID",
-                                placeholder: "Physical NFC ID",
-                                isRequired: true,
-                                text: $nfcId,
-                               
-                            )
-
-                            LabeledTextField(
-                                title: "Phone Number",
-                                placeholder: "Enter phone",
-                                text: $phone,
-                               
-                            )
                             
                             
                             // Device Access
@@ -175,383 +143,175 @@ struct AddUserView: View {
                                 }
                             }
 
-                            
-                            // Access Type Dropdown
-                            // Access Type Dropdown
-                            VStack(alignment: .leading, spacing: 6) {
+                            // ACCESS TYPE
+                            VStack(alignment: .leading, spacing: 10) {
 
-                                Text("Selected Access Type")
+                                Text("ACCESS TYPE")
                                     .font(.custom("Inter-Medium", size: 16))
                                     .foregroundColor(.white)
 
-                                Button {
-                                    showAccessTypePicker = true
-                                } label: {
+                                VStack(spacing: 20) {
 
-                                    HStack {
-
-                                        Text(isOneTimeAccess ? "One-time Access" : "Scheduled Access")
-                                            .foregroundColor(.white)
-                                            .font(.custom("Inter-Regular", size: 16))
-
-                                        Spacer()
-
-                                        Image(systemName: "chevron.down")
-                                            .foregroundColor(.white.opacity(0.7))
+                                    // Schedule
+                                    AccessTypeRow(
+                                        title: "Schedule",
+                                        isSelected: isScheduledAccess
+                                    ) {
+                                        isScheduledAccess = true
+                                        isOneTimeAccess = false
                                     }
-                                    .padding(.horizontal, 14)
-                                    .frame(height: 50)
-                                    .background(Color.white.opacity(0.15))
-                                    .cornerRadius(10)
-                                }
-                            }
-                            .confirmationDialog(
-                                "Select Access Type",
-                                isPresented: $showAccessTypePicker,
-                                titleVisibility: .visible
-                            ) {
 
-                                Button("One-time Access") {
-                                    isOneTimeAccess = true
-                                    isScheduledAccess = false
+                                    // One Time
+                                    AccessTypeRow(
+                                        title: "One Time",
+                                        isSelected: isOneTimeAccess
+                                    ) {
+                                        isOneTimeAccess = true
+                                        isScheduledAccess = false
+                                    }
                                 }
-
-                                Button("Scheduled Access") {
-                                    isOneTimeAccess = false
-                                    isScheduledAccess = true
-                                }
-
-                                Button("Cancel", role: .cancel) {}
+                                .padding(12)
+                                .background(Color.white.opacity(0.15))
+                                .cornerRadius(12)
                             }
 
+                            VStack(alignment: .leading, spacing: 16) {
 
-                            // MARK: - One-time Access Fields
-                            if isOneTimeAccess {
+                                Text("ACCESS DATE")
+                                    .font(.custom("Inter-Medium", size: 16))
+                                    .foregroundColor(.white)
 
                                 VStack(alignment: .leading, spacing: 16) {
-
-                                    // Date
-                                    VStack(alignment: .leading, spacing: 6) {
-
-                                        Text("Date")
-                                            .font(.custom("Inter-Medium", size: 16))
-                                            .foregroundColor(.white)
-
-                                        Button {
-                                            showOneTimeDatePicker = true
-                                        } label: {
-
-                                            HStack {
-
-                                                Text(oneTimeDate.formatted(date: .abbreviated, time: .omitted))
-                                                    .foregroundColor(.white)
-                                                    .font(.custom("Inter-Regular", size: 16))
-
-                                                Spacer()
-
-                                                Image(systemName: "calendar")
-                                                    .foregroundColor(.white.opacity(0.7))
-                                            }
-                                            .padding(.horizontal, 14)
-                                            .frame(height: 50)
-                                            .background(Color.white.opacity(0.15))
-                                            .cornerRadius(10)
-                                        }
-                                    }
-
-
-                                    .sheet(isPresented: $showOneTimeDatePicker) {
-                                        pickerSheet(
-                                            title: "Select Date",
-                                            selection: $oneTimeDate,
-                                            components: .date
-                                        ) {
-                                            showOneTimeDatePicker = false
-                                        }
-                                    }
-
-
-
-                                    // Time Fields
-                                    HStack(spacing: 12) {
-
-                                        // Start Time
-                                        VStack(alignment: .leading, spacing: 6) {
-
-                                            Text("Start Time")
-                                                .font(.custom("Inter-Medium", size: 16))
-                                                .foregroundColor(.white)
-
-                                            Button {
-                                                showStartTimePicker = true
-                                            } label: {
-
-                                                HStack {
-
-                                                    Text(oneTimeStartTime.formatted(date: .omitted, time: .shortened))
-                                                        .foregroundColor(.white)
-                                                        .font(.custom("Inter-Regular", size: 16))
-
-                                                    Spacer()
-
-                                                    Image(systemName: "clock")
-                                                        .foregroundColor(.white.opacity(0.7))
-                                                }
-                                                .padding(.horizontal, 14)
-                                                .frame(height: 50)
-                                                .background(Color.white.opacity(0.15))
-                                                .cornerRadius(10)
-                                            }
-                                        }
-
-                                        
-                                        .sheet(isPresented: $showStartTimePicker) {
-                                            pickerSheet(
-                                                title: "Select Start Time",
-                                                selection: $oneTimeStartTime,
-                                                components: .hourAndMinute
-                                            ) {
-                                                showStartTimePicker = false
-                                            }
-                                        }
-                                        
-
-                                        // End Time
-                                        VStack(alignment: .leading, spacing: 6) {
-
-                                            Text("End Time")
-                                                .font(.custom("Inter-Medium", size: 16))
-                                                .foregroundColor(.white)
-
-                                            Button {
-                                                showEndTimePicker = true
-                                            } label: {
-
-                                                HStack {
-
-                                                    Text(oneTimeEndTime.formatted(date: .omitted, time: .shortened))
-                                                        .foregroundColor(.white)
-                                                        .font(.custom("Inter-Regular", size: 16))
-
-                                                    Spacer()
-
-                                                    Image(systemName: "clock")
-                                                        .foregroundColor(.white.opacity(0.7))
-                                                }
-                                                .padding(.horizontal, 14)
-                                                .frame(height: 50)
-                                                .background(Color.white.opacity(0.15))
-                                                .cornerRadius(10)
-                                            }
-                                        }
-
-                                        
-                                            .sheet(isPresented: $showEndTimePicker) {
-                                                pickerSheet(
-                                                    title: "Select End Time",
-                                                    selection: $oneTimeEndTime,
-                                                    components: .hourAndMinute
-                                                ) {
-                                                    showEndTimePicker = false
-                                                }
-                                            }
-                                    }
-
-                                }
+                                    // Start Date
+                                    dateBox(
+                                        title: "Start Date",
+                                        value: accessStartDate,
+                                        action: { showStartDatePicker = true }
+                                    )
+                                    
+                                    // End Date
+                                    dateBox(
+                                        title: "End Date",
+                                        value: accessEndDate,
+                                        action: { showEndDatePicker = true }
+                                    )
+                                } .padding()
+                                .background(Color.white.opacity(0.15))
+                                .cornerRadius(10)
                             }
-
-
                             
-                            // MARK: - Scheduled Access Fields
+                            // MARK: - TIME SECTION
+
+                            VStack(alignment: .leading, spacing: 16) {
+
+                                Text("ACCESS TIME")
+                                    .font(.custom("Inter-Medium", size: 16))
+                                    .foregroundColor(.white)
+                                VStack(alignment: .leading, spacing: 16) {
+                                    // From
+                                    timeBox(
+                                        title: "Start Time",
+                                        value: accessStartTime,
+                                        action: {
+                                            showStartTimePicker = true
+                                        }
+                                    )
+                                    
+                                    // To
+                                    timeBox(
+                                        title: "End Time",
+                                        value: accessEndTime,
+                                        action: {
+                                            showEndTimePicker = true
+
+                                        }
+                                    )
+                                }
+                                .padding()
+                                .background(Color.white.opacity(0.15))
+                                .cornerRadius(10)
+                            }
+                           
+                            
                             if isScheduledAccess {
 
-                                VStack(alignment: .leading, spacing: 16) {
+                                VStack(alignment: .leading, spacing: 12) {
 
-                                    // Start Date
-                                    VStack(alignment: .leading, spacing: 6) {
-
-                                        Text("Start Date")
-                                            .font(.custom("Inter-Medium", size: 16))
-                                            .foregroundColor(.white)
-
-                                        Button {
-                                            showScheduleStartDatePicker = true
-                                        } label: {
-
-                                            HStack {
-                                                Text(scheduleStartDate.formatted(date: .abbreviated, time: .omitted))
-                                                    .foregroundColor(.white)
-                                                    .font(.custom("Inter-Regular", size: 16))
-
-                                                Spacer()
-
-                                                Image(systemName: "calendar")
-                                                    .foregroundColor(.white.opacity(0.7))
-                                            }
-                                            .padding(.horizontal, 14)
-                                            .frame(height: 50)
-                                            .background(Color.white.opacity(0.15))
-                                            .cornerRadius(10)
-                                        }
-                                    }
-                                    
-                                    .sheet(isPresented: $showScheduleStartDatePicker) {
-                                        pickerSheet(
-                                            title: "Select Start Date",
-                                            selection: $scheduleStartDate,
-                                            components: .date
-                                        ) {
-                                            showScheduleStartDatePicker = false
-                                        }
-                                    }
-
-
-                                    // End Date
-                                    VStack(alignment: .leading, spacing: 6) {
-
-                                        Text("End Date")
-                                            .font(.custom("Inter-Medium", size: 16))
-                                            .foregroundColor(.white)
-
-                                        Button {
-                                            showScheduleEndDatePicker = true
-                                        } label: {
-
-                                            HStack {
-                                                Text(scheduleEndDate.formatted(date: .abbreviated, time: .omitted))
-                                                    .foregroundColor(.white)
-                                                    .font(.custom("Inter-Regular", size: 16))
-
-                                                Spacer()
-
-                                                Image(systemName: "calendar")
-                                                    .foregroundColor(.white.opacity(0.7))
-                                            }
-                                            .padding(.horizontal, 14)
-                                            .frame(height: 50)
-                                            .background(Color.white.opacity(0.15))
-                                            .cornerRadius(10)
-                                        }
-                                    }
-                                    .sheet(isPresented: $showScheduleEndDatePicker) {
-                                        pickerSheet(
-                                            title: "Select End Date",
-                                            selection: $scheduleEndDate,
-                                            components: .date
-                                        ) {
-                                            showScheduleEndDatePicker = false
-                                        }
-                                    }
-
-                                    // Time Fields
-                                    HStack(spacing: 12) {
-
-                                        // Start Time
-                                        VStack(alignment: .leading, spacing: 6) {
-
-                                            Text("Start Time")
-                                                .font(.custom("Inter-Medium", size: 16))
-                                                .foregroundColor(.white)
-
-                                            Button {
-                                                showScheduleStartTimePicker = true
-                                            } label: {
-
-                                                HStack {
-                                                    Text(scheduleStartTime.formatted(date: .omitted, time: .shortened))
-                                                        .foregroundColor(.white)
-
-                                                    Spacer()
-
-                                                    Image(systemName: "clock")
-                                                        .foregroundColor(.white.opacity(0.7))
-                                                }
-                                                .padding(.horizontal, 14)
-                                                .frame(height: 50)
-                                                .background(Color.white.opacity(0.15))
-                                                .cornerRadius(10)
-                                            }
-                                        }
-                                        
-                                        
-                                        .sheet(isPresented: $showScheduleStartTimePicker) {
-                                            pickerSheet(
-                                                title: "Select Start Time",
-                                                selection: $scheduleStartTime,
-                                                components: .hourAndMinute
-                                            ) {
-                                                showScheduleStartTimePicker = false
-                                            }
-                                        }
-
-                                        // End Time
-                                        VStack(alignment: .leading, spacing: 6) {
-
-                                            Text("End Time")
-                                                .font(.custom("Inter-Medium", size: 16))
-                                                .foregroundColor(.white)
-
-                                            Button {
-                                                showScheduleEndTimePicker = true
-                                            } label: {
-
-                                                HStack {
-                                                    Text(scheduleEndTime.formatted(date: .omitted, time: .shortened))
-                                                        .foregroundColor(.white)
-
-                                                    Spacer()
-
-                                                    Image(systemName: "clock")
-                                                        .foregroundColor(.white.opacity(0.7))
-                                                }
-                                                .padding(.horizontal, 14)
-                                                .frame(height: 50)
-                                                .background(Color.white.opacity(0.15))
-                                                .cornerRadius(10)
-                                            }
-                                        }
-                                    
-                                        .sheet(isPresented: $showScheduleEndTimePicker) {
-                                            pickerSheet(
-                                                title: "Select End Time",
-                                                selection: $scheduleEndTime,
-                                                components: .hourAndMinute
-                                            ) {
-                                                showScheduleEndTimePicker = false
-                                            }
-                                        }
-                                    }
-
-                                    // Weekdays
-                                    Text("Repeat On")
+                                    Text("REPEAT EVERY")
                                         .font(.custom("Inter-Medium", size: 16))
                                         .foregroundColor(.white)
 
                                     LazyVGrid(
                                         columns: [
                                             GridItem(.flexible()),
+                                            GridItem(.flexible()),
+                                            GridItem(.flexible()),
                                             GridItem(.flexible())
                                         ],
-                                        spacing: 12
+                                        spacing: 15
                                     ) {
                                         ForEach(1...7, id: \.self) { day in
-                                            WeekdayCheckBoxRow(
-                                                title: fullWeekdayName(day),
-                                                isChecked: selectedWeekdays.contains(day)
+                                            DayPill(
+                                                title: shortDay(day),
+                                                isSelected: selectedWeekdays.contains(day)
                                             ) {
                                                 toggleDay(day)
                                             }
                                         }
                                     }
-
-
+                                    .padding()   // ✅ indent
+                                    .background(Color.white.opacity(0.15))
+                                    .cornerRadius(10)
                                 }
                             }
 
 
 
+
                             
                         }.padding(.bottom,10)
+                        .sheet(isPresented: $showStartDatePicker) {
+                            pickerSheet(
+                                title: "Select Start Date",
+                                selection: $accessStartDate,
+                                components: .date
+                            ) {
+                                showStartDatePicker = false
+                            }
+                        }
+
+                        .sheet(isPresented: $showEndDatePicker) {
+                            pickerSheet(
+                                title: "Select End Date",
+                                selection: $accessEndDate,
+                                components: .date
+                            ) {
+                                showEndDatePicker = false
+                            }
+                        }
+
+                        .sheet(isPresented: $showStartTimePicker) {
+                            pickerSheet(
+                                title: "Select Start Time",
+                                selection: $accessStartTime,
+                                components: .hourAndMinute
+                            ) {
+                                showStartTimePicker = false
+                            }
+                        }
+
+                        .sheet(isPresented: $showEndTimePicker) {
+                            pickerSheet(
+                                title: "Select End Time",
+                                selection: $accessEndTime,
+                                components: .hourAndMinute
+                            ) {
+                                showEndTimePicker = false
+                            }
+                        }
+
+                        
+
                     }
                     .frame(maxHeight: .infinity)
                     .keyboardAware()
@@ -625,49 +385,8 @@ struct AddUserView: View {
             selectedWeekdays.insert(day)
         }
     }
-    func fullWeekdayName(_ day: Int) -> String {
-        let names = [
-            "Sunday",
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday"
-        ]
-        return names[day-1]
-    }
+   
 
-    struct WeekdayCheckBoxRow: View {
-
-        let title: String
-        var isChecked: Bool
-        var action: () -> Void
-
-        var body: some View {
-            Button(action: action) {
-
-                HStack(spacing: 10) {
-
-                    Image(systemName: isChecked
-                          ? "checkmark.square.fill"
-                          : "square")
-                        .foregroundColor(isChecked ? .white : .gray)
-                        .font(.system(size: 18))
-
-                    Text(title)
-                        .foregroundColor(.white)
-                        .font(.custom("Inter-Regular", size: 15))
-
-                    Spacer()
-                }
-                .padding(.horizontal, 12)
-                .frame(height: 46)
-                .background(Color.white.opacity(0.15))
-                .cornerRadius(8)
-            }
-        }
-    }
     
     @ViewBuilder
     func pickerSheet(
@@ -797,4 +516,104 @@ struct CheckBoxView: View {
             }
         }
     }
+}
+
+struct AccessTypeRow: View {
+
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack {
+
+                Text(title)
+                    .foregroundColor(.white)
+                    .font(.custom("Inter-Regular", size: 15))
+
+                Spacer()
+
+                Image(isSelected
+                      ? "square-check"
+                      : "square-uncheck")
+                    .resizable()
+                    .frame(width: 20, height: 20)
+            }
+        }
+    }
+}
+
+
+// Date Field Box
+func dateBox(title: String, value: Date, action: @escaping () -> Void) -> some View {
+    VStack(alignment: .leading, spacing: 6) {
+        Text(title)
+            .foregroundColor(.white)
+            .font(.custom("Inter-Regular", size: 15))
+
+        Button(action: action) {
+            HStack {
+                Image(systemName: "calendar")
+                Text(value.formatted(date: .numeric, time: .omitted))
+                    .font(.custom("Inter-Regular", size: 15))
+                Spacer()
+            }
+            .foregroundColor(.white)
+            .padding()
+            
+        } .overlay(
+            RoundedRectangle(cornerRadius: 5)
+                .stroke(Color.white.opacity(0.4), lineWidth: 1)
+        )
+    }
+   
+}
+
+// Time Field Box
+func timeBox(title: String, value: Date, action: @escaping () -> Void) -> some View {
+    VStack(alignment: .leading, spacing: 6) {
+        Text(title)
+            .foregroundColor(.white)
+            .font(.custom("Inter-Regular", size: 15))
+
+        Button(action: action) {
+            HStack {
+                Image(systemName: "clock")
+                Text(value.formatted(date: .omitted, time: .shortened))
+                    .font(.custom("Inter-Regular", size: 15))
+                Spacer()
+            }
+            .foregroundColor(.white)
+            .padding()
+            .overlay(
+                RoundedRectangle(cornerRadius: 5)
+                    .stroke(Color.white.opacity(0.4), lineWidth: 1)
+            )
+        }
+    }
+}
+
+// Day Pill
+struct DayPill: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.custom("Inter-Regular", size: 14))
+                .foregroundColor(.white)
+                .padding(.horizontal, 15)
+                .padding(.vertical, 6)
+                .background(isSelected ? Color.blue : Color.white.opacity(0.15))
+                .cornerRadius(8)
+        }
+    }
+}
+
+// Short Day Name
+func shortDay(_ day: Int) -> String {
+    ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][day-1]
 }
