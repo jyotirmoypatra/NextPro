@@ -12,6 +12,7 @@ struct AddUserView: View {
     @StateObject private var addUserVM = AddUserViewModel()
     @State private var showAddUserVMError = false
     @State private var navigateToUserManagement = false
+    @State private var navigateToDoorAddView = false
     
     @State private var fullName = ""
     @State private var email = ""
@@ -175,6 +176,7 @@ struct AddUserView: View {
                                 .cornerRadius(12)
                             }
 
+                            //access date
                             VStack(alignment: .leading, spacing: 16) {
 
                                 Text("ACCESS DATE")
@@ -200,7 +202,7 @@ struct AddUserView: View {
                                 .cornerRadius(10)
                             }
                             
-                            // MARK: - TIME SECTION
+                         
 
                             VStack(alignment: .leading, spacing: 16) {
 
@@ -266,6 +268,38 @@ struct AddUserView: View {
                             }
 
 
+                            
+                            VStack(alignment: .leading, spacing: 12) {
+
+                                Text("DOOR ACCESS")
+                                    .font(.custom("Inter-Medium", size: 16))
+                                    .foregroundColor(.white)
+                                Button(action: {
+                                    navigateToDoorAddView = true
+                                }) {
+                                    HStack{
+                                        Image(systemName: "plus")
+                                            .font(.system(size: 15))
+                                            .foregroundColor(.white)
+                                            .fontWeight(.bold)
+                                        
+                                        Text("Add Door")
+                                            .font(.custom("Inter-SemiBold", size: 15))
+                                            .foregroundColor(.white)
+                                    }
+                                    
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .stroke(
+                                            Color.white.opacity(0.4),
+                                            lineWidth: 1
+                                        )
+                                )
+                                
+                            }
 
 
                             
@@ -354,6 +388,9 @@ struct AddUserView: View {
         .navigationBarBackButtonHidden(true)
         .navigationDestination(isPresented: $navigateToUserManagement) {
             UserManagementView()
+        }
+        .navigationDestination(isPresented: $navigateToDoorAddView) {
+            DoorAccessView()
         }
         .internetOverlay()
 
