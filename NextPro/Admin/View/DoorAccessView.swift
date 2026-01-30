@@ -11,10 +11,14 @@ import SwiftUI
 struct DoorAccessView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @Binding var selectedDoors: [DoorModel]
 
     @State private var searchText: String = ""
-    @State private var selectedDoors: Set<String> = []
+   // @State private var selectedDoors: Set<String> = []
 
+    @State private var tempSelected: Set<String> = []
+
+    
     // Dummy Data (replace with API later)
     let doors: [DoorModel] = [
         DoorModel(id: "UTL/L1-003", name: "UTL Front Gate"),
@@ -96,7 +100,7 @@ struct DoorAccessView: View {
 
                                 DoorRow(
                                     door: door,
-                                    isSelected: selectedDoors.contains(door.id)
+                                    isSelected: tempSelected.contains(door.id)
                                 ) {
                                     toggleDoor(door.id)
                                 }
@@ -114,24 +118,58 @@ struct DoorAccessView: View {
                     Spacer()
                 }
                 .padding(.horizontal, 10)
+                .padding(.bottom, 60)
+                
+                VStack(spacing: 16) {
+                    // Buttons
+                    HStack(spacing: 15) {
+                        
+                        Button(action: {
+
+                            selectedDoors = doors.filter {
+                                    tempSelected.contains($0.id)
+                                }
+                                dismiss()
+
+                        }) {
+                            Text("Add")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .font(.custom("Inter-SemiBold", size: 16))
+                                .background(Color.white)
+                                .foregroundColor(.black)
+                                .cornerRadius(8)
+                        }
+
+                    }
+                }
+                .padding(.horizontal, 10)
                 .padding(.bottom, 20)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
         }
         .navigationBarBackButtonHidden(true)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .onTapGesture {
             UIApplication.shared.hideKeyboard()
         }
+        
+        .onAppear {
+            tempSelected = Set(selectedDoors.map { $0.id })
+        }
+
     }
 
     // MARK: - Toggle
 
     func toggleDoor(_ id: String) {
-        if selectedDoors.contains(id) {
-            selectedDoors.remove(id)
+        if tempSelected.contains(id) {
+            tempSelected.remove(id)
         } else {
-            selectedDoors.insert(id)
+            tempSelected.insert(id)
         }
     }
+
 }
 
 

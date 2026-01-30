@@ -44,6 +44,8 @@ struct AddUserView: View {
 
     @State private var selectedWeekdays: Set<Int> = []   // 1 = Sun ... 7 = Sat
 
+    @State private var selectedDoors: [DoorModel] = []
+
 
     
     var body: some View {
@@ -120,15 +122,13 @@ struct AddUserView: View {
                             )
 
                             
-                            
-                            // Device Access
                             VStack(alignment: .leading, spacing: 10) {
 
                                 Text("Device Access")
                                     .font(.custom("Inter-Medium", size: 16))
                                     .foregroundColor(.white)
 
-                                HStack(spacing: 25) {
+                                VStack(spacing: 20) {
 
                                     // Digital
                                     CheckBoxView(
@@ -142,8 +142,12 @@ struct AddUserView: View {
                                         isChecked: $remoteAccess
                                     )
                                 }
+                                .padding(12)
+                                .background(Color.white.opacity(0.15))
+                                .cornerRadius(12)
                             }
-
+                            
+                            
                             // ACCESS TYPE
                             VStack(alignment: .leading, spacing: 10) {
 
@@ -269,37 +273,90 @@ struct AddUserView: View {
 
 
                             
+//                            VStack(alignment: .leading, spacing: 12) {
+//
+//                                Text("DOOR ACCESS")
+//                                    .font(.custom("Inter-Medium", size: 16))
+//                                    .foregroundColor(.white)
+//                                Button(action: {
+//                                    navigateToDoorAddView = true
+//                                }) {
+//                                    HStack{
+//                                        Image(systemName: "plus")
+//                                            .font(.system(size: 15))
+//                                            .foregroundColor(.white)
+//                                            .fontWeight(.bold)
+//                                        
+//                                        Text("Add Door")
+//                                            .font(.custom("Inter-SemiBold", size: 15))
+//                                            .foregroundColor(.white)
+//                                    }
+//                                    
+//                                }
+//                                .frame(maxWidth: .infinity)
+//                                .padding()
+//                                .overlay(
+//                                    RoundedRectangle(cornerRadius: 14)
+//                                        .stroke(
+//                                            Color.white.opacity(0.4),
+//                                            lineWidth: 1
+//                                        )
+//                                )
+//                                
+//                            }
+                            
+                            
                             VStack(alignment: .leading, spacing: 12) {
 
                                 Text("DOOR ACCESS")
                                     .font(.custom("Inter-Medium", size: 16))
                                     .foregroundColor(.white)
+
                                 Button(action: {
                                     navigateToDoorAddView = true
                                 }) {
-                                    HStack{
+                                    HStack {
                                         Image(systemName: "plus")
-                                            .font(.system(size: 15))
-                                            .foregroundColor(.white)
-                                            .fontWeight(.bold)
-                                        
                                         Text("Add Door")
                                             .font(.custom("Inter-SemiBold", size: 15))
-                                            .foregroundColor(.white)
                                     }
-                                    
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .stroke(Color.white.opacity(0.4), lineWidth: 1)
+                                    )
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 14)
-                                        .stroke(
-                                            Color.white.opacity(0.4),
-                                            lineWidth: 1
-                                        )
-                                )
-                                
+
+                                // ✅ Selected Door List
+                                ForEach(selectedDoors) { door in
+                                    HStack {
+
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(door.name)
+                                                .foregroundColor(.white)
+
+                                            Text(door.id)
+                                                .foregroundColor(.white.opacity(0.6))
+                                                .font(.system(size: 13))
+                                        }
+
+                                        Spacer()
+
+                                        Button {
+                                            selectedDoors.removeAll { $0.id == door.id }
+                                        } label: {
+                                            Image(systemName: "trash")
+                                                .foregroundColor(.red)
+                                        }
+                                    }
+                                    .padding()
+                                    .background(Color.white.opacity(0.12))
+                                    .cornerRadius(12)
+                                }
                             }
+
 
 
                             
@@ -368,6 +425,35 @@ struct AddUserView: View {
                         
                         Button("Create User") {
                             // submit
+                            
+                            print("-------- USER INFO --------")
+                            print("Full Name:", fullName)
+                            print("Phone:", phone)
+                            print("Email:", email)
+
+                            print("-------- DEVICE ACCESS --------")
+                            print("Digital:", digitalAccess)
+                            print("Remote:", remoteAccess)
+
+                            print("-------- ACCESS TYPE --------")
+                            print("One Time:", isOneTimeAccess)
+                            print("Scheduled:", isScheduledAccess)
+
+                            print("-------- ACCESS DATE --------")
+                            print("Start Date:", accessStartDate)
+                            print("End Date:", accessEndDate)
+
+                            print("-------- ACCESS TIME --------")
+                            print("Start Time:", accessStartTime)
+                            print("End Time:", accessEndTime)
+
+                            print("-------- REPEAT DAYS --------")
+                            let repeatDays = isScheduledAccess ? selectedWeekdays : []
+                            print(repeatDays)
+
+                            print("-------- DOOR ACCESS --------")
+                            // Later you will replace this with selected doors
+                            print("Selected Doors Coming Soon")
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -390,8 +476,11 @@ struct AddUserView: View {
             UserManagementView()
         }
         .navigationDestination(isPresented: $navigateToDoorAddView) {
-            DoorAccessView()
+            DoorAccessView(selectedDoors: $selectedDoors)
         }
+
+
+
         .internetOverlay()
 
         .modernAlert(
@@ -541,15 +630,19 @@ struct CheckBoxView: View {
         Button(action: {
             isChecked.toggle()
         }) {
-            HStack(spacing: 8) {
-
-                Image(systemName: isChecked ? "checkmark.square.fill" : "square")
-                    .foregroundColor(isChecked ? .white : .gray)
-                    .font(.system(size: 18))
+            HStack{
 
                 Text(title)
                     .foregroundColor(.white)
                     .font(.custom("Inter-Regular", size: 15))
+                
+                Spacer()
+                
+                Image( isChecked ? "square-check" : "square-uncheck")
+                    .resizable()
+                    .frame(width: 22, height: 22)
+
+                
             }
         }
     }
@@ -572,10 +665,10 @@ struct AccessTypeRow: View {
                 Spacer()
 
                 Image(isSelected
-                      ? "square-check"
-                      : "square-uncheck")
+                      ? "radio-checked"
+                      : "radio-unchecked")
                     .resizable()
-                    .frame(width: 20, height: 20)
+                    .frame(width: 22, height: 22)
             }
         }
     }
