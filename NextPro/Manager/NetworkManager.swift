@@ -1326,6 +1326,21 @@ class NetworkManager: ObservableObject {
             responseType: RefreshTokenResponse.self
         )
     }
+    
+    func generateUniqueNfcId() async throws -> UniqueCardResponse {
+
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.uniqueNfcCardGenerate))!
+        print("🔄 Unique Card Nfc Api called")
+
+        return try await performRequest(
+            url: url,
+            method: "GET",
+            requiresAuth: true,
+            responseType: UniqueCardResponse.self,
+            retry: true
+        )
+    }
 
 
 }

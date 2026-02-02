@@ -41,3 +41,10 @@ struct successDeviceConfigResposne: Codable {
     let status: Bool
     let message: String
 }
+
+
+struct UniqueCardResponse: Codable {
+    let status: Bool
+    let message: String
+    let nfc_number : Int
+}

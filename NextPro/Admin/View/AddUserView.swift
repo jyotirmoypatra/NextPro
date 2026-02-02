@@ -147,6 +147,14 @@ struct AddUserView: View {
                                 .cornerRadius(12)
                             }
                             
+                            LabeledTextField(
+                                title: "NFC Card ID",
+                                placeholder: "Generate NFC Card Id",
+                                isRequired: true,
+                                text: $nfcId,
+                                isHaveBtn: true
+                                
+                            )
                             
                             // ACCESS TYPE
                             VStack(alignment: .leading, spacing: 10) {
@@ -553,9 +561,11 @@ struct LabeledTextField: View {
     var isRequired: Bool = false
     @Binding var text: String
     var isSecure: Bool = false
-
+    var isHaveBtn: Bool = false
+    @State private var isGeneratingNfc = false
+    @StateObject private var generateNfcVm = GenerateUniqueNfcViewModel()
     @State private var isPasswordVisible: Bool = false   // 👈 NEW
-
+    @State private var showGenerateNfcVmError = false
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
 
@@ -569,6 +579,33 @@ struct LabeledTextField: View {
                     Text("*")
                         .foregroundColor(.red)
                 }
+                
+                if isHaveBtn {
+                    Button {
+                        generateNfc()
+                    } label: {
+                        ZStack {
+                            if isGeneratingNfc {
+                                ProgressView()
+                                    .scaleEffect(0.7)
+                                    .tint(.black)
+                            } else {
+                                Text("Generate")
+                                    .foregroundColor(.black)
+                                    .font(.system(size: 13, weight: .medium))
+                            }
+                        }
+                        .frame(height: 22)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.white)
+                        .cornerRadius(6)
+                    }
+                    .padding(.leading,10)
+                    .disabled(isGeneratingNfc)
+                }
+
+
             }
             
         
@@ -597,6 +634,8 @@ struct LabeledTextField: View {
                     }
                     .foregroundColor(.white)
                     .font(.custom("Inter-Regular", size: 16))
+                    .disabled(isHaveBtn)
+                    .opacity(isHaveBtn ? 0.7 : 1)
 
                     // 👁 Eye Button
                     if isSecure {
@@ -617,7 +656,46 @@ struct LabeledTextField: View {
             .autocapitalization(.none)
             .disableAutocorrection(true)
         }
+        .onReceive(generateNfcVm.$nfcCardId) { value in
+            if let value {
+                text = String(value)
+            }
+        }
+        .onReceive(generateNfcVm.$errorMessage) { msg in
+            if msg != nil {
+                showGenerateNfcVmError = true
+            }
+        }
+        .modernAlert(
+                isPresented: Binding(
+                    get: { showGenerateNfcVmError && !generateNfcVm.isFailedDueToNoInternet },
+                    set: { showGenerateNfcVmError = $0 }
+                )
+            ) {
+                ModernAlertView(
+                    title: "Error!",
+                    message: generateNfcVm.errorMessage ?? "Something went wrong!",
+                    isSuccess: false,
+                    buttonTitle: "OK"
+                ) {
+                    showGenerateNfcVmError = false
+                }
+        }
+
     }
+    
+    private func generateNfc() {
+        Task {
+            isGeneratingNfc = true
+            await generateNfcVm.generateNfcId()
+            isGeneratingNfc = false
+
+            if let id = generateNfcVm.nfcCardId {
+                text = String(id)   // 👈 Sets TextField value
+            }
+        }
+    }
+
 }
 
 
