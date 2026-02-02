@@ -60,6 +60,13 @@ extension ServerTimeService {
 
     private func fetchTime() async {
         guard networkManager.hasInternet else { return }
+        
+        // ✅ If user not logged in, don't even try
+            guard let token = KeychainManager.shared.get("access_token"),
+                  !token.isEmpty else {
+                print("⛔️ No access token. Skipping server time fetch.")
+                return
+            }
 
         do {
             let response = try await networkManager.serverTime()
