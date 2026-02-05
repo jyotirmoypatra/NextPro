@@ -132,7 +132,7 @@ struct DoorAccessView: View {
                                 dismiss()
 
                         }) {
-                            Text("Add")
+                            Text("Save")
                                 .frame(maxWidth: .infinity)
                                 .padding()
                                 .font(.custom("Inter-SemiBold", size: 16))

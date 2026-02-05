@@ -31,15 +31,21 @@ struct AddUserView: View {
     @State private var showStartTimePicker = false
     @State private var showEndTimePicker = false
     
-    @State private var accessStartTime = Date()
-    @State private var accessEndTime = Date()
+//    @State private var accessStartTime = Date()
+//    @State private var accessEndTime = Date()
 
 
+    @State private var accessStartTime: Date? = nil
+    @State private var accessEndTime: Date? = nil
+    
     @State private var showStartDatePicker = false
     @State private var showEndDatePicker = false
 
-    @State private var accessStartDate = Date()
-    @State private var accessEndDate = Date()
+//    @State private var accessStartDate = Date()
+//    @State private var accessEndDate = Date()
+    
+    @State private var accessStartDate: Date? = nil
+    @State private var accessEndDate: Date? = nil
 
 
     @State private var selectedWeekdays: Set<Int> = []   // 1 = Sun ... 7 = Sat
@@ -521,14 +527,52 @@ struct AddUserView: View {
     }
    
 
+//    
+//    @ViewBuilder
+//    func pickerSheet(
+//        title: String,
+//        selection: Binding<Date>,
+//        components: DatePickerComponents,
+//        onDone: @escaping () -> Void
+//    ) -> some View {
+//
+//        VStack(spacing: 20) {
+//
+//            Text(title)
+//                .font(.headline)
+//
+//            DatePicker(
+//                "",
+//                selection: selection,
+//                displayedComponents: components
+//            )
+//            .datePickerStyle(.wheel)
+//            .labelsHidden()
+//
+//            Button("Done") {
+//                onDone()
+//            }
+//        }
+//        .presentationDetents([.height(350)])
+//    }
     
     @ViewBuilder
     func pickerSheet(
         title: String,
-        selection: Binding<Date>,
+        selection: Binding<Date?>,
         components: DatePickerComponents,
         onDone: @escaping () -> Void
     ) -> some View {
+
+        // Local mutable value
+        let internalDate = Binding<Date>(
+            get: {
+                selection.wrappedValue ?? Date()
+            },
+            set: { newValue in
+                selection.wrappedValue = newValue
+            }
+        )
 
         VStack(spacing: 20) {
 
@@ -537,18 +581,20 @@ struct AddUserView: View {
 
             DatePicker(
                 "",
-                selection: selection,
+                selection: internalDate,
                 displayedComponents: components
             )
             .datePickerStyle(.wheel)
             .labelsHidden()
 
             Button("Done") {
-                onDone()
+                onDone()   // selection already updated
             }
         }
         .presentationDetents([.height(350)])
     }
+
+
 
 
 }
@@ -579,6 +625,32 @@ struct LabeledTextField: View {
                     Text("*")
                         .foregroundColor(.red)
                 }
+                 Spacer()
+                
+//                if isHaveBtn {
+//                    Button {
+//                        generateNfc()
+//                    } label: {
+//                        ZStack {
+//                            if isGeneratingNfc {
+//                                ProgressView()
+//                                    .scaleEffect(0.7)
+//                                    .tint(.black)
+//                            } else {
+//                                Text("Generate")
+//                                    .foregroundColor(.black)
+//                                    .font(.system(size: 13, weight: .medium))
+//                            }
+//                        }
+//                        .frame(height: 22)
+//                        .padding(.horizontal, 10)
+//                        .padding(.vertical, 4)
+//                        .background(Color.white)
+//                        .cornerRadius(6)
+//                    }
+//                    .padding(.leading,10)
+//                    .disabled(isGeneratingNfc)
+//                }
                 
                 if isHaveBtn {
                     Button {
@@ -588,22 +660,27 @@ struct LabeledTextField: View {
                             if isGeneratingNfc {
                                 ProgressView()
                                     .scaleEffect(0.7)
-                                    .tint(.black)
+                                    .tint(.white)
                             } else {
                                 Text("Generate")
-                                    .foregroundColor(.black)
+                                    .foregroundColor(.white)
                                     .font(.system(size: 13, weight: .medium))
                             }
                         }
                         .frame(height: 22)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(Color.white)
-                        .cornerRadius(6)
+                        .background(Color.white.opacity(0.12))   // 👈 gives contrast
+                        .cornerRadius(14)
                     }
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    )
                     .padding(.leading,10)
                     .disabled(isGeneratingNfc)
                 }
+
 
 
             }
@@ -754,53 +831,131 @@ struct AccessTypeRow: View {
 
 
 // Date Field Box
-func dateBox(title: String, value: Date, action: @escaping () -> Void) -> some View {
+//func dateBox(title: String, value: Date, action: @escaping () -> Void) -> some View {
+//    VStack(alignment: .leading, spacing: 6) {
+//        Text(title)
+//            .foregroundColor(.white)
+//            .font(.custom("Inter-Regular", size: 15))
+//
+//        Button(action: action) {
+//            HStack {
+//                Image("calendar")
+//                    .resizable()
+//                    .frame(width: 20, height: 20)
+//                Text(value.formatted(date: .numeric, time: .omitted))
+//                    .font(.custom("Inter-Regular", size: 15))
+//                Spacer()
+//            }
+//            .foregroundColor(.white)
+//            .padding()
+//            
+//        } .overlay(
+//            RoundedRectangle(cornerRadius: 5)
+//                .stroke(Color.white.opacity(0.4), lineWidth: 1)
+//        )
+//    }
+//   
+//}
+
+func dateBox(
+    title: String,
+    value: Date?,
+    action: @escaping () -> Void
+) -> some View {
+
     VStack(alignment: .leading, spacing: 6) {
+
         Text(title)
             .foregroundColor(.white)
             .font(.custom("Inter-Regular", size: 15))
 
         Button(action: action) {
             HStack {
-                Image(systemName: "calendar")
-                Text(value.formatted(date: .numeric, time: .omitted))
-                    .font(.custom("Inter-Regular", size: 15))
+                Image("calendar")
+                    .resizable()
+                    .frame(width: 20, height: 20)
+
+                Text(
+                    value == nil
+                    ? "Select Date"
+                    : value!.formatted(date: .numeric, time: .omitted)
+                )
+                .foregroundColor(value == nil ? .white.opacity(0.5) : .white)
+
                 Spacer()
             }
-            .foregroundColor(.white)
             .padding()
-            
-        } .overlay(
+        }
+        .overlay(
             RoundedRectangle(cornerRadius: 5)
                 .stroke(Color.white.opacity(0.4), lineWidth: 1)
         )
     }
-   
 }
 
+
 // Time Field Box
-func timeBox(title: String, value: Date, action: @escaping () -> Void) -> some View {
+//func timeBox(title: String, value: Date, action: @escaping () -> Void) -> some View {
+//    VStack(alignment: .leading, spacing: 6) {
+//        Text(title)
+//            .foregroundColor(.white)
+//            .font(.custom("Inter-Regular", size: 15))
+//
+//        Button(action: action) {
+//            HStack {
+//                Image("clock")
+//                    .resizable()
+//                    .frame(width: 20, height: 20)
+//                Text(value.formatted(date: .omitted, time: .shortened))
+//                    .font(.custom("Inter-Regular", size: 15))
+//                Spacer()
+//            }
+//            .foregroundColor(.white)
+//            .padding()
+//            .overlay(
+//                RoundedRectangle(cornerRadius: 5)
+//                    .stroke(Color.white.opacity(0.4), lineWidth: 1)
+//            )
+//        }
+//    }
+//}
+
+func timeBox(
+    title: String,
+    value: Date?,
+    action: @escaping () -> Void
+) -> some View {
+
     VStack(alignment: .leading, spacing: 6) {
+
         Text(title)
             .foregroundColor(.white)
             .font(.custom("Inter-Regular", size: 15))
 
         Button(action: action) {
             HStack {
-                Image(systemName: "clock")
-                Text(value.formatted(date: .omitted, time: .shortened))
-                    .font(.custom("Inter-Regular", size: 15))
+                Image("clock")
+                    .resizable()
+                    .frame(width: 20, height: 20)
+
+                Text(
+                    value == nil
+                    ? "Select Time"
+                    : value!.formatted(date: .omitted, time: .shortened)
+                )
+                .foregroundColor(value == nil ? .white.opacity(0.5) : .white)
+
                 Spacer()
             }
-            .foregroundColor(.white)
             .padding()
-            .overlay(
-                RoundedRectangle(cornerRadius: 5)
-                    .stroke(Color.white.opacity(0.4), lineWidth: 1)
-            )
         }
+        .overlay(
+            RoundedRectangle(cornerRadius: 5)
+                .stroke(Color.white.opacity(0.4), lineWidth: 1)
+        )
     }
 }
+
 
 // Day Pill
 struct DayPill: View {
