@@ -1328,8 +1328,6 @@ class NetworkManager: ObservableObject {
     }
     
     func generateUniqueNfcId() async throws -> UniqueCardResponse {
-
-
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.uniqueNfcCardGenerate))!
         print("🔄 Unique Card Nfc Api called")
 
@@ -1338,6 +1336,21 @@ class NetworkManager: ObservableObject {
             method: "GET",
             requiresAuth: true,
             responseType: UniqueCardResponse.self,
+            retry: true
+        )
+    }
+    
+    func getAllDoorList() async throws -> DoorListResponse {
+
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.allDoorList))!
+        print("🔄 Gett All Door Api called")
+
+        return try await performRequest(
+            url: url,
+            method: "GET",
+            requiresAuth: true,
+            responseType: DoorListResponse.self,
             retry: true
         )
     }

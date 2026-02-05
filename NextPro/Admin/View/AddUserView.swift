@@ -50,7 +50,9 @@ struct AddUserView: View {
 
     @State private var selectedWeekdays: Set<Int> = []   // 1 = Sun ... 7 = Sat
 
-    @State private var selectedDoors: [DoorModel] = []
+    @State private var selectedDoors: [SingleDoor] = []
+    @StateObject private var doorListVM = GetAllDoorListViewModel()
+
 
 
     
@@ -287,38 +289,6 @@ struct AddUserView: View {
 
 
                             
-//                            VStack(alignment: .leading, spacing: 12) {
-//
-//                                Text("DOOR ACCESS")
-//                                    .font(.custom("Inter-Medium", size: 16))
-//                                    .foregroundColor(.white)
-//                                Button(action: {
-//                                    navigateToDoorAddView = true
-//                                }) {
-//                                    HStack{
-//                                        Image(systemName: "plus")
-//                                            .font(.system(size: 15))
-//                                            .foregroundColor(.white)
-//                                            .fontWeight(.bold)
-//                                        
-//                                        Text("Add Door")
-//                                            .font(.custom("Inter-SemiBold", size: 15))
-//                                            .foregroundColor(.white)
-//                                    }
-//                                    
-//                                }
-//                                .frame(maxWidth: .infinity)
-//                                .padding()
-//                                .overlay(
-//                                    RoundedRectangle(cornerRadius: 14)
-//                                        .stroke(
-//                                            Color.white.opacity(0.4),
-//                                            lineWidth: 1
-//                                        )
-//                                )
-//                                
-//                            }
-                            
                             
                             VStack(alignment: .leading, spacing: 12) {
 
@@ -348,10 +318,10 @@ struct AddUserView: View {
                                     HStack {
 
                                         VStack(alignment: .leading, spacing: 4) {
-                                            Text(door.name)
+                                            Text(door.doorName)
                                                 .foregroundColor(.white)
 
-                                            Text(door.id)
+                                            Text(door.location ?? "")
                                                 .foregroundColor(.white.opacity(0.6))
                                                 .font(.system(size: 13))
                                         }
@@ -422,22 +392,14 @@ struct AddUserView: View {
                     .keyboardAware()
                 }
                 .padding(.horizontal,10)
-                .padding(.bottom, 100)
+                .padding(.bottom, 110)
                 
                 VStack(spacing: 16) {
                     // Buttons
-                    HStack(spacing: 15) {
-                        Button("Cancel") {
-                            dismiss()
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .font(.custom("Inter-SemiBold", size: 16))
-                        .foregroundColor(.white)
-                        .background(Color.gray.opacity(0.3))
-                        .cornerRadius(8)
-                        
-                        Button("Create User") {
+                    VStack(spacing: 10) {
+                                               
+                        Button {
+
                             // submit
                             
                             print("-------- USER INFO --------")
@@ -468,6 +430,13 @@ struct AddUserView: View {
                             print("-------- DOOR ACCESS --------")
                             // Later you will replace this with selected doors
                             print("Selected Doors Coming Soon")
+
+                        } label: {
+                            Text("Save")
+                                .frame(maxWidth: .infinity)
+                                .font(.custom("Inter-SemiBold", size: 16))
+                                .foregroundColor(.black)
+                               
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -475,10 +444,24 @@ struct AddUserView: View {
                         .background(Color.white)
                         .foregroundColor(.black)
                         .cornerRadius(8)
+                        
+                        
+                        
+                        Button {
+                            dismiss()
+                        } label: {
+                            Text("Cancel")
+                                .frame(maxWidth: .infinity)
+                                .font(.custom("Inter-SemiBold", size: 16))
+                                .foregroundColor(.white)
+                                
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 5)
+                        .foregroundColor(.white)
                     }
                 }
                 .padding(.horizontal, 10)
-                .padding(.bottom, 20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 
                 
@@ -490,10 +473,11 @@ struct AddUserView: View {
             UserManagementView()
         }
         .navigationDestination(isPresented: $navigateToDoorAddView) {
-            DoorAccessView(selectedDoors: $selectedDoors)
+            DoorAccessView(
+                selectedDoors: $selectedDoors,
+                doorListVM: doorListVM
+            )
         }
-
-
 
         .internetOverlay()
 
