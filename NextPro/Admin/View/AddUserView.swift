@@ -53,7 +53,7 @@ struct AddUserView: View {
     @State private var selectedDoors: [SingleDoor] = []
     @StateObject private var doorListVM = GetAllDoorListViewModel()
 
-
+    @State private var shouldScrollToDoorSection = false
 
     
     var body: some View {
@@ -103,299 +103,309 @@ struct AddUserView: View {
                     .padding(.bottom, 15)
                     
                     
-                    
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 18) {
-                            
-                            LabeledTextField(
-                                title: "Full Name",
-                                placeholder: "Enter full name",
-                                isRequired: true,
-                                text: $fullName,
-                            )
-
-                            LabeledTextField(
-                                title: "Phone Number",
-                                placeholder: "Enter phone",
-                                text: $phone,
-                               
-                            )
-                            
-                            LabeledTextField(
-                                title: "Email ID",
-                                placeholder: "Enter email",
-                                isRequired: true,
-                                text: $email,
+                    ScrollViewReader { proxy in
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(alignment: .leading, spacing: 18) {
                                 
-                            )
-
-                            
-                            VStack(alignment: .leading, spacing: 10) {
-
-                                Text("Device Access")
-                                    .font(.custom("Inter-Medium", size: 16))
-                                    .foregroundColor(.white)
-
-                                VStack(spacing: 20) {
-
-                                    // Digital
-                                    CheckBoxView(
-                                        title: "Digital",
-                                        isChecked: $digitalAccess
-                                    )
-
-                                    // Remote
-                                    CheckBoxView(
-                                        title: "Remote",
-                                        isChecked: $remoteAccess
-                                    )
-                                }
-                                .padding(12)
-                                .background(Color.white.opacity(0.15))
-                                .cornerRadius(12)
-                            }
-                            
-                            LabeledTextField(
-                                title: "NFC Card ID",
-                                placeholder: "Generate NFC Card Id",
-                                isRequired: true,
-                                text: $nfcId,
-                                isHaveBtn: true
+                                LabeledTextField(
+                                    title: "Full Name",
+                                    placeholder: "Enter full name",
+                                    isRequired: true,
+                                    text: $fullName,
+                                )
                                 
-                            )
-                            
-                            // ACCESS TYPE
-                            VStack(alignment: .leading, spacing: 10) {
-
-                                Text("ACCESS TYPE")
-                                    .font(.custom("Inter-Medium", size: 16))
-                                    .foregroundColor(.white)
-
-                                VStack(spacing: 20) {
-
-                                    // Schedule
-                                    AccessTypeRow(
-                                        title: "Schedule",
-                                        isSelected: isScheduledAccess
-                                    ) {
-                                        isScheduledAccess = true
-                                        isOneTimeAccess = false
-                                    }
-
-                                    // One Time
-                                    AccessTypeRow(
-                                        title: "One Time",
-                                        isSelected: isOneTimeAccess
-                                    ) {
-                                        isOneTimeAccess = true
-                                        isScheduledAccess = false
-                                    }
-                                }
-                                .padding(12)
-                                .background(Color.white.opacity(0.15))
-                                .cornerRadius(12)
-                            }
-
-                            //access date
-                            VStack(alignment: .leading, spacing: 16) {
-
-                                Text("ACCESS DATE")
-                                    .font(.custom("Inter-Medium", size: 16))
-                                    .foregroundColor(.white)
-
-                                VStack(alignment: .leading, spacing: 16) {
-                                    // Start Date
-                                    dateBox(
-                                        title: "Start Date",
-                                        value: accessStartDate,
-                                        action: { showStartDatePicker = true }
-                                    )
+                                LabeledTextField(
+                                    title: "Phone Number",
+                                    placeholder: "Enter phone",
+                                    text: $phone,
                                     
-                                    // End Date
-                                    dateBox(
-                                        title: "End Date",
-                                        value: accessEndDate,
-                                        action: { showEndDatePicker = true }
-                                    )
-                                } .padding()
-                                .background(Color.white.opacity(0.15))
-                                .cornerRadius(10)
-                            }
-                            
-                         
-
-                            VStack(alignment: .leading, spacing: 16) {
-
-                                Text("ACCESS TIME")
-                                    .font(.custom("Inter-Medium", size: 16))
-                                    .foregroundColor(.white)
-                                VStack(alignment: .leading, spacing: 16) {
-                                    // From
-                                    timeBox(
-                                        title: "Start Time",
-                                        value: accessStartTime,
-                                        action: {
-                                            showStartTimePicker = true
-                                        }
-                                    )
+                                )
+                                
+                                LabeledTextField(
+                                    title: "Email ID",
+                                    placeholder: "Enter email",
+                                    isRequired: true,
+                                    text: $email,
                                     
-                                    // To
-                                    timeBox(
-                                        title: "End Time",
-                                        value: accessEndTime,
-                                        action: {
-                                            showEndTimePicker = true
-
-                                        }
-                                    )
-                                }
-                                .padding()
-                                .background(Color.white.opacity(0.15))
-                                .cornerRadius(10)
-                            }
-                           
-                            
-                            if isScheduledAccess {
-
-                                VStack(alignment: .leading, spacing: 12) {
-
-                                    Text("REPEAT EVERY")
+                                )
+                                
+                                
+                                VStack(alignment: .leading, spacing: 10) {
+                                    
+                                    Text("Device Access")
                                         .font(.custom("Inter-Medium", size: 16))
                                         .foregroundColor(.white)
-
-                                    LazyVGrid(
-                                        columns: [
-                                            GridItem(.flexible()),
-                                            GridItem(.flexible()),
-                                            GridItem(.flexible()),
-                                            GridItem(.flexible())
-                                        ],
-                                        spacing: 15
-                                    ) {
-                                        ForEach(1...7, id: \.self) { day in
-                                            DayPill(
-                                                title: shortDay(day),
-                                                isSelected: selectedWeekdays.contains(day)
-                                            ) {
-                                                toggleDay(day)
-                                            }
+                                    
+                                    VStack(spacing: 20) {
+                                        
+                                        // Digital
+                                        CheckBoxView(
+                                            title: "Digital",
+                                            isChecked: $digitalAccess
+                                        )
+                                        
+                                        // Remote
+                                        CheckBoxView(
+                                            title: "Remote",
+                                            isChecked: $remoteAccess
+                                        )
+                                    }
+                                    .padding(12)
+                                    .background(Color.white.opacity(0.15))
+                                    .cornerRadius(12)
+                                }
+                                
+                                LabeledTextField(
+                                    title: "NFC Card ID",
+                                    placeholder: "Generate NFC Card Id",
+                                    isRequired: true,
+                                    text: $nfcId,
+                                    isHaveBtn: true
+                                    
+                                )
+                                
+                                // ACCESS TYPE
+                                VStack(alignment: .leading, spacing: 10) {
+                                    
+                                    Text("ACCESS TYPE")
+                                        .font(.custom("Inter-Medium", size: 16))
+                                        .foregroundColor(.white)
+                                    
+                                    VStack(spacing: 20) {
+                                        
+                                        // Schedule
+                                        AccessTypeRow(
+                                            title: "Schedule",
+                                            isSelected: isScheduledAccess
+                                        ) {
+                                            isScheduledAccess = true
+                                            isOneTimeAccess = false
+                                        }
+                                        
+                                        // One Time
+                                        AccessTypeRow(
+                                            title: "One Time",
+                                            isSelected: isOneTimeAccess
+                                        ) {
+                                            isOneTimeAccess = true
+                                            isScheduledAccess = false
                                         }
                                     }
-                                    .padding()   // ✅ indent
+                                    .padding(12)
+                                    .background(Color.white.opacity(0.15))
+                                    .cornerRadius(12)
+                                }
+                                
+                                //access date
+                                VStack(alignment: .leading, spacing: 16) {
+                                    
+                                    Text("ACCESS DATE")
+                                        .font(.custom("Inter-Medium", size: 16))
+                                        .foregroundColor(.white)
+                                    
+                                    VStack(alignment: .leading, spacing: 16) {
+                                        // Start Date
+                                        dateBox(
+                                            title: "Start Date",
+                                            value: accessStartDate,
+                                            action: { showStartDatePicker = true }
+                                        )
+                                        
+                                        // End Date
+                                        dateBox(
+                                            title: "End Date",
+                                            value: accessEndDate,
+                                            action: { showEndDatePicker = true }
+                                        )
+                                    } .padding()
+                                        .background(Color.white.opacity(0.15))
+                                        .cornerRadius(10)
+                                }
+                                
+                                
+                                
+                                VStack(alignment: .leading, spacing: 16) {
+                                    
+                                    Text("ACCESS TIME")
+                                        .font(.custom("Inter-Medium", size: 16))
+                                        .foregroundColor(.white)
+                                    VStack(alignment: .leading, spacing: 16) {
+                                        // From
+                                        timeBox(
+                                            title: "Start Time",
+                                            value: accessStartTime,
+                                            action: {
+                                                showStartTimePicker = true
+                                            }
+                                        )
+                                        
+                                        // To
+                                        timeBox(
+                                            title: "End Time",
+                                            value: accessEndTime,
+                                            action: {
+                                                showEndTimePicker = true
+                                                
+                                            }
+                                        )
+                                    }
+                                    .padding()
                                     .background(Color.white.opacity(0.15))
                                     .cornerRadius(10)
                                 }
-                            }
-
-
-                            
-                            
-                            VStack(alignment: .leading, spacing: 12) {
                                 
-                                Text("DOOR ACCESS")
-                                    .font(.custom("Inter-Medium", size: 16))
-                                    .foregroundColor(.white)
                                 
-                                Button(action: {
-                                    navigateToDoorAddView = true
-                                }) {
-                                    HStack {
-                                        Image(systemName: "plus")
-                                        Text("Add Door")
-                                            .font(.custom("Inter-SemiBold", size: 15))
-                                    }
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 14)
-                                            .stroke(Color.white.opacity(0.4), lineWidth: 1)
-                                    )
-                                }
-                                
-                                // ✅ Selected Door List
-                                VStack{
-                                    ForEach(selectedDoors) { door in
-                                        HStack {
-                                            
-                                            VStack(alignment: .leading, spacing: 4) {
-                                                Text(door.doorName)
-                                                    .foregroundColor(.white)
-                                                
-                                                Text(door.location ?? "")
-                                                    .foregroundColor(.white.opacity(0.6))
-                                                    .font(.system(size: 13))
-                                            }
-                                            
-                                            Spacer()
-                                            
-                                            Button {
-                                                selectedDoors.removeAll { $0.id == door.id }
-                                            } label: {
-                                                Image(systemName: "trash")
-                                                    .foregroundColor(.red)
+                                if isScheduledAccess {
+                                    
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        
+                                        Text("REPEAT EVERY")
+                                            .font(.custom("Inter-Medium", size: 16))
+                                            .foregroundColor(.white)
+                                        
+                                        LazyVGrid(
+                                            columns: [
+                                                GridItem(.flexible()),
+                                                GridItem(.flexible()),
+                                                GridItem(.flexible()),
+                                                GridItem(.flexible())
+                                            ],
+                                            spacing: 15
+                                        ) {
+                                            ForEach(1...7, id: \.self) { day in
+                                                DayPill(
+                                                    title: shortDay(day),
+                                                    isSelected: selectedWeekdays.contains(day)
+                                                ) {
+                                                    toggleDay(day)
+                                                }
                                             }
                                         }
+                                        .padding()   // ✅ indent
+                                        .background(Color.white.opacity(0.15))
+                                        .cornerRadius(10)
+                                    }
+                                }
+                                
+                                
+                                
+                                
+                                VStack(alignment: .leading, spacing: 12) {
+                                    
+                                    Text("DOOR ACCESS")
+                                        .font(.custom("Inter-Medium", size: 16))
+                                        .foregroundColor(.white)
+                                    
+                                    Button(action: {
+                                        navigateToDoorAddView = true
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "plus")
+                                            Text("Add Door")
+                                                .font(.custom("Inter-SemiBold", size: 15))
+                                        }
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
                                         .padding()
-                                        .background(Color.white.opacity(0.12))
-                                        .cornerRadius(12)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 14)
+                                                .stroke(Color.white.opacity(0.4), lineWidth: 1)
+                                        )
                                     }
                                     
+                                    // ✅ Selected Door List
+                                    VStack{
+                                        ForEach(selectedDoors) { door in
+                                            HStack {
+                                                
+                                                VStack(alignment: .leading, spacing: 4) {
+                                                    Text(door.doorName)
+                                                        .foregroundColor(.white)
+                                                    
+                                                    Text(door.location ?? "")
+                                                        .foregroundColor(.white.opacity(0.6))
+                                                        .font(.system(size: 13))
+                                                }
+                                                
+                                                Spacer()
+                                                
+                                                Button {
+                                                    selectedDoors.removeAll { $0.id == door.id }
+                                                } label: {
+                                                    Image(systemName: "trash")
+                                                        .foregroundColor(.red)
+                                                }
+                                            }
+                                            .padding()
+                                            .background(Color.white.opacity(0.12))
+                                            .cornerRadius(12)
+                                        }
+                                        
+                                    }
+                                    .padding()
+                                    .background(selectedDoors.isEmpty ? Color.white.opacity(0.0) : Color.white.opacity(0.15))
+                                    .cornerRadius(10)
                                 }
-                                .padding()
-                                .background(selectedDoors.isEmpty ? Color.white.opacity(0.0) : Color.white.opacity(0.15))
-                                .cornerRadius(10)
-                            }
-
-
-
+                                .id("DOOR_SECTION")
+                                
+                                
+                                
+                                
+                            }.padding(.bottom,10)
+                                .sheet(isPresented: $showStartDatePicker) {
+                                    pickerSheet(
+                                        title: "Select Start Date",
+                                        selection: $accessStartDate,
+                                        components: .date
+                                    ) {
+                                        showStartDatePicker = false
+                                    }
+                                }
                             
-                        }.padding(.bottom,10)
-                        .sheet(isPresented: $showStartDatePicker) {
-                            pickerSheet(
-                                title: "Select Start Date",
-                                selection: $accessStartDate,
-                                components: .date
-                            ) {
-                                showStartDatePicker = false
+                                .sheet(isPresented: $showEndDatePicker) {
+                                    pickerSheet(
+                                        title: "Select End Date",
+                                        selection: $accessEndDate,
+                                        components: .date
+                                    ) {
+                                        showEndDatePicker = false
+                                    }
+                                }
+                            
+                                .sheet(isPresented: $showStartTimePicker) {
+                                    pickerSheet(
+                                        title: "Select Start Time",
+                                        selection: $accessStartTime,
+                                        components: .hourAndMinute
+                                    ) {
+                                        showStartTimePicker = false
+                                    }
+                                }
+                            
+                                .sheet(isPresented: $showEndTimePicker) {
+                                    pickerSheet(
+                                        title: "Select End Time",
+                                        selection: $accessEndTime,
+                                        components: .hourAndMinute
+                                    ) {
+                                        showEndTimePicker = false
+                                    }
+                                }
+                            
+                            
+                            
+                        }
+                        .frame(maxHeight: .infinity)
+                        .keyboardAware()
+                        .onChange(of: shouldScrollToDoorSection) { value in
+                            if value {
+                                withAnimation {
+                                    proxy.scrollTo("DOOR_SECTION", anchor: .top)
+                                }
+                                shouldScrollToDoorSection = false
                             }
                         }
-
-                        .sheet(isPresented: $showEndDatePicker) {
-                            pickerSheet(
-                                title: "Select End Date",
-                                selection: $accessEndDate,
-                                components: .date
-                            ) {
-                                showEndDatePicker = false
-                            }
-                        }
-
-                        .sheet(isPresented: $showStartTimePicker) {
-                            pickerSheet(
-                                title: "Select Start Time",
-                                selection: $accessStartTime,
-                                components: .hourAndMinute
-                            ) {
-                                showStartTimePicker = false
-                            }
-                        }
-
-                        .sheet(isPresented: $showEndTimePicker) {
-                            pickerSheet(
-                                title: "Select End Time",
-                                selection: $accessEndTime,
-                                components: .hourAndMinute
-                            ) {
-                                showEndTimePicker = false
-                            }
-                        }
-
-                        
-
                     }
-                    .frame(maxHeight: .infinity)
-                    .keyboardAware()
                 }
                 .padding(.horizontal,10)
                 .padding(.bottom, 110)
@@ -478,13 +488,22 @@ struct AddUserView: View {
         .navigationDestination(isPresented: $navigateToUserManagement) {
             UserManagementView()
         }
+//        .navigationDestination(isPresented: $navigateToDoorAddView) {
+//            DoorAccessView(
+//                selectedDoors: $selectedDoors,
+//                doorListVM: doorListVM
+//            )
+//        }
         .navigationDestination(isPresented: $navigateToDoorAddView) {
             DoorAccessView(
                 selectedDoors: $selectedDoors,
                 doorListVM: doorListVM
             )
+            .onDisappear {
+                shouldScrollToDoorSection = true
+            }
         }
-
+        
         .internetOverlay()
 
         .modernAlert(
