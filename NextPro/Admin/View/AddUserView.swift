@@ -612,6 +612,7 @@ struct LabeledTextField: View {
     @StateObject private var generateNfcVm = GenerateUniqueNfcViewModel()
     @State private var isPasswordVisible: Bool = false   // 👈 NEW
     @State private var showGenerateNfcVmError = false
+    @State private var showGenerateButton: Bool = false   // 👈 NEW
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
 
@@ -652,7 +653,7 @@ struct LabeledTextField: View {
 //                    .disabled(isGeneratingNfc)
 //                }
                 
-                if isHaveBtn {
+                if isHaveBtn && showGenerateButton{
                     Button {
                         generateNfc()
                     } label: {
@@ -733,6 +734,13 @@ struct LabeledTextField: View {
             .autocapitalization(.none)
             .disableAutocorrection(true)
         }
+        .onAppear {
+            if isHaveBtn {
+                generateNfc()          // auto call
+                showGenerateButton = false
+            }
+        }
+
         .onReceive(generateNfcVm.$nfcCardId) { value in
             if let value {
                 text = String(value)
@@ -762,15 +770,31 @@ struct LabeledTextField: View {
     }
     
     private func generateNfc() {
+//        Task {
+//            isGeneratingNfc = true
+//            await generateNfcVm.generateNfcId()
+//            isGeneratingNfc = false
+//
+//            if let id = generateNfcVm.nfcCardId {
+//                text = String(id)   // 👈 Sets TextField value
+//            }
+//        }
+        
         Task {
-            isGeneratingNfc = true
-            await generateNfcVm.generateNfcId()
-            isGeneratingNfc = false
+                isGeneratingNfc = true
+                showGenerateButton = false
 
-            if let id = generateNfcVm.nfcCardId {
-                text = String(id)   // 👈 Sets TextField value
+                await generateNfcVm.generateNfcId()
+
+                isGeneratingNfc = false
+
+                if let id = generateNfcVm.nfcCardId {
+                    text = String(id)
+                    showGenerateButton = false     // success → keep hidden
+                } else {
+                    showGenerateButton = true      // failed → show button
+                }
             }
-        }
     }
 
 }
