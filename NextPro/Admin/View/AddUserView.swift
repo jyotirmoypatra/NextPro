@@ -291,11 +291,11 @@ struct AddUserView: View {
                             
                             
                             VStack(alignment: .leading, spacing: 12) {
-
+                                
                                 Text("DOOR ACCESS")
                                     .font(.custom("Inter-Medium", size: 16))
                                     .foregroundColor(.white)
-
+                                
                                 Button(action: {
                                     navigateToDoorAddView = true
                                 }) {
@@ -312,33 +312,39 @@ struct AddUserView: View {
                                             .stroke(Color.white.opacity(0.4), lineWidth: 1)
                                     )
                                 }
-
+                                
                                 // ✅ Selected Door List
-                                ForEach(selectedDoors) { door in
-                                    HStack {
-
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(door.doorName)
-                                                .foregroundColor(.white)
-
-                                            Text(door.location ?? "")
-                                                .foregroundColor(.white.opacity(0.6))
-                                                .font(.system(size: 13))
+                                VStack{
+                                    ForEach(selectedDoors) { door in
+                                        HStack {
+                                            
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(door.doorName)
+                                                    .foregroundColor(.white)
+                                                
+                                                Text(door.location ?? "")
+                                                    .foregroundColor(.white.opacity(0.6))
+                                                    .font(.system(size: 13))
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            Button {
+                                                selectedDoors.removeAll { $0.id == door.id }
+                                            } label: {
+                                                Image(systemName: "trash")
+                                                    .foregroundColor(.red)
+                                            }
                                         }
-
-                                        Spacer()
-
-                                        Button {
-                                            selectedDoors.removeAll { $0.id == door.id }
-                                        } label: {
-                                            Image(systemName: "trash")
-                                                .foregroundColor(.red)
-                                        }
+                                        .padding()
+                                        .background(Color.white.opacity(0.12))
+                                        .cornerRadius(12)
                                     }
-                                    .padding()
-                                    .background(Color.white.opacity(0.12))
-                                    .cornerRadius(12)
+                                    
                                 }
+                                .padding()
+                                .background(selectedDoors.isEmpty ? Color.white.opacity(0.0) : Color.white.opacity(0.15))
+                                .cornerRadius(10)
                             }
 
 

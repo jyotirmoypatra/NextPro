@@ -57,41 +57,80 @@ struct DoorAccessView: View {
 
                     // MARK: Header
                     HStack {
-
-                        Button {
+                        // LEFT: Back Button
+                        Button(action: {
                             dismiss()
-                        } label: {
+                        }) {
                             HStack {
                                 Image(systemName: "chevron.left")
+                                    .font(.system(size: 18, weight: .semibold))
                                     .foregroundColor(.white)
+                                
                                 Text("Back")
                                     .foregroundColor(.white)
+                                    .font(.custom("Inter-SemiBold", size: 16))
                             }
                         }
-
+                        
                         Spacer()
+                        
+                        // RIGHT: Info Icon
+                        Image(systemName: "info.circle")
+                            .resizable()
+                            .frame(width: 20, height: 20)
                     }
                     .overlay(
-                        Text("Door Access")
+                        Text("Add Door")
                             .foregroundColor(.white)
                             .font(.custom("Inter-Bold", size: 16))
                     )
-                    .padding()
+                    .padding(.horizontal, 5)
+                    .padding(.top, 10)
+                    .padding(.bottom, 15)
+
 
                     // MARK: Search
-                    TextField("Search Door", text: $searchText)
-                        .padding()
-                        .background(Color.white.opacity(0.15))
-                        .cornerRadius(10)
-                        .foregroundColor(.white)
-                        .padding(.horizontal)
+//                    TextField("Search Door", text: $searchText)
+//                        .padding()
+//                        .background(Color.white.opacity(0.15))
+//                        .cornerRadius(10)
+//                        .foregroundColor(.white)
+//                        .padding(.horizontal)
+                    
+                    HStack(spacing: 8) {
+
+                              Image(systemName: "magnifyingglass")
+                                  .foregroundColor(.white.opacity(0.7))
+                        ZStack(alignment: .leading) {
+                            if searchText.isEmpty {
+                                Text("Search Door")
+                                    .foregroundColor(Color.white.opacity(0.5))
+                                    .font(.custom("Inter-Regular", size: 16))
+                                
+                                
+                            }
+                            TextField("", text: $searchText)
+                                .foregroundColor(.white)
+                                .autocapitalization(.none)
+                                .disableAutocorrection(true)
+                        }
+                          }
+                          .padding(.horizontal, 12)
+                          .frame(height: 46)
+                          .background(Color.clear)
+                          .overlay(
+                              RoundedRectangle(cornerRadius: 10)
+                                  .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                          )
 
                     // MARK: Door List
                     ScrollView(showsIndicators: false) {
 
                         VStack(spacing: 12) {
 
-                            ForEach(filteredDoors) { door in
+                            ForEach(filteredDoors.indices, id: \.self) { index in
+                                
+                                let door = filteredDoors[index]
 
                                 DoorRow(
                                     door: door,
@@ -100,14 +139,16 @@ struct DoorAccessView: View {
                                     toggleDoor(door.id)
                                 }
 
-                                Divider()
-                                    .background(Color.white.opacity(0.15))
+                                if index != filteredDoors.count - 1 {
+                                    Divider()
+                                        .background(Color.white.opacity(0.15))
+                                }
                             }
                         }
                         .padding()
                         .background(Color.white.opacity(0.08))
                         .cornerRadius(16)
-                        .padding(.horizontal)
+                     
                     }
                     .refreshable {
                         await doorListVM.getDoorList(force: true)
@@ -116,6 +157,7 @@ struct DoorAccessView: View {
 
                     Spacer()
                 }
+                .padding(.horizontal,10)
                 .padding(.bottom, 80)
 
                 // MARK: Save Button
