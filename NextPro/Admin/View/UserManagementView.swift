@@ -269,19 +269,31 @@ struct UsersCardView: View {
 
             Spacer()
 
-            // Edit Button
-            Button {
-                print("Edit tapped")
-            } label: {
-                Text("Edit")
-                    .font(.custom("Inter-SemiBold", size: 12))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.white, lineWidth: 1)
-                    )
+            
+            // Action Buttons
+            HStack(spacing: 20) {
+
+                // ✏️ Edit
+                Button {
+                    print("Edit tapped")
+                } label: {
+                    Image("edit-pencil")
+                        .resizable()
+                        .renderingMode(.template)
+                        .foregroundColor(.white)
+                        .frame(width: 25, height: 25)
+                }
+
+                // 🗑 Delete
+                Button {
+                    print("Delete tapped")
+                } label: {
+                    Image("delete-icon")
+                        .resizable()
+                        .renderingMode(.template)
+                        .foregroundColor(.white)
+                        .frame(width: 25, height: 25)
+                }
             }
         }
         .padding(.horizontal, 16)
