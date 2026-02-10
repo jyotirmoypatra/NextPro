@@ -11,7 +11,7 @@ import Combine
 
 struct DeviceInformationView: View {
     let selectedDevice:AssignDevice
-    @StateObject private var doorManager = DoorManager.shared
+    @ObservedObject private var doorManager = DoorManager.shared
     @State private var showDeviceInfo = false
     @StateObject private var bleManager = BLEManager()
     @State private var showDeviceOfflineAlert = false
@@ -233,7 +233,7 @@ struct DeviceInformationView: View {
                                     }
                                 }
                             }
-                            .disabled(doorManager.isProcessing)
+                            .disabled(doorManager.isProcessing || isCheckingDevice)
 
 
                             
@@ -330,10 +330,20 @@ struct DeviceInformationView: View {
 
         }
         .navigationBarBackButtonHidden(true)
+        .onAppear {
+            doorManager.isProcessing = false
+                doorManager.deviceConfig = nil
+                bleManager.stopScanning()
+        }
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .navigationDestination(isPresented: $showDeviceInfo) {
             if let info = doorManager.deviceConfig {
                 DeviceInfoDetailView(deviceInfo: info)
+            }
+        }
+        .onReceive(doorManager.$deviceConfig) { config in
+            if config != nil {
+                showDeviceInfo = true
             }
         }
 
@@ -398,9 +408,9 @@ struct DeviceInformationView: View {
                         
 
                         // Observe result and navigate once data arrives
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            waitForDeviceInfo()
-                        }
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+//                            waitForDeviceInfo()
+//                        }
 
                         return
                     }

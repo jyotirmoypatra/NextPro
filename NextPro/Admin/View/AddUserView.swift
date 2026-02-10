@@ -890,6 +890,43 @@ struct AccessTypeRow: View {
 //   
 //}
 
+//func dateBox(
+//    title: String,
+//    value: Date?,
+//    action: @escaping () -> Void
+//) -> some View {
+//
+//    VStack(alignment: .leading, spacing: 6) {
+//
+//        Text(title)
+//            .foregroundColor(.white)
+//            .font(.custom("Inter-Regular", size: 15))
+//
+//        Button(action: action) {
+//            HStack {
+//                Image("calendar")
+//                    .resizable()
+//                    .frame(width: 20, height: 20)
+//
+//                Text(
+//                    value == nil
+//                    ? "Select Date"
+//                    : value!.formatted(date: .numeric, time: .omitted)
+//                )
+//                .foregroundColor(value == nil ? .white.opacity(0.5) : .white)
+//
+//                Spacer()
+//            }
+//            .padding()
+//        }
+//        .overlay(
+//            RoundedRectangle(cornerRadius: 5)
+//                .stroke(Color.white.opacity(0.4), lineWidth: 1)
+//        )
+//    }
+//}
+
+
 func dateBox(
     title: String,
     value: Date?,
@@ -911,7 +948,7 @@ func dateBox(
                 Text(
                     value == nil
                     ? "Select Date"
-                    : value!.formatted(date: .numeric, time: .omitted)
+                    : mmddyyFormatter.string(from: value!)
                 )
                 .foregroundColor(value == nil ? .white.opacity(0.5) : .white)
 
@@ -925,7 +962,12 @@ func dateBox(
         )
     }
 }
-
+private let mmddyyFormatter: DateFormatter = {
+    let df = DateFormatter()
+    df.dateFormat = "MM/dd/YYYY"
+    df.locale = Locale(identifier: "en_US_POSIX") // 🔒 stable format
+    return df
+}()
 
 // Time Field Box
 //func timeBox(title: String, value: Date, action: @escaping () -> Void) -> some View {

@@ -743,7 +743,7 @@ struct DoorOpenView: View {
                         isSuccess: true,
                         message: grantedBase
                     )
-                    speakText(accessGrantedMessage)
+                    speakText(accessGrantedMessage + " - " + accessGreetingMessage)
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                 }else{
                     animateSuccess()
