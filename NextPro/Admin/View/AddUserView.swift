@@ -759,6 +759,9 @@ struct AddUserView: View {
             .labelsHidden()
 
             Button("Done") {
+                if selection.wrappedValue == nil {
+                    selection.wrappedValue = internalDate.wrappedValue
+                }
                 onDone()   // selection already updated
             }
         }
