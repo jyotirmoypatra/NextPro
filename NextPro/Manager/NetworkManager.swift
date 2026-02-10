@@ -1288,21 +1288,17 @@ class NetworkManager: ObservableObject {
         )
     }
     
-    func addNewUser(
-        userId: String,
-    ) async throws -> UsersResponse {
+    
+    func addNewUser(body: AddUserRequest) async throws -> AddUserResponse {
 
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.addNewUser))!
-        print("SuccessConfig wifi Api called----")
+
         return try await performRequest(
             url: url,
             method: "POST",
-            body: [
-                "user_id": userId,
-                
-            ],
+            body: try body.toDictionary(),
             requiresAuth: true,
-            responseType: UsersResponse.self,
+            responseType: AddUserResponse.self,
             retry: true
         )
     }

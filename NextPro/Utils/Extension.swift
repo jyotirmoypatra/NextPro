@@ -251,3 +251,43 @@ extension Date {
 func speakText(_ text: String) {
     SpeechManager.shared.speak(text)
 }
+
+
+extension Date {
+
+    /// yyyy-MM-dd (example: 2026-02-10)
+    func toAPIDate() -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: self)
+    }
+
+    /// HH:mm (example: 14:30)
+    func toAPITime() -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: self)
+    }
+}
+
+
+extension Encodable {
+    func toDictionary() throws -> [String: Any] {
+        let data = try JSONEncoder().encode(self)
+        let json = try JSONSerialization.jsonObject(with: data, options: [])
+        guard let dict = json as? [String: Any] else {
+            throw NSError(
+                domain: "EncodingError",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to convert model to dictionary"]
+            )
+        }
+        return dict
+    }
+}

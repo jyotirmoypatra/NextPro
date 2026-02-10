@@ -841,79 +841,81 @@ struct DoorOpenView: View {
     //check startdatetime  to  EnddateTime slot--------
     func isWithinAccessWindow() -> Bool {
         
-        // 🔓 Offline → allow access
-        if !network.hasInternet {
-            print("⚠️ No internet — bypassing access window check")
-            return true
-        }
+//        // 🔓 Offline → allow access
+//        if !network.hasInternet {
+//            print("⚠️ No internet — bypassing access window check")
+//            return true
+//        }
+//        
+//        guard
+//            let currentTime = serverTimeVM.localServerDate,
+//            let tzID = serverTimeVM.localTimeZoneID,
+//            let accessTZ = TimeZone(identifier: tzID),
+//            let startDateStr = deviceVM.startDate,
+//            let endDateStr = deviceVM.endDate,
+//            let startTimeStr = deviceVM.startTime,
+//            let endTimeStr = deviceVM.endTime
+//        else {
+//            print("⚠️ Missing access window data")
+//            return false
+//        }
+//        
+//        var calendar = Calendar(identifier: .gregorian)
+//        calendar.timeZone = accessTZ
+//        
+//        // --- Date formatter ---
+//        let dateFormatter = DateFormatter()
+//        dateFormatter.dateFormat = "yyyy-MM-dd"
+//        dateFormatter.timeZone = accessTZ
+//        
+//        // --- Time formatter ---
+//        let timeFormatter = DateFormatter()
+//        timeFormatter.dateFormat = "HH:mm"
+//        timeFormatter.timeZone = accessTZ
+//        
+//        guard
+//            let startDate = dateFormatter.date(from: startDateStr),
+//            let endDate = dateFormatter.date(from: endDateStr),
+//            let startTime = timeFormatter.date(from: startTimeStr),
+//            let endTime = timeFormatter.date(from: endTimeStr)
+//        else {
+//            print("❌ Invalid date/time format")
+//            return false
+//        }
+//        
+//        // Combine start date + start time
+//        guard let startDateTime = calendar.date(
+//            bySettingHour: calendar.component(.hour, from: startTime),
+//            minute: calendar.component(.minute, from: startTime),
+//            second: 0,
+//            of: startDate
+//        ) else { return false }
+//        
+//        // Combine end date + end time
+//        guard let endDateTime = calendar.date(
+//            bySettingHour: calendar.component(.hour, from: endTime),
+//            minute: calendar.component(.minute, from: endTime),
+//            second: 59,
+//            of: endDate
+//        ) else { return false }
+//        
+//        // 🔍 Debug
+//        let df = DateFormatter()
+//        df.dateFormat = "yyyy-MM-dd HH:mm:ss"
+//        df.timeZone = accessTZ
+//        
+//        print("🧭 Access Window:",
+//              df.string(from: startDateTime),
+//              "→",
+//              df.string(from: endDateTime))
+//        
+//        print("🕒 Current Time:",
+//              df.string(from: currentTime))
+//        
+//        //  SINGLE comparison (correct)
+//        return currentTime >= startDateTime && currentTime <= endDateTime
         
-        guard
-            let currentTime = serverTimeVM.localServerDate,
-            let tzID = serverTimeVM.localTimeZoneID,
-            let accessTZ = TimeZone(identifier: tzID),
-            let startDateStr = deviceVM.startDate,
-            let endDateStr = deviceVM.endDate,
-            let startTimeStr = deviceVM.startTime,
-            let endTimeStr = deviceVM.endTime
-        else {
-            print("⚠️ Missing access window data")
-            return false
-        }
-        
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = accessTZ
-        
-        // --- Date formatter ---
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        dateFormatter.timeZone = accessTZ
-        
-        // --- Time formatter ---
-        let timeFormatter = DateFormatter()
-        timeFormatter.dateFormat = "HH:mm"
-        timeFormatter.timeZone = accessTZ
-        
-        guard
-            let startDate = dateFormatter.date(from: startDateStr),
-            let endDate = dateFormatter.date(from: endDateStr),
-            let startTime = timeFormatter.date(from: startTimeStr),
-            let endTime = timeFormatter.date(from: endTimeStr)
-        else {
-            print("❌ Invalid date/time format")
-            return false
-        }
-        
-        // Combine start date + start time
-        guard let startDateTime = calendar.date(
-            bySettingHour: calendar.component(.hour, from: startTime),
-            minute: calendar.component(.minute, from: startTime),
-            second: 0,
-            of: startDate
-        ) else { return false }
-        
-        // Combine end date + end time
-        guard let endDateTime = calendar.date(
-            bySettingHour: calendar.component(.hour, from: endTime),
-            minute: calendar.component(.minute, from: endTime),
-            second: 59,
-            of: endDate
-        ) else { return false }
-        
-        // 🔍 Debug
-        let df = DateFormatter()
-        df.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        df.timeZone = accessTZ
-        
-        print("🧭 Access Window:",
-              df.string(from: startDateTime),
-              "→",
-              df.string(from: endDateTime))
-        
-        print("🕒 Current Time:",
-              df.string(from: currentTime))
-        
-        //  SINGLE comparison (correct)
-        return currentTime >= startDateTime && currentTime <= endDateTime
+        return true
     }
     
     

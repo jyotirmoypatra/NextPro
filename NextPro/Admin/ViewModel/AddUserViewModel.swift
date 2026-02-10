@@ -13,47 +13,49 @@ import Combine
 @MainActor
 class AddUserViewModel: ObservableObject {
 
+    
     @Published var errorMessage: String?
     @Published var isLoading = false
     @Published var Successflag = false
     @Published var isFailedDueToNoInternet = false
     let networkManager = NetworkManager.shared
-
-    func addUser() async {
+    
+    func addUser(request: AddUserRequest) async {
 
         guard networkManager.hasInternet else {
-           errorMessage = nil
             isFailedDueToNoInternet = true
             return
         }
-        guard let userId = UserDefaults.standard.string(forKey: "user_id") else {
-            errorMessage = "User ID missing!"
-            return
-        }
-        
+
         isFailedDueToNoInternet = false
         errorMessage = nil
         isLoading = true
-        
         defer { isLoading = false }
 
         do {
-           let response = try await networkManager.addNewUser(userId: userId)
 
-            isLoading = false
+            let encoder = JSONEncoder()
+                    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+
+                    let data = try encoder.encode(request)
+                    if let jsonString = String(data: data, encoding: .utf8) {
+                        print("📤 AddUser Request JSON:\n\(jsonString)")
+                    }
             
-            if response.status {
+            
+            let response = try await networkManager.addNewUser(body: request)
+            
+            if response.status{
                 Successflag = true
-            } else {
-              //  errorMessage = response.message
+            }else{
+                errorMessage = response.message 
             }
-
+            
+            
         } catch {
             isLoading = false
-            print("❌ API ERROR:", error.localizedDescription)
-            errorMessage = error.localizedDescription // show real message instead of generic
+            errorMessage = error.localizedDescription
         }
-
-        
     }
+    
 }

@@ -11,6 +11,7 @@ struct AddUserView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var addUserVM = AddUserViewModel()
     @State private var showAddUserVMError = false
+    @State private var showAddUserSuccess = false
     @State private var navigateToUserManagement = false
     @State private var navigateToDoorAddView = false
     
@@ -118,6 +119,7 @@ struct AddUserView: View {
                                     title: "Phone Number",
                                     placeholder: "Enter phone",
                                     text: $phone,
+                                    keyboardType: .numberPad
                                     
                                 )
                                 
@@ -126,6 +128,15 @@ struct AddUserView: View {
                                     placeholder: "Enter email",
                                     isRequired: true,
                                     text: $email,
+                                    
+                                )
+                                
+                                LabeledTextField(
+                                    title: "NFC Card ID",
+                                    placeholder: "Generate NFC Card Id",
+                                    isRequired: true,
+                                    text: $nfcId,
+                                    isHaveBtn: true
                                     
                                 )
                                 
@@ -155,14 +166,7 @@ struct AddUserView: View {
                                     .cornerRadius(12)
                                 }
                                 
-                                LabeledTextField(
-                                    title: "NFC Card ID",
-                                    placeholder: "Generate NFC Card Id",
-                                    isRequired: true,
-                                    text: $nfcId,
-                                    isHaveBtn: true
-                                    
-                                )
+                               
                                 
                                 // ACCESS TYPE
                                 VStack(alignment: .leading, spacing: 10) {
@@ -413,46 +417,15 @@ struct AddUserView: View {
                 VStack(spacing: 16) {
                     // Buttons
                     VStack(spacing: 10) {
-                                               
                         Button {
-
-                            // submit
                             
-                            print("-------- USER INFO --------")
-                            print("Full Name:", fullName)
-                            print("Phone:", phone)
-                            print("Email:", email)
-
-                            print("-------- DEVICE ACCESS --------")
-                            print("Digital:", digitalAccess)
-                            print("Remote:", remoteAccess)
-
-                            print("-------- ACCESS TYPE --------")
-                            print("One Time:", isOneTimeAccess)
-                            print("Scheduled:", isScheduledAccess)
-
-                            print("-------- ACCESS DATE --------")
-                            print("Start Date:", accessStartDate)
-                            print("End Date:", accessEndDate)
-
-                            print("-------- ACCESS TIME --------")
-                            print("Start Time:", accessStartTime)
-                            print("End Time:", accessEndTime)
-
-                            print("-------- REPEAT DAYS --------")
-                            let repeatDays = isScheduledAccess ? selectedWeekdays : []
-                            print(repeatDays)
-
-                            print("-------- DOOR ACCESS --------")
-                            // Later you will replace this with selected doors
-                            print("Selected Doors Coming Soon")
-
+                            
+                            CreateUserApiCall()
+                            
+                           
                         } label: {
                             Text("Save")
                                 .frame(maxWidth: .infinity)
-                                .font(.custom("Inter-SemiBold", size: 16))
-                                .foregroundColor(.black)
-                               
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -481,6 +454,21 @@ struct AddUserView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 
                 
+                // LOADING OVERLAY
+                if addUserVM.isLoading{
+                    ZStack {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.8)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                }
+                
+                
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -488,12 +476,6 @@ struct AddUserView: View {
         .navigationDestination(isPresented: $navigateToUserManagement) {
             UserManagementView()
         }
-//        .navigationDestination(isPresented: $navigateToDoorAddView) {
-//            DoorAccessView(
-//                selectedDoors: $selectedDoors,
-//                doorListVM: doorListVM
-//            )
-//        }
         .navigationDestination(isPresented: $navigateToDoorAddView) {
             DoorAccessView(
                 selectedDoors: $selectedDoors,
@@ -521,6 +503,19 @@ struct AddUserView: View {
                     showAddUserVMError = false
                 }
         }
+        
+            .modernAlert(isPresented: $showAddUserSuccess) {
+                ModernAlertView(
+                    title: "Success!",
+                    message: "User Created successfully",
+                    isSuccess: true,
+                    buttonTitle: "OK"
+                ) {
+                    showAddUserSuccess = false
+                    addUserVM.Successflag = false
+                    dismiss()
+                }
+            }
             .onTapGesture {
                 UIApplication.shared.hideKeyboard()
             }
@@ -535,8 +530,175 @@ struct AddUserView: View {
         }
     }
    
+    func validateForm() -> String? {
+        
+        guard let userId = UserDefaults.standard.string(forKey: "user_id"),
+                  !userId.trimmingCharacters(in: .whitespaces).isEmpty else {
+                return "User session expired. Please login again."
+            }
 
-//    
+        if fullName.trimmingCharacters(in: .whitespaces).isEmpty {
+            return "Full name is required"
+        }
+        
+        if phone.trimmingCharacters(in: .whitespaces).isEmpty {
+            return "Phone number is required"
+        }
+
+        if email.trimmingCharacters(in: .whitespaces).isEmpty {
+            return "Email is required"
+        }
+
+        if !isValidEmail(email) {
+            return "Please enter a valid email address"
+        }
+
+        if nfcId.trimmingCharacters(in: .whitespaces).isEmpty {
+            return "NFC Card ID is required"
+        }
+
+        if !digitalAccess && !remoteAccess {
+            return "Please select at least one device access (Digital or Remote)"
+        }
+        
+        if accessStartDate == nil || accessEndDate == nil {
+            return "Please select access start and end date"
+        }
+
+        if accessStartTime == nil || accessEndTime == nil {
+            return "Please select access start and end time"
+        }
+        if isScheduledAccess {
+            if selectedWeekdays.isEmpty {
+                return "Please select at least one repeat day"
+            }
+        }
+        
+        if selectedDoors.isEmpty {
+            return "Please select at least one door"
+        }
+
+
+        return nil // All good
+    }
+    
+//    func isValidEmail(_ email: String) -> Bool {
+//        let email = email.trimmingCharacters(in: .whitespacesAndNewlines)
+//        let pattern = #"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
+//        return email.range(of: pattern, options: .regularExpression) != nil
+//    }
+    
+    func CreateUserApiCall(){
+        if let error = validateForm() {
+                addUserVM.errorMessage = error
+                showAddUserVMError = true
+                return
+            }
+        
+       
+        //  Safe unwrap (validation already ensured this exists)
+            guard let userId = UserDefaults.standard.string(forKey: "user_id") else {
+                addUserVM.errorMessage = "User session expired. Please login again."
+                showAddUserVMError = true
+                return
+            }
+        
+        Task {
+          
+
+            let timeSlots: [TimeSlot] = {
+                guard let start = accessStartTime,
+                      let end = accessEndTime else {
+                    return []
+                }
+                return [
+                    TimeSlot(
+                        start_time: start.toAPITime(),
+                        end_time: end.toAPITime()
+                    )
+                ]
+            }()
+            
+            
+            let weekDaysString: String? = isScheduledAccess
+                ? selectedWeekdays
+                    .sorted()
+                    .map(String.init)
+                    .joined(separator: ", ")
+                : ""
+        
+            
+            let request = AddUserRequest(
+                user_id: userId,
+                username: username,
+                password: password,
+                full_name: fullName,
+                email: email,
+                phone_number: phone,
+                user_type: "non_staff",
+
+                // Access
+                is_digital: digitalAccess,
+                is_remote: remoteAccess,
+
+                // NFC
+                nfc_type: "DIGITAL",
+                nfc_physical: "",
+                nfc_digital: nfcId,
+
+                // Doors
+                doors: selectedDoors.map { $0.id },
+
+                // Schedule
+                start_date: accessStartDate?.toAPIDate(),
+                end_date: accessEndDate?.toAPIDate(),
+                time_slots: timeSlots,
+                week_days: weekDaysString,
+
+                // Meta
+                source: "app",
+                is_mqtt_sync: true,
+                creation_method: "door_selection",
+                schedule_type: isOneTimeAccess ? "one_time" : "schedule"
+            )
+
+            await addUserVM.addUser(request: request)
+            
+            if addUserVM.Successflag{
+                resetForm()
+                showAddUserSuccess = true
+            }else{
+                resetForm()
+                showAddUserVMError = true
+            }
+        }
+    }
+    
+    func resetForm() {
+        fullName = ""
+        email = ""
+        username = ""
+        password = ""
+        phone = ""
+        nfcId = ""
+
+        digitalAccess = false
+        remoteAccess = false
+
+        isOneTimeAccess = true
+        isScheduledAccess = false
+
+        accessStartDate = nil
+        accessEndDate = nil
+        accessStartTime = nil
+        accessEndTime = nil
+
+        selectedWeekdays.removeAll()
+        selectedDoors.removeAll()
+
+        shouldScrollToDoorSection = false
+    }
+//
 //    @ViewBuilder
 //    func pickerSheet(
 //        title: String,
@@ -622,6 +784,7 @@ struct LabeledTextField: View {
     @State private var isPasswordVisible: Bool = false   // 👈 NEW
     @State private var showGenerateNfcVmError = false
     @State private var showGenerateButton: Bool = false   // 👈 NEW
+    var keyboardType: UIKeyboardType = .default
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
 
@@ -719,6 +882,7 @@ struct LabeledTextField: View {
                             TextField("", text: $text)
                         }
                     }
+                    .keyboardType(keyboardType)
                     .foregroundColor(.white)
                     .font(.custom("Inter-Regular", size: 16))
                     .disabled(isHaveBtn)
@@ -1053,5 +1217,5 @@ struct DayPill: View {
 
 // Short Day Name
 func shortDay(_ day: Int) -> String {
-    ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][day-1]
+    ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][day - 1]
 }
