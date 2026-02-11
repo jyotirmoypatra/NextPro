@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct AddUserView: View {
+    
+    let editUser: User?
+    
     @Environment(\.dismiss) private var dismiss
     @StateObject private var addUserVM = AddUserViewModel()
     @State private var showAddUserVMError = false
@@ -32,18 +35,11 @@ struct AddUserView: View {
     @State private var showStartTimePicker = false
     @State private var showEndTimePicker = false
     
-//    @State private var accessStartTime = Date()
-//    @State private var accessEndTime = Date()
-
-
     @State private var accessStartTime: Date? = nil
     @State private var accessEndTime: Date? = nil
     
     @State private var showStartDatePicker = false
     @State private var showEndDatePicker = false
-
-//    @State private var accessStartDate = Date()
-//    @State private var accessEndDate = Date()
     
     @State private var accessStartDate: Date? = nil
     @State private var accessEndDate: Date? = nil
@@ -95,7 +91,7 @@ struct AddUserView: View {
                             .frame(width: 20, height: 20)
                     }
                     .overlay(
-                        Text("Add User")
+                        Text(editUser != nil ? "Edit User" : "Add User")
                             .foregroundColor(.white)
                             .font(.custom("Inter-Bold", size: 16))
                     )
@@ -136,9 +132,12 @@ struct AddUserView: View {
                                     placeholder: "Generate NFC Card Id",
                                     isRequired: true,
                                     text: $nfcId,
-                                    isHaveBtn: true
+                                    isHaveBtn: true,
+                                    isEditMode: editUser != nil
                                     
                                 )
+                                
+                                
                                 
                                 
                                 VStack(alignment: .leading, spacing: 10) {
@@ -486,6 +485,14 @@ struct AddUserView: View {
             }
         }
         
+        .onAppear {
+            guard let user = editUser else { return }
+
+            fullName = user.fullName
+            phone = user.phone
+            nfcId = user.nfcDigital ?? ""
+        }
+        
         .internetOverlay()
 
         .modernAlert(
@@ -788,6 +795,7 @@ struct LabeledTextField: View {
     @State private var showGenerateNfcVmError = false
     @State private var showGenerateButton: Bool = false   // 👈 NEW
     var keyboardType: UIKeyboardType = .default
+    var isEditMode: Bool = false
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
 
@@ -910,9 +918,17 @@ struct LabeledTextField: View {
             .autocapitalization(.none)
             .disableAutocorrection(true)
         }
+    
+        
         .onAppear {
-            if isHaveBtn {
-                generateNfc()          // auto call
+            guard isHaveBtn else { return }
+
+            if isEditMode {
+                // 👈 Edit mode → never auto-generate
+                showGenerateButton = text.isEmpty
+            } else {
+                // 👈 Add mode → auto-generate
+                generateNfc()
                 showGenerateButton = false
             }
         }

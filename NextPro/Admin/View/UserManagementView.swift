@@ -13,6 +13,7 @@ struct UserManagementView: View {
     @State private var showFetchUserVMError = false
     @State private var navigateToAddUser = false
     @State private var pullToRefresh = false
+    @State private var selectedUserForEdit: User?
     
     var body: some View {
         GeometryReader { geometry in
@@ -61,6 +62,7 @@ struct UserManagementView: View {
                     .padding(.bottom, 15)
                     
                     Button(action: {
+                        selectedUserForEdit = nil 
                         navigateToAddUser = true
                     }) {
                         HStack{
@@ -101,7 +103,15 @@ struct UserManagementView: View {
                             
                             if !fetchUserVM.usersList.isEmpty {
                                 ForEach(fetchUserVM.usersList) { item in
-                                    UsersCardView(user: item)
+                                    UsersCardView(user: item,
+                                      onEdit: { user in
+                                          selectedUserForEdit = user
+                                          navigateToAddUser = true
+                                      },
+                                      onDelete: { user in
+                                          print("Delete \(user.id)")
+                                      }
+                                    )
                                         .onTapGesture {
                                             
                                             navigateToAddUser = true
@@ -170,7 +180,7 @@ struct UserManagementView: View {
         }
         .navigationBarHidden(true)
         .navigationDestination(isPresented: $navigateToAddUser) {
-            AddUserView()
+            AddUserView(editUser: selectedUserForEdit)
         }
         .task {
             await fetchUserVM.fetchUsersList()
@@ -211,40 +221,11 @@ struct UserManagementView: View {
     }
 }
 
-//
-//struct UsersCardView: View {
-//    let user: User
-//
-//    var body: some View {
-//        HStack(spacing: 16) {
-//            Image("user-square")
-//                .resizable()
-//                .frame(width: 30, height: 30)
-//
-//            VStack(alignment: .leading, spacing: 2) {
-//                Text("\(user.fullName)")
-//                    .font(.custom("Inter-SemiBold", size: 16))
-//                    .foregroundColor(.white)
-//                    .lineLimit(2)
-//
-//            }
-//
-//            Spacer()
-//
-//        }
-//        .padding(15)
-//        .background(Color.white.opacity(0.08))
-//        .cornerRadius(14)
-//        .overlay(
-//            RoundedRectangle(cornerRadius: 14)
-//                .stroke(Color.white.opacity(0.15), lineWidth: 1)
-//        )
-//    }
-//}
-
-
 struct UsersCardView: View {
     let user: User
+    
+    let onEdit: (User) -> Void
+    let onDelete: (User) -> Void
 
     var body: some View {
         HStack(spacing: 14) {
@@ -276,6 +257,7 @@ struct UsersCardView: View {
                 // ✏️ Edit
                 Button {
                     print("Edit tapped")
+                    onEdit(user)
                 } label: {
                     Image("edit-pencil")
                         .resizable()
@@ -287,6 +269,7 @@ struct UsersCardView: View {
                 // 🗑 Delete
                 Button {
                     print("Delete tapped")
+                    onDelete(user)
                 } label: {
                     Image("delete-icon")
                         .resizable()
