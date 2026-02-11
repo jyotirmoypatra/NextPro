@@ -35,6 +35,14 @@ class DeviceDetailsViewModel: ObservableObject {
         fetchTask = Task { @MainActor in
             errorMessage = ""
 
+            
+            // 🔴 If NO internet → load cache only
+            if !network.hasInternet {
+                print("📴 No internet → loading local data")
+                _ = loadSavedDetails()
+                return
+            }
+            
             if !force, loadSavedDetails() {
                 print("📦 Loaded from cache")
                 return

@@ -448,7 +448,8 @@ struct DoorOpenView: View {
         .background(Color.black.opacity(0.4))
         .task{
             
-            await deviceVM.fetchDeviceDetailsIfNeeded()
+           // await deviceVM.fetchDeviceDetailsIfNeeded()
+            await deviceVM.fetchDeviceDetailsIfNeeded(force: true)
             //            if !deviceVM.issuccess && deviceVM.errorMessage != ""{
             //                doorStorage.clearDoors()          // sets hasResolvedDoors = false ❌ (we’ll fix below)
             //                doorStorage.hasResolvedDoors = true
