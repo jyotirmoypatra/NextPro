@@ -8,7 +8,8 @@
 struct AddUserRequest: Codable {
 
     // MARK: - User Info
-    let user_id: String
+    let user_id: String?
+    let id: String?
     let username: String?
     let password: String?
     let full_name: String

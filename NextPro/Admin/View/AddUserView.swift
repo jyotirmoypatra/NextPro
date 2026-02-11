@@ -61,6 +61,8 @@ struct AddUserView: View {
     @State private var selectedAccessGroup: AccessGroupItem? = nil
     @State private var openSection: Int? = nil
     
+    @State private var hasInitialized = false
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -539,99 +541,90 @@ struct AddUserView: View {
         }
         
         .onAppear {
+            guard !hasInitialized else { return }
+               hasInitialized = true
             Task {
-                    await getAccessGroupVM.getAccessGroupList()
-                }
-            
-            guard let user = editUser else { return }
-
-            fullName = user.full_name
-            phone = user.phone_number
-            nfcId = user.nfc_digital ?? ""
-            email =  user.email
-            
-            digitalAccess =  user.is_digital
-            remoteAccess =  user.is_remote
-            
-            if user.creation_method == "door_selection" {
-                isSelectAccessGroup = false
-                isSelectDoor = true
-            } else{  // access_group
-                isSelectAccessGroup = true
-                isSelectDoor = false
-            }
-            
-            
-            if user.creation_method == "access_group",
-               let firstGroup = user.access_groups_detail.first {
-
-                selectedAccessGroup = AccessGroupItem(
-                    id: firstGroup.access_group_id,
-                    name: firstGroup.access_group_name,
-                    description: nil,
-                    doors: user.doors
-                )
-            }
-           
-            
-            if user.creation_method == "door_selection" {
+                await getAccessGroupVM.getAccessGroupList()
+                await doorListVM.getDoorList(force: true)
                 
-                if user.schedule_type == "schedule"{
-                    isOneTimeAccess = false
-                    isScheduledAccess = true
-                }else{
-                    isOneTimeAccess = true
-                    isScheduledAccess = false
+                
+                guard let user = editUser else { return }
+                
+                fullName = user.full_name
+                phone = user.phone_number
+                nfcId = user.nfc_digital ?? ""
+                email =  user.email
+                
+                digitalAccess =  user.is_digital
+                remoteAccess =  user.is_remote
+                
+                if user.creation_method == "door_selection" {
+                    isSelectAccessGroup = false
+                    isSelectDoor = true
+                } else{  // access_group
+                    isSelectAccessGroup = true
+                    isSelectDoor = false
                 }
                 
-                if let startDateString = user.start_date {
-                    accessStartDate = apiDateFormatter.date(from: startDateString)
-                }
-
-                if let endDateString = user.end_date {
-                    accessEndDate = apiDateFormatter.date(from: endDateString)
-                }
-
-                if let firstSlot = user.time_slots.first {
+                
+                if user.creation_method == "access_group",
+                   let firstGroup = user.access_groups_detail.first {
                     
-                    if let startTime = apiTimeFormatter.date(from: firstSlot.start_time) {
-                        accessStartTime = startTime
-                    }
-                    
-                    if let endTime = apiTimeFormatter.date(from: firstSlot.end_time) {
-                        accessEndTime = endTime
-                    }
-                }
-                
-                if let weekDays = user.week_days {
-                    selectedWeekdays = Set(
-                        weekDays
-                            .split(separator: ",")
-                            .compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+                    selectedAccessGroup = AccessGroupItem(
+                        id: firstGroup.access_group_id,
+                        name: firstGroup.access_group_name,
+                        description: nil,
+                        doors: user.doors
                     )
                 }
                 
                 
-                if let firstGroup = user.access_groups_detail.first {
+                if user.creation_method == "door_selection" {
                     
-                    selectedDoors = firstGroup.doors.map { door in
-                        SingleDoor(
-                            id: door.door_id,
-                            doorName: door.door_name,
-                            location: nil,                 // API doesn't give location here
-                            status: "",
-                            device: "",
-                            organization: "",
-                            facility: nil,
-                            building: nil,
-                            createdAt: "",
-                            updatedAt: ""
+                    if user.schedule_type == "schedule"{
+                        isOneTimeAccess = false
+                        isScheduledAccess = true
+                    }else{
+                        isOneTimeAccess = true
+                        isScheduledAccess = false
+                    }
+                    
+                    if let startDateString = user.start_date {
+                        accessStartDate = apiDateFormatter.date(from: startDateString)
+                    }
+                    
+                    if let endDateString = user.end_date {
+                        accessEndDate = apiDateFormatter.date(from: endDateString)
+                    }
+                    
+                    if let firstSlot = user.time_slots.first {
+                        
+                        if let startTime = apiTimeFormatter.date(from: firstSlot.start_time) {
+                            accessStartTime = startTime
+                        }
+                        
+                        if let endTime = apiTimeFormatter.date(from: firstSlot.end_time) {
+                            accessEndTime = endTime
+                        }
+                    }
+                    
+                    if let weekDays = user.week_days {
+                        selectedWeekdays = Set(
+                            weekDays
+                                .split(separator: ",")
+                                .compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
                         )
                     }
+                    
+                    
+                    selectedDoors = doorListVM.doorList.filter {
+                        user.doors.contains($0.id)
+                    }
+                    
+                    print("selectedDoors is :\(selectedDoors)")
+                    
                 }
-                
             }
-            
             
            
         }
@@ -657,7 +650,7 @@ struct AddUserView: View {
             .modernAlert(isPresented: $showAddUserSuccess) {
                 ModernAlertView(
                     title: "Success!",
-                    message: "User Created successfully",
+                    message:  editUser != nil ? "User Update Successfully" : "User Created successfully",
                     isSuccess: true,
                     buttonTitle: "OK"
                 ) {
@@ -787,6 +780,7 @@ struct AddUserView: View {
         
         Task {
           
+            let isEditMode = editUser != nil
 
             let timeSlots: [TimeSlot] = {
                 guard let start = accessStartTime,
@@ -811,7 +805,8 @@ struct AddUserView: View {
         
             
             let request = AddUserRequest(
-                user_id: userId,
+                user_id: isEditMode ? nil : userId,
+                id: isEditMode ? editUser?.id : nil, // for edit
                 username: username,
                 password: password,
                 full_name: fullName,
@@ -848,7 +843,7 @@ struct AddUserView: View {
                 schedule_type: isSelectDoor ? (isOneTimeAccess ? "one_time" : "schedule") : ""
             )
 
-            await addUserVM.addUser(request: request)
+            await addUserVM.addUser(request: request,isEditUser: isEditMode)
             
             if addUserVM.Successflag{
                 resetForm()
@@ -1094,10 +1089,10 @@ struct LabeledTextField: View {
             guard isHaveBtn else { return }
 
             if isEditMode {
-                // 👈 Edit mode → never auto-generate
-                showGenerateButton = text.isEmpty
+                //  Edit mode → never auto-generate
+                showGenerateButton = false
             } else {
-                // 👈 Add mode → auto-generate
+                //  Add mode → auto-generate
                 generateNfc()
                 showGenerateButton = false
             }

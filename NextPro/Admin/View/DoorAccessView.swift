@@ -166,8 +166,15 @@ struct DoorAccessView: View {
                 VStack {
                     Button {
 
-                        selectedDoors = doors.filter {
-                            tempSelected.contains($0.id)
+//                        selectedDoors = doors.filter {
+//                            tempSelected.contains($0.id)
+//                        }
+                        
+                        let previousDoors = selectedDoors
+
+                        selectedDoors = tempSelected.compactMap { id in
+                            doors.first(where: { $0.id == id }) ??
+                            previousDoors.first(where: { $0.id == id })
                         }
 
                         dismiss()

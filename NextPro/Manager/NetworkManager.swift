@@ -1290,13 +1290,13 @@ class NetworkManager: ObservableObject {
     }
     
     // MARK: - Add New User api
-    func addNewUser(body: AddUserRequest) async throws -> AddUserResponse {
+    func addNewUser(body: AddUserRequest,isEditUser:Bool) async throws -> AddUserResponse {
 
-        let url = URL(string: APIConfig.url(APIConfig.Endpoints.addNewUser))!
-
+        let url = URL(string: APIConfig.url(isEditUser ? APIConfig.Endpoints.updateUser : APIConfig.Endpoints.addNewUser))!
+        print("🔄Add update user Api called")
         return try await performRequest(
             url: url,
-            method: "POST",
+            method: isEditUser ? "PUT" : "POST",
             body: try body.toDictionary(),
             requiresAuth: true,
             responseType: AddUserResponse.self,

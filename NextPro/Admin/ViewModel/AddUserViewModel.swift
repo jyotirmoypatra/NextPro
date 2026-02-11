@@ -20,7 +20,7 @@ class AddUserViewModel: ObservableObject {
     @Published var isFailedDueToNoInternet = false
     let networkManager = NetworkManager.shared
     
-    func addUser(request: AddUserRequest) async {
+    func addUser(request: AddUserRequest,isEditUser : Bool) async {
 
         guard networkManager.hasInternet else {
             isFailedDueToNoInternet = true
@@ -43,7 +43,7 @@ class AddUserViewModel: ObservableObject {
                     }
             
             
-            let response = try await networkManager.addNewUser(body: request)
+            let response = try await networkManager.addNewUser(body: request, isEditUser:isEditUser)
             
             if response.status{
                 Successflag = true
