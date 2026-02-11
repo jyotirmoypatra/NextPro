@@ -58,6 +58,9 @@ struct AddUserView: View {
     @State private var shouldScrollToDoorSection = false
 
     
+    @State private var selectedAccessGroup: AccessGroupItem? = nil
+    @State private var openSection: Int? = nil
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -200,6 +203,17 @@ struct AddUserView: View {
                                     .padding(12)
                                     .background(Color.white.opacity(0.15))
                                     .cornerRadius(12)
+                                }
+                                
+                                if isSelectAccessGroup {
+                                    
+                                    AccessGroupDropDown(
+                                        id: 0,
+                                        options: getAccessGroupVM.accessGroupList,
+                                        selectedGroup: $selectedAccessGroup,
+                                        openSection: $openSection
+                                    )
+                                    
                                 }
                                 
                                 if isSelectDoor {
@@ -629,32 +643,35 @@ struct AddUserView: View {
             return "Please select at least one device access (Digital or Remote)"
         }
         
-        if accessStartDate == nil || accessEndDate == nil {
-            return "Please select access start and end date"
-        }
-
-        if accessStartTime == nil || accessEndTime == nil {
-            return "Please select access start and end time"
-        }
-        if isScheduledAccess {
-            if selectedWeekdays.isEmpty {
-                return "Please select at least one repeat day"
+        if isSelectDoor {
+            
+            if accessStartDate == nil || accessEndDate == nil {
+                return "Please select access start and end date"
+            }
+            
+            if accessStartTime == nil || accessEndTime == nil {
+                return "Please select access start and end time"
+            }
+            if isScheduledAccess {
+                if selectedWeekdays.isEmpty {
+                    return "Please select at least one repeat day"
+                }
+            }
+            
+            if selectedDoors.isEmpty {
+                return "Please select at least one door"
             }
         }
         
-        if selectedDoors.isEmpty {
-            return "Please select at least one door"
+        if isSelectAccessGroup {
+            if selectedAccessGroup == nil {
+                    return "Please select an access group"
+            }
         }
-
 
         return nil // All good
     }
     
-//    func isValidEmail(_ email: String) -> Bool {
-//        let email = email.trimmingCharacters(in: .whitespacesAndNewlines)
-//        let pattern = #"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
-//        return email.range(of: pattern, options: .regularExpression) != nil
-//    }
     
     func CreateUserApiCall(){
         if let error = validateForm() {
@@ -715,19 +732,23 @@ struct AddUserView: View {
                 nfc_digital: nfcId,
 
                 // Doors
-                doors: selectedDoors.map { $0.id },
+                doors: isSelectDoor ? selectedDoors.map { $0.id } : [],
 
+                //access group
+                access_groups: isSelectAccessGroup ? (selectedAccessGroup != nil ? [selectedAccessGroup!.id] : nil)  : [],
+                
                 // Schedule
-                start_date: accessStartDate?.toAPIDate(),
-                end_date: accessEndDate?.toAPIDate(),
-                time_slots: timeSlots,
-                week_days: weekDaysString,
+                start_date: isSelectDoor ? accessStartDate?.toAPIDate() : "",
+                end_date: isSelectDoor ?  accessEndDate?.toAPIDate() : "",
+                time_slots:  isSelectDoor ?  timeSlots : [],
+                week_days: isSelectDoor ?  weekDaysString : "",
+
 
                 // Meta
                 source: "app",
                 is_mqtt_sync: true,
-                creation_method: "door_selection",
-                schedule_type: isOneTimeAccess ? "one_time" : "schedule"
+                creation_method: isSelectDoor ? "door_selection" : "access_group",
+                schedule_type: isSelectDoor ? (isOneTimeAccess ? "one_time" : "schedule") : ""
             )
 
             await addUserVM.addUser(request: request)
@@ -742,58 +763,73 @@ struct AddUserView: View {
         }
     }
     
+//    func resetForm() {
+//        fullName = ""
+//        email = ""
+//        username = ""
+//        password = ""
+//        phone = ""
+//        nfcId = ""
+//
+//        digitalAccess = false
+//        remoteAccess = false
+//
+//        isOneTimeAccess = true
+//        isScheduledAccess = false
+//
+//        accessStartDate = nil
+//        accessEndDate = nil
+//        accessStartTime = nil
+//        accessEndTime = nil
+//
+//        selectedWeekdays.removeAll()
+//        selectedDoors.removeAll()
+//
+//        shouldScrollToDoorSection = false
+//    }
+    
     func resetForm() {
+        
+        // MARK: - User Info
         fullName = ""
         email = ""
         username = ""
         password = ""
         phone = ""
         nfcId = ""
-
+        
+        // MARK: - Access Mode
         digitalAccess = false
         remoteAccess = false
-
+        
+        // Reset to default mode → Access Group
+        isSelectAccessGroup = true
+        isSelectDoor = false
+        
+        // MARK: - Schedule Type
         isOneTimeAccess = true
         isScheduledAccess = false
-
+        
+        // MARK: - Dates & Time
         accessStartDate = nil
         accessEndDate = nil
         accessStartTime = nil
         accessEndTime = nil
-
+        
+        // MARK: - Weekdays
         selectedWeekdays.removeAll()
+        
+        // MARK: - Doors
         selectedDoors.removeAll()
-
+        
+        // MARK: - Access Group
+        selectedAccessGroup = nil
+        openSection = nil
+        
+        // MARK: - Scroll
         shouldScrollToDoorSection = false
     }
-//
-//    @ViewBuilder
-//    func pickerSheet(
-//        title: String,
-//        selection: Binding<Date>,
-//        components: DatePickerComponents,
-//        onDone: @escaping () -> Void
-//    ) -> some View {
-//
-//        VStack(spacing: 20) {
-//
-//            Text(title)
-//                .font(.headline)
-//
-//            DatePicker(
-//                "",
-//                selection: selection,
-//                displayedComponents: components
-//            )
-//            .datePickerStyle(.wheel)
-//            .labelsHidden()
-//
-//            Button("Done") {
-//                onDone()
-//            }
-//        }
-//        .presentationDetents([.height(350)])
-//    }
+
     
     @ViewBuilder
     func pickerSheet(
@@ -871,31 +907,7 @@ struct LabeledTextField: View {
                         .foregroundColor(.red)
                 }
                  Spacer()
-                
-//                if isHaveBtn {
-//                    Button {
-//                        generateNfc()
-//                    } label: {
-//                        ZStack {
-//                            if isGeneratingNfc {
-//                                ProgressView()
-//                                    .scaleEffect(0.7)
-//                                    .tint(.black)
-//                            } else {
-//                                Text("Generate")
-//                                    .foregroundColor(.black)
-//                                    .font(.system(size: 13, weight: .medium))
-//                            }
-//                        }
-//                        .frame(height: 22)
-//                        .padding(.horizontal, 10)
-//                        .padding(.vertical, 4)
-//                        .background(Color.white)
-//                        .cornerRadius(6)
-//                    }
-//                    .padding(.leading,10)
-//                    .disabled(isGeneratingNfc)
-//                }
+            
                 
                 if isHaveBtn && showGenerateButton{
                     Button {
@@ -1023,15 +1035,6 @@ struct LabeledTextField: View {
     }
     
     private func generateNfc() {
-//        Task {
-//            isGeneratingNfc = true
-//            await generateNfcVm.generateNfcId()
-//            isGeneratingNfc = false
-//
-//            if let id = generateNfcVm.nfcCardId {
-//                text = String(id)   // 👈 Sets TextField value
-//            }
-//        }
         
         Task {
                 isGeneratingNfc = true
@@ -1107,69 +1110,6 @@ struct AccessTypeRow: View {
 }
 
 
-// Date Field Box
-//func dateBox(title: String, value: Date, action: @escaping () -> Void) -> some View {
-//    VStack(alignment: .leading, spacing: 6) {
-//        Text(title)
-//            .foregroundColor(.white)
-//            .font(.custom("Inter-Regular", size: 15))
-//
-//        Button(action: action) {
-//            HStack {
-//                Image("calendar")
-//                    .resizable()
-//                    .frame(width: 20, height: 20)
-//                Text(value.formatted(date: .numeric, time: .omitted))
-//                    .font(.custom("Inter-Regular", size: 15))
-//                Spacer()
-//            }
-//            .foregroundColor(.white)
-//            .padding()
-//            
-//        } .overlay(
-//            RoundedRectangle(cornerRadius: 5)
-//                .stroke(Color.white.opacity(0.4), lineWidth: 1)
-//        )
-//    }
-//   
-//}
-
-//func dateBox(
-//    title: String,
-//    value: Date?,
-//    action: @escaping () -> Void
-//) -> some View {
-//
-//    VStack(alignment: .leading, spacing: 6) {
-//
-//        Text(title)
-//            .foregroundColor(.white)
-//            .font(.custom("Inter-Regular", size: 15))
-//
-//        Button(action: action) {
-//            HStack {
-//                Image("calendar")
-//                    .resizable()
-//                    .frame(width: 20, height: 20)
-//
-//                Text(
-//                    value == nil
-//                    ? "Select Date"
-//                    : value!.formatted(date: .numeric, time: .omitted)
-//                )
-//                .foregroundColor(value == nil ? .white.opacity(0.5) : .white)
-//
-//                Spacer()
-//            }
-//            .padding()
-//        }
-//        .overlay(
-//            RoundedRectangle(cornerRadius: 5)
-//                .stroke(Color.white.opacity(0.4), lineWidth: 1)
-//        )
-//    }
-//}
-
 
 func dateBox(
     title: String,
@@ -1194,6 +1134,7 @@ func dateBox(
                     ? "Select Date"
                     : mmddyyFormatter.string(from: value!)
                 )
+                .font(.custom("Inter-Regular", size: 15))
                 .foregroundColor(value == nil ? .white.opacity(0.5) : .white)
 
                 Spacer()
@@ -1213,31 +1154,6 @@ private let mmddyyFormatter: DateFormatter = {
     return df
 }()
 
-// Time Field Box
-//func timeBox(title: String, value: Date, action: @escaping () -> Void) -> some View {
-//    VStack(alignment: .leading, spacing: 6) {
-//        Text(title)
-//            .foregroundColor(.white)
-//            .font(.custom("Inter-Regular", size: 15))
-//
-//        Button(action: action) {
-//            HStack {
-//                Image("clock")
-//                    .resizable()
-//                    .frame(width: 20, height: 20)
-//                Text(value.formatted(date: .omitted, time: .shortened))
-//                    .font(.custom("Inter-Regular", size: 15))
-//                Spacer()
-//            }
-//            .foregroundColor(.white)
-//            .padding()
-//            .overlay(
-//                RoundedRectangle(cornerRadius: 5)
-//                    .stroke(Color.white.opacity(0.4), lineWidth: 1)
-//            )
-//        }
-//    }
-//}
 
 func timeBox(
     title: String,
@@ -1262,6 +1178,7 @@ func timeBox(
                     ? "Select Time"
                     : value!.formatted(date: .omitted, time: .shortened)
                 )
+                .font(.custom("Inter-Regular", size: 15))
                 .foregroundColor(value == nil ? .white.opacity(0.5) : .white)
 
                 Spacer()
@@ -1298,4 +1215,92 @@ struct DayPill: View {
 // Short Day Name
 func shortDay(_ day: Int) -> String {
     ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][day - 1]
+}
+
+
+
+struct AccessGroupDropDown: View {
+    
+    let id: Int
+    let options: [AccessGroupItem]
+    
+    @Binding var selectedGroup: AccessGroupItem?
+    @Binding var openSection: Int?
+    
+    private var isOpen: Bool {
+        openSection == id
+    }
+    
+    var body: some View {
+        
+        VStack(alignment: .leading, spacing: 10) {
+            
+            HStack(spacing: 2) {
+                Text("Door Access Group")
+                    .font(.custom("Inter-Medium", size: 16))
+                    .foregroundColor(.white)
+                Text("*")
+                    .foregroundColor(.red)
+            }
+            
+            // 🔹 Dropdown Button
+            Button {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    openSection = isOpen ? nil : id
+                }
+            } label: {
+                HStack {
+                    
+                    Text(selectedGroup?.name ?? "Select Access Group")
+                        .foregroundColor(selectedGroup == nil ? .white.opacity(0.6) : .white)
+                        .font(.custom("Inter-Regular", size: 14))
+                    
+                    Spacer()
+                    
+                    Image(systemName: isOpen ? "chevron.up" : "chevron.down")
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                .padding()
+                .background(Color.white.opacity(0.2))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            
+            // 🔹 Dropdown List
+            if isOpen {
+                VStack(spacing: 0) {
+                    ForEach(options) { item in
+                        
+                        Button {
+                            selectedGroup = item
+                            withAnimation {
+                                openSection = nil
+                            }
+                        } label: {
+                            HStack {
+                                Text(item.name)
+                                    .foregroundColor(.white)
+                                    .font(.custom("Inter-Regular", size: 14))
+                                
+                                Spacer()
+                                
+                                if selectedGroup?.id == item.id {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.green)
+                                }
+                            }
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 12)
+                        }
+                        
+                        Divider()
+                            .overlay(Color.white.opacity(0.08))
+                    }
+                }
+                .background(Color.white.opacity(0.2))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .transition(.opacity)
+                .padding(.top, -9)
+            }
+        }
+    }
 }

@@ -26,12 +26,14 @@ struct AddUserRequest: Codable {
     let nfc_digital: String?
 
     // MARK: - Door / Assignment
-    let doors: [String]
+    let doors: [String]?
+    
+    let access_groups: [String]?
 
     // MARK: - Schedule
     let start_date: String?
     let end_date: String?
-    let time_slots: [TimeSlot]
+    let time_slots: [TimeSlot]?
     let week_days: String?   // empty or nil for one_time
 
     // MARK: - Meta
