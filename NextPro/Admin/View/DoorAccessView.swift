@@ -125,29 +125,30 @@ struct DoorAccessView: View {
 
                     // MARK: Door List
                     ScrollView(showsIndicators: false) {
-
-                        VStack(spacing: 12) {
-
-                            ForEach(filteredDoors.indices, id: \.self) { index in
+                        if !filteredDoors.isEmpty {
+                            VStack(spacing: 12) {
                                 
-                                let door = filteredDoors[index]
-
-                                DoorRow(
-                                    door: door,
-                                    isSelected: tempSelected.contains(door.id)
-                                ) {
-                                    toggleDoor(door.id)
-                                }
-
-                                if index != filteredDoors.count - 1 {
-                                    Divider()
-                                        .background(Color.white.opacity(0.15))
+                                ForEach(filteredDoors.indices, id: \.self) { index in
+                                    
+                                    let door = filteredDoors[index]
+                                    
+                                    DoorRow(
+                                        door: door,
+                                        isSelected: tempSelected.contains(door.id)
+                                    ) {
+                                        toggleDoor(door.id)
+                                    }
+                                    
+                                    if index != filteredDoors.count - 1 {
+                                        Divider()
+                                            .background(Color.white.opacity(0.15))
+                                    }
                                 }
                             }
+                            .padding()
+                            .background(Color.white.opacity(0.08))
+                            .cornerRadius(16)
                         }
-                        .padding()
-                        .background(Color.white.opacity(0.08))
-                        .cornerRadius(16)
                      
                     }
                     .refreshable {

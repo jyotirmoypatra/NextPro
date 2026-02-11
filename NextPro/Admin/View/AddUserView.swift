@@ -494,7 +494,7 @@ struct AddUserView: View {
                 // LOADING OVERLAY
                 if addUserVM.isLoading || getAccessGroupVM.isLoading{
                     ZStack {
-                        Color.black.opacity(0.4)
+                        Color.black.opacity(0.6)
                             .ignoresSafeArea()
 
                         ProgressView()
