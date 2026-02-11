@@ -9,7 +9,7 @@ import SwiftUI
 
 struct AddUserView: View {
     
-    let editUser: User?
+    let editUser: GetUserData?
     
     @Environment(\.dismiss) private var dismiss
     @StateObject private var addUserVM = AddUserViewModel()
@@ -374,10 +374,11 @@ struct AddUserView: View {
                                                 VStack(alignment: .leading, spacing: 4) {
                                                     Text(door.doorName)
                                                         .foregroundColor(.white)
-                                                    
-                                                    Text(door.location ?? "")
-                                                        .foregroundColor(.white.opacity(0.6))
-                                                        .font(.system(size: 13))
+                                                    if let location = door.location, !location.trimmingCharacters(in: .whitespaces).isEmpty {
+                                                        Text(location)
+                                                            .foregroundColor(.white.opacity(0.6))
+                                                            .font(.system(size: 13))
+                                                    }
                                                 }
                                                 
                                                 Spacer()
@@ -544,9 +545,93 @@ struct AddUserView: View {
             
             guard let user = editUser else { return }
 
-            fullName = user.fullName
-            phone = user.phone
-            nfcId = user.nfcDigital ?? ""
+            fullName = user.full_name
+            phone = user.phone_number
+            nfcId = user.nfc_digital ?? ""
+            email =  user.email
+            
+            digitalAccess =  user.is_digital
+            remoteAccess =  user.is_remote
+            
+            if user.creation_method == "door_selection" {
+                isSelectAccessGroup = false
+                isSelectDoor = true
+            } else{  // access_group
+                isSelectAccessGroup = true
+                isSelectDoor = false
+            }
+            
+            
+            if user.creation_method == "access_group",
+               let firstGroup = user.access_groups_detail.first {
+
+                selectedAccessGroup = AccessGroupItem(
+                    id: firstGroup.access_group_id,
+                    name: firstGroup.access_group_name,
+                    description: nil,
+                    doors: user.doors
+                )
+            }
+           
+            
+            if user.creation_method == "door_selection" {
+                
+                if user.schedule_type == "schedule"{
+                    isOneTimeAccess = false
+                    isScheduledAccess = true
+                }else{
+                    isOneTimeAccess = true
+                    isScheduledAccess = false
+                }
+                
+                if let startDateString = user.start_date {
+                    accessStartDate = apiDateFormatter.date(from: startDateString)
+                }
+
+                if let endDateString = user.end_date {
+                    accessEndDate = apiDateFormatter.date(from: endDateString)
+                }
+
+                if let firstSlot = user.time_slots.first {
+                    
+                    if let startTime = apiTimeFormatter.date(from: firstSlot.start_time) {
+                        accessStartTime = startTime
+                    }
+                    
+                    if let endTime = apiTimeFormatter.date(from: firstSlot.end_time) {
+                        accessEndTime = endTime
+                    }
+                }
+                
+                if let weekDays = user.week_days {
+                    selectedWeekdays = Set(
+                        weekDays
+                            .split(separator: ",")
+                            .compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+                    )
+                }
+                
+                
+                if let firstGroup = user.access_groups_detail.first {
+                    
+                    selectedDoors = firstGroup.doors.map { door in
+                        SingleDoor(
+                            id: door.door_id,
+                            doorName: door.door_name,
+                            location: nil,                 // API doesn't give location here
+                            status: "",
+                            device: "",
+                            organization: "",
+                            facility: nil,
+                            building: nil,
+                            createdAt: "",
+                            updatedAt: ""
+                        )
+                    }
+                }
+                
+            }
+            
             
            
         }
@@ -602,7 +687,19 @@ struct AddUserView: View {
                 UIApplication.shared.hideKeyboard()
             }
     }
-    
+    private let apiDateFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        df.locale = Locale(identifier: "en_US_POSIX")
+        return df
+    }()
+
+    private let apiTimeFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateFormat = "HH:mm"
+        df.locale = Locale(identifier: "en_US_POSIX")
+        return df
+    }()
     
     func toggleDay(_ day: Int) {
         if selectedWeekdays.contains(day) {

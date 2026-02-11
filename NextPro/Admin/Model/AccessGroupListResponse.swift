@@ -16,6 +16,6 @@ struct AccessGroupListResponse: Codable {
 struct AccessGroupItem: Codable, Identifiable {
     let id: String
     let name: String
-    let description: String
+    let description: String?
     let doors: [String]
 }

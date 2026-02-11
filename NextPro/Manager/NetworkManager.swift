@@ -1369,6 +1369,24 @@ class NetworkManager: ObservableObject {
             retry: true
         )
     }
+    
+    // MARK: - Get User details  api
+    func getUserDetails(userId: String) async throws -> GetUserFullResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.getUserDetails))!
+        print("🔄 Refresh token Api called")
+
+        return try await performRequest(
+            url: url,
+            method: "POST",
+            body: [
+                "id": userId
+            ],
+            requiresAuth: true,
+            responseType: GetUserFullResponse.self,
+            retry: true
+        )
+    }
 
 
 }

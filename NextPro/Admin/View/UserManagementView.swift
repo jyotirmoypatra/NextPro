@@ -10,10 +10,12 @@ import SwiftUI
 struct UserManagementView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var fetchUserVM = FetchUserListViewModel()
+    @StateObject private var getUserDetailsVM = GetUserDetailsViewModel()
     @State private var showFetchUserVMError = false
+    @State private var showUserDetailsVMError = false
     @State private var navigateToAddUser = false
     @State private var pullToRefresh = false
-    @State private var selectedUserForEdit: User?
+    @State private var selectedUserForEdit: GetUserData?
     
     var body: some View {
         GeometryReader { geometry in
@@ -105,8 +107,17 @@ struct UserManagementView: View {
                                 ForEach(fetchUserVM.usersList) { item in
                                     UsersCardView(user: item,
                                       onEdit: { user in
-                                          selectedUserForEdit = user
-                                          navigateToAddUser = true
+                                          Task {
+                                              getUserDetailsVM.userid = user.id
+                                              await getUserDetailsVM.getUserDetails()
+
+                                              if let fullData = getUserDetailsVM.userData {
+                                                  selectedUserForEdit = fullData
+                                                  navigateToAddUser = true
+                                              } else if let error = getUserDetailsVM.errorMessage {
+                                                  showUserDetailsVMError = true
+                                              }
+                                          }
                                       },
                                       onDelete: { user in
                                           print("Delete \(user.id)")
@@ -138,6 +149,20 @@ struct UserManagementView: View {
                 
                 
                 if fetchUserVM.isLoading && !pullToRefresh{
+                    ZStack {
+                        Color.black.opacity(0.6)
+                            .ignoresSafeArea()
+                        
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.8)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                }
+                
+                if getUserDetailsVM.isLoading{
                     ZStack {
                         Color.black.opacity(0.6)
                             .ignoresSafeArea()
@@ -218,6 +243,22 @@ struct UserManagementView: View {
                     showFetchUserVMError = false
                 }
             }
+        
+            .modernAlert(
+                    isPresented: Binding(
+                        get: { showUserDetailsVMError && !getUserDetailsVM.isFailedDueToNoInternet },
+                        set: { showUserDetailsVMError = $0 }
+                    )
+                ) {
+                    ModernAlertView(
+                        title: "Error!",
+                        message: getUserDetailsVM.errorMessage ?? "Something went wrong!",
+                        isSuccess: false,
+                        buttonTitle: "OK"
+                    ) {
+                        showUserDetailsVMError = false
+                    }
+                }
     }
 }
 
@@ -243,9 +284,9 @@ struct UsersCardView: View {
                     .font(.custom("Inter-SemiBold", size: 16))
                     .foregroundColor(.white)
 
-                Text("Schedule")
-                    .font(.custom("Inter-Regular", size: 13))
-                    .foregroundColor(.white.opacity(0.6))
+//                Text("Schedule")
+//                    .font(.custom("Inter-Regular", size: 13))
+//                    .foregroundColor(.white.opacity(0.6))
             }
 
             Spacer()
