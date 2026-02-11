@@ -17,11 +17,7 @@ struct DeviceDetailsResponse: Codable {
     let userFullName: String?
     let physicalCardNumber: String?
     let digitalCardNumber: String?
-    let cardExpiryDate: String?
-    let startDate: String?
-    let endDate: String?
-    let startTime: String?
-    let endTime: String?
+    let accessGroups: [AccessGroups]?
     let controllers: [Controller]?
     let standaloneAllInOne: [Standalone_All_In_One_Door]?
     let standaloneController: [StandaloneController]?
@@ -35,14 +31,46 @@ struct DeviceDetailsResponse: Codable {
         case userFullName = "user_full_name"
         case physicalCardNumber = "physical_card_number"
         case digitalCardNumber = "digital_card_number"
-        case cardExpiryDate = "card_expiry_date"
-        case startDate = "start_date"
-        case endDate = "end_date"
-        case startTime = "start_time"
-        case endTime = "end_time"
+        case accessGroups = "access_groups"
         case controllers = "controllers"
         case standaloneAllInOne = "standalone_all_in_one"
         case standaloneController = "standalone_controller"
+    }
+}
+
+struct AccessGroups: Codable {
+    let accessGroupId: String
+    let accessGroupName: String?
+    let tpgId: Int?
+    let isInternal: Bool?
+    let scheduleType: String?
+    let startDate: String?
+    let endDate: String?
+    let timeSlots: [TimeSlot]?
+    let weekDays: String?
+    let doors: [AccessDoor]?
+
+    enum CodingKeys: String, CodingKey {
+        case accessGroupId = "access_group_id"
+        case accessGroupName = "access_group_name"
+        case tpgId = "tpg_id"
+        case isInternal = "is_internal"
+        case scheduleType = "schedule_type"
+        case startDate = "start_date"
+        case endDate = "end_date"
+        case timeSlots = "time_slots"
+        case weekDays = "week_days"
+        case doors
+    }
+}
+
+struct AccessDoor: Codable {
+    let doorId: String
+    let doorName: String?
+
+    enum CodingKeys: String, CodingKey {
+        case doorId = "door_id"
+        case doorName = "door_name"
     }
 }
 

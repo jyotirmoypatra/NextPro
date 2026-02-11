@@ -23,9 +23,9 @@ class DeviceDetailsViewModel: ObservableObject {
     private let network = NetworkManager.shared
     private var fetchTask: Task<Void, Never>?
     
-    @Published var startTime : String?
-    @Published var endTime : String?
+   @Published var time_slots : [TimeSlot]?
     @Published var startDate: String?
+    @Published var weekday: String?
     @Published var endDate : String?
 
     func fetchDeviceDetailsIfNeeded(force: Bool = false) async {
@@ -51,10 +51,11 @@ class DeviceDetailsViewModel: ObservableObject {
             do {
                 let response = try await network.deviceDetails(userID: userId)
                 self.deviceDetails = response
-                startDate = response.startDate
-                endDate = response.endDate
-                startTime = response.startTime
-                endTime = response.endTime
+                startDate = response.accessGroups?.first?.startDate
+                endDate = response.accessGroups?.first?.endDate
+                time_slots = response.accessGroups?.first?.timeSlots
+                weekday = response.accessGroups?.first?.weekDays
+                
                 issuccess=true
                 saveDetailsLocally(response)
                 updateAndSubscribeAllDevices()
@@ -66,155 +67,7 @@ class DeviceDetailsViewModel: ObservableObject {
         await fetchTask?.value
     }
     
-//    func fetchDeviceDetailsIfNeeded() async {
-//        errorMessage = ""
-//        
-//        // 1️⃣ Check for saved local data first
-//        if loadSavedDetails() {
-//            print("📦 Loaded from local storage. No API call needed.")
-//            return
-//        }
-//        
-//        // 2️⃣ Only call API / load dummy JSON if no local data
-//        isLoading = true
-//        
-//        
-//        // Dummy JSON (for now)
-//        let dummyJSON = """
-//        {
-//          "status": true,
-//          "user_id": "d6b5e158-f48c-40bf-bbc0-4de054069fbc",
-//          "device_user_id": 7001,
-//          "organization_name": "Lockheed Martin",
-//          "user_full_name": "Jyotirmoy Patra",
-//          "physical_card_number": "2988462596",
-//          "digital_card_number": "2988462596",
-//          "card_expiry_date": "2026-01-10T21:26",
-//          "controllers": [
-//            {
-//              "controller_id": "94f5dbd6-c8b7-4002-a593-1d2f3c137320",
-//              "controller_name": "Main Gate Controller",
-//              "controller_serial": "4282184653",
-//              "controller_mac": "a0:76:4e:5a:ae:a2",
-//              "controller_key": "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
-//              "controller_model": "BC220",
-//              "controller_comm_type": null,
-//              "max_doors_supported": 1,
-//              "doors": [
-//                {
-//                  "door_id": "e58973dc-18d0-4302-a12f-e8f3f8766c19",
-//                  "door_name": "Office Entrance",
-//                  "door_number": 1,
-//                  "door_model": "M230",
-//                  "door_serial": "4287123590",
-//                  "door_mac": "58:cf:79:1a:c4:86",
-//                  "door_key": "d8829cf1e861620e2d42b2f4af4fd4db000000000000000000000000000000001000",
-//                  "dev_type": 14,
-//                  "open_type": 2,
-//                  "door_comm_type": null,
-//                  "is_standalone": false
-//                }
-//              ]
-//            },
-//            {
-//              "controller_id": "hf7f7d6-c8b7-4002-a593-1d2f3c137320",
-//              "controller_name": "GAte Controller",
-//              "controller_serial": "4283847520",
-//              "controller_mac": "d8:3b:da:36:53:62",
-//              "controller_key": "41f888c5017576eb80f030fe8730851d000000000000000000000000000000001000",
-//              "controller_model": "TC434",
-//              "controller_comm_type": null,
-//              "max_doors_supported": 4,
-//              "doors": [
-//                {
-//                  "door_id": "rd497dc-18d0-dhd8-a12f-e8f3f8766c19",
-//                  "door_name": "Conferance Hall",
-//                  "door_number": 2,
-//                  "door_model": "M230",
-//                  "door_serial": "4282894706",
-//                  "door_mac": "58:cf:79:1d:f7:e6",
-//                  "door_key": "97b4c368894a17be950800a8022b7a21000000000000000000000000000000001000",
-//                  "dev_type": 14,
-//                  "open_type": 2,
-//                  "door_comm_type": null,
-//                  "is_standalone": false
-//                }
-//              ]
-//            }
-//          ],
-//          "standalone_all_in_one": [
-//            {
-//              "door_id": "82l4b0ec8-32ad-4d49-824b-5a67ef87b7f0",
-//              "door_name": "Store room all In One",
-//              "door_number": 1,
-//              "door_model": "M230",
-//              "door_serial": "4282705968",
-//              "door_mac": "58:cf:79:1a:89:ce",
-//              "door_key": "92fc410e8d125331c26faf21c7e77292000000000000000000000000000000001000",
-//              "controller_comm_type": null,
-//              "controller_based": false,
-//              "dev_type": 14,
-//              "open_type": 2
-//            }
-//          ],
-//          "standalone_controller": [
-//            {
-//              "controller_id": "66dbd6-c4b7-4002-a593-1d2f3c137320",
-//              "controller_name": "Lockheed Martin : Main Gate",
-//              "controller_serial": "4282184678",
-//              "controller_mac": "00:76:4e:67:ae:a2",
-//              "controller_key": "ad8fufbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
-//              "controller_model": "BC220",
-//              "controller_comm_type": null,
-//              "controller_type": "Controller",
-//              "max_doors_supported": 1,
-//              "doors": [
-//                {
-//                  "door_id": "94435688-a677-4202-866a-d75ccca52d9d",
-//                  "door_name": "Sensorless Store Room Bc220",
-//                  "door_number": 1
-//                }
-//              ]
-//            },
-//                    {
-//                      "controller_id": "66dbd6-c4b7-4002-a593-1d2f3c137320",
-//                      "controller_name": "Main Gate",
-//                      "controller_serial": "8667676888",
-//                      "controller_mac": "80:76:78:5a:ae:a2",
-//                      "controller_key": "ad8ffbf81283b55c89b3bcf184b8294d000000000000000000000000000000001000",
-//                      "controller_model": "TC434",
-//                      "controller_comm_type": null,
-//                      "controller_type": "Controller",
-//                      "max_doors_supported": 1,
-//                      "doors": [
-//                        {
-//                          "door_id": "94435688-a677-4202-866a-d75ccca52d9d",
-//                          "door_name": "Sensorless Store Room TC434",
-//                          "door_number": 1
-//                        }
-//                      ]
-//                    }
-//           
-//          ]
-//        }
-//        """
-//        
-//        do {
-//            let data = Data(dummyJSON.utf8)
-//            let decodedResponse = try JSONDecoder().decode(DeviceDetailsResponse.self, from: data)
-//            self.deviceDetails = decodedResponse
-//            saveDetailsLocally(decodedResponse)
-//            updateAndSubscribeAllDevices()
-//            issuccess = true
-//            print("✅ Dummy Device Details Loaded")
-//        } catch {
-//            issuccess = false
-//            self.errorMessage = error.localizedDescription
-//            print("❌ Dummy Decode Error:", error)
-//        }
-//        
-//        isLoading = false
-//    }
+
     
     // MARK: - Save To UserDefaults
     private func saveDetailsLocally(_ response: DeviceDetailsResponse) {
@@ -229,10 +82,10 @@ class DeviceDetailsViewModel: ObservableObject {
         if let data = UserDefaults.standard.data(forKey: "device_details"),
            let decoded = try? JSONDecoder().decode(DeviceDetailsResponse.self, from: data) {
             self.deviceDetails = decoded
-            startDate = self.deviceDetails?.startDate
-            endDate = self.deviceDetails?.endDate
-            startTime = self.deviceDetails?.startTime
-            endTime = self.deviceDetails?.endTime
+            startDate = self.deviceDetails?.accessGroups?.first?.startDate
+            endDate = self.deviceDetails?.accessGroups?.first?.endDate
+            time_slots = self.deviceDetails?.accessGroups?.first?.timeSlots
+            weekday = self.deviceDetails?.accessGroups?.first?.weekDays
             updateAndSubscribeAllDevices()
             issuccess = true
             
