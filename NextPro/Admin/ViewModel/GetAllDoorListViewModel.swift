@@ -77,12 +77,19 @@ final class GetAllDoorListViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var hasLoadedOnce = false
+    @Published var isFailedDueToNoInternet = false
     private let networkManager = NetworkManager.shared
     
     func getDoorList(force: Bool = false) async {
 
         if hasLoadedOnce && !force { return }
 
+        guard networkManager.hasInternet else {
+           errorMessage = nil
+            isFailedDueToNoInternet = true
+            return
+        }
+        
         isLoading = true
         defer { isLoading = false }
 

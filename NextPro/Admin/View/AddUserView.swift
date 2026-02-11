@@ -13,7 +13,9 @@ struct AddUserView: View {
     
     @Environment(\.dismiss) private var dismiss
     @StateObject private var addUserVM = AddUserViewModel()
+    @StateObject private var getAccessGroupVM = GetAccessGroupListViewModel()
     @State private var showAddUserVMError = false
+    @State private var showAccessGroupVMError = false
     @State private var showAddUserSuccess = false
     @State private var navigateToUserManagement = false
     @State private var navigateToDoorAddView = false
@@ -31,6 +33,9 @@ struct AddUserView: View {
 
     @State private var isOneTimeAccess: Bool = true
     @State private var isScheduledAccess: Bool = false
+    
+    @State private var isSelectAccessGroup: Bool = true
+    @State private var isSelectDoor: Bool = false
 
     @State private var showStartTimePicker = false
     @State private var showEndTimePicker = false
@@ -165,8 +170,39 @@ struct AddUserView: View {
                                     .cornerRadius(12)
                                 }
                                 
-                               
+                                // ACCESS TYPE
+                                VStack(alignment: .leading, spacing: 10) {
+                                    
+                                    Text("Access Configuration")
+                                        .font(.custom("Inter-Medium", size: 16))
+                                        .foregroundColor(.white)
+                                    
+                                    VStack(spacing: 20) {
+                                        
+                                        // Schedule
+                                        AccessTypeRow(
+                                            title: "Select Access group",
+                                            isSelected: isSelectAccessGroup
+                                        ) {
+                                            isSelectAccessGroup = true
+                                            isSelectDoor = false
+                                        }
+                                        
+                                        // One Time
+                                        AccessTypeRow(
+                                            title: "Select Door",
+                                            isSelected: isSelectDoor
+                                        ) {
+                                            isSelectAccessGroup = false
+                                            isSelectDoor = true
+                                        }
+                                    }
+                                    .padding(12)
+                                    .background(Color.white.opacity(0.15))
+                                    .cornerRadius(12)
+                                }
                                 
+                                if isSelectDoor {
                                 // ACCESS TYPE
                                 VStack(alignment: .leading, spacing: 10) {
                                     
@@ -352,6 +388,8 @@ struct AddUserView: View {
                                 .id("DOOR_SECTION")
                                 
                                 
+                            }
+                                
                                 
                                 
                             }.padding(.bottom,10)
@@ -454,7 +492,7 @@ struct AddUserView: View {
                 
                 
                 // LOADING OVERLAY
-                if addUserVM.isLoading{
+                if addUserVM.isLoading || getAccessGroupVM.isLoading{
                     ZStack {
                         Color.black.opacity(0.4)
                             .ignoresSafeArea()
@@ -486,11 +524,17 @@ struct AddUserView: View {
         }
         
         .onAppear {
+            Task {
+                    await getAccessGroupVM.getAccessGroupList()
+                }
+            
             guard let user = editUser else { return }
 
             fullName = user.fullName
             phone = user.phone
             nfcId = user.nfcDigital ?? ""
+            
+           
         }
         
         .internetOverlay()
@@ -523,6 +567,23 @@ struct AddUserView: View {
                     dismiss()
                 }
             }
+        
+            .modernAlert(
+                    isPresented: Binding(
+                        get: { showAccessGroupVMError && !getAccessGroupVM.isFailedDueToNoInternet },
+                        set: { showAccessGroupVMError = $0 }
+                    )
+                ) {
+                    ModernAlertView(
+                        title: "Error!",
+                        message: getAccessGroupVM.errorMessage ?? "Something went wrong!",
+                        isSuccess: false,
+                        buttonTitle: "OK"
+                    ) {
+                        showAccessGroupVMError = false
+                    }
+            }
+        
             .onTapGesture {
                 UIApplication.shared.hideKeyboard()
             }

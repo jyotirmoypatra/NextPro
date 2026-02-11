@@ -17,7 +17,7 @@ struct DoorAccessView: View {
 
     @State private var searchText: String = ""
     @State private var tempSelected: Set<String> = []
-
+    @State private var showDoorListVMError = false
     var doors: [SingleDoor] {
         doorListVM.doorList
     }
@@ -220,6 +220,22 @@ struct DoorAccessView: View {
         // Reflect delete from AddUserView
         .onChange(of: selectedDoors) { newValue in
             tempSelected = Set(newValue.map { $0.id })
+        }
+        
+        .modernAlert(
+                isPresented: Binding(
+                    get: { showDoorListVMError && !doorListVM.isFailedDueToNoInternet },
+                    set: { showDoorListVMError = $0 }
+                )
+            ) {
+                ModernAlertView(
+                    title: "Error!",
+                    message: doorListVM.errorMessage ?? "Something went wrong!",
+                    isSuccess: false,
+                    buttonTitle: "OK"
+                ) {
+                    showDoorListVMError = false
+                }
         }
     }
 

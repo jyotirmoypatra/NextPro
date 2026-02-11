@@ -36,6 +36,7 @@ static let baseURL = "https://devapi.nextprotechnologies.com"
         static let uniqueNfcCardGenerate = "/api/doors/generate-unique-nfc/"
         static let allDoorList = "/api/doors/all-door-list/"
         static let getUserDetails = "/api/facility-manager/detail/"
+        static let getAccessGroupList = "/api/access-group/list/"
     }
     
     

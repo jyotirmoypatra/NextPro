@@ -1227,6 +1227,7 @@ class NetworkManager: ObservableObject {
 //        }
 //    }
 
+    // MARK: - Device Config Success api
     func successDeviceConfig(
         userId: String,
         isSuccess: Bool,
@@ -1253,7 +1254,7 @@ class NetworkManager: ObservableObject {
         )
     }
     
-    
+    // MARK: - Server Time api
     func serverTime() async throws -> ServerTimeResponse {
 
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.serverDateTime))!
@@ -1267,7 +1268,7 @@ class NetworkManager: ObservableObject {
         )
     }
 
-    
+    // MARK: - Fetch User List api
     func fetchUserList(
         userId: String,
     ) async throws -> UsersResponse {
@@ -1288,7 +1289,7 @@ class NetworkManager: ObservableObject {
         )
     }
     
-    
+    // MARK: - Add New User api
     func addNewUser(body: AddUserRequest) async throws -> AddUserResponse {
 
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.addNewUser))!
@@ -1302,7 +1303,7 @@ class NetworkManager: ObservableObject {
             retry: true
         )
     }
-    
+    // MARK: - Refresh Token  api
     func refressToken() async throws -> RefreshTokenResponse {
 
         guard let refreshToken = KeychainManager.shared.get("refresh_token"),
@@ -1323,6 +1324,7 @@ class NetworkManager: ObservableObject {
         )
     }
     
+    // MARK: - NFC Card Generate api
     func generateUniqueNfcId() async throws -> UniqueCardResponse {
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.uniqueNfcCardGenerate))!
         print("🔄 Unique Card Nfc Api called")
@@ -1336,6 +1338,7 @@ class NetworkManager: ObservableObject {
         )
     }
     
+    // MARK: - Get All Door List api
     func getAllDoorList() async throws -> DoorListResponse {
 
 
@@ -1347,6 +1350,22 @@ class NetworkManager: ObservableObject {
             method: "GET",
             requiresAuth: true,
             responseType: DoorListResponse.self,
+            retry: true
+        )
+    }
+    
+    // MARK: - Get Access Group List api
+    func getAccessGroupList() async throws -> AccessGroupListResponse {
+
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.getAccessGroupList))!
+        print("🔄 Gett Access group list Api called")
+
+        return try await performRequest(
+            url: url,
+            method: "GET",
+            requiresAuth: true,
+            responseType: AccessGroupListResponse.self,
             retry: true
         )
     }
