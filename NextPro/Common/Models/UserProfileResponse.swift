@@ -8,7 +8,7 @@
 
 struct UserProfileData: Decodable {
     let full_name: String?
-    let phone: String?
+    let phone_number: String?
     let email: String?
     let status: String?
     let organization: String?

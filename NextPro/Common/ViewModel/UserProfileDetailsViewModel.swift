@@ -56,7 +56,7 @@ class UserProfileDetailsViewModel: ObservableObject {
                 isSuccess = true
                 // Assign response to UI (no UserDefaults save)
                 fullName = response.data.full_name ?? ""
-                phoneNumber = response.data.phone ?? ""
+                phoneNumber = response.data.phone_number ?? ""
                 email = response.data.email ?? ""
                 accountStatus = response.data.status ?? ""
                 organization = response.data.organization ?? ""

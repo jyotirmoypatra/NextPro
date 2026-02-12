@@ -132,30 +132,54 @@ func isPasswordValid(_ password: String) -> Bool {
     return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(with: email)
 }
 
+//extension String {
+//    func formattedUSPhone() -> String {
+//        // keep only digits
+//        let digits = self.filter { $0.isNumber }
+//        
+//        if digits.count == 10 {
+//            // (123) 456-7890
+//            let area = digits.prefix(3)
+//            let prefix = digits.dropFirst(3).prefix(3)
+//            let line = digits.suffix(4)
+//            return "(\(area)) \(prefix)-\(line)"
+//        } else if digits.count == 11, digits.first == "1" {
+//            // 1-234-567-8901
+//            let country = digits.prefix(1)
+//            let area = digits.dropFirst(1).prefix(3)
+//            let prefix = digits.dropFirst(4).prefix(3)
+//            let line = digits.suffix(4)
+//            return "\(country)-(\(area)) \(prefix)-\(line)"
+//        }
+//        
+//        return self  // fallback if not 10/11 digits
+//    }
+//}
+
 extension String {
+    
     func formattedUSPhone() -> String {
-        // keep only digits
-        let digits = self.filter { $0.isNumber }
+        let digits = self.filter { $0.isNumber }.prefix(10)
+        let count = digits.count
         
-        if digits.count == 10 {
-            // (123) 456-7890
+        switch count {
+            
+        case 0...3:
+            return String(digits)
+            
+        case 4...6:
+            let area = digits.prefix(3)
+            let prefix = digits.dropFirst(3)
+            return "(\(area)) \(prefix)"
+            
+        default:
             let area = digits.prefix(3)
             let prefix = digits.dropFirst(3).prefix(3)
-            let line = digits.suffix(4)
+            let line = digits.dropFirst(6)
             return "(\(area)) \(prefix)-\(line)"
-        } else if digits.count == 11, digits.first == "1" {
-            // 1-234-567-8901
-            let country = digits.prefix(1)
-            let area = digits.dropFirst(1).prefix(3)
-            let prefix = digits.dropFirst(4).prefix(3)
-            let line = digits.suffix(4)
-            return "\(country)-(\(area)) \(prefix)-\(line)"
         }
-        
-        return self  // fallback if not 10/11 digits
     }
 }
-
 
 func loadHTML(_ fileName: String) -> String {
     if let url = Bundle.main.url(forResource: fileName, withExtension: "html"),

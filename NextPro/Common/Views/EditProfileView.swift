@@ -191,29 +191,64 @@ struct EditProfileView: View {
                                             .padding(.leading, 14)
                                     }
                                     
-                                    TextField("", text: Binding(
+//                                    TextField("", text: Binding(
+//
+//                                        
 //                                        get: {
-//                                            phoneNumber.formattedUSPhone()   // show formatted
-//                                        },
-//                                        set: { newValue in
-//                                            phoneNumber = newValue.filter { $0.isNumber } // store only digits
-//                                        }
-                                        
-                                        get: {
+//                                                   phoneNumber.formattedUSPhone()
+//                                               },
+//                                               set: { newValue in
+//                                                   
+//                                                   let digits = newValue.filter { $0.isNumber }
+//                                                   
+//                                                   if digits.count > 10 {
+//                                                       let generator = UIImpactFeedbackGenerator(style: .medium)
+//                                                       generator.impactOccurred()
+//                                                       return
+//                                                   }
+//                                                   
+//                                                   phoneNumber = digits
+//                                               }
+//                                    ))
+//                                    .foregroundColor(.white)
+//                                    .font(.custom("Inter-Regular", size: 16))
+//                                    .padding(.horizontal, 14)
+//                                    .frame(height: 50)
+//                                    .background(Color.white.opacity(0.15))
+//                                    .cornerRadius(10)
+//                                    .keyboardType(.phonePad)
+                                    
+                                    
+                                    TextField(
+                                        "",
+                                        text: Binding(
+                                            get: {
                                                 phoneNumber.formattedUSPhone()
                                             },
                                             set: { newValue in
-                                                let digits = newValue.filter { $0.isNumber }
-                                                phoneNumber = String(digits.prefix(10))
+                                                phoneNumber = newValue
                                             }
-                                    ))
-                                    .foregroundColor(.white)
-                                    .font(.custom("Inter-Regular", size: 16))
-                                    .padding(.horizontal, 14)
-                                    .frame(height: 50)
-                                    .background(Color.white.opacity(0.15))
-                                    .cornerRadius(10)
-                                    .keyboardType(.phonePad)
+                                        )
+                                    )
+                                        .foregroundColor(.white)
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .padding(.horizontal, 14)
+                                        .frame(height: 50)
+                                        .background(Color.white.opacity(0.15))
+                                        .cornerRadius(10)
+                                        .keyboardType(.numberPad)
+                                        .onChange(of: phoneNumber) { newValue in
+                                            
+                                            let digits = newValue.filter { $0.isNumber }
+                                            
+                                            if digits.count > 10 {
+                                                let generator = UIImpactFeedbackGenerator(style: .medium)
+                                                generator.impactOccurred()
+                                                phoneNumber = String(digits.prefix(10))
+                                            } else {
+                                                phoneNumber = digits
+                                            }
+                                        }
                                 }
                             }
                             
