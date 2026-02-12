@@ -14,6 +14,8 @@ struct ContentView: View {
     @State private var isAdmin = false
     @State private var isUserInitialSetupDone = false
     
+    @StateObject private var networkManager = NetworkManager.shared
+    
     init(skipSplash: Bool = false) {
             _showSplash = State(initialValue: !skipSplash)
         
@@ -65,7 +67,19 @@ struct ContentView: View {
                             showSplash = false
                         }
                     }
-                }
+        }
+        
+        .modernAlert(isPresented: $networkManager.showSessionExpiredAlert) {
+            ModernAlertView(
+                title: "Session Expired!",
+                message:  "Your session has expired. Please login again.",
+                isSuccess: false,
+                buttonTitle: "OK"
+            ) {
+                KeychainManager.shared.clearUserDefaultsAndKeychainData()
+                KeychainManager.shared.resetToLogin()
+            }
+        }
 
     }
     private func checkLoginStatus() {

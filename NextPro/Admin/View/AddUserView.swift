@@ -10,7 +10,7 @@ import SwiftUI
 struct AddUserView: View {
     
     let editUser: GetUserData?
-    
+    let onDismiss: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @StateObject private var addUserVM = AddUserViewModel()
     @StateObject private var getAccessGroupVM = GetAccessGroupListViewModel()
@@ -22,12 +22,12 @@ struct AddUserView: View {
     
     @State private var fullName = ""
     @State private var email = ""
-    @State private var username = ""
-    @State private var password = ""
+    @State private var username = "sourav"
+    @State private var password = "Jyoti@123"
     @State private var phone = ""
     @State private var nfcId = ""
    
-    @State private var digitalAccess = false
+    @State private var digitalAccess = true
     @State private var remoteAccess = false
 
 
@@ -121,19 +121,21 @@ struct AddUserView: View {
                                     text: $fullName,
                                 )
                                 
-                                LabeledTextField(
-                                    title: "Phone Number",
-                                    placeholder: "Enter phone",
-                                    text: $phone,
-                                    keyboardType: .numberPad
-                                    
-                                )
+                                
                                 
                                 LabeledTextField(
                                     title: "Email ID",
                                     placeholder: "Enter email",
                                     isRequired: true,
                                     text: $email,
+                                    
+                                )
+                                
+                                LabeledTextField(
+                                    title: "Phone Number",
+                                    placeholder: "Enter phone",
+                                    text: $phone,
+                                    keyboardType: .numberPad
                                     
                                 )
                                 
@@ -151,10 +153,14 @@ struct AddUserView: View {
                                 
                                 
                                 VStack(alignment: .leading, spacing: 10) {
-                                    
-                                    Text("Device Access")
-                                        .font(.custom("Inter-Medium", size: 16))
-                                        .foregroundColor(.white)
+                                    HStack(spacing: 2) {
+                                        Text("DEVICE ACCESS")
+                                            .font(.custom("Inter-Medium", size: 16))
+                                            .foregroundColor(.white)
+                                        
+                                        Text("*")
+                                            .foregroundColor(.red)
+                                    }
                                     
                                     VStack(spacing: 20) {
                                         
@@ -177,10 +183,14 @@ struct AddUserView: View {
                                 
                                 // ACCESS TYPE
                                 VStack(alignment: .leading, spacing: 10) {
-                                    
-                                    Text("Access Configuration")
-                                        .font(.custom("Inter-Medium", size: 16))
-                                        .foregroundColor(.white)
+                                    HStack(spacing: 2) {
+                                        Text("ACCESS CONFIGURATION")
+                                            .font(.custom("Inter-Medium", size: 16))
+                                            .foregroundColor(.white)
+                                        
+                                        Text("*")
+                                            .foregroundColor(.red)
+                                    }
                                     
                                     VStack(spacing: 20) {
                                         
@@ -195,7 +205,7 @@ struct AddUserView: View {
                                         
                                         // One Time
                                         AccessTypeRow(
-                                            title: "Select Door",
+                                            title: "Select Doors",
                                             isSelected: isSelectDoor
                                         ) {
                                             isSelectAccessGroup = false
@@ -221,10 +231,13 @@ struct AddUserView: View {
                                 if isSelectDoor {
                                 // ACCESS TYPE
                                 VStack(alignment: .leading, spacing: 10) {
-                                    
-                                    Text("ACCESS TYPE")
-                                        .font(.custom("Inter-Medium", size: 16))
-                                        .foregroundColor(.white)
+                                    HStack(spacing: 2) {
+                                        Text("ACCESS TYPE")
+                                            .font(.custom("Inter-Medium", size: 16))
+                                            .foregroundColor(.white)
+                                        Text("*")
+                                            .foregroundColor(.red)
+                                    }
                                     
                                     VStack(spacing: 20) {
                                         
@@ -253,10 +266,13 @@ struct AddUserView: View {
                                 
                                 //access date
                                 VStack(alignment: .leading, spacing: 16) {
-                                    
-                                    Text("ACCESS DATE")
-                                        .font(.custom("Inter-Medium", size: 16))
-                                        .foregroundColor(.white)
+                                    HStack(spacing: 2) {
+                                        Text("ACCESS DATE")
+                                            .font(.custom("Inter-Medium", size: 16))
+                                            .foregroundColor(.white)
+                                        Text("*")
+                                            .foregroundColor(.red)
+                                    }
                                     
                                     VStack(alignment: .leading, spacing: 16) {
                                         // Start Date
@@ -280,10 +296,13 @@ struct AddUserView: View {
                                 
                                 
                                 VStack(alignment: .leading, spacing: 16) {
-                                    
+                                    HStack(spacing: 2) {
                                     Text("ACCESS TIME")
                                         .font(.custom("Inter-Medium", size: 16))
                                         .foregroundColor(.white)
+                                        Text("*")
+                                            .foregroundColor(.red)
+                                    }
                                     VStack(alignment: .leading, spacing: 16) {
                                         // From
                                         timeBox(
@@ -313,10 +332,13 @@ struct AddUserView: View {
                                 if isScheduledAccess {
                                     
                                     VStack(alignment: .leading, spacing: 12) {
-                                        
+                                        HStack(spacing: 2) {
                                         Text("REPEAT EVERY")
                                             .font(.custom("Inter-Medium", size: 16))
                                             .foregroundColor(.white)
+                                            Text("*")
+                                                .foregroundColor(.red)
+                                        }
                                         
                                         LazyVGrid(
                                             columns: [
@@ -346,10 +368,13 @@ struct AddUserView: View {
                                 
                                 
                                 VStack(alignment: .leading, spacing: 12) {
-                                    
+                                    HStack(spacing: 2) {
                                     Text("DOOR ACCESS")
                                         .font(.custom("Inter-Medium", size: 16))
                                         .foregroundColor(.white)
+                                        Text("*")
+                                            .foregroundColor(.red)
+                                    }
                                     
                                     Button(action: {
                                         navigateToDoorAddView = true
@@ -627,6 +652,10 @@ struct AddUserView: View {
             }
             
            
+        }
+        
+        .onDisappear {
+            onDismiss?()
         }
         
         .internetOverlay()

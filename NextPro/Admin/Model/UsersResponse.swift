@@ -28,9 +28,9 @@ struct User: Codable, Identifiable {
 
     let id: String               // facility_user_id
     let userId: String
-    let username: String
+    let username: String?
     let fullName: String
-    let phone: String
+    let phone: String?
     let userType: String
     let userTypeLabel: String
     let status: String
@@ -42,6 +42,7 @@ struct User: Codable, Identifiable {
     let accessGroups: [AccessGroup]
     let buildingId: String?
     let buildingName: String?
+    let creationMethod: String?
 
     enum CodingKeys: String, CodingKey {
         case id = "facility_user_id"
@@ -60,6 +61,7 @@ struct User: Codable, Identifiable {
         case accessGroups = "access_groups"
         case buildingId = "building_id"
         case buildingName = "building_name"
+        case creationMethod = "creation_method"
     }
 }
 

@@ -62,43 +62,58 @@ struct UserManagementView: View {
                     .padding(.horizontal, 5)
                     .padding(.top, 10)
                     .padding(.bottom, 15)
+                   
                     
                     Button(action: {
-                        selectedUserForEdit = nil 
+                        selectedUserForEdit = nil
                         navigateToAddUser = true
                     }) {
-                        HStack{
+                        HStack {
                             Image(systemName: "plus")
                                 .font(.system(size: 16))
                                 .foregroundColor(.white)
                                 .fontWeight(.bold)
-                            
+
                             Text("Add User")
                                 .font(.custom("Inter-SemiBold", size: 18))
                                 .foregroundColor(.white)
                         }
-                        
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .contentShape(Rectangle())   // ⭐ makes full area tappable
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
                     .overlay(
                         RoundedRectangle(cornerRadius: 14)
-                            .stroke(
-                                Color.white.opacity(0.2),
-                                lineWidth: 1
-                            )
+                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
                     )
                     
-                    if !fetchUserVM.usersList.isEmpty {
-                        HStack{
-                            Text("Added Users")
-                                .font(.custom("Inter-SemiBold", size: 16))
-                                .foregroundColor(.white)
-                            
-                        }.frame(maxWidth:.infinity, alignment: .leading)
-                            .padding(.top, 20)
+                  //  if !fetchUserVM.usersList.isEmpty {
+//                        HStack{
+//                            Text("Added Users")
+//                                .font(.custom("Inter-SemiBold", size: 16))
+//                                .foregroundColor(.white)
+//                            
+//                        }.frame(maxWidth:.infinity, alignment: .leading)
+//                            .padding(.top, 20)
                         
+                        
+                    HStack(spacing: 10) {
+                        
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.white.opacity(0.7))
+                        
+                        TextField("Search User by name", text: $fetchUserVM.searchText)
+                            .foregroundColor(.white)
+                            .tint(.white) // cursor color
                     }
+                    .padding(15)
+                    .background(Color.white.opacity(0.1))
+                    .cornerRadius(12)
+                    .padding(.top,20)
+                        
+                    //}
+                    
+                   
                     
                     ScrollView {
                         VStack(alignment: .leading, spacing: 15) {
@@ -127,6 +142,24 @@ struct UserManagementView: View {
                                             
                                             navigateToAddUser = true
                                         }
+                                        .onAppear {
+                                            if item.id == fetchUserVM.usersList.last?.id &&
+                                               !fetchUserVM.isLoadingMore &&
+                                               !fetchUserVM.isLoading {
+                                                Task {
+                                                    await fetchUserVM.fetchUsersList()
+                                                }
+                                            }
+                                        }
+                                }
+                                
+                                if fetchUserVM.isLoadingMore {
+                                    HStack {
+                                        Spacer()
+                                        ProgressView()
+                                        Spacer()
+                                    }
+                                    .padding(.top, 10)
                                 }
                             }
                             
@@ -136,7 +169,7 @@ struct UserManagementView: View {
                     }
                     .refreshable {
                         pullToRefresh = true
-                        await fetchUserVM.fetchUsersList()
+                        await fetchUserVM.fetchUsersList(reset: true)
                         pullToRefresh = false
                         if let error = fetchUserVM.errorMessage, !error.isEmpty {
                             showFetchUserVMError = true
@@ -177,7 +210,9 @@ struct UserManagementView: View {
                 }
                 
                 
-                if !fetchUserVM.isLoading && fetchUserVM.usersList.isEmpty {
+               // if !fetchUserVM.isLoading && fetchUserVM.usersList.isEmpty {
+                    
+                    if fetchUserVM.hasLoadedOnce && !fetchUserVM.isLoading && fetchUserVM.usersList.isEmpty {
                     ZStack {
                         VStack(spacing: 14) {
                             Image(systemName: "person.fill")
@@ -185,7 +220,10 @@ struct UserManagementView: View {
                                 .foregroundColor(.gray)
                             
                             
-                            Text("No User Devices Found")
+                           // Text("No User Devices Found")
+                            Text(fetchUserVM.searchText.isEmpty
+                                 ? "No User Found"
+                                 : "No search results found")
                                 .font(.custom("Inter-SemiBold", size: 16))
                                 .foregroundColor(.white)
                             
@@ -203,16 +241,35 @@ struct UserManagementView: View {
                 
             }
         }
-        .navigationBarHidden(true)
-        .navigationDestination(isPresented: $navigateToAddUser) {
-            AddUserView(editUser: selectedUserForEdit)
+        .onTapGesture {
+            UIApplication.shared.hideKeyboard()
         }
-        .task {
-            await fetchUserVM.fetchUsersList()
-
-            if let error = fetchUserVM.errorMessage, !error.isEmpty {
-                showFetchUserVMError = true
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .navigationBarHidden(true)
+//        .navigationDestination(isPresented: $navigateToAddUser) {
+//            AddUserView(editUser: selectedUserForEdit)
+//        }
+        
+        .navigationDestination(isPresented: $navigateToAddUser) {
+            AddUserView(
+                editUser: selectedUserForEdit,
+                onDismiss: {
+                    Task {
+                        await fetchUserVM.fetchUsersList(reset: true)
+                    }
+                }
+            )
+        }
+        .onAppear {
+            Task {
+                await fetchUserVM.fetchUsersList(reset: true)
+                
+                if let error = fetchUserVM.errorMessage, !error.isEmpty {
+                    showFetchUserVMError = true
+                }
             }
+            
+            
         }
        
 
@@ -222,7 +279,10 @@ struct UserManagementView: View {
             // Retry ONLY if previous failure was due to no internet
             if fetchUserVM.isFailedDueToNoInternet {
                 Task {
-                    await fetchUserVM.fetchUsersList()
+                    await fetchUserVM.fetchUsersList(reset: true)
+                    if let error = fetchUserVM.errorMessage, !error.isEmpty {
+                        showFetchUserVMError = true
+                    }
                 }
             }
         }
@@ -260,6 +320,7 @@ struct UserManagementView: View {
                     }
                 }
     }
+    
 }
 
 struct UsersCardView: View {
@@ -284,9 +345,9 @@ struct UsersCardView: View {
                     .font(.custom("Inter-SemiBold", size: 16))
                     .foregroundColor(.white)
 
-//                Text("Schedule")
-//                    .font(.custom("Inter-Regular", size: 13))
-//                    .foregroundColor(.white.opacity(0.6))
+                Text(user.creationMethod == "access_group" ? "Access Group" : "Custom Door Access" )
+                    .font(.custom("Inter-Regular", size: 13))
+                    .foregroundColor(.white.opacity(0.6))
             }
 
             Spacer()

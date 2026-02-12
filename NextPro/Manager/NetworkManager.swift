@@ -19,6 +19,8 @@ class NetworkManager: ObservableObject {
     @Published var isConnected: Bool = false
     @Published var hasInternet: Bool = false
     @Published var didCheckInternet: Bool = false
+    
+    @Published var showSessionExpiredAlert = false
 
     private init() {
         startMonitoring()
@@ -167,6 +169,20 @@ class NetworkManager: ObservableObject {
                    retry: false
                )
            }
+        
+        // authentication failed after one rety and logout
+        if http.statusCode == 401, !retry {
+
+                print("🚪 Session expired after retry. Showing alert...")
+
+                DispatchQueue.main.async {
+                    if !NetworkManager.shared.showSessionExpiredAlert {
+                        NetworkManager.shared.showSessionExpiredAlert = true
+                    }
+                }
+
+                throw APIError.unAuthorized
+        }
         
         guard (200...299).contains(http.statusCode) else {
             let message = extractErrorMessage(from: data) ?? "Something went wrong."
@@ -1269,10 +1285,7 @@ class NetworkManager: ObservableObject {
     }
 
     // MARK: - Fetch User List api
-    func fetchUserList(
-        userId: String,
-    ) async throws -> UsersResponse {
-
+    func fetchUserList(userId: String, page: Int, pageSize: Int , search: String) async throws -> UsersResponse {
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.fetchUsersList))!
         print("SuccessConfig wifi Api called----")
         return try await performRequest(
@@ -1280,8 +1293,10 @@ class NetworkManager: ObservableObject {
             method: "POST",
             body: [
                 "user_id": userId,
-                "source" : "app"
-                
+                "source" : "app" ,
+                "page" : page ,
+                "page_size" : pageSize,
+                "search" :  search
             ],
             requiresAuth: true,
             responseType: UsersResponse.self,
