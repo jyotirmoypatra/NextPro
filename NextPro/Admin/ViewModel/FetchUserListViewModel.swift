@@ -83,19 +83,6 @@ final class FetchUserListViewModel: ObservableObject {
             }
 
             isFailedDueToNoInternet = false
-
-            
-
-            // Manual reset (pull to refresh)
-//            if reset {
-//                currentPage = 1
-//                totalPages = 1
-//                
-//                // clear only when first load OR pull refresh
-//                if searchText.isEmpty {
-//                    usersList = []
-//                }
-//            }
             
             if reset {
                 currentPage = 1
@@ -106,6 +93,8 @@ final class FetchUserListViewModel: ObservableObject {
                     usersList = []
                 }
             }
+            
+            
 
             //Stop if no more pages
             guard currentPage <= totalPages else { return }

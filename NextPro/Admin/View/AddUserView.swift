@@ -23,7 +23,7 @@ struct AddUserView: View {
     @State private var fullName = ""
     @State private var email = ""
     @State private var username = ""
-    @State private var password = ""
+    @State private var password = "SecurePassword@!"
     @State private var phone = ""
     @State private var nfcId = ""
    
@@ -62,6 +62,8 @@ struct AddUserView: View {
     @State private var openSection: Int? = nil
     
     @State private var hasInitialized = false
+    
+    @State private var isInitialLoading = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -529,7 +531,7 @@ struct AddUserView: View {
                 
                 
                 // LOADING OVERLAY
-                if addUserVM.isLoading || getAccessGroupVM.isLoading{
+                if addUserVM.isLoading || isInitialLoading{
                     ZStack {
                         Color.black.opacity(0.6)
                             .ignoresSafeArea()
@@ -564,86 +566,93 @@ struct AddUserView: View {
             guard !hasInitialized else { return }
                hasInitialized = true
             Task {
+                isInitialLoading = true
                 await getAccessGroupVM.getAccessGroupList()
                 await doorListVM.getDoorList(force: true)
                 
                 
-                guard let user = editUser else { return }
-                
-                fullName = user.full_name
-                phone = user.phone_number ?? ""
-                nfcId = user.nfc_digital ?? ""
-                email =  user.email
-                
-                digitalAccess =  user.is_digital
-                remoteAccess =  user.is_remote
-                
-                if user.creation_method == "door_selection" {
-                    isSelectAccessGroup = false
-                    isSelectDoor = true
-                } else{  // access_group
-                    isSelectAccessGroup = true
-                    isSelectDoor = false
-                }
-                
-                
-                if user.creation_method == "access_group",
-                   let firstGroup = user.access_groups_detail.first {
+                if let user = editUser {
                     
-                    selectedAccessGroup = AccessGroupItem(
-                        id: firstGroup.access_group_id,
-                        name: firstGroup.access_group_name,
-                        description: nil,
-                        doors: user.doors
-                    )
-                }
-                
-                
-                if user.creation_method == "door_selection" {
+                    fullName = user.full_name
+                    phone = user.phone_number ?? ""
+                    nfcId = user.nfc_digital ?? ""
+                    email =  user.email
+                    username = user.username ?? ""
                     
-                    if user.schedule_type == "schedule"{
-                        isOneTimeAccess = false
-                        isScheduledAccess = true
-                    }else{
-                        isOneTimeAccess = true
-                        isScheduledAccess = false
+                    digitalAccess =  user.is_digital
+                    remoteAccess =  user.is_remote
+                    
+                    if user.creation_method == "door_selection" {
+                        isSelectAccessGroup = false
+                        isSelectDoor = true
+                    } else{  // access_group
+                        isSelectAccessGroup = true
+                        isSelectDoor = false
                     }
                     
-                    if let startDateString = user.start_date {
-                        accessStartDate = apiDateFormatter.date(from: startDateString)
-                    }
                     
-                    if let endDateString = user.end_date {
-                        accessEndDate = apiDateFormatter.date(from: endDateString)
-                    }
-                    
-                    if let firstSlot = user.time_slots.first {
+                    if user.creation_method == "access_group",
+                       let firstGroup = user.access_groups_detail.first {
                         
-                        if let startTime = apiTimeFormatter.date(from: firstSlot.start_time) {
-                            accessStartTime = startTime
-                        }
-                        
-                        if let endTime = apiTimeFormatter.date(from: firstSlot.end_time) {
-                            accessEndTime = endTime
-                        }
-                    }
-                    
-                    if let weekDays = user.week_days {
-                        selectedWeekdays = Set(
-                            weekDays
-                                .split(separator: ",")
-                                .compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+                        selectedAccessGroup = AccessGroupItem(
+                            id: firstGroup.access_group_id,
+                            name: firstGroup.access_group_name,
+                            description: nil,
+                            doors: user.doors
                         )
                     }
                     
                     
-                    selectedDoors = doorListVM.doorList.filter {
-                        user.doors.contains($0.id)
+                    if user.creation_method == "door_selection" {
+                        
+                        if user.schedule_type == "schedule"{
+                            isOneTimeAccess = false
+                            isScheduledAccess = true
+                        }else{
+                            isOneTimeAccess = true
+                            isScheduledAccess = false
+                        }
+                        
+                        if let startDateString = user.start_date {
+                            accessStartDate = apiDateFormatter.date(from: startDateString)
+                        }
+                        
+                        if let endDateString = user.end_date {
+                            accessEndDate = apiDateFormatter.date(from: endDateString)
+                        }
+                        
+                        if let firstSlot = user.time_slots.first {
+                            
+                            if let startTime = apiTimeFormatter.date(from: firstSlot.start_time) {
+                                accessStartTime = startTime
+                            }
+                            
+                            if let endTime = apiTimeFormatter.date(from: firstSlot.end_time) {
+                                accessEndTime = endTime
+                            }
+                        }
+                        
+                        if let weekDays = user.week_days {
+                            selectedWeekdays = Set(
+                                weekDays
+                                    .split(separator: ",")
+                                    .compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+                            )
+                        }
+                        
+                        
+                        selectedDoors = doorListVM.doorList.filter {
+                            user.doors.contains($0.id)
+                        }
+                        
+                        print("selectedDoors is :\(selectedDoors)")
+                        
                     }
-                    
-                    print("selectedDoors is :\(selectedDoors)")
-                    
                 }
+                
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                isInitialLoading = false
+                
             }
             
            
@@ -841,8 +850,8 @@ struct AddUserView: View {
             let request = AddUserRequest(
                 user_id: isEditMode ? nil : userId,
                 id: isEditMode ? editUser?.id : nil, // for edit
-                username: username,
-                password: password,
+                username: isEditMode ? username : email,
+                password: isEditMode ? "" : password,
                 full_name: fullName,
                 email: email,
                 phone_number: phone,

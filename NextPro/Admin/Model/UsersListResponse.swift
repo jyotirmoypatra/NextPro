@@ -1,12 +1,12 @@
 //
-//  UsersResponse.swift
+//  UsersListResponse.swift
 //  NextPro
 //
 //  Created by JYOTIRMOY PATRA on 07/01/26.
 //
 import Foundation
 
-struct UsersResponse: Codable {
+struct UsersListResponse: Codable {
     let status: Bool
     let data: [User]
     let pagination: Pagination
@@ -34,7 +34,7 @@ struct User: Codable, Identifiable {
     let userType: String
     let userTypeLabel: String
     let status: String
-    let createdAt: String
+    let createdAt: String?
     let nfcPhysical: String?
     let nfcDigital: String?
     let nfcStartDate: String?

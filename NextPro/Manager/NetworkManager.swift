@@ -1285,7 +1285,7 @@ class NetworkManager: ObservableObject {
     }
 
     // MARK: - Fetch User List api
-    func fetchUserList(userId: String, page: Int, pageSize: Int , search: String) async throws -> UsersResponse {
+    func fetchUserList(userId: String, page: Int, pageSize: Int , search: String) async throws -> UsersListResponse {
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.fetchUsersList))!
         print("fetchUserList Api called----")
         return try await performRequest(
@@ -1299,7 +1299,7 @@ class NetworkManager: ObservableObject {
                 "search" :  search
             ],
             requiresAuth: true,
-            responseType: UsersResponse.self,
+            responseType: UsersListResponse.self,
             retry: true
         )
     }

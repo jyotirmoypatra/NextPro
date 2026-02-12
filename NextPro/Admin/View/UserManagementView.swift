@@ -16,6 +16,7 @@ struct UserManagementView: View {
     @State private var navigateToAddUser = false
     @State private var pullToRefresh = false
     @State private var selectedUserForEdit: GetUserData?
+    @State private var scrollToTop = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -114,67 +115,75 @@ struct UserManagementView: View {
                     //}
                     
                    
-                    
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 15) {
-                            
-                            if !fetchUserVM.usersList.isEmpty {
-                                ForEach(fetchUserVM.usersList) { item in
-                                    UsersCardView(user: item,
-                                      onEdit: { user in
-                                          Task {
-                                              getUserDetailsVM.userid = user.id
-                                              await getUserDetailsVM.getUserDetails()
-
-                                              if let fullData = getUserDetailsVM.userData {
-                                                  selectedUserForEdit = fullData
-                                                  navigateToAddUser = true
-                                              } else if let error = getUserDetailsVM.errorMessage {
-                                                  showUserDetailsVMError = true
-                                              }
-                                          }
-                                      },
-                                      onDelete: { user in
-                                          print("Delete \(user.id)")
-                                      }
-                                    )
-                                        .onTapGesture {
-                                            
-                                            navigateToAddUser = true
+                    ScrollViewReader { proxy in
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(alignment: .leading, spacing: 15) {
+                                Color.clear
+                                        .frame(height: 1)
+                                        .id("TOP")
+                                if !fetchUserVM.usersList.isEmpty {
+                                    ForEach(fetchUserVM.usersList) { item in
+                                        UsersCardView(user: item,
+                                                      onEdit: { user in
+                                            Task {
+                                                getUserDetailsVM.userid = user.id
+                                                await getUserDetailsVM.getUserDetails()
+                                                
+                                                if let fullData = getUserDetailsVM.userData {
+                                                    selectedUserForEdit = fullData
+                                                    navigateToAddUser = true
+                                                } else if let error = getUserDetailsVM.errorMessage {
+                                                    showUserDetailsVMError = true
+                                                }
+                                            }
+                                        },
+                                                      onDelete: { user in
+                                            print("Delete \(user.id)")
                                         }
+                                        )
                                         .onAppear {
                                             if item.id == fetchUserVM.usersList.last?.id &&
-                                               !fetchUserVM.isLoadingMore &&
-                                               !fetchUserVM.isLoading {
+                                                !fetchUserVM.isLoadingMore &&
+                                                !fetchUserVM.isLoading {
                                                 Task {
                                                     await fetchUserVM.fetchUsersList()
                                                 }
                                             }
                                         }
+                                    }
+                                    
+                                    if fetchUserVM.isLoadingMore {
+                                        HStack {
+                                            Spacer()
+                                            ProgressView()
+                                            Spacer()
+                                        }
+                                        .padding(.top, 10)
+                                    }
                                 }
                                 
-                                if fetchUserVM.isLoadingMore {
-                                    HStack {
-                                        Spacer()
-                                        ProgressView()
-                                        Spacer()
-                                    }
-                                    .padding(.top, 10)
-                                }
                             }
-                            
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 2)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 2)
-                    }
-                    .refreshable {
-                        pullToRefresh = true
-                        await fetchUserVM.fetchUsersList(reset: true)
-                        pullToRefresh = false
-                        if let error = fetchUserVM.errorMessage, !error.isEmpty {
-                            showFetchUserVMError = true
+                        .onChange(of: scrollToTop) { value in
+                               if value {
+                                   withAnimation {
+                                       proxy.scrollTo("TOP", anchor: .top)
+                                   }
+                                   scrollToTop = false
+                               }
+                           }
+                        .refreshable {
+                            pullToRefresh = true
+                            await fetchUserVM.fetchUsersList(reset: true)
+                            pullToRefresh = false
+                            if let error = fetchUserVM.errorMessage, !error.isEmpty {
+                                showFetchUserVMError = true
+                            }
                         }
                     }
+                    
                     
                     
                 }
@@ -256,6 +265,7 @@ struct UserManagementView: View {
                 onDismiss: {
                     Task {
                         await fetchUserVM.fetchUsersList(reset: true)
+                        scrollToTop = true
                     }
                 }
             )

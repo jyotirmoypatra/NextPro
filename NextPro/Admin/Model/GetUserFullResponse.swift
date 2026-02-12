@@ -16,7 +16,7 @@ struct GetUserData: Codable {
     let id: String
     let user_id: String
     let full_name: String
-   // let username: String?
+   let username: String?
     let email: String
     let user_type: String
     let phone_number: String?
