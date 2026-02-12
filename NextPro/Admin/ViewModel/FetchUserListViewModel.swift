@@ -29,7 +29,7 @@ final class FetchUserListViewModel: ObservableObject {
     // MARK: - Pagination
     @Published var currentPage = 1
     @Published var totalPages = 1
-    let pageSize = 10
+    let pageSize = 7
 
 
     @Published var searchText: String = ""
@@ -69,40 +69,37 @@ final class FetchUserListViewModel: ObservableObject {
     }
 
     // MARK: - MAIN FETCH
+    /// Fetches user list with server-side pagination.
+    /// - Parameter reset: If true, clears list, resets to page 1, and fetches first page (used for initial load, search, pull-to-refresh, return from AddUserView).
     func fetchUsersList(reset: Bool = false) async {
-
         fetchTask?.cancel()
 
         fetchTask = Task { @MainActor in
-
-         
             guard networkManager.hasInternet else {
                 errorMessage = nil
                 isFailedDueToNoInternet = true
                 return
             }
-
             isFailedDueToNoInternet = false
-            
+
             if reset {
+                usersList = []
                 currentPage = 1
                 totalPages = 1
-                
-                // Clear list ONLY on first load (not when refreshing or coming back)
-                if !hasLoadedOnce {
-                    usersList = []
-                }
+                print("🔄 Pagination reset → loading from page 1")
             }
-            
-            
 
-            //Stop if no more pages
-            guard currentPage <= totalPages else { return }
+            // Do not fetch beyond last page
+           
+            guard currentPage <= totalPages else {
+                print("⛔ No more pages to load. currentPage:", currentPage, "totalPages:", totalPages)
+                return }
 
-            // Prevent duplicate calls
+            // Prevent duplicate calls for same or next page
             if isLoading || isLoadingMore { return }
 
-            if currentPage == 1 {
+            let pageToFetch = currentPage
+            if pageToFetch == 1 {
                 isLoading = true
             } else {
                 isLoadingMore = true
@@ -118,43 +115,55 @@ final class FetchUserListViewModel: ObservableObject {
                 return
             }
 
-            do {
-                print("Fetch page:", currentPage, "search:", searchText)
+            let searchQuery = searchText.trimmingCharacters(in: .whitespaces)
+            
+            print("📤 Requesting page:", pageToFetch,
+                  "| search:", searchQuery,
+                  "| current stored count:", usersList.count)
 
+            do {
                 let response = try await networkManager.fetchUserList(
                     userId: userId,
-                    page: currentPage,
+                    page: pageToFetch,
                     pageSize: pageSize,
-                    search: searchText.trimmingCharacters(in: .whitespaces)
+                    search: searchQuery
                 )
 
                 if response.status {
-
-                    if currentPage == 1 {
+                    print("📥 Received page:", pageToFetch,
+                          "| items received:", response.data.count,
+                          "| total pages:", response.pagination.totalPages)
+                    if pageToFetch == 1 {
                         usersList = response.data
                     } else {
                         usersList.append(contentsOf: response.data)
                     }
-
                     totalPages = response.pagination.totalPages
-                    currentPage += 1
+                    currentPage = pageToFetch + 1
                     issuccess = true
                     hasLoadedOnce = true
-
+                    
+                    print("✅ List updated",
+                          "| total items now:", usersList.count,
+                          "| next page will be:", currentPage)
                 } else {
                     errorMessage = "Something went wrong!"
                 }
-
             } catch is CancellationError {
                 return
             } catch let error as NSError where error.code == NSURLErrorCancelled {
                 return
             } catch {
                 errorMessage = error.localizedDescription
-                hasLoadedOnce = true  
+                hasLoadedOnce = true
             }
         }
 
         await fetchTask?.value
+    }
+
+    /// Call when returning from AddUserView: reset pagination and reload from page 1, keeping current search.
+    func refreshAfterAddOrEditUser() async {
+        await fetchUsersList(reset: true)
     }
 }

@@ -142,9 +142,10 @@ struct UserManagementView: View {
                                         }
                                         )
                                         .onAppear {
-                                            if item.id == fetchUserVM.usersList.last?.id &&
-                                                !fetchUserVM.isLoadingMore &&
-                                                !fetchUserVM.isLoading {
+                                            let isLastItem = item.id == fetchUserVM.usersList.last?.id
+                                            let hasMorePages = fetchUserVM.currentPage <= fetchUserVM.totalPages
+                                            let notLoading = !fetchUserVM.isLoadingMore && !fetchUserVM.isLoading
+                                            if isLastItem && hasMorePages && notLoading {
                                                 Task {
                                                     await fetchUserVM.fetchUsersList()
                                                 }
@@ -264,22 +265,21 @@ struct UserManagementView: View {
                 editUser: selectedUserForEdit,
                 onDismiss: {
                     Task {
-                        await fetchUserVM.fetchUsersList(reset: true)
+                        await fetchUserVM.refreshAfterAddOrEditUser()
                         scrollToTop = true
                     }
                 }
             )
         }
         .onAppear {
+            // Only run initial load when view has never loaded (avoids double fetch when returning from AddUserView)
+            guard !fetchUserVM.hasLoadedOnce else { return }
             Task {
                 await fetchUserVM.fetchUsersList(reset: true)
-                
                 if let error = fetchUserVM.errorMessage, !error.isEmpty {
                     showFetchUserVMError = true
                 }
             }
-            
-            
         }
        
 
