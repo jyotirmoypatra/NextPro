@@ -29,7 +29,7 @@ final class FetchUserListViewModel: ObservableObject {
     // MARK: - Pagination
     @Published var currentPage = 1
     @Published var totalPages = 1
-    let pageSize = 7
+    let pageSize = 10
 
 
     @Published var searchText: String = ""

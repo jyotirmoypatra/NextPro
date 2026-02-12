@@ -117,7 +117,7 @@ struct UserManagementView: View {
                    
                     ScrollViewReader { proxy in
                         ScrollView(.vertical, showsIndicators: false) {
-                            VStack(alignment: .leading, spacing: 15) {
+                            LazyVStack(alignment: .leading, spacing: 15) {
                                 Color.clear
                                         .frame(height: 1)
                                         .id("TOP")
