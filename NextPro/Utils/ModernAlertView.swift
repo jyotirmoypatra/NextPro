@@ -70,7 +70,7 @@ struct ModernAlertModifier: ViewModifier {
             content
             
             if isPresented {
-                Color.black.opacity(0.7)
+                Color.black.opacity(0.8)
                     .ignoresSafeArea()
                     .transition(.opacity)
                 

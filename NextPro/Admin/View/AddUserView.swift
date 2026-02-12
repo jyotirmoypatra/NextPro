@@ -227,6 +227,7 @@ struct AddUserView: View {
                                         selectedGroup: $selectedAccessGroup,
                                         openSection: $openSection
                                     )
+                                    .id("ACCESS_GROUP_SECTION")
                                     
                                 }
                                 
@@ -410,8 +411,13 @@ struct AddUserView: View {
                                                 Button {
                                                     selectedDoors.removeAll { $0.id == door.id }
                                                 } label: {
-                                                    Image(systemName: "trash")
-                                                        .foregroundColor(.red)
+//                                                    Image(systemName: "trash")
+//                                                        .foregroundColor(.red)
+                                                    Image("delete-icon")
+                                                        .resizable()
+                                                        .renderingMode(.template)
+                                                        .foregroundColor(.white)
+                                                        .frame(width: 25, height: 25)
                                                 }
                                             }
                                             .padding()
@@ -483,6 +489,16 @@ struct AddUserView: View {
                                     proxy.scrollTo("DOOR_SECTION", anchor: .top)
                                 }
                                 shouldScrollToDoorSection = false
+                            }
+                        }
+                        
+                        .onChange(of: openSection) { value in
+                            if value == 0 {   // same id you passed
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                    withAnimation {
+                                        proxy.scrollTo("ACCESS_GROUP_SECTION", anchor: .top)
+                                    }
+                                }
                             }
                         }
                     }
@@ -632,14 +648,16 @@ struct AddUserView: View {
                             }
                         }
                         
-                        if let weekDays = user.week_days {
-                            selectedWeekdays = Set(
-                                weekDays
-                                    .split(separator: ",")
-                                    .compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
-                            )
+                        if user.schedule_type == "schedule"{
+                            if let weekDays = user.week_days {
+                                selectedWeekdays = Set(
+                                    weekDays
+                                        .split(separator: ",")
+                                        .compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+                                )
+                            }
+                            
                         }
-                        
                         
                         selectedDoors = doorListVM.doorList.filter {
                             user.doors.contains($0.id)
@@ -1431,7 +1449,7 @@ struct AccessGroupDropDown: View {
                             .overlay(Color.white.opacity(0.08))
                     }
                 }
-                .background(Color.white.opacity(0.2))
+                .background(Color.gray.opacity(0.2))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .transition(.opacity)
                 .padding(.top, -9)

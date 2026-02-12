@@ -97,20 +97,31 @@ struct UserManagementView: View {
 //                        }.frame(maxWidth:.infinity, alignment: .leading)
 //                            .padding(.top, 20)
                         
-                        
-                    HStack(spacing: 10) {
-                        
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.white.opacity(0.7))
-                        
-                        TextField("Search User by name", text: $fetchUserVM.searchText)
-                            .foregroundColor(.white)
-                            .tint(.white) // cursor color
-                    }
-                    .padding(15)
-                    .background(Color.white.opacity(0.1))
-                    .cornerRadius(12)
-                    .padding(.top,20)
+                    
+                        HStack(spacing: 10) {
+                            
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.white.opacity(0.7))
+                            ZStack(alignment: .leading){
+                                
+                                // Placeholder
+                                if fetchUserVM.searchText.isEmpty {
+                                    Text("Search User by name")
+                                        .foregroundColor(Color.white.opacity(0.5))
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        
+                                }
+                                
+                                TextField("", text: $fetchUserVM.searchText)
+                                    .foregroundColor(.white)
+                                    .tint(.white) // cursor color
+                            }
+                        }
+                        .padding(15)
+                        .background(Color.white.opacity(0.1))
+                        .cornerRadius(12)
+                        .padding(.top,20)
+                   
                         
                     //}
                     
