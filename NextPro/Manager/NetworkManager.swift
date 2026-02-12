@@ -1287,7 +1287,7 @@ class NetworkManager: ObservableObject {
     // MARK: - Fetch User List api
     func fetchUserList(userId: String, page: Int, pageSize: Int , search: String) async throws -> UsersResponse {
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.fetchUsersList))!
-        print("SuccessConfig wifi Api called----")
+        print("fetchUserList Api called----")
         return try await performRequest(
             url: url,
             method: "POST",
@@ -1308,7 +1308,7 @@ class NetworkManager: ObservableObject {
     func addNewUser(body: AddUserRequest,isEditUser:Bool) async throws -> AddUserResponse {
 
         let url = URL(string: APIConfig.url(isEditUser ? APIConfig.Endpoints.updateUser : APIConfig.Endpoints.addNewUser))!
-        print("🔄Add update user Api called")
+        print("Add update user Api called")
         return try await performRequest(
             url: url,
             method: isEditUser ? "PUT" : "POST",
@@ -1358,7 +1358,7 @@ class NetworkManager: ObservableObject {
 
 
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.allDoorList))!
-        print("🔄 Gett All Door Api called")
+        print("Get All Door Api called")
 
         return try await performRequest(
             url: url,
@@ -1374,7 +1374,7 @@ class NetworkManager: ObservableObject {
 
 
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.getAccessGroupList))!
-        print("🔄 Gett Access group list Api called")
+        print("Get Access group list Api called")
 
         return try await performRequest(
             url: url,
@@ -1389,7 +1389,7 @@ class NetworkManager: ObservableObject {
     func getUserDetails(userId: String) async throws -> GetUserFullResponse {
 
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.getUserDetails))!
-        print("🔄 Refresh token Api called")
+        print("getUserDetails  Api called")
 
         return try await performRequest(
             url: url,

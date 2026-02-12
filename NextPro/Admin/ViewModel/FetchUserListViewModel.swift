@@ -87,12 +87,22 @@ final class FetchUserListViewModel: ObservableObject {
             
 
             // Manual reset (pull to refresh)
+//            if reset {
+//                currentPage = 1
+//                totalPages = 1
+//                
+//                // clear only when first load OR pull refresh
+//                if searchText.isEmpty {
+//                    usersList = []
+//                }
+//            }
+            
             if reset {
                 currentPage = 1
                 totalPages = 1
                 
-                // clear only when first load OR pull refresh
-                if searchText.isEmpty {
+                // Clear list ONLY on first load (not when refreshing or coming back)
+                if !hasLoadedOnce {
                     usersList = []
                 }
             }
@@ -120,7 +130,7 @@ final class FetchUserListViewModel: ObservableObject {
             }
 
             do {
-                print("📄 Fetch page:", currentPage, "search:", searchText)
+                print("Fetch page:", currentPage, "search:", searchText)
 
                 let response = try await networkManager.fetchUserList(
                     userId: userId,

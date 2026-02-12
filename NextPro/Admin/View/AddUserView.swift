@@ -22,8 +22,8 @@ struct AddUserView: View {
     
     @State private var fullName = ""
     @State private var email = ""
-    @State private var username = "sourav"
-    @State private var password = "Jyoti@123"
+    @State private var username = ""
+    @State private var password = ""
     @State private var phone = ""
     @State private var nfcId = ""
    
@@ -341,13 +341,8 @@ struct AddUserView: View {
                                         }
                                         
                                         LazyVGrid(
-                                            columns: [
-                                                GridItem(.flexible()),
-                                                GridItem(.flexible()),
-                                                GridItem(.flexible()),
-                                                GridItem(.flexible())
-                                            ],
-                                            spacing: 15
+                                            columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 7),
+                                            spacing: 10
                                         ) {
                                             ForEach(1...7, id: \.self) { day in
                                                 DayPill(
@@ -576,7 +571,7 @@ struct AddUserView: View {
                 guard let user = editUser else { return }
                 
                 fullName = user.full_name
-                phone = user.phone_number
+                phone = user.phone_number ?? ""
                 nfcId = user.nfc_digital ?? ""
                 email =  user.email
                 
@@ -652,6 +647,19 @@ struct AddUserView: View {
             }
             
            
+        }
+        
+        .onChange(of: phone) { newValue in
+            // keep only digits
+            let filtered = newValue.filter { $0.isNumber }
+            
+            // limit to 10 digits
+            if filtered.count <= 10 {
+                phone = filtered
+            } else {
+                phone = String(filtered.prefix(10))
+                UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            }
         }
         
         .onDisappear {
@@ -742,9 +750,6 @@ struct AddUserView: View {
             return "Full name is required"
         }
         
-        if phone.trimmingCharacters(in: .whitespaces).isEmpty {
-            return "Phone number is required"
-        }
 
         if email.trimmingCharacters(in: .whitespaces).isEmpty {
             return "Email is required"
@@ -1325,7 +1330,7 @@ struct DayPill: View {
             Text(title)
                 .font(.custom("Inter-Regular", size: 14))
                 .foregroundColor(.white)
-                .padding(.horizontal, 15)
+                .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)
                 .background(isSelected ? Color.blue : Color.white.opacity(0.15))
                 .cornerRadius(8)
