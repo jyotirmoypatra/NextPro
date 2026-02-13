@@ -401,7 +401,9 @@ struct DeviceInformationView: View {
                                 devType: Int32(selectedDevice.devType ?? 14),
                                 doorID: 0,
                                 eKey: selectedDevice.key,
-                                cardno: ""
+                                cardno: "",
+                                deviceType: "",
+                                deviceModel: selectedDevice.modelName
                             )
                         )
                         

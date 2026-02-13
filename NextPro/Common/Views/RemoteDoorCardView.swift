@@ -106,6 +106,13 @@ struct RemoteDoorCardView: View {
         door.doorType == "standalone_controller" && door.doorControllerType == "TC434"
     }
     
+    private var isStandAloneAllInOneM230: Bool {
+        door.doorType == "all_in_one" && door.doorControllerType == "M230"
+    }
+    
+    private var isStandAloneControllerBC220: Bool {
+        door.doorType == "standalone_controller" && door.doorControllerType == "BC220"
+    }
     
     var body: some View {
         HStack(spacing: 16) {
@@ -229,12 +236,13 @@ struct RemoteDoorCardView: View {
                                                 showBluetoothAlert = true
                                                 return
                                             }
-                                        
-                                        guard canOpenDoor() else {
-                                            showTimeRestrictedAndReset(isWifi: false)
+                                        // check only m230 and bc220 standalone
+                                        if isStandAloneControllerBC220 || isStandAloneAllInOneM230 {
+                                            guard canOpenDoor() else {
+                                                showTimeRestrictedAndReset(isWifi: false)
                                                 return
                                             }
-                                        
+                                        }
                                         resetWifiState()
                                         startBleWaiting()
                                         onBleOpen()
@@ -325,10 +333,13 @@ struct RemoteDoorCardView: View {
                                             return
                                         }
                                     activeDoorKey = door.key
-                                    guard canOpenDoor() else {
-                                        showTimeRestrictedAndReset(isWifi: false)
+                                    // check only m230 and bc220 standalone 
+                                    if isStandAloneControllerBC220 || isStandAloneAllInOneM230 {
+                                        guard canOpenDoor() else {
+                                            showTimeRestrictedAndReset(isWifi: false)
                                             return
                                         }
+                                    }
                                     resetWifiState()
                                     startBleWaiting()
                                     onBleOpen()

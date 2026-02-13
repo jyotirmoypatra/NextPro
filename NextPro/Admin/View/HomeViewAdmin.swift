@@ -15,11 +15,6 @@ struct HomeViewAdmin: View {
            _selectedTab = State(initialValue: initialTab)
        }
     
-//    enum AdminHomeSubPage:Equatable {
-//        case facilityList
-//        case facilityDetail(facilityName: String)
-//    }
-//    @State private var adminHomePage: AdminHomeSubPage = .facilityList
 
     var body: some View {
         GeometryReader { geo in
@@ -36,32 +31,7 @@ struct HomeViewAdmin: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // MARK: - Top Bar
-//                    if !(selectedTab == 0 && adminHomePage != .facilityList) {
-//                        HStack {
-//                            VStack(alignment: .leading, spacing: 4) {
-//                                Text("UTL")
-//                                    .font(.title2.bold())
-//                                    .foregroundColor(.white)
-//                                Text("UTL")
-//                                    .font(.caption)
-//                                    .foregroundColor(.gray)
-//                            }
-//                            Spacer()
-//                            
-//                            Button(action: {}) {
-//                                Image(systemName: "bell")
-//                                    .foregroundColor(.white)
-//                                
-//                                    .background(Color.black.opacity(0.4))
-//                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-//                            }
-//                        }
-//                        .padding(.horizontal)
-//                        .padding(.top, 5) // ✅ fixed padding instead of safeAreaInsets.top
-//                        .padding(.bottom, 10) // ✅ fixed padding instead of safeAreaInsets.top
-//                        
-//                    }
+                
 
                     // MARK: - Dynamic Page Content
                     VStack {
@@ -74,20 +44,7 @@ struct HomeViewAdmin: View {
                                                 maxWidth: .infinity,
                                                 maxHeight: .infinity
                                             )
-//                        case 0:
-//                            Group {
-//                                switch adminHomePage {
-//                                case .facilityList:
-//                                    AdminFacilityListView { facilityName in
-//                                        adminHomePage = .facilityDetail(facilityName: facilityName)
-//                                    }
-//
-//                                case .facilityDetail(let name):
-//                                    FacilityDetailView(facilityName: name) {
-//                                        adminHomePage = .facilityList
-//                                    }
-//                                }
-//                            }
+
 
                         case 1:
                             DeviceAdminTabView()
@@ -147,12 +104,6 @@ struct HomeViewAdmin: View {
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
                 
-                //for reset tab again
-//                .onChange(of: selectedTab) { newValue in
-//                    if newValue == 0 {
-//                        adminHomePage = .facilityList
-//                    }
-//                }
 
             }
         }

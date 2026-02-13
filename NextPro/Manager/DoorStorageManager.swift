@@ -19,6 +19,8 @@ struct DoorModelUser: Identifiable, Codable {
     let doorID: Int32
     let eKey: String
     let cardno: String
+    let deviceType: String?
+    let deviceModel: String?
     
     init(
         id: UUID = UUID(),
@@ -28,7 +30,9 @@ struct DoorModelUser: Identifiable, Codable {
         devType: Int32 = 14,
         doorID: Int32 ,
         eKey: String,
-        cardno: String
+        cardno: String,
+        deviceType : String?,
+        deviceModel : String?
     ) {
         self.id = id
         self.name = name
@@ -38,6 +42,8 @@ struct DoorModelUser: Identifiable, Codable {
         self.doorID = doorID
         self.eKey = eKey
         self.cardno = cardno
+        self.deviceType = deviceType
+        self.deviceModel = deviceModel
     }
 }
 

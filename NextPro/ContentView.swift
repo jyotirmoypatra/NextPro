@@ -69,8 +69,8 @@ struct ContentView: View {
                     }
         }
         
-        .modernAlert(isPresented: $networkManager.showSessionExpiredAlert) {
-            ModernAlertView(
+        .SessionExpiredAlert(isPresented: $networkManager.showSessionExpiredAlert) {
+            SessionExpiredAlertView(
                 title: "Session Expired!",
                 message:  "Your session has expired. Please login again.",
                 isSuccess: false,
@@ -78,6 +78,7 @@ struct ContentView: View {
             ) {
                 KeychainManager.shared.clearUserDefaultsAndKeychainData()
                 KeychainManager.shared.resetToLogin()
+                networkManager.showSessionExpiredAlert = false
             }
         }
 

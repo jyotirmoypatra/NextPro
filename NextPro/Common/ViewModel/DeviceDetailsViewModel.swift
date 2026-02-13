@@ -197,7 +197,9 @@ class DeviceDetailsViewModel: ObservableObject {
                         devType: Int32(door.devType ?? 14),
                         doorID: Int32(door.doorNumber ?? 1),
                         eKey: key,
-                        cardno: cardNo
+                        cardno: cardNo,
+                        deviceType: "standard",
+                        deviceModel: controller.controllerModel
                     )
                 )
             }
@@ -219,7 +221,9 @@ class DeviceDetailsViewModel: ObservableObject {
                     devType: Int32(door.devType ?? 14),
                     doorID: Int32(door.doorNumber ?? 1),
                     eKey: key,
-                    cardno: cardNo
+                    cardno: cardNo,
+                    deviceType: "all_in_one",
+                    deviceModel: door.doorModel
                 )
             )
         }
@@ -247,7 +251,9 @@ class DeviceDetailsViewModel: ObservableObject {
                             devType:Int32(door.devType ?? 14),
                             doorID: Int32(door.doorNumber ?? 1),
                             eKey: door.doorKey ?? "",
-                            cardno: deviceDetails?.digitalCardNumber ?? ""
+                            cardno: deviceDetails?.digitalCardNumber ?? "",
+                            deviceType: "standard",
+                            deviceModel: controller.controllerModel
                         )
                 
                 result.append(
@@ -275,7 +281,9 @@ class DeviceDetailsViewModel: ObservableObject {
                         devType:Int32(door.devType ?? 14),
                         doorID: Int32(door.doorNumber ?? 1),
                         eKey: door.doorKey ?? "",
-                        cardno: deviceDetails?.digitalCardNumber ?? ""
+                        cardno: deviceDetails?.digitalCardNumber ?? "",
+                        deviceType: "all_in_one",
+                        deviceModel: door.doorModel
                     )
             
             result.append(
@@ -303,7 +311,9 @@ class DeviceDetailsViewModel: ObservableObject {
                             devType:Int32(14),
                             doorID: Int32(door.doorNumber ?? 1),
                             eKey: controller.controllerKey ?? "",
-                            cardno: deviceDetails?.digitalCardNumber ?? ""
+                            cardno: deviceDetails?.digitalCardNumber ?? "",
+                            deviceType: "standalone_controller",
+                            deviceModel: controller.controllerModel
                         )
                 
                 result.append(

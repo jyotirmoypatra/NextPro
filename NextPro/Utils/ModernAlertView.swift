@@ -207,3 +207,165 @@ extension View {
         self.modifier(BluetoothAlertModifier(isPresented: isPresented, alertView: alertView))
     }
 }
+
+
+
+//session expired alert
+//struct SessionExpiredAlertView: View {
+//    let title: String
+//    let message: String
+//    let isSuccess: Bool
+//    let buttonTitle: String
+//    let action: () -> Void
+//    
+//    var body: some View {
+//        VStack(spacing:10){
+//            
+//            HStack(alignment: .center, spacing: 12){
+//                // Icon
+//                Image(systemName: isSuccess ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+//                    .font(.system(size: 25))
+//                    .foregroundColor(isSuccess ? .green : .red)
+//                
+//                // Title
+//                Text(title)
+//                    .font(.custom("Inter-Bold", size: 16))
+//                    .foregroundColor(isSuccess ? .green : .red)
+//                
+//                Spacer()
+//            }
+//            
+//            Text(message)
+//                .font(.custom("Inter-Medium", size: 14))
+//                .foregroundColor(.white)
+//                .multilineTextAlignment(.leading)
+//                .frame(maxWidth: .infinity, alignment: .leading)
+//            
+//            
+//            // Button
+//            Button(action: action) {
+//                Text(buttonTitle)
+//                    .font(.custom("Inter-Bold", size: 16))
+//                    .frame(maxWidth: .infinity)
+//                    .padding(10)
+//                    .foregroundColor(.black)
+//                    .background(isSuccess ? Color.green.opacity(0.8) : Color.red.opacity(0.8))
+//                    .clipShape(RoundedRectangle(cornerRadius: 12))
+//            }
+//            
+//        }
+//        .padding(15)
+//        .background(Color(hex: "#292929"))
+//        .clipShape(RoundedRectangle(cornerRadius: 20))
+//        .shadow(radius: 20)
+//        .padding(.horizontal, 30)
+//        
+//    }
+//}
+
+struct SessionExpiredAlertView: View {
+    let title: String
+    let message: String
+    let isSuccess: Bool
+    let buttonTitle: String
+    let action: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 18) {
+            
+            // MARK: Header
+            HStack(spacing: 15) {
+                
+                ZStack {
+                    Circle()
+                        .fill((isSuccess ? Color.green : Color.red).opacity(0.15))
+                        .frame(width: 46, height: 46)
+                    
+                    Image(systemName: isSuccess ? "checkmark" : "exclamationmark")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(isSuccess ? .green : .red)
+                }
+                
+                Text(title)
+                    .font(.custom("Inter-Bold", size: 18))
+                    .foregroundColor(.white)
+                
+                Spacer()
+            }
+            
+            
+            // MARK: Message
+            Text(message)
+                .font(.custom("Inter-Medium", size: 16))
+                .foregroundColor(.white.opacity(0.85))
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            
+            
+            // MARK: Button
+            Button(action: action) {
+                Text(buttonTitle)
+                    .font(.custom("Inter-Bold", size: 16))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        LinearGradient(
+                            colors: isSuccess
+                            ? [Color.green, Color.green.opacity(0.7)]
+                            : [Color.red, Color.red.opacity(0.7)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .shadow(
+                        color: (isSuccess ? Color.green : Color.red).opacity(0.4),
+                        radius: 8,
+                        x: 0,
+                        y: 4
+                    )
+            }
+        }
+        .padding(20)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(.ultraThinMaterial)
+                
+                RoundedRectangle(cornerRadius: 24)
+                    .stroke(Color.white.opacity(0.15), lineWidth: 1)
+            }
+        )
+        .shadow(color: .black.opacity(0.6), radius: 30, x: 0, y: 20)
+        .padding(.horizontal, 28)
+    }
+}
+
+
+struct SessionExpiredAlertModifier: ViewModifier {
+    @Binding var isPresented: Bool
+    let alertView: () -> SessionExpiredAlertView
+    
+    func body(content: Content) -> some View {
+        ZStack {
+            content
+            
+            if isPresented {
+                Color.black.opacity(0.8)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                
+                alertView()
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .animation(.spring(), value: isPresented)
+    }
+}
+
+extension View {
+    func SessionExpiredAlert(isPresented: Binding<Bool>, @ViewBuilder alertView: @escaping () -> SessionExpiredAlertView) -> some View {
+        self.modifier(SessionExpiredAlertModifier(isPresented: isPresented, alertView: alertView))
+    }
+}
