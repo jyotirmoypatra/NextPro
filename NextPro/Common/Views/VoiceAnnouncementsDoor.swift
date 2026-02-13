@@ -113,73 +113,89 @@ struct VoiceAnnouncementsDoor: View {
                     
                     VStack {
                         
-                        ScrollView {
-                            VStack(spacing: 22) {
-                                
-                                
-                                // MARK: 1 - Access Granted
-                                MessageSection(
-                                    id: 0,
-                                    title: "Access Granted",
-                                    description: "This message played when door opens successfully.",
-                                    options: $grantedOptions,
-                                    openSection: $openSection
-                                )
-                                
-                                Divider()
-                                    .overlay(Color.white.opacity(0.08))
-                                
-                                // MARK: 2 - Access Denied
-                                MessageSection(
-                                    id: 1,
-                                    title: "Access Denied",
-                                    description: "This message played when door access failed.",
-                                    options: $deniedOptions,
-                                    openSection: $openSection
+                        ScrollViewReader { proxy in
+                            
+                            ScrollView {
+                                VStack(spacing: 22) {
                                     
-                                )
-                                
-                                Divider()
-                                    .overlay(Color.white.opacity(0.08))
-                                
-                                // MARK: 3 - Friendly Welcome
-                                MessageSection(
-                                    id: 4,
-                                    title: "Unauthorized Door",
-                                    description: "This message played when approaching an unauthorized door.",
-                                    options: $unauthorizedOptions,
-                                    openSection: $openSection
                                     
-                                )
-                                
-                                Divider()
-                                    .overlay(Color.white.opacity(0.8))
-                                
-                                // MARK: 3 - Unauthorized
-                                MessageSection(
-                                    id: 2,
-                                    title: "Friendly Welcome",
-                                    description: "Greeting played after successfull access",
-                                    options: $greetingOptions,
-                                    openSection: $openSection
+                                    // MARK: 1 - Access Granted
+                                    MessageSection(
+                                        id: 0,
+                                        title: "Access Granted",
+                                        description: "This message played when door opens successfully.",
+                                        options: $grantedOptions,
+                                        openSection: $openSection
+                                    )
+                                    .id(0)
+                                    Divider()
+                                        .overlay(Color.white.opacity(0.08))
                                     
-                                )
+                                    // MARK: 2 - Access Denied
+                                    MessageSection(
+                                        id: 1,
+                                        title: "Access Denied",
+                                        description: "This message played when door access failed.",
+                                        options: $deniedOptions,
+                                        openSection: $openSection
+                                        
+                                    )
+                                    .id(1)
+                                    
+                                    Divider()
+                                        .overlay(Color.white.opacity(0.08))
+                                    
+                                    // MARK: 3 - Unauthorized
+                                    MessageSection(
+                                        id: 4,
+                                        title: "Unauthorized Door",
+                                        description: "This message played when approaching an unauthorized door.",
+                                        options: $unauthorizedOptions,
+                                        openSection: $openSection
+                                        
+                                    )
+                                    .id(4)
+                                    
+                                    Divider()
+                                        .overlay(Color.white.opacity(0.8))
+                                    
+                                    // MARK: 3 -  Friendly Welcome
+                                    MessageSection(
+                                        id: 2,
+                                        title: "Friendly Welcome",
+                                        description: "Greeting played after successfull access",
+                                        options: $greetingOptions,
+                                        openSection: $openSection
+                                        
+                                    )
+                                    .id(2)
+                                    
+                                    Spacer().frame(height: 20)
+                                }
+                                .padding(.horizontal, 16)
                                 
-                                Spacer().frame(height: 20)
+                                
                             }
-                            .padding(.horizontal, 16)
+                            .padding(.top, 15)
                             
+                            .scrollIndicators(.hidden)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.white.opacity(0.8), lineWidth: 2)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
                             
+                            //  THIS IS THE MAGIC LINE
+                               .onChange(of: openSection) { id in
+                                   guard let id else { return }
+
+                                   DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                                       withAnimation(.easeInOut) {
+                                           proxy.scrollTo(id, anchor: .top)
+                                       }
+                                   }
+                               }
                         }
-                        .padding(.top, 15)
-                        
-                        .scrollIndicators(.hidden)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.white.opacity(0.8), lineWidth: 2)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        
                         
                         VStack(alignment: .leading){
                             HStack{
