@@ -800,9 +800,26 @@ struct AddUserView: View {
                 return "Please select access start and end date"
             }
             
+            if let start = accessStartDate,
+               let end = accessEndDate,
+               end < start {
+                return "End date must be later than or same as start date"
+            }
+            
+            
             if accessStartTime == nil || accessEndTime == nil {
                 return "Please select access start and end time"
             }
+            
+            
+
+            // Time check
+            if let startTime = accessStartTime,
+               let endTime = accessEndTime,
+               endTime < startTime {
+                return "End time must be later than or same as start time"
+            }
+            
             if isScheduledAccess {
                 if selectedWeekdays.isEmpty {
                     return "Please select at least one repeat day"
