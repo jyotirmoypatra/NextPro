@@ -291,9 +291,21 @@ struct DoorOpenView: View {
                                     
                                 }
                                 .transition(.opacity)
+//                                .refreshable{
+//                                    pullToRefresh = true
+//                                    await deviceVM.refreshDeviceDetails()
+//                                    pullToRefresh = false
+//                                }
+                                
                                 .refreshable{
                                     pullToRefresh = true
-                                    await deviceVM.refreshDeviceDetails()
+
+                                    if network.hasInternet {
+                                            await deviceVM.fetchDeviceDetailsIfNeeded(force: true) // force API
+                                        } else {
+                                            await deviceVM.fetchDeviceDetailsIfNeeded() // load cache
+                                        }
+
                                     pullToRefresh = false
                                 }
                                 
@@ -415,11 +427,23 @@ struct DoorOpenView: View {
                             }
                             .id("remote-tab-\(selectedTab)")
                             .transition(.opacity)
+//                            .refreshable{
+//                                pullToRefresh = true
+//                                await deviceVM.refreshDeviceDetails()
+//                                pullToRefresh = false
+//                                
+//                            }
+                            
                             .refreshable{
                                 pullToRefresh = true
-                                await deviceVM.refreshDeviceDetails()
+
+                                if network.hasInternet {
+                                        await deviceVM.fetchDeviceDetailsIfNeeded(force: true) // force API
+                                    } else {
+                                        await deviceVM.fetchDeviceDetailsIfNeeded() // load cache
+                                    }
+
                                 pullToRefresh = false
-                                
                             }
                             
                         }
@@ -449,7 +473,11 @@ struct DoorOpenView: View {
         .task{
             
            // await deviceVM.fetchDeviceDetailsIfNeeded()
-            await deviceVM.fetchDeviceDetailsIfNeeded(force: true)
+            if network.hasInternet {
+                    await deviceVM.fetchDeviceDetailsIfNeeded(force: true) // force API
+                } else {
+                    await deviceVM.fetchDeviceDetailsIfNeeded() // load cache
+                }
             //            if !deviceVM.issuccess && deviceVM.errorMessage != ""{
             //                doorStorage.clearDoors()          // sets hasResolvedDoors = false ❌ (we’ll fix below)
             //                doorStorage.hasResolvedDoors = true
