@@ -23,7 +23,7 @@ struct AddUserView: View {
     @State private var fullName = ""
     @State private var email = ""
     @State private var username = ""
-    @State private var password = "SecurePassword@!"
+    @State private var password = "Password@2026"
     @State private var phone = ""
     @State private var nfcId = ""
    
@@ -64,6 +64,15 @@ struct AddUserView: View {
     @State private var hasInitialized = false
     
     @State private var isInitialLoading = false
+    
+    
+    enum Field {
+        case fullName
+        case email
+        case phone
+    }
+    
+    @FocusState private var focusedField: Field?
     
     var body: some View {
         GeometryReader { geometry in
@@ -123,6 +132,12 @@ struct AddUserView: View {
                                     text: $fullName,
                                 )
                                 
+                                .focused($focusedField, equals: .fullName)
+                                .submitLabel(.next)
+                                .onSubmit {
+                                    focusedField = .email
+                                }
+                                
                                 
                                 
                                 LabeledTextField(
@@ -132,6 +147,12 @@ struct AddUserView: View {
                                     text: $email,
                                     
                                 )
+                    
+                                .focused($focusedField, equals: .email)
+                                .submitLabel(.next)
+                                .onSubmit {
+                                    focusedField = .phone
+                                }
                                 
                                 LabeledTextField(
                                     title: "Phone Number",
@@ -140,6 +161,12 @@ struct AddUserView: View {
                                     keyboardType: .numberPad
                                     
                                 )
+                              
+                                .focused($focusedField, equals: .phone)
+                                .submitLabel(.done)
+                                .onSubmit {
+                                    focusedField = nil
+                                }
                                 
                                 LabeledTextField(
                                     title: "NFC Card ID",
@@ -501,6 +528,7 @@ struct AddUserView: View {
                                 }
                             }
                         }
+                    
                     }
                 }
                 .padding(.horizontal,10)
@@ -1134,6 +1162,7 @@ struct LabeledTextField: View {
                             SecureField("", text: $text)
                         } else {
                             TextField("", text: $text)
+                                .submitLabel(.next)
                         }
                     }
                     .keyboardType(keyboardType)
