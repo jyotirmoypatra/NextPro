@@ -802,13 +802,24 @@ struct DoorOpenView: View {
                         isSuccess: false,
                         message: deniedBase
                     )
-                    speakText(accessDeniedMessage)
+                    
+                    if type == 42 || type == 43 {
+                        speakText(accessDeniedMessage + ". " + "Time Restricted")
+                    }else{
+                        speakText(accessDeniedMessage)
+                    }
+             
                     UINotificationFeedbackGenerator().notificationOccurred(.error)
                 }else{
                     UINotificationFeedbackGenerator().notificationOccurred(.error)
                     AceesMessage = accessDeniedMessage
                     overlayMessage = accessDeniedMessage
-                    speakText(accessDeniedMessage)
+                   // speakText(accessDeniedMessage)
+                    if type == 42 || type == 43 {
+                        speakText(accessDeniedMessage + ". " + "Time Restricted")
+                    }else{
+                        speakText(accessDeniedMessage)
+                    }
                     animateFailure()
                 }
                 
@@ -1217,7 +1228,7 @@ struct DoorOpenView: View {
         
         let prefix: String
         if let name = cleanName, !name.isEmpty {
-            prefix = "\(name), "
+            prefix = "\(name). "
         } else {
             prefix = ""
         }
@@ -1422,10 +1433,10 @@ struct DoorOpenView: View {
                     guard isWithinAccessWindow() else {
                         print("⛔ Outside allowed time window")
                         DispatchQueue.main.async {
-                            overlayMessage = "\(deniedBase). Time Restricted"
-                            AceesMessage = "\(deniedBase). Time Restricted"
+                            overlayMessage = door.name + ". " + deniedBase
+                            AceesMessage = deniedBase
                             animateFailureOutSideTime()
-                            speakText("\(deniedBase). Time Restricted")
+                            speakText(door.name + ". " + deniedBase + ". Time Restricted")
                             UINotificationFeedbackGenerator().notificationOccurred(.error)
                         }
                         
@@ -1439,7 +1450,7 @@ struct DoorOpenView: View {
                         
                         return
                     }
-                }
+               }
                 
                 doorManager.openSelectedDoor(door)
                 //  Activate 20s MQTT window

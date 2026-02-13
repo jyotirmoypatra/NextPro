@@ -548,8 +548,8 @@ struct RemoteDoorCardView: View {
     private func showTimeRestrictedAndReset(isWifi: Bool) {
         UINotificationFeedbackGenerator().notificationOccurred(.error)
        
-        speakText("\(deniedBase). Time Restricted")
-        statusMessage = "\(deniedBase). Time Restricted"
+        speakText(door.doorName + ". " + deniedBase + ". " + "Time Restricted")
+        statusMessage = deniedBase
         isResultSuccess = false
 
         if isWifi {
