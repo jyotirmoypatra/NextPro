@@ -222,10 +222,18 @@ struct DeviceCardView: View {
 
             Spacer()
 
+//            Text(device.status ?? "OFFLINE")
+//                .font(.custom("Inter-SemiBold", size: 10))
+//                .foregroundColor(.white)
+//                .padding(6)
+//                .background(device.status == "ONLINE" ? Color.green : Color.red)
+//                .cornerRadius(6)
+            
+            
             Text(device.status ?? "OFFLINE")
                 .font(.custom("Inter-SemiBold", size: 10))
                 .foregroundColor(.white)
-                .padding(6)
+                .frame(width: 65, height: 25) // ← fixed size
                 .background(device.status == "ONLINE" ? Color.green : Color.red)
                 .cornerRadius(6)
         }
