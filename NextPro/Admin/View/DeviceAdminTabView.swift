@@ -75,7 +75,7 @@ struct DeviceAdminTabView: View {
                 
                  }
                 
-                ScrollView {
+                ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 15) {
 
                         if !assignDeviceVM.alredayConfiguredDeviceList.isEmpty {
@@ -90,7 +90,8 @@ struct DeviceAdminTabView: View {
 
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.top, 2)
+                    .padding(.top, 5)
+                    .padding(.bottom, 20)
                 }
                 .refreshable {
                     pullToRefresh = true
