@@ -76,10 +76,31 @@ final class AssignedDeviceViewModel: ObservableObject {
                     issuccess = true
                     
                     //stored alredy configured deviced
-                    alredayConfiguredDeviceList.removeAll()
-                    let allDevices = response.data ?? []
-                    alredayConfiguredDeviceList = allDevices.filter {
-                        $0.isConfigured == true
+//                    alredayConfiguredDeviceList.removeAll()
+//                    let allDevices = response.data ?? []
+//                    alredayConfiguredDeviceList = allDevices.filter {
+//                        $0.isConfigured == true
+//                    }
+                    
+                    
+                    let oldStatusMap = Dictionary(
+                        uniqueKeysWithValues:
+                            alredayConfiguredDeviceList.map { ($0.serial, $0.status) }
+                    )
+
+                    let newDevices = (response.data ?? []).filter { $0.isConfigured ?? false }
+
+                    alredayConfiguredDeviceList = newDevices.map { device in
+                        AssignDevice(
+                            serial: device.serial,
+                            mac: device.mac,
+                            key: device.key,
+                            modelName: device.modelName,
+                            isConfigured: device.isConfigured,
+                            openType: device.openType,
+                            devType: device.devType,
+                            status: oldStatusMap[device.serial] ?? "ONLINE" // keep previous
+                        )
                     }
                     // START HEARTBEAT TIMER HERE
                     startHeartbeatLoop()
