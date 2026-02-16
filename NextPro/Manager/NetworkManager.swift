@@ -1402,6 +1402,24 @@ class NetworkManager: ObservableObject {
             retry: true
         )
     }
+    
+    // MARK: - Delete User   api
+    func deleteUser(userId: String) async throws -> DeleteUserResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.deleteUser))!
+        print("Delete User  Api called")
+
+        return try await performRequest(
+            url: url,
+            method: "DELETE",
+            body: [
+                "id": userId
+            ],
+            requiresAuth: true,
+            responseType: DeleteUserResponse.self,
+            retry: true
+        )
+    }
 
 
 }

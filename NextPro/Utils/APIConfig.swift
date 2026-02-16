@@ -38,6 +38,7 @@ static let baseURL = "https://devapi.nextprotechnologies.com"
         static let allDoorList = "/api/doors/all-door-list/"
         static let getUserDetails = "/api/facility-manager/detail/"
         static let getAccessGroupList = "/api/access-group/list/"
+        static let deleteUser = "/api/facility-manager/delete/"
     }
     
     

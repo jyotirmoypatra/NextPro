@@ -18,6 +18,12 @@ struct UserManagementView: View {
     @State private var selectedUserForEdit: GetUserData?
     @State private var scrollToTop = false
     
+    
+    @State private var showDeleteAlert = false
+    @State private var selectedUserForDelete: User?
+    @StateObject private var deleteUserVM = DeleteUserViewModel()
+    @State private var showDeleteError = false
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -150,6 +156,9 @@ struct UserManagementView: View {
                                         },
                                                       onDelete: { user in
                                             print("Delete \(user.id)")
+                                            selectedUserForDelete = user
+                                                showDeleteAlert = true
+                                            
                                         }
                                         )
                                         .onAppear {
@@ -216,19 +225,7 @@ struct UserManagementView: View {
                     .allowsHitTesting(false)
                 }
                 
-                if getUserDetailsVM.isLoading{
-                    ZStack {
-                        Color.black.opacity(0.6)
-                            .ignoresSafeArea()
-                        
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(1.8)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .ignoresSafeArea()
-                    .allowsHitTesting(false)
-                }
+               
                 
                 
                // if !fetchUserVM.isLoading && fetchUserVM.usersList.isEmpty {
@@ -254,6 +251,47 @@ struct UserManagementView: View {
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 32)
                         }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                }
+                
+                
+                
+                if showDeleteAlert, let user = selectedUserForDelete {
+                    DeleteConfirmationAlert(
+                        userName: user.fullName,
+                        onCancel: {
+                            showDeleteAlert = false
+                        },
+                        onContinue: {
+                            showDeleteAlert = false
+
+                            Task {
+                                await deleteUserVM.deleteUser(id: user.id)
+
+                                if deleteUserVM.isSuccess {
+                                    showDeleteAlert = false
+                                    await fetchUserVM.refreshAfterAddOrEditUser()
+                                    scrollToTop = true
+                                } else {
+                                    showDeleteError = true
+                                }
+                            }
+                        }
+                    )
+                }
+                
+                
+                if getUserDetailsVM.isLoading || deleteUserVM.isLoading {
+                    ZStack {
+                        Color.black.opacity(0.6)
+                            .ignoresSafeArea()
+                        
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.8)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ignoresSafeArea()
@@ -340,6 +378,17 @@ struct UserManagementView: View {
                         showUserDetailsVMError = false
                     }
                 }
+        
+                .modernAlert(isPresented: $showDeleteError) {
+                    ModernAlertView(
+                        title: "Delete Failed",
+                        message: deleteUserVM.errorMessage ?? "Something went wrong",
+                        isSuccess: false,
+                        buttonTitle: "OK"
+                    ) {
+                        showDeleteError = false
+                    }
+                }
     }
     
 }
@@ -419,5 +468,69 @@ struct UsersCardView: View {
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.white.opacity(0.15), lineWidth: 1)
         )
+    }
+}
+
+struct DeleteConfirmationAlert: View {
+    let userName: String
+    let onCancel: () -> Void
+    let onContinue: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.8).ignoresSafeArea()
+
+            VStack(spacing: 18) {
+
+                Text("Delete User")
+                    .font(.custom("Inter-Bold", size: 18))
+                    .foregroundColor(.white)
+
+                Text("Are you sure you want to delete \(userName)? This action cannot be undone.")
+                    .font(.custom("Inter-Regular", size: 15))
+                    .foregroundColor(.white.opacity(0.85))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+
+                HStack(spacing: 14) {
+
+                    Button(action: onCancel) {
+                        Text("CANCEL")
+                            .font(.custom("Inter-SemiBold", size: 15))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding(10)
+                            .background(Color.white)
+                            .cornerRadius(10)
+                    }
+
+                    Button(action: onContinue) {
+                        Text("CONTINUE")
+                            .font(.custom("Inter-SemiBold", size: 15))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .padding(10)
+                            .background(Color.white)
+                            .cornerRadius(10)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 6)
+            }
+            .padding(.vertical, 22)
+            .background(
+                LinearGradient(
+                    colors: [Color.black.opacity(0.95), Color.black.opacity(0.8)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .cornerRadius(18)
+            .overlay(
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
+            .padding(.horizontal, 30)
+        }
     }
 }
