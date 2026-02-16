@@ -62,8 +62,8 @@ class UserProfileDetailsViewModel: ObservableObject {
                 organization = response.data.organization ?? ""
                 image_url = response.data.image_url ?? ""
                 
-                
-                
+                 let  is_admin = response.data.is_admin ?? false
+                UserDefaults.standard.set(is_admin, forKey: "is_admin")
                 
                 // Digital access Tab
                 let hasDigitalAccess = response.data.is_digital
