@@ -13,6 +13,7 @@ struct DeviceInformationView: View {
     let selectedDevice:AssignDevice
     @ObservedObject private var doorManager = DoorManager.shared
     @State private var showDeviceInfo = false
+    @State private var navigateToWiFiListView = false
     @StateObject private var bleManager = BLEManager()
     @State private var showDeviceOfflineAlert = false
     @Environment(\.dismiss) private var dismiss
@@ -237,22 +238,27 @@ struct DeviceInformationView: View {
 
 
                             
-//                            Divider().background(Color.gray.opacity(0.3))
-//                            
-//                            HStack(){
-//                                Text("Configure Wifi")
-//                                    .foregroundColor(.white)
-//                                    .font(.custom("Inter-Medium", size: 16))
-//                                    .padding(.trailing,10)
-//                                
-//                                Spacer()
-//                                
-//                                Image(systemName: "chevron.right")
-//                                    .foregroundColor(.white)
-//                                    .font(.system(size: 15, weight: .medium))
-//                                
-//                            }
-//                            
+                            Divider().background(Color.gray.opacity(0.3))
+                            
+                            Button {
+                                navigateToWiFiListView = true
+                            } label: {
+                                
+                                HStack(){
+                                    Text("Configure Wifi")
+                                        .foregroundColor(.white)
+                                        .font(.custom("Inter-Medium", size: 16))
+                                        .padding(.trailing,10)
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.white)
+                                        .font(.system(size: 15, weight: .medium))
+                                    
+                                }
+                            }
+//
 //                            Divider().background(Color.gray.opacity(0.3))
 //                            
 //                            HStack{
@@ -345,6 +351,11 @@ struct DeviceInformationView: View {
             if config != nil {
                 showDeviceInfo = true
             }
+        }
+        
+        .navigationDestination(isPresented: $navigateToWiFiListView) {
+                SelectWiFiView(selectedDevice: selectedDevice)
+          
         }
 
     }
