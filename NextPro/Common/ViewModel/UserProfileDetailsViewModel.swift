@@ -63,7 +63,13 @@ class UserProfileDetailsViewModel: ObservableObject {
                 image_url = response.data.image_url ?? ""
                 
                  let  is_admin = response.data.is_admin ?? false
-                UserDefaults.standard.set(is_admin, forKey: "is_admin")
+                let oldValue = UserDefaults.standard.bool(forKey: "is_admin")
+
+                if oldValue != is_admin {
+                    UserDefaults.standard.set(is_admin, forKey: "is_admin")
+
+                    NotificationCenter.default.post(name: .roleChanged, object: nil)
+                }
                 
                 // Digital access Tab
                 let hasDigitalAccess = response.data.is_digital

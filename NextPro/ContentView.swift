@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var isLoggedIn = false
     @AppStorage("is_admin") private var isAdmin = false
     @State private var isUserInitialSetupDone = false
+    @State private var viewRefreshID = UUID()
     
     @StateObject private var networkManager = NetworkManager.shared
     
@@ -57,7 +58,9 @@ struct ContentView: View {
                 }
                 
             }
-        }.transition(.move(edge: .trailing))
+        }
+        .id(viewRefreshID)
+        .transition(.move(edge: .trailing))
 
         .onAppear {
                     checkLoginStatus()
@@ -67,6 +70,15 @@ struct ContentView: View {
                             showSplash = false
                         }
                     }
+        }
+        
+        
+//        .onReceive(NotificationCenter.default.publisher(for: .roleChanged)) { _ in
+//            isAdmin = UserDefaults.standard.bool(forKey: "is_admin")
+//        }
+       
+        .onReceive(NotificationCenter.default.publisher(for: .roleChanged)) { _ in
+            viewRefreshID = UUID()
         }
         
         .SessionExpiredAlert(isPresented: $networkManager.showSessionExpiredAlert) {

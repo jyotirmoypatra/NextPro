@@ -9,6 +9,9 @@ import Foundation
 import SwiftUI
 import UIKit
 
+
+
+
 extension UIApplication {
     func hideKeyboard() {
         sendAction(#selector(UIResponder.resignFirstResponder),
@@ -314,4 +317,9 @@ extension Encodable {
         }
         return dict
     }
+}
+
+
+extension Notification.Name {
+    static let roleChanged = Notification.Name("roleChanged")
 }
