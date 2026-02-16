@@ -11,7 +11,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var showSplash = true
     @State private var isLoggedIn = false
-    @State private var isAdmin = false
+    @AppStorage("is_admin") private var isAdmin = false
     @State private var isUserInitialSetupDone = false
     
     @StateObject private var networkManager = NetworkManager.shared
@@ -86,7 +86,7 @@ struct ContentView: View {
     private func checkLoginStatus() {
             let access = KeychainManager.shared.get("access_token")
             let userId = UserDefaults.standard.string(forKey: "user_id")
-            let is_admin = UserDefaults.standard.bool(forKey: "is_admin")
+           // let is_admin = UserDefaults.standard.bool(forKey: "is_admin")
             isUserInitialSetupDone = UserDefaults.standard.bool(forKey: "isUserInitialSetupCompleted")
 
             print("isUserInitialSetupDone onapear =", isUserInitialSetupDone)
@@ -94,7 +94,7 @@ struct ContentView: View {
         
             if access != nil, userId != nil {
                 isLoggedIn = true
-                isAdmin = is_admin
+               // isAdmin = is_admin
             } else {
                 isLoggedIn = false
             }
