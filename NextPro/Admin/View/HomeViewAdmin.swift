@@ -69,7 +69,7 @@ struct HomeViewAdmin: View {
                             .background(Color.white.opacity(0.15))
                         HStack {
                             TabBarItemUser(
-                                title: "Home",
+                                title: "Open Doors",
                                 activeIcon: "home-active",
                                 inactiveIcon: "home-inactive",
                                 isSelected: selectedTab == 0

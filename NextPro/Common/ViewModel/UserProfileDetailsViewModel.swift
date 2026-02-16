@@ -61,6 +61,25 @@ class UserProfileDetailsViewModel: ObservableObject {
                 accountStatus = response.data.status ?? ""
                 organization = response.data.organization ?? ""
                 image_url = response.data.image_url ?? ""
+                
+                
+                
+                
+                // Digital access Tab
+                let hasDigitalAccess = response.data.is_digital
+                UserDefaults.standard.set(hasDigitalAccess, forKey: "digital_access")
+
+                // Remote access tab
+                let hasRemoteAccess = response.data.is_remote
+                UserDefaults.standard.set(hasRemoteAccess, forKey: "remote_access")
+                
+                // Remote  wifi access
+                let hasRemoteWifiAccess = response.data.is_wifi
+                UserDefaults.standard.set(hasRemoteWifiAccess, forKey: "remote_wifi")
+                // Remote access tab
+                let hasRemoteBleAccess = response.data.is_ble
+                UserDefaults.standard.set(hasRemoteBleAccess, forKey: "remote_ble")
+                
             }else{
                 errorMessage = response.message ?? "Something Went Wrong"
             }
