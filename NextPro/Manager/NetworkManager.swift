@@ -114,8 +114,14 @@ class NetworkManager: ObservableObject {
         retry: Bool = false
     ) async throws -> T {
 
-        print("\(url)")
-        print("\(body)")
+        print("🌐 URL:", url.absoluteString)
+        print("📡 Method:", method)
+        if let body {
+            if let jsonData = try? JSONSerialization.data(withJSONObject: body, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                print("📤 Body:\n\(jsonString)")
+            }
+        }
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")

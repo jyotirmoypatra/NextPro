@@ -1052,6 +1052,15 @@ struct AddUserView: View {
             Text(title)
                 .font(.headline)
 
+//            DatePicker(
+//                "",
+//                selection: internalDate,
+//                displayedComponents: components
+//            )
+//            .datePickerStyle(.wheel)
+//            .labelsHidden()
+            
+            
             DatePicker(
                 "",
                 selection: internalDate,
@@ -1059,6 +1068,7 @@ struct AddUserView: View {
             )
             .datePickerStyle(.wheel)
             .labelsHidden()
+            .environment(\.locale, Locale(identifier: "en_US"))
 
             Button("Done") {
                 if selection.wrappedValue == nil {
@@ -1353,6 +1363,13 @@ private let mmddyyFormatter: DateFormatter = {
     return df
 }()
 
+private let amPmFormatter: DateFormatter = {
+    let df = DateFormatter()
+    df.dateFormat = "hh:mm a"
+    df.locale = Locale(identifier: "en_US_POSIX")
+    return df
+}()
+
 
 func timeBox(
     title: String,
@@ -1375,7 +1392,8 @@ func timeBox(
                 Text(
                     value == nil
                     ? "Select Time"
-                    : value!.formatted(date: .omitted, time: .shortened)
+                    : /*value!.formatted(date: .omitted, time: .shortened)*/
+                    amPmFormatter.string(from: value!)
                 )
                 .font(.custom("Inter-Regular", size: 15))
                 .foregroundColor(value == nil ? .white.opacity(0.5) : .white)

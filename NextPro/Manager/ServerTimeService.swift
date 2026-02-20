@@ -64,7 +64,7 @@ extension ServerTimeService {
         // ✅ If user not logged in, don't even try
             guard let token = KeychainManager.shared.get("access_token"),
                   !token.isEmpty else {
-                print("⛔️ No access token. Skipping server time fetch.")
+               // print("⛔️ No access token. Skipping server time fetch.")
                 return
             }
 
