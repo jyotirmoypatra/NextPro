@@ -24,6 +24,9 @@ struct UserManagementView: View {
     @StateObject private var deleteUserVM = DeleteUserViewModel()
     @State private var showDeleteError = false
     
+    @State private var canReadUserManagemnt = false
+    @State private var canWriteUserManagemnt = false
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -70,30 +73,31 @@ struct UserManagementView: View {
                     .padding(.top, 10)
                     .padding(.bottom, 15)
                    
-                    
-                    Button(action: {
-                        selectedUserForEdit = nil
-                        navigateToAddUser = true
-                    }) {
-                        HStack {
-                            Image(systemName: "plus")
-                                .font(.system(size: 16))
-                                .foregroundColor(.white)
-                                .fontWeight(.bold)
-
-                            Text("Add User")
-                                .font(.custom("Inter-SemiBold", size: 18))
-                                .foregroundColor(.white)
+                    if canWriteUserManagemnt {
+                        Button(action: {
+                            selectedUserForEdit = nil
+                            navigateToAddUser = true
+                        }) {
+                            HStack {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.white)
+                                    .fontWeight(.bold)
+                                
+                                Text("Add User")
+                                    .font(.custom("Inter-SemiBold", size: 18))
+                                    .foregroundColor(.white)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .contentShape(Rectangle())   // ⭐ makes full area tappable
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .contentShape(Rectangle())   // ⭐ makes full area tappable
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                        
                     }
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                    )
-                    
                   //  if !fetchUserVM.usersList.isEmpty {
 //                        HStack{
 //                            Text("Added Users")
@@ -141,6 +145,7 @@ struct UserManagementView: View {
                                 if !fetchUserVM.usersList.isEmpty {
                                     ForEach(fetchUserVM.usersList) { item in
                                         UsersCardView(user: item,
+                                                      canWriteUser: canWriteUserManagemnt,
                                                       onEdit: { user in
                                             Task {
                                                 getUserDetailsVM.userid = user.id
@@ -321,6 +326,14 @@ struct UserManagementView: View {
             )
         }
         .onAppear {
+            
+            // read permissions saved from profile API
+               let read = UserDefaults.standard.bool(forKey: "user_management_read")
+               let write = UserDefaults.standard.bool(forKey: "user_management_write")
+
+               canReadUserManagemnt = read
+               canWriteUserManagemnt = write
+            
             // Only run initial load when view has never loaded (avoids double fetch when returning from AddUserView)
             guard !fetchUserVM.hasLoadedOnce else { return }
             Task {
@@ -395,7 +408,7 @@ struct UserManagementView: View {
 
 struct UsersCardView: View {
     let user: User
-    
+    let canWriteUser: Bool
     let onEdit: (User) -> Void
     let onDelete: (User) -> Void
 
@@ -424,30 +437,32 @@ struct UsersCardView: View {
 
             
             // Action Buttons
-            HStack(spacing: 20) {
-
-                // ✏️ Edit
-                Button {
-                    print("Edit tapped")
-                    onEdit(user)
-                } label: {
-                    Image("edit-pencil")
-                        .resizable()
-                        .renderingMode(.template)
-                        .foregroundColor(.white)
-                        .frame(width: 25, height: 25)
-                }
-
-                // 🗑 Delete
-                Button {
-                    print("Delete tapped")
-                    onDelete(user)
-                } label: {
-                    Image("delete-icon")
-                        .resizable()
-                        .renderingMode(.template)
-                        .foregroundColor(.white)
-                        .frame(width: 25, height: 25)
+            if canWriteUser {
+                HStack(spacing: 20) {
+                    
+                    // ✏️ Edit
+                    Button {
+                        print("Edit tapped")
+                        onEdit(user)
+                    } label: {
+                        Image("edit-pencil")
+                            .resizable()
+                            .renderingMode(.template)
+                            .foregroundColor(.white)
+                            .frame(width: 25, height: 25)
+                    }
+                    
+                    // 🗑 Delete
+                    Button {
+                        print("Delete tapped")
+                        onDelete(user)
+                    } label: {
+                        Image("delete-icon")
+                            .resizable()
+                            .renderingMode(.template)
+                            .foregroundColor(.white)
+                            .frame(width: 25, height: 25)
+                    }
                 }
             }
         }

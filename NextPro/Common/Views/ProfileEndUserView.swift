@@ -124,7 +124,7 @@ struct ProfileEndUserView: View {
                             Divider().background(Color.white.opacity(0.15))
                                 .padding(.horizontal,20)
                             
-                            if isAdmin {
+                            if viewModel.canReadUserManagement || viewModel.canWriteUserManagement {
                                 
                                 UserProfileRow(title: "User Management" , textColor: .white) {
                                     navigateToUserManagement = true

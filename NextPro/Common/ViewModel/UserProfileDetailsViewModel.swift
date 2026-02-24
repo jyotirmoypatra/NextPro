@@ -23,6 +23,10 @@ class UserProfileDetailsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage = ""
     @Published var isSuccess = false
+    
+    @Published var canReadUserManagement = false
+    @Published var canWriteUserManagement = false
+    
     private let networkManager = NetworkManager.shared
     @Published var isFailedDueToNoInternet = false
 
@@ -85,6 +89,19 @@ class UserProfileDetailsViewModel: ObservableObject {
                 // Remote access tab
                 let hasRemoteBleAccess = response.data.is_ble
                 UserDefaults.standard.set(hasRemoteBleAccess, forKey: "remote_ble")
+                
+                // PERMISSION PARSING
+                let facilityUserPermission = response.data.permissions?.facility_user
+
+                let read = facilityUserPermission?.read ?? false
+                let write = facilityUserPermission?.write ?? false
+
+                canReadUserManagement = read
+                canWriteUserManagement = write
+
+                // save for global use
+                UserDefaults.standard.set(read, forKey: "user_management_read")
+                UserDefaults.standard.set(write, forKey: "user_management_write")
                 
             }else{
                 errorMessage = response.message ?? "Something Went Wrong"
