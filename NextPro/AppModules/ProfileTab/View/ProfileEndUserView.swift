@@ -71,9 +71,16 @@ struct ProfileEndUserView: View {
                         VStack(spacing: 12) {
 
 
+//                            ProfileImageView(imageUrl: viewModel.image_url)
+//                                .onTapGesture {
+//                                    showFullImage = true
+//                                }
+                            
                             ProfileImageView(imageUrl: viewModel.image_url)
                                 .onTapGesture {
-                                    showFullImage = true
+                                    if isValidImageURL(viewModel.image_url) {
+                                        showFullImage = true
+                                    }
                                 }
 
                             
@@ -344,6 +351,18 @@ struct ProfileEndUserView: View {
             DeleteConfirmationSheet()
         }
 
+    }
+    
+    
+    private func isValidImageURL(_ urlString: String?) -> Bool {
+        guard let urlString = urlString,
+              !urlString.isEmpty,
+              let url = URL(string: urlString),
+              UIApplication.shared.canOpenURL(url)
+        else {
+            return false
+        }
+        return true
     }
     
     func loadUserData() {
