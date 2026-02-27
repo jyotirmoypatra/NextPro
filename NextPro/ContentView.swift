@@ -12,6 +12,8 @@ struct ContentView: View {
     @State private var showSplash = true
  //   @State private var isLoggedIn = false
     @AppStorage("is_admin") private var isAdmin = false
+    @AppStorage("device_management_read") private var deviceManagementRead = false
+    @AppStorage("device_management_write") private var deviceManagementWrite = false
    // @State private var isUserInitialSetupDone = false
    // @State private var viewRefreshID = UUID()
     
@@ -51,7 +53,7 @@ struct ContentView: View {
 //                                .navigationBarBackButtonHidden(true)
 //                                .navigationBarHidden(true)
 //                        }
-                        HomeView(isAdmin: isAdmin, initialTab: 0)
+                        HomeView(isAdmin: deviceManagementRead || deviceManagementWrite, initialTab: 0)
                             .navigationBarBackButtonHidden(true)
                             .navigationBarHidden(true)
                     } else {

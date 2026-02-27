@@ -15,6 +15,9 @@ struct DeviceAdminTabView: View {
     @State private var selectedDevice: AssignDevice?
     @State private var pullToRefresh = false
     
+    @State private var canReadDevice = false
+    @State private var canWriteDevice = false
+    
     var body: some View {
         ZStack {
             VStack(spacing: 10){
@@ -39,30 +42,32 @@ struct DeviceAdminTabView: View {
                 }
                 .padding(.bottom, 12)
                 .padding(.top, 16)
-                Button(action: {
-                    navigateToDeviceScanView = true
-                }) {
-                    HStack{
-                        Image(systemName: "plus")
-                            .font(.system(size: 16))
-                            .foregroundColor(.white)
-                            .fontWeight(.bold)
+                if canWriteDevice{
+                    Button(action: {
+                        navigateToDeviceScanView = true
+                    }) {
+                        HStack{
+                            Image(systemName: "plus")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white)
+                                .fontWeight(.bold)
+                            
+                            Text("Configure device")
+                                .font(.custom("Inter-SemiBold", size: 16))
+                                .foregroundColor(.white)
+                        }
                         
-                        Text("Configure device")
-                            .font(.custom("Inter-SemiBold", size: 16))
-                            .foregroundColor(.white)
                     }
-                    
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(
+                                Color.white.opacity(0.2),
+                                lineWidth: 1
+                            )
+                    )
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(
-                            Color.white.opacity(0.2),
-                            lineWidth: 1
-                        )
-                )
                 
                 if !assignDeviceVM.alredayConfiguredDeviceList.isEmpty {
                 HStack{
@@ -82,6 +87,7 @@ struct DeviceAdminTabView: View {
                             ForEach(assignDeviceVM.alredayConfiguredDeviceList) { item in
                                 DeviceCardView(device: item)
                                     .onTapGesture {
+                                        guard canWriteDevice else { return }
                                                 selectedDevice = item
                                                 navigateToDeviceInfoView = true
                                             }
@@ -163,6 +169,14 @@ struct DeviceAdminTabView: View {
             if let error = assignDeviceVM.errorMessage, !error.isEmpty {
                 showAssignDeviceVMErrorAlert = true
             }
+        }
+        .onAppear{
+            // read permissions saved from profile API
+           let readDevice = UserDefaults.standard.bool(forKey: "device_management_read")
+           let writeDevice = UserDefaults.standard.bool(forKey: "device_management_write")
+
+           canReadDevice = readDevice
+           canWriteDevice = writeDevice
         }
         .onDisappear {
             assignDeviceVM.stopHeartbeat()   

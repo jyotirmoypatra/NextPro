@@ -357,10 +357,7 @@ class NetworkManager: ObservableObject {
         print("UserProfile details Api called----")
         return try await performRequest(
             url: url,
-            method: "POST",
-            body: [
-                "id": id
-            ],
+            method: "GET",
             requiresAuth: true,
             responseType: UserProfileResponse.self,
             retry: true

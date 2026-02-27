@@ -10,15 +10,15 @@ import Foundation
 
 struct LoginResponseModel: Decodable {
     let status: Bool
-    let message: String
+    let message: String?
     let user_id: String?
     let facility_id: String?
     let username: String?
+    let full_name: String?
     let user_type: String?
-    let is_digital : Bool?
-    let is_remote : Bool?
-    let is_wifi : Bool?
-    let is_ble : Bool?
+    let user_role: String?
+    let user_role_detail: UserRoleDetail?
+    let permission: Permissions?
     let is_reset_password: Bool?
     let is_aggrement_accept: Bool?
     let is_admin: Bool?

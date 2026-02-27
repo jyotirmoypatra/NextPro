@@ -328,11 +328,11 @@ struct UserManagementView: View {
         .onAppear {
             
             // read permissions saved from profile API
-               let read = UserDefaults.standard.bool(forKey: "user_management_read")
-               let write = UserDefaults.standard.bool(forKey: "user_management_write")
+               let readUser = UserDefaults.standard.bool(forKey: "user_management_read")
+               let writeUser = UserDefaults.standard.bool(forKey: "user_management_write")
 
-               canReadUserManagemnt = read
-               canWriteUserManagemnt = write
+               canReadUserManagemnt = readUser
+               canWriteUserManagemnt = writeUser
             
             // Only run initial load when view has never loaded (avoids double fetch when returning from AddUserView)
             guard !fetchUserVM.hasLoadedOnce else { return }

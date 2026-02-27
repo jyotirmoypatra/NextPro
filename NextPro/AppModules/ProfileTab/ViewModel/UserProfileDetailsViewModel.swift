@@ -105,6 +105,14 @@ class UserProfileDetailsViewModel: ObservableObject {
                 UserDefaults.standard.set(read, forKey: "user_management_read")
                 UserDefaults.standard.set(write, forKey: "user_management_write")
                 
+                
+                //permissions device management
+                let deviceManagement = response.data.permissions?.device_mapping
+                let deviceRead = deviceManagement?.read ?? false
+                let deviceWrite = deviceManagement?.write ?? false
+                UserDefaults.standard.set(deviceRead, forKey: "device_management_read")
+                UserDefaults.standard.set(deviceWrite, forKey: "device_management_write")
+                
             }else{
                 errorMessage = response.message ?? "Something Went Wrong"
             }

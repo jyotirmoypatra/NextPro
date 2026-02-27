@@ -411,48 +411,48 @@ struct LogoutSheetView: View {
                 
                 Divider().background(Color.white.opacity(0.2))
                 
-//                Button(action: {
-//                    KeychainManager.shared.clearUserDefaultsAndKeychainData()
-//                    UserDefaults.standard.set(false, forKey: "is_logged_in")
-//                   // KeychainManager.shared.resetToLogin()
-//                   // dismiss()
-//                }) {
-//                    Text("YES, LOGOUT")
-//                        .font(.custom("Inter-Bold", size: 16))
-//                        .frame(maxWidth: .infinity)
-//                        .padding()
-//                        .background(colorScheme == .dark ? .white : .black)
-//                        .foregroundColor(colorScheme == .dark ? .black : .white)
-//                        .cornerRadius(10)
-//                }
-//                .padding(.horizontal)
-                
                 Button(action: {
-                    isLoggingOut = true
-
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                        KeychainManager.shared.clearUserDefaultsAndKeychainData()
-                        UserDefaults.standard.set(false, forKey: "is_logged_in")
-                    }
-
+                    KeychainManager.shared.clearUserDefaultsAndKeychainData()
+                    UserDefaults.standard.set(false, forKey: "is_logged_in")
+                   // KeychainManager.shared.resetToLogin()
+                   // dismiss()
                 }) {
-                    ZStack {
-                        if isLoggingOut {
-                            ProgressView()
-                                .tint(colorScheme == .dark ? .black : .white)
-                        } else {
-                            Text("YES, LOGOUT")
-                                .font(.custom("Inter-Bold", size: 16))
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(colorScheme == .dark ? .white : .black)
-                    .foregroundColor(colorScheme == .dark ? .black : .white)
-                    .cornerRadius(10)
+                    Text("YES, LOGOUT")
+                        .font(.custom("Inter-Bold", size: 16))
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(colorScheme == .dark ? .white : .black)
+                        .foregroundColor(colorScheme == .dark ? .black : .white)
+                        .cornerRadius(10)
                 }
-                .disabled(isLoggingOut)
                 .padding(.horizontal)
+                
+//                Button(action: {
+//                    isLoggingOut = true
+//
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+//                        KeychainManager.shared.clearUserDefaultsAndKeychainData()
+//                        UserDefaults.standard.set(false, forKey: "is_logged_in")
+//                    }
+//
+//                }) {
+//                    ZStack {
+//                        if isLoggingOut {
+//                            ProgressView()
+//                                .tint(colorScheme == .dark ? .black : .white)
+//                        } else {
+//                            Text("YES, LOGOUT")
+//                                .font(.custom("Inter-Bold", size: 16))
+//                        }
+//                    }
+//                    .frame(maxWidth: .infinity)
+//                    .padding()
+//                    .background(colorScheme == .dark ? .white : .black)
+//                    .foregroundColor(colorScheme == .dark ? .black : .white)
+//                    .cornerRadius(10)
+//                }
+//                .disabled(isLoggingOut)
+//                .padding(.horizontal)
                 
                 Button {
                     dismiss()

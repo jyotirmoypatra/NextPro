@@ -103,24 +103,40 @@ class LoginViewModel: ObservableObject {
                
 
                 // Digital access Tab
-                let hasDigitalAccess = response.is_digital ?? false
+                let hasDigitalAccess = response.user_role_detail?.is_digital  ?? false
                 UserDefaults.standard.set(hasDigitalAccess, forKey: "digital_access")
 
                 // Remote access tab
-                let hasRemoteAccess = response.is_remote ?? false
+                let hasRemoteAccess = response.user_role_detail?.is_remote  ?? false
                 UserDefaults.standard.set(hasRemoteAccess, forKey: "remote_access")
                 
                 // Remote  wifi access
-                let hasRemoteWifiAccess = response.is_wifi ?? false
+                let hasRemoteWifiAccess = response.user_role_detail?.is_wifi  ?? false
                 UserDefaults.standard.set(hasRemoteWifiAccess, forKey: "remote_wifi")
                 // Remote access tab
-                let hasRemoteBleAccess = response.is_ble ?? false
+                let hasRemoteBleAccess = response.user_role_detail?.is_ble  ?? false
                 UserDefaults.standard.set(hasRemoteBleAccess, forKey: "remote_ble")
+                
+                
+                //permissions user management
+                let facilityUserPermission = response.permission?.facility_user
+                let userRead = facilityUserPermission?.read ?? false
+                let userWrite = facilityUserPermission?.write ?? false
+                UserDefaults.standard.set(userRead, forKey: "user_management_read")
+                UserDefaults.standard.set(userWrite, forKey: "user_management_write")
+                
+                //permissions device management
+                let deviceManagement = response.permission?.device_mapping
+                let deviceRead = deviceManagement?.read ?? false
+                let deviceWrite = deviceManagement?.write ?? false
+                UserDefaults.standard.set(deviceRead, forKey: "device_management_read")
+                UserDefaults.standard.set(deviceWrite, forKey: "device_management_write")
+                
                 
                
             } else {
                 // Backend error message
-                loginError = response.message
+                loginError = response.message ?? "Something Went Wrong"
             }
 
         } catch {
