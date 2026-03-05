@@ -286,16 +286,39 @@ struct UserAgreementScreen: View {
     }
    
     func AcceptAggrementCall() {
-        if !termsAccepted && !privacyAccepted {
+//        if !termsAccepted && !privacyAccepted {
+//                showAggremntAcceptMessage = "Please read and accept both. Go to each tab and scroll to the bottom and check the acceptance checkbox"
+//                showAggremntAcceptError = true
+//            } else if !termsAccepted {
+//                showAggremntAcceptMessage = "Please go to Terms & Conditions tab, scroll to the bottom and check the acceptance checkbox"
+//                showAggremntAcceptError = true
+//            } else if !privacyAccepted {
+//                showAggremntAcceptMessage = "Please go to Privacy Policy tab, scroll to the bottom and check the acceptance checkbox"
+//                showAggremntAcceptError = true
+//            }
+        
+        
+            if !termsAccepted && !privacyAccepted {
+                
+                selectedTab = 0   // move to Terms first
                 showAggremntAcceptMessage = "Please read and accept both. Go to each tab and scroll to the bottom and check the acceptance checkbox"
                 showAggremntAcceptError = true
-            } else if !termsAccepted {
+                
+            }
+            else if !termsAccepted {
+                
+                selectedTab = 0   // switch to Terms tab
                 showAggremntAcceptMessage = "Please go to Terms & Conditions tab, scroll to the bottom and check the acceptance checkbox"
                 showAggremntAcceptError = true
-            } else if !privacyAccepted {
+                
+            }
+            else if !privacyAccepted {
+                
+                selectedTab = 1   // switch to Privacy tab
                 showAggremntAcceptMessage = "Please go to Privacy Policy tab, scroll to the bottom and check the acceptance checkbox"
                 showAggremntAcceptError = true
-            } 
+                
+            }
         else{
             Task {
                 viewModel.isAggrementAccepted =  true
