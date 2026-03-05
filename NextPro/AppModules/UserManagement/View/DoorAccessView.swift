@@ -221,6 +221,10 @@ struct DoorAccessView: View {
             if !doorListVM.hasLoadedOnce {
                 Task {
                     await doorListVM.getDoorList()
+                    
+                    if !doorListVM.hasLoadedOnce{
+                        showDoorListVMError = true
+                    }
                 }
             }
         }

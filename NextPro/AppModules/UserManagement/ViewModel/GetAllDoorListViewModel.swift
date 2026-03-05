@@ -98,6 +98,7 @@ final class GetAllDoorListViewModel: ObservableObject {
             if response.status {
                 doorList = response.data
                 hasLoadedOnce = true
+                print("door load:\(doorList)")
             }
         } catch {
             errorMessage = error.localizedDescription
