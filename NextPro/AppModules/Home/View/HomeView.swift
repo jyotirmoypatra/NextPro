@@ -246,6 +246,9 @@ struct HomeView: View {
 
             }
         }
+        .onChange(of: isAdmin) { _ in
+            selectedTab = 0
+        }
     }
 }
 
