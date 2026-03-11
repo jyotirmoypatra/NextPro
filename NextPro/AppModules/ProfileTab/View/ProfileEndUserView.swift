@@ -31,6 +31,7 @@ struct ProfileEndUserView: View {
     @State private var showDeleteAccountAlert = false
     @State private var navigate_Webview_PrivacyTerms = false
     @State private var navigate_voice_message = false
+    @State private var navigate_Debug = false
     @State private var showFailedAlert = false
     
     
@@ -207,6 +208,14 @@ struct ProfileEndUserView: View {
                             UserProfileRow(title: "Logout" , textColor: .orange) {
                                 showLogoutAlert = true
                             }
+                            
+                            Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
+                            
+                            UserProfileRow(title: "Debug MQTT" , textColor: .white) {
+                                // Handle support action
+                                navigate_Debug = true
+                            }
 
                            
                         }
@@ -282,6 +291,13 @@ struct ProfileEndUserView: View {
         
         .navigationDestination(isPresented: $navigateToUserManagement) {
            UserManagementView()
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
+                .interactiveDismissDisabled(true)
+        }
+        
+        .navigationDestination(isPresented: $navigate_Debug) {
+           DebugMqtt()
                 .navigationBarBackButtonHidden(true)
                 .navigationBarHidden(true)
                 .interactiveDismissDisabled(true)

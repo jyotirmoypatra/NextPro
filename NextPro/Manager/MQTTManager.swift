@@ -163,6 +163,27 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
         mqtt?.subscribe(topic, qos: .qos1)
         print("📡 MQTT subscribed to \(topic)")
     }
+    
+    func subscribeDownChannel(sn: String) {
+        let topic = "down/\(sn)"
+
+        guard !subscribedTopics.contains(topic) else { return }
+
+        subscribedTopics.insert(topic)
+        mqtt?.subscribe(topic, qos: .qos1)
+
+        print("📡 Subscribed to DOWN topic:", topic)
+    }
+    
+    func publishRaw(sn: String, message: String) {
+        
+        let topic = "down/\(sn)"
+        
+        mqtt?.publish(topic, withString: message, qos: .qos1)
+        
+        print("📤 Raw MQTT publish → \(topic)")
+        print(message)
+    }
 
     
     // MARK: - Heartbeat Check (Force Device to Send Heartbeat)
