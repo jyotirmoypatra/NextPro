@@ -30,7 +30,7 @@ struct HomeView: View {
                     .ignoresSafeArea()
 
                 // Black translucent overlay
-                Color.black.opacity(0.85)
+                Color.black.opacity(0.9)
                     .ignoresSafeArea()
 
                 if isAdmin {

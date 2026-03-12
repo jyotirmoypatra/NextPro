@@ -90,6 +90,7 @@ extension ServerTimeService {
             let uptime = ProcessInfo.processInfo.systemUptime
             UserDefaults.standard.set(serverDate.timeIntervalSince1970, forKey: "server_time_epoch")
             UserDefaults.standard.set(uptime, forKey: "server_time_uptime")
+            UserDefaults.standard.set(localTimeZoneID, forKey: "server_time_timezone")
             
             if let tz = TimeZone(identifier: localTimeZoneID) {
                 let formatter = DateFormatter()
@@ -142,7 +143,9 @@ extension ServerTimeService {
         
         let savedServerEpoch = defaults.double(forKey: "server_time_epoch")
         let savedUptime = defaults.double(forKey: "server_time_uptime")
-        
+        if localTimeZoneID == nil {
+            localTimeZoneID = UserDefaults.standard.string(forKey: "server_time_timezone")
+        }
         
         print("💾 Saved Server Epoch:", savedServerEpoch)
            print("💾 Saved Uptime:", savedUptime)
@@ -160,7 +163,8 @@ extension ServerTimeService {
         let elapsed = currentUptime - savedUptime
         
         // 4 hour limit
-        if elapsed > 14400 {
+       // if elapsed > 14400 {
+        if elapsed > 60 {
             return nil
         }
         

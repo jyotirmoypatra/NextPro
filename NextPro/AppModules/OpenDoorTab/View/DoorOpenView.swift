@@ -90,102 +90,309 @@ struct DoorOpenView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .animation(.spring(), value: network.hasInternet)
                 }
-                HStack {
-                    VStack(alignment: .leading,spacing: 5) {
-                        Text("Welcome!")
-                            .font(.custom("Inter-SemiBold", size: 18))
-                            .foregroundColor(.white)
-                        
-                        if deviceVM.isLoading {
-                            ShimmerTextView(width: 100, height: 16)
-                        } else {
-                            Text(deviceVM.deviceDetails?.userFullName ?? "")
-                                .font(.custom("Inter-Regular", size: 16))
-                                .foregroundColor(.gray)
-                        }
-                        
-                    }
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        // Notification action
-                    }) {
-                        Image(systemName: "bell")
-                            .font(.system(size: 18))
-                            .foregroundColor(.white)
-                            .padding(10)
-                            .background(Color.white.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                    }
-                }
-                .padding(.top, 16)
-                .padding(.bottom, 12)
-                .padding(.horizontal,10)
-                
-                if !hasRemoteAccess && !hasDigitalKeyAccess {
-                    
-                    VStack(spacing: 12) {
-                        Image(systemName: "exclamationmark.circle.fill")
-                            .font(.system(size: 48))
-                            .foregroundColor(.red)
-                        Text("No Access Available")
-                            .font(.custom("Inter-SemiBold", size: 18))
-                            .foregroundColor(.white)
-                        
-                        Text("You don't have any access method enable. Please contact your administrator.")
-                            .font(.custom("Inter-Regular", size: 14))
-                            .foregroundColor(.gray)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 30)
-                        
-                    }
-                    .padding(.horizontal,10)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .transition(.opacity)
-                    
-                }else {
-                    
-                    DoorTabSection
-                    
-                    Group {
-                        
-                        if selectedTab == 0 && hasDigitalKeyAccess{
-                            // Digital Key Tab start
+                ZStack {
+                    VStack{
+                        HStack {
+                            VStack(alignment: .leading,spacing: 5) {
+                                Text("Welcome!")
+                                    .font(.custom("Inter-SemiBold", size: 18))
+                                    .foregroundColor(.white)
+                                
+                                if deviceVM.isLoading {
+                                    ShimmerTextView(width: 100, height: 16)
+                                } else {
+                                    Text(deviceVM.deviceDetails?.userFullName ?? "")
+                                        .font(.custom("Inter-Regular", size: 16))
+                                        .foregroundColor(.gray)
+                                }
+                                
+                            }
                             
-                            ZStack {
-                                ScrollView(.vertical, showsIndicators: false){
+                            Spacer()
+                            
+                            Button(action: {
+                                // Notification action
+                            }) {
+                                Image(systemName: "bell")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(.white)
+                                    .padding(10)
+                                    .background(Color.white.opacity(0.1))
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                            }
+                        }
+                        .padding(.top, 16)
+                        .padding(.bottom, 12)
+                        .padding(.horizontal,10)
+                        
+                        if !hasRemoteAccess && !hasDigitalKeyAccess {
+                            
+                            VStack(spacing: 12) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .font(.system(size: 48))
+                                    .foregroundColor(.red)
+                                Text("No Access Available")
+                                    .font(.custom("Inter-SemiBold", size: 18))
+                                    .foregroundColor(.white)
+                                
+                                Text("You don't have any access method enable. Please contact your administrator.")
+                                    .font(.custom("Inter-Regular", size: 14))
+                                    .foregroundColor(.gray)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 30)
+                                
+                            }
+                            .padding(.horizontal,10)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .transition(.opacity)
+                            
+                        }else {
+                            
+                            DoorTabSection
+                            
+                            Group {
+                                
+                                if selectedTab == 0 && hasDigitalKeyAccess{
+                                    // Digital Key Tab start
                                     
-                                    VStack{
-                                        Spacer().frame(height: 20)
-                                        
-//                                            if let date = serverTimeVM.localServerDate {
-//                                                Text(date.toReadableString(
-//                                                    format: "dd MMM yyyy, hh:mm a",
-//                                                    timeZoneID: serverTimeVM.localTimeZoneID
-//                                                ))
-//                                                .font(.custom("Inter-Regular", size: 14))
-//                                                .foregroundColor(.gray)
-//                                            }
-                                        
-                                        if !doorStorage.hasResolvedDoors {
-                                            VStack(spacing: 12) {
-                                               // ProgressView()
-                                            }.frame(maxWidth: .infinity, maxHeight: .infinity)
-                                                .transition(.opacity)
-                                        }
-                                        else if !doorStorage.hasDoor {
-                                            VStack(spacing: 12) {
-                                                Image(systemName: "lock.slash")
+                                    ZStack {
+                                        ScrollView(.vertical, showsIndicators: false){
+                                            
+                                            VStack{
+                                                Spacer().frame(height: 20)
                                                 
+                                                //                                            if let date = serverTimeVM.localServerDate {
+                                                //                                                Text(date.toReadableString(
+                                                //                                                    format: "dd MMM yyyy, hh:mm a",
+                                                //                                                    timeZoneID: serverTimeVM.localTimeZoneID
+                                                //                                                ))
+                                                //                                                .font(.custom("Inter-Regular", size: 14))
+                                                //                                                .foregroundColor(.gray)
+                                                //                                            }
+                                                
+                                                if !doorStorage.hasResolvedDoors {
+                                                    VStack(spacing: 12) {
+                                                        // ProgressView()
+                                                    }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                                                        .transition(.opacity)
+                                                }
+                                                else if !doorStorage.hasDoor {
+                                                    VStack(spacing: 12) {
+                                                        Image(systemName: "lock.slash")
+                                                        
+                                                            .font(.system(size: 42))
+                                                            .foregroundColor(.gray)
+                                                        
+                                                        Text("No Digital Access Doors")
+                                                            .font(.custom("Inter-SemiBold", size: 18))
+                                                            .foregroundColor(.white)
+                                                        
+                                                        Text("You do not have any doors available for digital unlocking.")
+                                                            .font(.custom("Inter-Regular", size: 14))
+                                                            .foregroundColor(.gray)
+                                                            .multilineTextAlignment(.center)
+                                                            .padding(.horizontal, 30)
+                                                    }
+                                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                                    .transition(.opacity)
+                                                    .padding(.horizontal,10)
+                                                    .padding(.top,80)
+                                                }
+                                                else {
+                                                    VStack(spacing: 20) {
+                                                        
+                                                        // 🪪 Card (centered in the view)
+                                                        VStack(spacing: 32) {
+                                                            HStack {
+                                                                Text(deviceVM.deviceDetails?.organizationName ?? "")
+                                                                    .font(.custom("Inter-SemiBold", size: 16))
+                                                                    .foregroundColor(.white)
+                                                                Spacer()
+                                                                Text("NextPro")
+                                                                    .font(.custom("Inter-Semibold", size: 16))
+                                                                    .foregroundColor(.gray)
+                                                            }
+                                                            
+                                                            HStack {
+                                                                Image("dooricon")
+                                                                    .resizable()
+                                                                    .scaledToFit()
+                                                                    .frame(width: 52, height: 48)
+                                                                
+                                                                Spacer()
+                                                                
+                                                                HotspotWaveExact(isActive: $isScanningActive)
+                                                                    .frame(width: 60, height: 20)
+                                                            }
+                                                            
+                                                            HStack {
+                                                                VStack(alignment: .leading,spacing: 2) {
+                                                                    //  Text(selectedCard?.userName ?? "")
+                                                                    Text(deviceVM.deviceDetails?.userFullName ?? "")
+                                                                        .font(.custom("Inter-Regular", size: 12))
+                                                                        .foregroundColor(.gray)
+                                                                    
+                                                                    Text(maskCardNumber(deviceVM.deviceDetails?.digitalCardNumber ?? ""))
+                                                                        .font(.custom("Inter-Regular", size: 12))
+                                                                        .foregroundColor(.gray)
+                                                                    
+                                                                }
+                                                                
+                                                                Spacer()
+                                                                
+                                                                VStack(alignment: .trailing, spacing: 2) {
+                                                                    Text("Exp")
+                                                                        .font(.custom("Inter-Regular", size: 12))
+                                                                        .foregroundColor(.white)
+                                                                    //.toFormattedDate(outputFormat: "yyyy")
+                                                                    Text(deviceVM.deviceDetails?.accessGroups?.first?.endDate ?? "")
+                                                                        .font(.custom("Inter-Regular", size: 12))
+                                                                        .foregroundColor(.gray)
+                                                                }
+                                                            }
+                                                            
+                                                        }
+                                                        .padding(20)
+                                                        .frame(maxWidth: .infinity)
+                                                        .background(
+                                                            LinearGradient(
+                                                                gradient: Gradient(colors: [
+                                                                    Color.white.opacity(0.09),
+                                                                    Color.white.opacity(0.06)
+                                                                ]),
+                                                                startPoint: .top,
+                                                                endPoint: .bottom
+                                                            )
+                                                        )
+                                                        
+                                                        .cornerRadius(14)
+                                                        .overlay(
+                                                            RoundedRectangle(cornerRadius: 14)
+                                                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                                        )
+                                                        
+                                                        
+                                                        
+                                                        HStack(spacing: 6) {
+                                                            
+                                                            Text(AceesMessage ?? "")
+                                                                .font(.custom("Inter-SemiBold", size: 16))
+                                                                .foregroundColor(isScanningActive ? .white.opacity(0.5) : .red.opacity(0.8))
+                                                                .padding(.horizontal,15)
+                                                            
+                                                        }
+                                                        
+                                                        
+                                                        HowItWorksView()
+                                                        
+                                                        
+                                                    }
+                                                }
+                                                
+                                            }
+                                            .padding(.horizontal,10)
+                                            .padding(.bottom, 30)
+                                            
+                                            
+                                        }
+                                        .transition(.opacity)
+                                        //                                .refreshable{
+                                        //                                    pullToRefresh = true
+                                        //                                    await deviceVM.refreshDeviceDetails()
+                                        //                                    pullToRefresh = false
+                                        //                                }
+                                        
+                                        .refreshable{
+                                            pullToRefresh = true
+                                            
+                                            if network.hasInternet {
+                                                await deviceVM.fetchDeviceDetailsIfNeeded(force: true) // force API
+                                            } else {
+                                                await deviceVM.fetchDeviceDetailsIfNeeded() // load cache
+                                            }
+                                            
+                                            pullToRefresh = false
+                                        }
+                                        
+                                        if isOpening || progress > 0 || ringColor != .white {
+                                            ZStack {
+                                                // Full-screen black background
+                                                Color.black.opacity(0.98)
+                                                    .ignoresSafeArea()
+                                                
+                                                // Lock icon and progress ring in the center
+                                                VStack(spacing: 16) {
+                                                    ZStack {
+                                                        Circle()
+                                                            .fill(Color.black)
+                                                            .frame(width: 80, height: 80)
+                                                        
+                                                        Circle()
+                                                            .trim(from: 0, to: progress)
+                                                            .stroke(
+                                                                ringColor,
+                                                                style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                                                            )
+                                                            .frame(width: 80, height: 80)
+                                                            .rotationEffect(.degrees(-90))
+                                                            .animation(.easeInOut(duration: 1.0), value: progress)
+                                                        
+                                                        Image(systemName: lockIcon)
+                                                            .foregroundColor(ringColor)
+                                                            .font(.system(size: 36, weight: .semibold))
+                                                            .scaleEffect(isOpening ? 1.15 : 1.0)
+                                                            .animation(.spring(), value: isOpening)
+                                                        
+                                                        if isUnauthorise {
+                                                            Rectangle()
+                                                                .fill(Color.red)
+                                                                .frame(width: 70, height: 6)   // thickness = 6
+                                                                .rotationEffect(.degrees(45)) // diagonal slash
+                                                        }
+                                                    }
+                                                    .shadow(color: ringColor.opacity(0.4), radius: 10, x: 0, y: 5)
+                                                    
+                                                    // Status Message
+                                                    
+                                                    Text(overlayMessage)
+                                                        .font(.custom("Inter-SemiBold", size: 18))
+                                                        .foregroundColor(ringColor)
+                                                        .padding(.horizontal,10)
+                                                        .id(overlayMessage)
+                                                        .transition(.opacity)
+                                                        .animation(.easeInOut(duration: 0.25), value: overlayMessage)
+                                                    
+                                                }
+                                            }
+                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                            .transition(.opacity)
+                                            .ignoresSafeArea()
+                                            .zIndex(10)
+                                            
+                                        }
+                                    }
+                                    
+                                }
+                                
+                                // Digital Key Tab end
+                                
+                                else if selectedTab == 1 && hasRemoteAccess
+                                {
+                                    
+                                    
+                                    // Remote Access Tab
+                                    ScrollView(.vertical, showsIndicators: false) {
+                                        if deviceVM.standaloneControllerList.isEmpty {
+                                            VStack(spacing: 12) {
+                                                Image(systemName: "wifi.slash")
                                                     .font(.system(size: 42))
                                                     .foregroundColor(.gray)
                                                 
-                                                Text("No Digital Access Doors")
+                                                Text("No Remote Access Doors")
                                                     .font(.custom("Inter-SemiBold", size: 18))
                                                     .foregroundColor(.white)
                                                 
-                                                Text("You do not have any doors available for digital unlocking.")
+                                                Text("You do not have any doors available for remote unlocking.")
                                                     .font(.custom("Inter-Regular", size: 14))
                                                     .foregroundColor(.gray)
                                                     .multilineTextAlignment(.center)
@@ -195,265 +402,73 @@ struct DoorOpenView: View {
                                             .transition(.opacity)
                                             .padding(.horizontal,10)
                                             .padding(.top,80)
-                                        }
-                                        else {
-                                            VStack(spacing: 20) {
-                                                
-                                                // 🪪 Card (centered in the view)
-                                                VStack(spacing: 32) {
-                                                    HStack {
-                                                        Text(deviceVM.deviceDetails?.organizationName ?? "")
-                                                            .font(.custom("Inter-SemiBold", size: 16))
-                                                            .foregroundColor(.white)
-                                                        Spacer()
-                                                        Text("NextPro")
-                                                            .font(.custom("Inter-Semibold", size: 16))
-                                                            .foregroundColor(.gray)
-                                                    }
-                                                    
-                                                    HStack {
-                                                        Image("dooricon")
-                                                            .resizable()
-                                                            .scaledToFit()
-                                                            .frame(width: 52, height: 48)
-                                                        
-                                                        Spacer()
-                                                        
-                                                        HotspotWaveExact(isActive: $isScanningActive)
-                                                            .frame(width: 60, height: 20)
-                                                    }
-                                                    
-                                                    HStack {
-                                                        VStack(alignment: .leading,spacing: 2) {
-                                                            //  Text(selectedCard?.userName ?? "")
-                                                            Text(deviceVM.deviceDetails?.userFullName ?? "")
-                                                                .font(.custom("Inter-Regular", size: 12))
-                                                                .foregroundColor(.gray)
-                                                            
-                                                            Text(maskCardNumber(deviceVM.deviceDetails?.digitalCardNumber ?? ""))
-                                                                .font(.custom("Inter-Regular", size: 12))
-                                                                .foregroundColor(.gray)
-                                                            
+                                        } else {
+                                            VStack(alignment: .leading, spacing: 20) {
+                                                ForEach(deviceVM.standaloneControllerList) { door in
+                                                    RemoteDoorCardView(
+                                                        door: door,
+                                                        activeDoorKey: $activeDoorKey,
+                                                        mqttResult: $remoteMqttResult,
+                                                        isBluetoothOn: .constant(bleManager.isBluetoothOn),
+                                                        showBluetoothAlert: $showBluetoothAlert,
+                                                        onRemoteOpen: {
+                                                            activeDoorKey = door.key
+                                                            handleRemoteOpen(for: door)
+                                                        },
+                                                        onBleOpen: {
+                                                            activeDoorKey = door.key
+                                                            handleBLEOpen(for: door)
+                                                        },
+                                                        canOpenDoor: {
+                                                            isWithinAccessWindow()
                                                         }
-                                                        
-                                                        Spacer()
-                                                        
-                                                        VStack(alignment: .trailing, spacing: 2) {
-                                                            Text("Exp")
-                                                                .font(.custom("Inter-Regular", size: 12))
-                                                                .foregroundColor(.white)
-                                                            //.toFormattedDate(outputFormat: "yyyy")
-                                                            Text(deviceVM.deviceDetails?.accessGroups?.first?.endDate ?? "")
-                                                                .font(.custom("Inter-Regular", size: 12))
-                                                                .foregroundColor(.gray)
-                                                        }
-                                                    }
-                                                    
-                                                }
-                                                .padding(20)
-                                                .frame(maxWidth: .infinity)
-                                                .background(
-                                                    LinearGradient(
-                                                        gradient: Gradient(colors: [
-                                                            Color.white.opacity(0.09),
-                                                            Color.white.opacity(0.06)
-                                                        ]),
-                                                        startPoint: .top,
-                                                        endPoint: .bottom
                                                     )
-                                                )
-                                                
-                                                .cornerRadius(14)
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 14)
-                                                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                                                )
-                                                
-                                                
-                                                
-                                                HStack(spacing: 6) {
-                                                    
-                                                    Text(AceesMessage ?? "")
-                                                        .font(.custom("Inter-SemiBold", size: 16))
-                                                        .foregroundColor(isScanningActive ? .white.opacity(0.5) : .red.opacity(0.8))
-                                                        .padding(.horizontal,15)
-                                                    
                                                 }
-                                                
-                                                
-                                                HowItWorksView()
-                                                
-                                                
                                             }
+                                            .padding(.horizontal, 10)
+                                            .padding(.top, 20)
+                                            .padding(.bottom, 20)
                                         }
-                                        
                                     }
-                                    .padding(.horizontal,10)
-                                    .padding(.bottom, 30)
+                                    .id("remote-tab-\(selectedTab)")
+                                    .transition(.opacity)
+                                    //                            .refreshable{
+                                    //                                pullToRefresh = true
+                                    //                                await deviceVM.refreshDeviceDetails()
+                                    //                                pullToRefresh = false
+                                    //
+                                    //                            }
                                     
-                                    
-                                }
-                                .transition(.opacity)
-//                                .refreshable{
-//                                    pullToRefresh = true
-//                                    await deviceVM.refreshDeviceDetails()
-//                                    pullToRefresh = false
-//                                }
-                                
-                                .refreshable{
-                                    pullToRefresh = true
-
-                                    if network.hasInternet {
+                                    .refreshable{
+                                        pullToRefresh = true
+                                        
+                                        if network.hasInternet {
                                             await deviceVM.fetchDeviceDetailsIfNeeded(force: true) // force API
                                         } else {
                                             await deviceVM.fetchDeviceDetailsIfNeeded() // load cache
                                         }
-
-                                    pullToRefresh = false
-                                }
-                                
-                                if isOpening || progress > 0 || ringColor != .white {
-                                    ZStack {
-                                        // Full-screen black background
-                                        Color.black.opacity(0.98)
-                                            .ignoresSafeArea()
                                         
-                                        // Lock icon and progress ring in the center
-                                        VStack(spacing: 16) {
-                                            ZStack {
-                                                Circle()
-                                                    .fill(Color.black)
-                                                    .frame(width: 80, height: 80)
-                                                
-                                                Circle()
-                                                    .trim(from: 0, to: progress)
-                                                    .stroke(
-                                                        ringColor,
-                                                        style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                                                    )
-                                                    .frame(width: 80, height: 80)
-                                                    .rotationEffect(.degrees(-90))
-                                                    .animation(.easeInOut(duration: 1.0), value: progress)
-                                                
-                                                Image(systemName: lockIcon)
-                                                    .foregroundColor(ringColor)
-                                                    .font(.system(size: 36, weight: .semibold))
-                                                    .scaleEffect(isOpening ? 1.15 : 1.0)
-                                                    .animation(.spring(), value: isOpening)
-                                                
-                                                if isUnauthorise {
-                                                    Rectangle()
-                                                        .fill(Color.red)
-                                                        .frame(width: 70, height: 6)   // thickness = 6
-                                                        .rotationEffect(.degrees(45)) // diagonal slash
-                                                }
-                                            }
-                                            .shadow(color: ringColor.opacity(0.4), radius: 10, x: 0, y: 5)
-                                            
-                                            // Status Message
-                                            
-                                            Text(overlayMessage)
-                                                .font(.custom("Inter-SemiBold", size: 18))
-                                                .foregroundColor(ringColor)
-                                                .padding(.horizontal,10)
-                                                .id(overlayMessage)
-                                                .transition(.opacity)
-                                                .animation(.easeInOut(duration: 0.25), value: overlayMessage)
-                                            
-                                        }
+                                        pullToRefresh = false
                                     }
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .transition(.opacity)
-                                    .ignoresSafeArea()
-                                    .zIndex(10)
                                     
                                 }
-                            }
-                            
+                                
+                            }.animation(.easeInOut(duration: 0.6), value: selectedTab)
                         }
-                        
-                        // Digital Key Tab end
-                        
-                        else if selectedTab == 1 && hasRemoteAccess
-                        {
-                            
-                            
-                            // Remote Access Tab
-                            ScrollView(.vertical, showsIndicators: false) {
-                                if deviceVM.standaloneControllerList.isEmpty {
-                                    VStack(spacing: 12) {
-                                        Image(systemName: "wifi.slash")
-                                            .font(.system(size: 42))
-                                            .foregroundColor(.gray)
-                                        
-                                        Text("No Remote Access Doors")
-                                            .font(.custom("Inter-SemiBold", size: 18))
-                                            .foregroundColor(.white)
-                                        
-                                        Text("You do not have any doors available for remote unlocking.")
-                                            .font(.custom("Inter-Regular", size: 14))
-                                            .foregroundColor(.gray)
-                                            .multilineTextAlignment(.center)
-                                            .padding(.horizontal, 30)
-                                    }
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .transition(.opacity)
-                                    .padding(.horizontal,10)
-                                    .padding(.top,80)
-                                } else {
-                                    VStack(alignment: .leading, spacing: 20) {
-                                        ForEach(deviceVM.standaloneControllerList) { door in
-                                            RemoteDoorCardView(
-                                                door: door,
-                                                activeDoorKey: $activeDoorKey,
-                                                mqttResult: $remoteMqttResult,
-                                                isBluetoothOn: .constant(bleManager.isBluetoothOn),
-                                                showBluetoothAlert: $showBluetoothAlert,
-                                                onRemoteOpen: {
-                                                    activeDoorKey = door.key
-                                                    handleRemoteOpen(for: door)
-                                                },
-                                                onBleOpen: {
-                                                    activeDoorKey = door.key
-                                                    handleBLEOpen(for: door)
-                                                },
-                                                canOpenDoor: {
-                                                    isWithinAccessWindow()
-                                                }
-                                            )
-                                        }
-                                    }
-                                    .padding(.horizontal, 10)
-                                    .padding(.top, 20)
-                                    .padding(.bottom, 20)
-                                }
-                            }
-                            .id("remote-tab-\(selectedTab)")
-                            .transition(.opacity)
-//                            .refreshable{
-//                                pullToRefresh = true
-//                                await deviceVM.refreshDeviceDetails()
-//                                pullToRefresh = false
-//                                
-//                            }
-                            
-                            .refreshable{
-                                pullToRefresh = true
-
-                                if network.hasInternet {
-                                        await deviceVM.fetchDeviceDetailsIfNeeded(force: true) // force API
-                                    } else {
-                                        await deviceVM.fetchDeviceDetailsIfNeeded() // load cache
-                                    }
-
-                                pullToRefresh = false
-                            }
-                            
-                        }
-                        
-                    }.animation(.easeInOut(duration: 0.6), value: selectedTab)
+                    }
                 }
-                
+                .overlay(alignment: .top) {
+                    if showTimeSyncAlert {
+                        TimeSyncOverlayView {
+                            network.checkInternet()
+
+                            if network.hasInternet {
+                                serverTimeVM.start(forceImmediate: true)
+                                showTimeSyncAlert = false
+                            }
+                        }
+                    }
+                }
             }.frame(maxHeight: .infinity, alignment: .top)
             
             
@@ -472,18 +487,7 @@ struct DoorOpenView: View {
             }
             
         }
-        .overlay {
-            if showTimeSyncAlert {
-                TimeSyncOverlayView {
-                    print("🔄 Retry time sync")
-                    network.checkInternet()
-                    if network.hasInternet {
-                        serverTimeVM.start(forceImmediate: true)
-                        showTimeSyncAlert = false
-                    }
-                }
-            }
-        }
+       
        
         .task{
             
@@ -1172,6 +1176,12 @@ struct DoorOpenView: View {
     
     
     private func startBLEIfPossible() {
+        
+        guard !showTimeSyncAlert else {
+                print("⛔ Time sync required — BLE start blocked")
+                return
+            }
+        
         guard isViewVisible else { return }
         guard selectedTab == 0 else { return }
         guard hasDigitalKeyAccess else { return }
@@ -1609,7 +1619,6 @@ struct HowItWorksView: View {
     }
 }
 
-
 struct TimeSyncOverlayView: View {
 
     var retryAction: () -> Void
@@ -1617,14 +1626,9 @@ struct TimeSyncOverlayView: View {
     var body: some View {
         ZStack {
 
-            Image("backgroundimg")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-
-            Color.black.opacity(0.9)
+            Color.black.opacity(1.0)
 
             VStack(spacing: 18) {
-
                 Image(systemName: "clock.badge.exclamationmark")
                     .font(.system(size: 40))
                     .foregroundColor(.white)
@@ -1640,10 +1644,8 @@ struct TimeSyncOverlayView: View {
                     .padding(.horizontal, 40)
 
                 Button(action: retryAction) {
-
                     HStack {
                         Image(systemName: "arrow.clockwise")
-
                         Text("RETRY")
                             .font(.custom("Inter-Bold", size: 16))
                     }
@@ -1652,7 +1654,6 @@ struct TimeSyncOverlayView: View {
                     .background(Color.white)
                     .foregroundColor(.black)
                     .cornerRadius(15)
-
                 }
                 .padding(.horizontal, 50)
             }
