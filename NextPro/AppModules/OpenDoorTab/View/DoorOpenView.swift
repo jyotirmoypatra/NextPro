@@ -12,6 +12,7 @@ import AVFoundation
 
 struct DoorOpenView: View {
     @Environment(\.scenePhase) private var scenePhase
+    @StateObject private var toastManager = ToastManager.shared
     @StateObject private var mqttManager = MQTTManager.shared
     @StateObject private var doorStorage = DoorStorageManager.shared
     @StateObject private var deviceVM = DeviceDetailsViewModel()
@@ -419,6 +420,13 @@ struct DoorOpenView: View {
                                                             activeDoorKey = door.key
                                                             handleBLEOpen(for: door)
                                                         },
+                                                        onNoInternet: {
+                                                                toastManager.show(
+                                                                    message: "Internet required for Wi-Fi unlock",
+                                                                    type: .error,
+                                                                    duration: 1.5
+                                                                )
+                                                        },
                                                         canOpenDoor: {
                                                             isWithinAccessWindow()
                                                         }
@@ -486,9 +494,7 @@ struct DoorOpenView: View {
                 .ignoresSafeArea()
             }
             
-        }
-       
-       
+        }.toast()
         .task{
             
            // await deviceVM.fetchDeviceDetailsIfNeeded()

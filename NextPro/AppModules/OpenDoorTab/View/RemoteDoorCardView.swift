@@ -595,6 +595,7 @@ struct RemoteDoorCardView: View {
     @Binding var showBluetoothAlert: Bool
     let onRemoteOpen: () -> Void
     let onBleOpen: () -> Void
+    let onNoInternet: () -> Void
     
     let canOpenDoor: () -> Bool
     @State private var deniedBase = ""
@@ -757,6 +758,12 @@ struct RemoteDoorCardView: View {
                           //  if !wifiWaiting {
                                 Button {
                                     activeDoorKey = door.key
+                                
+                                    guard NetworkManager.shared.hasInternet else {
+                                        onNoInternet()
+                                        return
+                                    }
+                                    
                                     guard canOpenDoor() else {
                                             showTimeRestrictedAndReset(isWifi: true)
                                             return
