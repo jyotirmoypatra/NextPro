@@ -584,15 +584,19 @@ struct DoorOpenView: View {
         .onChange(of: network.hasInternet) { hasInternet in
 
             if hasInternet {
-                print("🌐 Internet restored — stopping timer")
-
                 offlineTimeCheckTimer?.invalidate()
                 offlineTimeCheckTimer = nil
                 showTimeSyncAlert = false
 
-            } else {
-                print("📴 Internet lost — starting timer")
+                // Reconnect MQTT if it dropped while offline
+                mqttManager.reconnectIfNeeded()
 
+                // Refresh server time immediately so access-window checks use fresh time
+                Task { await serverTimeVM.forceRefresh() }
+
+               // Task { await deviceVM.fetchDeviceDetailsIfNeeded(force: true) }
+
+            } else {
                 startOfflineTimeObserver()
             }
         }
@@ -1076,58 +1080,27 @@ struct DoorOpenView: View {
     func startOfflineTimeObserver() {
 
         guard offlineTimeCheckTimer == nil else { return }
-        
-        // 🔴 FIRST CHECK IMMEDIATELY
-           if !network.hasInternet {
+
+        //FIRST CHECK IMMEDIATELY
+         if !network.hasInternet {
                let time = serverTimeVM.getEstimatedServerTime()
-
                if time == nil {
-                   print("⛔ Offline time expired — sync required")
-
                    showTimeSyncAlert = true
-
                    if selectedTab == 0 {
                        stopAllScanningAndMonitoring()
                    }
-
                    return
                }
-           }
-
+         }
         offlineTimeCheckTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-
             guard !network.hasInternet else { return }
-
             let time = serverTimeVM.getEstimatedServerTime()
-
-            if time == nil {
-
-                print("⛔ Offline time expired — sync required")
-
-                DispatchQueue.main.async {
-
-                    showTimeSyncAlert = true
-
-                    if selectedTab == 0 {
-                        stopAllScanningAndMonitoring()
-                    }
-
-                   
-                }
-
-            }
             
             if time == nil {
-
                 // Prevent repeating UI updates every second
                 guard !showTimeSyncAlert else { return }
-
-                print("⛔ Offline time expired — sync required")
-
                 DispatchQueue.main.async {
-
                     showTimeSyncAlert = true
-
                     if selectedTab == 0 {
                         stopAllScanningAndMonitoring()
                     }
@@ -1136,26 +1109,21 @@ struct DoorOpenView: View {
             else {
 
                 DispatchQueue.main.async {
-
+                    
+                    // Stop timer so it doesn't fire repeatedly
                     guard selectedTab == 0 else { return }
-
                     // If scanning already running → do nothing
                     guard !isScanningActive else { return }
-
                     guard bleManager.isBluetoothOn else {
                         AceesMessage = "Bluetooth is Off. Please turn it on."
                         return
                     }
-
                     AceesMessage = "Preparing Scan..."
-
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                         startBLEIfPossible()
                     }
                     
-                    // ✅ Stop timer so it doesn't fire repeatedly
-                    offlineTimeCheckTimer?.invalidate()
-                    offlineTimeCheckTimer = nil
+                   
                 }
             }
         }

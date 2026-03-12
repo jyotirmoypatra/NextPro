@@ -58,6 +58,11 @@ extension ServerTimeService {
         print("🔴 ServerTimeService stopped")
     }
 
+    /// Immediately fetches server time without restarting the polling loop.
+    func forceRefresh() async {
+        await fetchTime()
+    }
+
     private func fetchTime() async {
         guard networkManager.hasInternet else { return }
         
@@ -164,7 +169,7 @@ extension ServerTimeService {
         
         // 4 hour limit
        // if elapsed > 14400 {
-        if elapsed > 60 {
+        if elapsed > 10 {
             return nil
         }
         
