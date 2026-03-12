@@ -1072,6 +1072,23 @@ struct DoorOpenView: View {
     func startOfflineTimeObserver() {
 
         guard offlineTimeCheckTimer == nil else { return }
+        
+        // 🔴 FIRST CHECK IMMEDIATELY
+           if !network.hasInternet {
+               let time = serverTimeVM.getEstimatedServerTime()
+
+               if time == nil {
+                   print("⛔ Offline time expired — sync required")
+
+                   showTimeSyncAlert = true
+
+                   if selectedTab == 0 {
+                       stopAllScanningAndMonitoring()
+                   }
+
+                   return
+               }
+           }
 
         offlineTimeCheckTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
 
@@ -1094,7 +1111,25 @@ struct DoorOpenView: View {
                    
                 }
 
-            } else {
+            }
+            
+            if time == nil {
+
+                // Prevent repeating UI updates every second
+                guard !showTimeSyncAlert else { return }
+
+                print("⛔ Offline time expired — sync required")
+
+                DispatchQueue.main.async {
+
+                    showTimeSyncAlert = true
+
+                    if selectedTab == 0 {
+                        stopAllScanningAndMonitoring()
+                    }
+                }
+            }
+            else {
 
                 DispatchQueue.main.async {
 

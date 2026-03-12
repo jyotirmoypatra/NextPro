@@ -160,8 +160,7 @@ extension ServerTimeService {
         let elapsed = currentUptime - savedUptime
         
         // 4 hour limit
-       // if elapsed > 14400 {
-        if elapsed > 120 {
+        if elapsed > 14400 {
             return nil
         }
         
