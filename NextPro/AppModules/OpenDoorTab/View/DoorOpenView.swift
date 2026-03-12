@@ -65,6 +65,9 @@ struct DoorOpenView: View {
     
     @State private var didReceiveResponse = false
     
+    @State private var showTimeSyncAlert = false
+    @State private var offlineTimeCheckTimer: Timer?
+    
     var body: some View {
         ZStack {
             
@@ -469,7 +472,19 @@ struct DoorOpenView: View {
             }
             
         }
-        .background(Color.black.opacity(0.4))
+        .overlay {
+            if showTimeSyncAlert {
+                TimeSyncOverlayView {
+                    print("🔄 Retry time sync")
+                    network.checkInternet()
+                    if network.hasInternet {
+                        serverTimeVM.start(forceImmediate: true)
+                        showTimeSyncAlert = false
+                    }
+                }
+            }
+        }
+       
         .task{
             
            // await deviceVM.fetchDeviceDetailsIfNeeded()
@@ -525,6 +540,10 @@ struct DoorOpenView: View {
             } else if hasRemoteAccess {
                 selectedTab = 1
             }
+            
+            if !network.hasInternet {
+                    startOfflineTimeObserver()
+                }
         }
         .onDisappear {
             print("🛑 DoorOpenView disappeared — stopping all BLE and timers")
@@ -547,6 +566,9 @@ struct DoorOpenView: View {
             rssiTimer = nil
             
             doorManager.clearDoorEvent()
+            
+            offlineTimeCheckTimer?.invalidate()
+            offlineTimeCheckTimer = nil
         }
         .onChange(of: deviceVM.errorMessage) { message in
             guard !message.isEmpty else { return }
@@ -555,7 +577,21 @@ struct DoorOpenView: View {
             doorStorage.hasResolvedDoors = true
             showDoorErrorAlert = true
         }
-        
+        .onChange(of: network.hasInternet) { hasInternet in
+
+            if hasInternet {
+                print("🌐 Internet restored — stopping timer")
+
+                offlineTimeCheckTimer?.invalidate()
+                offlineTimeCheckTimer = nil
+                showTimeSyncAlert = false
+
+            } else {
+                print("📴 Internet lost — starting timer")
+
+                startOfflineTimeObserver()
+            }
+        }
         .onChange(of: scenePhase) { newPhase in
             switch newPhase {
             case .background:
@@ -864,6 +900,19 @@ struct DoorOpenView: View {
             }
         }
         
+//        .modernAlert(isPresented: $showTimeSyncAlert) {
+//            ModernAlertView(
+//                title: "Time Sync Required!",
+//                message: "Please connect to the internet to sync server time.Otherwise, door access will be denied.",
+//                isSuccess: false,
+//                buttonTitle: "OK"
+//            ) { showTimeSyncAlert = false
+//                
+//            }
+//        }
+        
+       
+        
         .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
             
             BluetoothAlertView(
@@ -878,99 +927,19 @@ struct DoorOpenView: View {
         }
     }
     
-    //check startdatetime  to  EnddateTime slot--------
-//    func isWithinAccessWindow() -> Bool {
-//        
-//        // 🔓 Offline → allow access
+//final
+    func isWithinAccessWindow() -> Bool {
+        print("──────── ACCESS WINDOW CHECK START ────────")
+
+        // 🔓 Offline → allow access
 //        if !network.hasInternet {
 //            print("⚠️ No internet — bypassing access window check")
 //            return true
 //        }
-//        
-//        guard
-//            let currentTime = serverTimeVM.localServerDate,
-//            let tzID = serverTimeVM.localTimeZoneID,
-//            let accessTZ = TimeZone(identifier: tzID),
-//            let startDateStr = deviceVM.startDate,
-//            let endDateStr = deviceVM.endDate,
-//            let timeSlot = deviceVM.time_slots,
-//            let weekday = deviceVM.weekday
-//        else {
-//            print("⚠️ Missing access window data")
-//            return false
-//        }
-//        
-//        var calendar = Calendar(identifier: .gregorian)
-//        calendar.timeZone = accessTZ
-//        
-//        // --- Date formatter ---
-//        let dateFormatter = DateFormatter()
-//        dateFormatter.dateFormat = "yyyy-MM-dd"
-//        dateFormatter.timeZone = accessTZ
-//        
-//        // --- Time formatter ---
-//        let timeFormatter = DateFormatter()
-//        timeFormatter.dateFormat = "HH:mm"
-//        timeFormatter.timeZone = accessTZ
-//        
-//        guard
-//            let startDate = dateFormatter.date(from: startDateStr),
-//            let endDate = dateFormatter.date(from: endDateStr),
-//            let startTime = timeFormatter.date(from: startTimeStr),
-//            let endTime = timeFormatter.date(from: endTimeStr)
-//        else {
-//            print("❌ Invalid date/time format")
-//            return false
-//        }
-//        
-//        // Combine start date + start time
-//        guard let startDateTime = calendar.date(
-//            bySettingHour: calendar.component(.hour, from: startTime),
-//            minute: calendar.component(.minute, from: startTime),
-//            second: 0,
-//            of: startDate
-//        ) else { return false }
-//        
-//        // Combine end date + end time
-//        guard let endDateTime = calendar.date(
-//            bySettingHour: calendar.component(.hour, from: endTime),
-//            minute: calendar.component(.minute, from: endTime),
-//            second: 59,
-//            of: endDate
-//        ) else { return false }
-//        
-//        // 🔍 Debug
-//        let df = DateFormatter()
-//        df.dateFormat = "yyyy-MM-dd HH:mm:ss"
-//        df.timeZone = accessTZ
-//        
-//        print("🧭 Access Window:",
-//              df.string(from: startDateTime),
-//              "→",
-//              df.string(from: endDateTime))
-//        
-//        print("🕒 Current Time:",
-//              df.string(from: currentTime))
-//        
-//        //  SINGLE comparison (correct)
-//        return currentTime >= startDateTime && currentTime <= endDateTime
-//        
-//       
-//    }
-    
-//final
-    func isWithinAccessWindow() -> Bool {
-       // return true
-        print("──────── ACCESS WINDOW CHECK START ────────")
-
-        // 🔓 Offline → allow access
-        if !network.hasInternet {
-            print("⚠️ No internet — bypassing access window check")
-            return true
-        }
 
         guard
-            let currentDateTime = serverTimeVM.localServerDate,
+         //   let currentDateTime = serverTimeVM.localServerDate,
+            let currentDateTime = serverTimeVM.getEstimatedServerTime(),
             let tzID = serverTimeVM.localTimeZoneID,
             let accessTZ = TimeZone(identifier: tzID),
             let startDateStr = deviceVM.startDate,
@@ -979,6 +948,13 @@ struct DoorOpenView: View {
             let weekDaysStr = deviceVM.weekday
         else {
             print("❌ Missing required access window data")
+            
+            print("⛔ Server time unavailable — sync required")
+
+                    DispatchQueue.main.async {
+                        showTimeSyncAlert = true
+                    }
+            
             return false
         }
 
@@ -1091,6 +1067,59 @@ struct DoorOpenView: View {
         print("⛔ FAILED: No time slot matched")
         print("──────── ACCESS DENIED ────────")
         return false
+    }
+
+    func startOfflineTimeObserver() {
+
+        guard offlineTimeCheckTimer == nil else { return }
+
+        offlineTimeCheckTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+
+            guard !network.hasInternet else { return }
+
+            let time = serverTimeVM.getEstimatedServerTime()
+
+            if time == nil {
+
+                print("⛔ Offline time expired — sync required")
+
+                DispatchQueue.main.async {
+
+                    showTimeSyncAlert = true
+
+                    if selectedTab == 0 {
+                        stopAllScanningAndMonitoring()
+                    }
+
+                   
+                }
+
+            } else {
+
+                DispatchQueue.main.async {
+
+                    guard selectedTab == 0 else { return }
+
+                    // If scanning already running → do nothing
+                    guard !isScanningActive else { return }
+
+                    guard bleManager.isBluetoothOn else {
+                        AceesMessage = "Bluetooth is Off. Please turn it on."
+                        return
+                    }
+
+                    AceesMessage = "Preparing Scan..."
+
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        startBLEIfPossible()
+                    }
+                    
+                    // ✅ Stop timer so it doesn't fire repeatedly
+                    offlineTimeCheckTimer?.invalidate()
+                    offlineTimeCheckTimer = nil
+                }
+            }
+        }
     }
     
     
@@ -1428,7 +1457,7 @@ struct DoorOpenView: View {
                 rssiTimer = nil
                 
                 
-                if door.deviceModel?.uppercased() == "M230" && door.deviceType == "all_in_one" {
+              //  if door.deviceModel?.uppercased() == "M230" && door.deviceType == "all_in_one" {
                     
                     guard isWithinAccessWindow() else {
                         print("⛔ Outside allowed time window")
@@ -1450,7 +1479,7 @@ struct DoorOpenView: View {
                         
                         return
                     }
-               }
+            //   }
                 
                 doorManager.openSelectedDoor(door)
                 //  Activate 20s MQTT window
@@ -1545,3 +1574,53 @@ struct HowItWorksView: View {
     }
 }
 
+
+struct TimeSyncOverlayView: View {
+
+    var retryAction: () -> Void
+
+    var body: some View {
+        ZStack {
+
+            Image("backgroundimg")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+
+            Color.black.opacity(0.9)
+
+            VStack(spacing: 18) {
+
+                Image(systemName: "clock.badge.exclamationmark")
+                    .font(.system(size: 40))
+                    .foregroundColor(.white)
+
+                Text("Time Sync Required")
+                    .font(.custom("Inter-SemiBold", size: 20))
+                    .foregroundColor(.white)
+
+                Text("Please connect to the internet to synchronize server time. Door access will remain disabled until time is synced.")
+                    .font(.custom("Inter-Regular", size: 15))
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+
+                Button(action: retryAction) {
+
+                    HStack {
+                        Image(systemName: "arrow.clockwise")
+
+                        Text("RETRY")
+                            .font(.custom("Inter-Bold", size: 16))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical,12)
+                    .background(Color.white)
+                    .foregroundColor(.black)
+                    .cornerRadius(15)
+
+                }
+                .padding(.horizontal, 50)
+            }
+        }
+    }
+}

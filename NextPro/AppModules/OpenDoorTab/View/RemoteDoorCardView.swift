@@ -807,12 +807,12 @@ struct RemoteDoorCardView: View {
                                                 return
                                             }
                                         // check only m230 and bc220 standalone
-                                        if isStandAloneControllerBC220 || isStandAloneAllInOneM230 {
+                                     //   if isStandAloneControllerBC220 || isStandAloneAllInOneM230 {
                                             guard canOpenDoor() else {
                                                 showTimeRestrictedAndReset(isWifi: false)
                                                 return
                                             }
-                                        }
+                                      //  }
                                         resetWifiState()
                                         startBleWaiting()
                                         onBleOpen()

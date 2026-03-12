@@ -85,6 +85,12 @@ extension ServerTimeService {
             ) else { return }
 
             self.localServerDate = serverDate
+            
+            //store system uptime with server time to local
+            let uptime = ProcessInfo.processInfo.systemUptime
+            UserDefaults.standard.set(serverDate.timeIntervalSince1970, forKey: "server_time_epoch")
+            UserDefaults.standard.set(uptime, forKey: "server_time_uptime")
+            
             if let tz = TimeZone(identifier: localTimeZoneID) {
                 let formatter = DateFormatter()
                 formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -122,5 +128,48 @@ extension ServerTimeService {
         formatter.timeZone = serverTZ
 
         return formatter.date(from: datetime)
+    }
+    
+    func getEstimatedServerTime() -> Date? {
+        print("──────── SERVER TIME ESTIMATION ────────")
+        
+        if networkManager.hasInternet {
+            return localServerDate
+        }
+        
+        print("📴 Offline mode — estimating server time")
+        let defaults = UserDefaults.standard
+        
+        let savedServerEpoch = defaults.double(forKey: "server_time_epoch")
+        let savedUptime = defaults.double(forKey: "server_time_uptime")
+        
+        
+        print("💾 Saved Server Epoch:", savedServerEpoch)
+           print("💾 Saved Uptime:", savedUptime)
+        guard savedServerEpoch > 0, savedUptime > 0 else {
+            return nil
+        }
+        
+        let currentUptime = ProcessInfo.processInfo.systemUptime
+        
+        // Detect device restart
+        if currentUptime < savedUptime {
+            return nil
+        }
+        
+        let elapsed = currentUptime - savedUptime
+        
+        // 4 hour limit
+       // if elapsed > 14400 {
+        if elapsed > 120 {
+            return nil
+        }
+        
+        let estimatedEpoch = savedServerEpoch + elapsed
+        let estimatedDate = Date(timeIntervalSince1970: estimatedEpoch)
+        print("🕒 Estimated Server Time:", estimatedDate)
+           print("──────── ESTIMATION COMPLETE ────────")
+        
+        return Date(timeIntervalSince1970: estimatedEpoch)
     }
 }
