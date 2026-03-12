@@ -1259,7 +1259,10 @@ struct DoorOpenView: View {
         rssiTimer = nil
         
         isScanningActive = false
-        AceesMessage = "Scanning paused"
+       // AceesMessage = "Scanning paused"
+        AceesMessage = bleManager.isBluetoothOn
+        ? "Scanning paused"
+        : "Bluetooth is Off. Please turn it on."
         
     }
     
