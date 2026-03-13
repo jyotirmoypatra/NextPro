@@ -33,8 +33,8 @@ final class SpeechManager: NSObject, AVSpeechSynthesizerDelegate {
 
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = 0.42
-        utterance.pitchMultiplier = 0.95
+        utterance.rate = 0.45
+        utterance.pitchMultiplier = 0.9
         utterance.volume = 0.9
         utterance.postUtteranceDelay = 0.1   // small pause after speaking
 
