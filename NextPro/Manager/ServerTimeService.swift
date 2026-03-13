@@ -169,7 +169,7 @@ extension ServerTimeService {
         
         // 4 hour limit
        // if elapsed > 14400 {
-        if elapsed > 10 {
+        if elapsed > 3600 {
             return nil
         }
         

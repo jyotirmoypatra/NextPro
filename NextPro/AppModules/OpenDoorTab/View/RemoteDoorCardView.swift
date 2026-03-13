@@ -757,12 +757,15 @@ struct RemoteDoorCardView: View {
                         ZStack {
                           //  if !wifiWaiting {
                                 Button {
-                                    activeDoorKey = door.key
-                                
+                                    
                                     guard NetworkManager.shared.hasInternet else {
                                         onNoInternet()
                                         return
                                     }
+                                    
+                                    activeDoorKey = door.key
+                                
+                                   
                                     
                                     guard canOpenDoor() else {
                                             showTimeRestrictedAndReset(isWifi: true)

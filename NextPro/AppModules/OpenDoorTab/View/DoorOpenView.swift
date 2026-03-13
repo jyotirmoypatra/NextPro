@@ -52,6 +52,8 @@ struct DoorOpenView: View {
     
     @State private var animationResetTask: DispatchWorkItem?
     
+    @State private var isProcessingDoor = false
+    
     @State private var successDoorKey: String?
     @State private var activeDoorKey: String? = nil
     @State private var remoteMqttResult: RemoteMQTTResult?
@@ -422,7 +424,7 @@ struct DoorOpenView: View {
                                                         },
                                                         onNoInternet: {
                                                                 toastManager.show(
-                                                                    message: "Internet required for Wi-Fi unlock",
+                                                                    message: "Internet connection is required for Wi-Fi unlock.",
                                                                     type: .error,
                                                                     duration: 1.5
                                                                 )
@@ -1146,6 +1148,9 @@ struct DoorOpenView: View {
         isUnauthorise = false
         isRemoteUnlock = false
         AceesMessage = "Walk closer to the door."
+        
+        // release processing lock
+        isProcessingDoor = false
     }
     
     
@@ -1303,6 +1308,7 @@ struct DoorOpenView: View {
         // Cancel previous reset (important)
         animationResetTask?.cancel()
         didReceiveResponse = false
+        isProcessingDoor = true   // lock new scans
         
         withAnimation(.easeInOut(duration: 0.3)) {
             ringColor = .yellow
@@ -1339,11 +1345,11 @@ struct DoorOpenView: View {
         }
         
         animationResetTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 7.0, execute: task)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 11.0, execute: task)
     }
     
     func animateSuccess() {
-        
+        didReceiveResponse = true
         animationResetTask?.cancel()
         isRemoteUnlock = false
         withAnimation(.easeInOut(duration: 0.3)) {
@@ -1418,6 +1424,8 @@ struct DoorOpenView: View {
                 overlayMessage = "Processing.."
                 
             }
+            // 🔓 allow next BLE scan
+                isProcessingDoor = false
         }
         
         animationResetTask = task
@@ -1438,7 +1446,7 @@ struct DoorOpenView: View {
         let doorStorage = self.doorStorage
         
         
-        rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak bleManager, weak doorStorage] timer in
+        rssiTimer = Timer.scheduledTimer(withTimeInterval: 0.7, repeats: true) { [weak bleManager, weak doorStorage] timer in
             
             guard
                 isViewVisible,
@@ -1448,6 +1456,10 @@ struct DoorOpenView: View {
                 timer.invalidate()
                 return
             }
+            
+            //  wait until current process finishes
+               guard !isProcessingDoor else { return }
+            
             // 1️⃣ Find the closest device (BLEManager already filters for Thimmo devices only)
             let nearbyDevices = bleManager.devices.compactMap { peripheral -> (peripheral: CBPeripheral, rssi: Int)? in
                 // let name = (peripheral.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1465,7 +1477,7 @@ struct DoorOpenView: View {
             print("🎯 Closest device: \(name) with RSSI: \(rssi)")
             
             // Only act if RSSI is strong
-            guard rssi > -41 && rssi < 0 else { return }
+            guard rssi > -30 && rssi < 0 else { return }
             
             if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
                 // Authorized door
@@ -1473,11 +1485,12 @@ struct DoorOpenView: View {
                 
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 isScanningActive = false
-                bleManager.stopScanning()
-                bleManager.stopMonitoringDevice()
-                timer.invalidate()
-                rssiTimer = nil
+//                bleManager.stopScanning()
+//                bleManager.stopMonitoringDevice()
+//                timer.invalidate()
+//                rssiTimer = nil
                 
+                stopAllScanningAndMonitoring()
                 
               //  if door.deviceModel?.uppercased() == "M230" && door.deviceType == "all_in_one" {
                     
@@ -1509,7 +1522,7 @@ struct DoorOpenView: View {
                 
                 
                 // Restart monitoring after 5 seconds
-                DispatchQueue.main.asyncAfter(deadline: .now() + 7.0) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 11.0) {
                     bleManager.startContinuousScanning()
                     isScanningActive = true
                     monitorAndAutoOpenNearbyDoor()
@@ -1518,11 +1531,11 @@ struct DoorOpenView: View {
             else {
                 //  Unauthorized Thimmo device
                 print("🚫 Unauthorized Thimmo device nearby: \(name)")
-                
-                bleManager.stopScanning()
-                bleManager.stopMonitoringDevice()
-                timer.invalidate()
-                rssiTimer = nil
+                stopAllScanningAndMonitoring()
+//                bleManager.stopScanning()
+//                bleManager.stopMonitoringDevice()
+//                timer.invalidate()
+//                rssiTimer = nil
                 doorName = ""
                 doorId = nil
                 updateVoiceMessages(for: "")
