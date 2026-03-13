@@ -811,11 +811,13 @@ struct RemoteDoorCardView: View {
                             ZStack {
                                // if !bleWaiting {
                                     Button {
-                                        activeDoorKey = door.key
+                                        
                                         guard isBluetoothOn else {
                                                 showBluetoothAlert = true
                                                 return
                                             }
+                                        activeDoorKey = door.key
+                                       
                                         // check only m230 and bc220 standalone
                                      //   if isStandAloneControllerBC220 || isStandAloneAllInOneM230 {
                                             guard canOpenDoor() else {
