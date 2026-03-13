@@ -274,21 +274,13 @@ struct DoorOpenView: View {
                                                                 .stroke(Color.white.opacity(0.1), lineWidth: 1)
                                                         )
                                                         
-                                                        
-                                                        
                                                         HStack(spacing: 6) {
-                                                            
                                                             Text(AceesMessage ?? "")
                                                                 .font(.custom("Inter-SemiBold", size: 16))
                                                                 .foregroundColor(isScanningActive ? .white.opacity(0.5) : .red.opacity(0.8))
                                                                 .padding(.horizontal,15)
-                                                            
                                                         }
-                                                        
-                                                        
                                                         HowItWorksView()
-                                                        
-                                                        
                                                     }
                                                 }
                                                 
@@ -299,12 +291,6 @@ struct DoorOpenView: View {
                                             
                                         }
                                         .transition(.opacity)
-                                        //                                .refreshable{
-                                        //                                    pullToRefresh = true
-                                        //                                    await deviceVM.refreshDeviceDetails()
-                                        //                                    pullToRefresh = false
-                                        //                                }
-                                        
                                         .refreshable{
                                             pullToRefresh = true
                                             
@@ -423,11 +409,11 @@ struct DoorOpenView: View {
                                                             handleBLEOpen(for: door)
                                                         },
                                                         onNoInternet: {
-                                                                toastManager.show(
-                                                                    message: "Internet connection is required for Wi-Fi unlock.",
-                                                                    type: .error,
-                                                                    duration: 1.5
-                                                                )
+                                                            toastManager.show(
+                                                                message: "Internet connection is required for Wi-Fi unlock.",
+                                                                type: .error,
+                                                                duration: 1.5
+                                                            )
                                                         },
                                                         canOpenDoor: {
                                                             isWithinAccessWindow()
@@ -471,7 +457,7 @@ struct DoorOpenView: View {
                     if showTimeSyncAlert {
                         TimeSyncOverlayView {
                             network.checkInternet()
-
+                            
                             if network.hasInternet {
                                 serverTimeVM.start(forceImmediate: true)
                                 showTimeSyncAlert = false
@@ -497,307 +483,321 @@ struct DoorOpenView: View {
             }
             
         }.toast()
-        .task{
-            
-           // await deviceVM.fetchDeviceDetailsIfNeeded()
-            if network.hasInternet {
+            .task{
+                if network.hasInternet {
                     await deviceVM.fetchDeviceDetailsIfNeeded(force: true) // force API
                 } else {
                     await deviceVM.fetchDeviceDetailsIfNeeded() // load cache
                 }
-            //            if !deviceVM.issuccess && deviceVM.errorMessage != ""{
-            //                doorStorage.clearDoors()          // sets hasResolvedDoors = false ❌ (we’ll fix below)
-            //                doorStorage.hasResolvedDoors = true
-            //                showDoorErrorAlert = true
-            //            }
-            
-            print("Controller Serials:", deviceVM.allControllerSerials)
-            
-            
-            accessGreetingMessage =
-            UserDefaults.standard.string(forKey: "voice_greeting")
-            ?? VoiceMessageDefaults.greetings.first?.text
-            ?? ""
-            
-            grantedBase =
-            UserDefaults.standard.string(forKey: "voice_granted")
-            ?? VoiceMessageDefaults.granted.first?.text
-            ?? ""
-            
-            deniedBase =
-            UserDefaults.standard.string(forKey: "voice_denied")
-            ?? VoiceMessageDefaults.denied.first?.text
-            ?? ""
-            
-            unauthorizedBase =
-            UserDefaults.standard.string(forKey: "voice_unauthorized")
-            ?? VoiceMessageDefaults.unauthorized.first?.text
-            ?? ""
-            
-            
-            mqttManager.connect()
-            
-        }
-        
-        .onAppear {
-            isViewVisible = true
-            // Load access flags from UserDefaults
-            hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
-            hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
-            
-            
-            // Automatically select first available tab
-            if hasDigitalKeyAccess {
-                selectedTab = 0
-            } else if hasRemoteAccess {
-                selectedTab = 1
+                
+                accessGreetingMessage =
+                UserDefaults.standard.string(forKey: "voice_greeting")
+                ?? VoiceMessageDefaults.greetings.first?.text
+                ?? ""
+                
+                grantedBase =
+                UserDefaults.standard.string(forKey: "voice_granted")
+                ?? VoiceMessageDefaults.granted.first?.text
+                ?? ""
+                
+                deniedBase =
+                UserDefaults.standard.string(forKey: "voice_denied")
+                ?? VoiceMessageDefaults.denied.first?.text
+                ?? ""
+                
+                unauthorizedBase =
+                UserDefaults.standard.string(forKey: "voice_unauthorized")
+                ?? VoiceMessageDefaults.unauthorized.first?.text
+                ?? ""
+                
+                
+                mqttManager.connect()
+                
             }
-            
-            if !network.hasInternet {
+        
+            .onAppear {
+                isViewVisible = true
+                // Load access flags from UserDefaults
+                hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
+                hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
+                
+                
+                // Automatically select first available tab
+                if hasDigitalKeyAccess {
+                    selectedTab = 0
+                } else if hasRemoteAccess {
+                    selectedTab = 1
+                }
+                
+                if !network.hasInternet {
                     startOfflineTimeObserver()
                 }
-        }
-        .onDisappear {
-            print("🛑 DoorOpenView disappeared — stopping all BLE and timers")
-            
-            // Mark view as not visible
-            isViewVisible = false
-            
-            // Cancel any pending monitoring start task
-            startMonitoringTask?.cancel()
-            startMonitoringTask = nil
-            
-            // Stop continuous BLE scanning & monitoring
-            bleManager.stopContinuousScanning()
-            bleManager.stopMonitoringDevice()
-            bleManager.stopScanning()
-            isScanningActive = false
-            
-            // Stop RSSI monitoring timer
-            rssiTimer?.invalidate()
-            rssiTimer = nil
-            
-            doorManager.clearDoorEvent()
-            
-            offlineTimeCheckTimer?.invalidate()
-            offlineTimeCheckTimer = nil
-        }
-        .onChange(of: deviceVM.errorMessage) { message in
-            guard !message.isEmpty else { return }
-            
-            doorStorage.clearDoors()
-            doorStorage.hasResolvedDoors = true
-            showDoorErrorAlert = true
-        }
-        .onChange(of: network.hasInternet) { hasInternet in
-
-            if hasInternet {
-                offlineTimeCheckTimer?.invalidate()
-                offlineTimeCheckTimer = nil
-                showTimeSyncAlert = false
-
-                // Reconnect MQTT if it dropped while offline
-                mqttManager.reconnectIfNeeded()
-
-                // Refresh server time immediately so access-window checks use fresh time
-                Task { await serverTimeVM.forceRefresh() }
-
-               // Task { await deviceVM.fetchDeviceDetailsIfNeeded(force: true) }
-
-            } else {
-                startOfflineTimeObserver()
             }
-        }
-        .onChange(of: scenePhase) { newPhase in
-            switch newPhase {
-            case .background:
-                print("🌙 App went to background — stopping BLE scanning and monitoring")
-                // Stop all BLE activities
+            .onDisappear {
+                print("🛑 DoorOpenView disappeared — stopping all BLE and timers")
+                
+                // Mark view as not visible
+                isViewVisible = false
+                
+                // Cancel any pending monitoring start task
+                startMonitoringTask?.cancel()
+                startMonitoringTask = nil
+                
+                // Stop continuous BLE scanning & monitoring
                 bleManager.stopContinuousScanning()
                 bleManager.stopMonitoringDevice()
                 bleManager.stopScanning()
                 isScanningActive = false
-                AceesMessage = "Preparing Scan.."
                 
                 // Stop RSSI monitoring timer
                 rssiTimer?.invalidate()
                 rssiTimer = nil
                 
-            case .active:
-                print("☀️ App became active — restarting BLE scanning and monitoring")
+                doorManager.clearDoorEvent()
                 
-                // Only restart if view is still visible
-                guard isViewVisible else {
-                    print("⚠️ View is not visible. Skipping BLE restart.")
-                    return
+                offlineTimeCheckTimer?.invalidate()
+                offlineTimeCheckTimer = nil
+            }
+            .onChange(of: deviceVM.errorMessage) { message in
+                guard !message.isEmpty else { return }
+                
+                doorStorage.clearDoors()
+                doorStorage.hasResolvedDoors = true
+                showDoorErrorAlert = true
+            }
+            .onChange(of: network.hasInternet) { hasInternet in
+                
+                if hasInternet {
+                    offlineTimeCheckTimer?.invalidate()
+                    offlineTimeCheckTimer = nil
+                    showTimeSyncAlert = false
+                    
+                    // Reconnect MQTT if it dropped while offline
+                    mqttManager.reconnectIfNeeded()
+                    
+                    // Refresh server time immediately so access-window checks use fresh time
+                    Task { await serverTimeVM.forceRefresh() }
+                    
+                    // Task { await deviceVM.fetchDeviceDetailsIfNeeded(force: true) }
+                    
+                } else {
+                    startOfflineTimeObserver()
                 }
-                
-                guard selectedTab == 0 else {
-                    print("🚫 Remote Access tab active — BLE restart blocked")
-                    return
-                }
-                guard hasDigitalKeyAccess else {
-                    print("🚫 Digital Key disabled — BLE restart blocked")
-                    return
-                }
-                
-                
-                if !bleManager.isBluetoothOn {
-                    print("⚠️ Bluetooth is OFF. Cannot enable auto-open.")
-                    //  showBluetoothAlert = true
+            }
+            .onChange(of: scenePhase) { newPhase in
+                switch newPhase {
+                case .background:
+                    print("🌙 App went to background — stopping BLE scanning and monitoring")
+                    // Stop all BLE activities
+                    bleManager.stopContinuousScanning()
+                    bleManager.stopMonitoringDevice()
+                    bleManager.stopScanning()
                     isScanningActive = false
-                    return
-                }
-                
-                
-                // Restart BLE scanning with a small delay to ensure everything is ready
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    // Double-check view is still visible
+                    AceesMessage = "Preparing Scan.."
+                    
+                    // Stop RSSI monitoring timer
+                    rssiTimer?.invalidate()
+                    rssiTimer = nil
+                    
+                case .active:
                     guard isViewVisible else {
-                        print("⚠️ View is no longer visible. Skipping BLE restart.")
                         return
                     }
-                    print("🔄 Restarting BLE scanning...")
-                    bleManager.startContinuousScanning()
-                    isScanningActive = true
-                    monitorAndAutoOpenNearbyDoor()
+                    
+                    guard selectedTab == 0 else {
+                        return
+                    }
+                    guard hasDigitalKeyAccess else {
+                        return
+                    }
+                    
+                    if !bleManager.isBluetoothOn {
+                        isScanningActive = false
+                        return
+                    }
+                    // Restart BLE scanning with a small delay to ensure everything is ready
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        guard isViewVisible else {
+                            return
+                        }
+                        bleManager.startContinuousScanning()
+                        isScanningActive = true
+                        monitorAndAutoOpenNearbyDoor()
+                    }
+                    
+                case .inactive:
+                    print("⏸️ App became inactive")
+                    
+                @unknown default:
+                    break
                 }
-                
-            case .inactive:
-                print("⏸️ App became inactive")
-                
-            @unknown default:
-                break
             }
-        }
         
         
-        .onChange(of: selectedTab) { newTab in
-            resetOverlayState()
-            doorManager.clearDoorEvent()
-            if newTab != 1 {
-                //switch tab to reset remote tab view ui
-                activeDoorKey = nil
-                successDoorKey = nil
+            .onChange(of: selectedTab) { newTab in
+                resetOverlayState()
+                doorManager.clearDoorEvent()
+                if newTab != 1 {
+                    //switch tab to reset remote tab view ui
+                    activeDoorKey = nil
+                    successDoorKey = nil
+                }
+                if newTab == 1 {
+                    stopAllScanningAndMonitoring()
+                    AceesMessage = "Remote access selected"
+                } else {
+                    guard bleManager.isBluetoothOn else {
+                        AceesMessage = "Bluetooth is Off. Please turn it on."
+                        return
+                    }
+                    
+                    AceesMessage = "Preparing Scan..."
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        startBLEIfPossible()
+                    }
+                }
             }
-            if newTab == 1 {
-                stopAllScanningAndMonitoring()
-                AceesMessage = "Remote access selected"
-            } else {
-                guard bleManager.isBluetoothOn else {
+            .onReceive(NotificationCenter.default.publisher(
+                for: UIApplication.didEnterBackgroundNotification
+            )) { _ in
+                print("🌙 didEnterBackground — force stop BLE")
+                
+                bleManager.stopContinuousScanning()
+                bleManager.stopMonitoringDevice()
+                bleManager.stopScanning()
+                isScanningActive = false
+                
+                rssiTimer?.invalidate()
+                rssiTimer = nil
+                
+                AceesMessage = "Preparing Scan.."
+                
+            }
+        
+        
+            .onReceive(bleManager.$bleState) { state in
+                switch state {
+                case .poweredOff:
+                    print("🔴 Bluetooth OFF")
                     AceesMessage = "Bluetooth is Off. Please turn it on."
+                    isScanningActive = false
+                    
+                case .poweredOn:
+                    print("🟢 Bluetooth ON")
+                    AceesMessage = "Preparing Scan..."
+                    
+                    // Small delay ensures CoreBluetooth is fully ready
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        startBLEIfPossible()
+                    }
+                    
+                default:
+                    AceesMessage = "Checking Bluetooth status..."
+                }
+            }
+        
+        
+            .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in
+                
+                
+                guard
+                    let info = notification.userInfo,
+                    let rawUserID = info["userID"],
+                    let rawcardNumber = info["cardnumber"],
+                    
+                        let cardNumber = (rawcardNumber as? NSNumber)?.intValue
+                        ?? (rawcardNumber as? Int)
+                        ?? Int(rawcardNumber as? String ?? ""),
+                    
+                        let userid = (rawUserID as? NSNumber)?.intValue
+                        ?? (rawUserID as? Int)
+                        ?? Int(rawUserID as? String ?? ""),
+                    
+                        let deviceUserId = deviceVM.deviceDetails?.deviceUserId,
+                    let digitalCardString = deviceVM.deviceDetails?.digitalCardNumber,
+                    let digitalCardNumber = Int(digitalCardString),
+                    
+                        (
+                            (userid == 0 && cardNumber == 999_999_999) ||
+                            (userid == 0 && cardNumber == 0) ||
+                            (userid == deviceUserId) ||
+                            (userid != 0 && cardNumber == digitalCardNumber) ||
+                            
+                            (userid == 0 && (info["sn"] as? String).map { deviceVM.allControllerSerials.contains($0)} == true)
+                        )
+                else {
                     return
                 }
                 
-                AceesMessage = "Preparing Scan..."
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    startBLEIfPossible()
-                }
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(
-            for: UIApplication.didEnterBackgroundNotification
-        )) { _ in
-            print("🌙 didEnterBackground — force stop BLE")
-            
-            bleManager.stopContinuousScanning()
-            bleManager.stopMonitoringDevice()
-            bleManager.stopScanning()
-            isScanningActive = false
-            
-            rssiTimer?.invalidate()
-            rssiTimer = nil
-            
-            AceesMessage = "Preparing Scan.."
-            
-        }
-        
-        
-        .onReceive(bleManager.$bleState) { state in
-            switch state {
-            case .poweredOff:
-                print("🔴 Bluetooth OFF")
-                AceesMessage = "Bluetooth is Off. Please turn it on."
-                isScanningActive = false
-                
-            case .poweredOn:
-                print("🟢 Bluetooth ON")
-                AceesMessage = "Preparing Scan..."
-                
-                // Small delay ensures CoreBluetooth is fully ready
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    startBLEIfPossible()
+                guard DoorManager.shared.shouldProcessMQTTEvent() else {
+                    print("🚫 MQTT ignored — outside 20s active window")
+                    return
                 }
                 
-            default:
-                AceesMessage = "Checking Bluetooth status..."
-            }
-        }
-        
-        
-        .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in
-            
-            
-            guard
-                let info = notification.userInfo,
-                let rawUserID = info["userID"],
-                let rawcardNumber = info["cardnumber"],
+                didReceiveResponse = true
+                let type = info["type"] as? Int
+                doorId = info["doorID"] as? Int
+                let sn = info["sn"] as? String
                 
-                    let cardNumber = (rawcardNumber as? NSNumber)?.intValue
-                    ?? (rawcardNumber as? Int)
-                    ?? Int(rawcardNumber as? String ?? ""),
+                let resolvedDoorName = deviceVM.getDoorName(sn: sn, doorId: doorId)
+                doorName = resolvedDoorName
+                updateVoiceMessages(for: resolvedDoorName)
+                let deniedTypes: Set<Int> = [
+                    41, // Non-effective time period
+                    42, // Illegal time period
+                    43, // Illegal access permission
+                    47, // Card not registered
+                    49, // Card expired
+                    53, // Card reported lost
+                    54, // Blacklist user
+                    55, // Verification mode error
+                    62  // User permission disabled
+                ]
                 
-                    let userid = (rawUserID as? NSNumber)?.intValue
-                    ?? (rawUserID as? Int)
-                    ?? Int(rawUserID as? String ?? ""),
                 
-                    let deviceUserId = deviceVM.deviceDetails?.deviceUserId,
-                let digitalCardString = deviceVM.deviceDetails?.digitalCardNumber,
-                let digitalCardNumber = Int(digitalCardString),
-                
-                    (
-                        (userid == 0 && cardNumber == 999_999_999) ||
-                        (userid == 0 && cardNumber == 0) ||
-                        (userid == deviceUserId) ||
-                        (userid != 0 && cardNumber == digitalCardNumber) ||
+                if type == 0 {
+                    
+                    if isRemoteUnlock{
+                        guard let sn = sn, let doorId = doorId else { return }
                         
-                        (userid == 0 && (info["sn"] as? String).map { deviceVM.allControllerSerials.contains($0)} == true)
-                    )
-            else {
-                return
-            }
-            
-            guard DoorManager.shared.shouldProcessMQTTEvent() else {
-                print("🚫 MQTT ignored — outside 20s active window")
-                return
-            }
-            
-            didReceiveResponse = true
-            let type = info["type"] as? Int
-            doorId = info["doorID"] as? Int
-            let sn = info["sn"] as? String
-            
-            let resolvedDoorName = deviceVM.getDoorName(sn: sn, doorId: doorId)
-            doorName = resolvedDoorName
-            updateVoiceMessages(for: resolvedDoorName)
-            let deniedTypes: Set<Int> = [
-                41, // Non-effective time period
-                42, // Illegal time period
-                43, // Illegal access permission
-                47, // Card not registered
-                49, // Card expired
-                53, // Card reported lost
-                54, // Blacklist user
-                55, // Verification mode error
-                62  // User permission disabled
-            ]
-            
-            
-            if type == 0 {
-                
-                if isRemoteUnlock{
-                    guard let sn = sn, let doorId = doorId else { return }
+                        let key = "\(sn)_\(doorId)"
+                        remoteMqttResult = RemoteMQTTResult(
+                            doorKey: key,
+                            isSuccess: true,
+                            message: grantedBase
+                        )
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                    }else{
+                        animateSuccess()
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        AceesMessage =  accessGrantedMessage
+                        speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                        overlayMessage = accessGrantedMessage
+                    }
                     
+                }
+                else if type == 19 { //ble unlock
+                    if isRemoteUnlock{
+                        guard let sn = sn, let doorId = doorId else { return }
+                        let key = "\(sn)_\(doorId)"
+                        remoteMqttResult = RemoteMQTTResult(
+                            doorKey: key,
+                            isSuccess: true,
+                            message: grantedBase
+                        )
+                        speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    }else{
+                        animateSuccess()
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        AceesMessage =  accessGrantedMessage
+                        speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                        overlayMessage = accessGrantedMessage
+                    }
+                }
+                else if type == 8 { //wifi unlock
+                    guard let sn = sn, let doorId = doorId else { return }
                     let key = "\(sn)_\(doorId)"
                     remoteMqttResult = RemoteMQTTResult(
                         doorKey: key,
@@ -806,155 +806,96 @@ struct DoorOpenView: View {
                     )
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                     speakText(accessGrantedMessage + " - " + accessGreetingMessage)
-                }else{
-                    animateSuccess()
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    AceesMessage =  accessGrantedMessage
-                    speakText(accessGrantedMessage + " - " + accessGreetingMessage)
-                    overlayMessage = accessGrantedMessage
                 }
-                
-            }
-            else if type == 19 { //ble unlock
-                if isRemoteUnlock{
-                    guard let sn = sn, let doorId = doorId else { return }
-                    let key = "\(sn)_\(doorId)"
-                    remoteMqttResult = RemoteMQTTResult(
-                        doorKey: key,
-                        isSuccess: true,
-                        message: grantedBase
-                    )
-                    speakText(accessGrantedMessage + " - " + accessGreetingMessage)
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
-                }else{
-                    animateSuccess()
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    AceesMessage =  accessGrantedMessage
-                    speakText(accessGrantedMessage + " - " + accessGreetingMessage)
-                    overlayMessage = accessGrantedMessage
-                }
-            }
-            else if type == 8 { //wifi unlock
-                guard let sn = sn, let doorId = doorId else { return }
-                let key = "\(sn)_\(doorId)"
-                remoteMqttResult = RemoteMQTTResult(
-                    doorKey: key,
-                    isSuccess: true,
-                    message: grantedBase
-                )
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
-                speakText(accessGrantedMessage + " - " + accessGreetingMessage)
-            }
-            else if let type = type, deniedTypes.contains(type) {
-                if isRemoteUnlock{
-                    guard let sn = sn, let doorId = doorId else { return }
-                    let key = "\(sn)_\(doorId)"
-                    remoteMqttResult = RemoteMQTTResult(
-                        doorKey: key,
-                        isSuccess: false,
-                        message: deniedBase
-                    )
+                else if let type = type, deniedTypes.contains(type) {
+                    if isRemoteUnlock{
+                        guard let sn = sn, let doorId = doorId else { return }
+                        let key = "\(sn)_\(doorId)"
+                        remoteMqttResult = RemoteMQTTResult(
+                            doorKey: key,
+                            isSuccess: false,
+                            message: deniedBase
+                        )
+                        
+                        if type == 42 || type == 43 {
+                            speakText(accessDeniedMessage + ". " + "Time Restricted")
+                        }else{
+                            speakText(accessDeniedMessage)
+                        }
+                        
+                        UINotificationFeedbackGenerator().notificationOccurred(.error)
+                    }else{
+                        UINotificationFeedbackGenerator().notificationOccurred(.error)
+                        AceesMessage = accessDeniedMessage
+                        overlayMessage = accessDeniedMessage
+                        // speakText(accessDeniedMessage)
+                        if type == 42 || type == 43 {
+                            speakText(accessDeniedMessage + ". " + "Time Restricted")
+                        }else{
+                            speakText(accessDeniedMessage)
+                        }
+                        animateFailure()
+                    }
                     
-                    if type == 42 || type == 43 {
-                        speakText(accessDeniedMessage + ". " + "Time Restricted")
-                    }else{
-                        speakText(accessDeniedMessage)
-                    }
-             
-                    UINotificationFeedbackGenerator().notificationOccurred(.error)
-                }else{
-                    UINotificationFeedbackGenerator().notificationOccurred(.error)
-                    AceesMessage = accessDeniedMessage
-                    overlayMessage = accessDeniedMessage
-                   // speakText(accessDeniedMessage)
-                    if type == 42 || type == 43 {
-                        speakText(accessDeniedMessage + ". " + "Time Restricted")
-                    }else{
-                        speakText(accessDeniedMessage)
-                    }
+                }
+                else {
+                    print("Ignored door event type:", type ?? -1)
+                    return
+                }
+                doorManager.closeMQTTWindow()
+                doorManager.clearDoorEvent()
+            }
+        
+        
+        
+            .onReceive(doorManager.$doorEvent.compactMap({ $0 })) { event in
+                
+                if isRemoteUnlock && selectedTab == 1 { return }
+                
+                switch event.status {
+                case .starting:
+                    animateOpeningStart()
+                case .success:
+                    animateSuccess()
+                case .failure:
                     animateFailure()
                 }
                 
-            }
-            else {
-                print("Ignored door event type:", type ?? -1)
-                return
-            }
-            doorManager.closeMQTTWindow()
-            doorManager.clearDoorEvent()
-        }
-        
-        
-        
-        .onReceive(doorManager.$doorEvent.compactMap({ $0 })) { event in
-            
-            if isRemoteUnlock && selectedTab == 1 { return }
-            
-            switch event.status {
-            case .starting:
-                animateOpeningStart()
-            case .success:
-                animateSuccess()
-            case .failure:
-                animateFailure()
-            }
-            
-            // Clear the event after processing to prevent re-triggering
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                doorManager.clearDoorEvent()
-            }
-        }
-        
-        .modernAlert(isPresented: $showDoorErrorAlert) {
-            ModernAlertView(
-                title: "Error!",
-                message: deviceVM.errorMessage,
-                isSuccess: false,
-                buttonTitle: "OK"
-            ) { showDoorErrorAlert = false
-                
-            }
-        }
-        
-//        .modernAlert(isPresented: $showTimeSyncAlert) {
-//            ModernAlertView(
-//                title: "Time Sync Required!",
-//                message: "Please connect to the internet to sync server time.Otherwise, door access will be denied.",
-//                isSuccess: false,
-//                buttonTitle: "OK"
-//            ) { showTimeSyncAlert = false
-//                
-//            }
-//        }
-        
-       
-        
-        .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
-            
-            BluetoothAlertView(
-                onCancel: { showBluetoothAlert = false },
-                openSettings: {
-                    if let url = URL(string: "App-Prefs:root=Bluetooth"),
-                       UIApplication.shared.canOpenURL(url) {
-                        UIApplication.shared.open(url)
-                    }
+                // Clear the event after processing to prevent re-triggering
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    doorManager.clearDoorEvent()
                 }
-            )
-        }
+            }
+        
+            .modernAlert(isPresented: $showDoorErrorAlert) {
+                ModernAlertView(
+                    title: "Error!",
+                    message: deviceVM.errorMessage,
+                    isSuccess: false,
+                    buttonTitle: "OK"
+                ) { showDoorErrorAlert = false
+                    
+                }
+            }
+        
+            .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
+                
+                BluetoothAlertView(
+                    onCancel: { showBluetoothAlert = false },
+                    openSettings: {
+                        if let url = URL(string: "App-Prefs:root=Bluetooth"),
+                           UIApplication.shared.canOpenURL(url) {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                )
+            }
     }
     
-//final
     func isWithinAccessWindow() -> Bool {
-        print("──────── ACCESS WINDOW CHECK START ────────")
-
-        // 🔓 Offline → allow access
-//        if !network.hasInternet {
-//            print("⚠️ No internet — bypassing access window check")
-//            return true
-//        }
-
+        
         guard
-         //   let currentDateTime = serverTimeVM.localServerDate,
+            //   let currentDateTime = serverTimeVM.localServerDate,
             let currentDateTime = serverTimeVM.getEstimatedServerTime(),
             let tzID = serverTimeVM.localTimeZoneID,
             let accessTZ = TimeZone(identifier: tzID),
@@ -963,36 +904,32 @@ struct DoorOpenView: View {
             let timeSlots = deviceVM.time_slots,
             let weekDaysStr = deviceVM.weekday
         else {
-            print("❌ Missing required access window data")
-            
-            print("⛔ Server time unavailable — sync required")
-
-                    DispatchQueue.main.async {
-                        showTimeSyncAlert = true
-                    }
+            DispatchQueue.main.async {
+                showTimeSyncAlert = true
+            }
             
             return false
         }
-
+        
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = accessTZ
-
+        
         let debugFormatter = DateFormatter()
         debugFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         debugFormatter.timeZone = accessTZ
-
+        
         print("🕒 Current Time:", debugFormatter.string(from: currentDateTime))
         print("📅 Start Date:", startDateStr)
         print("📅 End Date:", endDateStr)
         print("📆 Allowed Weekdays:", weekDaysStr)
         print("⏰ Total Time Slots:", timeSlots.count)
-
+        
         // MARK: 1️⃣ DATE RANGE CHECK
-
+        
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         dateFormatter.timeZone = accessTZ
-
+        
         guard
             let startDate = dateFormatter.date(from: startDateStr),
             let endDate = dateFormatter.date(from: endDateStr)
@@ -1000,11 +937,11 @@ struct DoorOpenView: View {
             print("❌ Invalid start/end date format")
             return false
         }
-
+        
         let today = calendar.startOfDay(for: currentDateTime)
         let start = calendar.startOfDay(for: startDate)
         let end = calendar.startOfDay(for: endDate)
-
+        
         if !(today >= start && today <= end) {
             print("⛔ FAILED: Outside date range")
             print("👉 Today:", debugFormatter.string(from: today))
@@ -1012,45 +949,45 @@ struct DoorOpenView: View {
                   "to", debugFormatter.string(from: end))
             return false
         }
-
+        
         print("✅ Date range check passed")
-
+        
         // MARK: 2️⃣ WEEKDAY CHECK
-
+        
         let iosWeekday = calendar.component(.weekday, from: currentDateTime)
         // iOS: 1=Sun, 2=Mon ... 7=Sat
-
+        
         // Convert to backend format: 1=Mon ... 7=Sun
         let backendWeekday = iosWeekday == 1 ? 7 : iosWeekday - 1
-
+        
         let allowedWeekdays: [Int] = weekDaysStr
             .split(separator: ",")
             .compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
-
+        
         print("📆 iOS Weekday:", iosWeekday)
         print("📆 Backend Weekday:", backendWeekday)
         print("📆 Allowed Weekday Array:", allowedWeekdays)
-
+        
         if !allowedWeekdays.contains(backendWeekday) {
             print("⛔ FAILED: Weekday not allowed")
             return false
         }
-
+        
         print("✅ Weekday check passed")
-
+        
         // MARK: 3️⃣ MULTIPLE TIME SLOT CHECK
-
+        
         let timeFormatter = DateFormatter()
         timeFormatter.dateFormat = "HH:mm"
         timeFormatter.timeZone = accessTZ
-
+        
         let nowComponents = calendar.dateComponents([.hour, .minute], from: currentDateTime)
         let nowMinutes = (nowComponents.hour ?? 0) * 60 + (nowComponents.minute ?? 0)
-
+        
         print("🕒 Current Minutes:", nowMinutes)
-
+        
         for (index, slot) in timeSlots.enumerated() {
-
+            
             guard
                 let startTime = timeFormatter.date(from: slot.start_time),
                 let endTime = timeFormatter.date(from: slot.end_time)
@@ -1058,19 +995,19 @@ struct DoorOpenView: View {
                 print("⚠️ Slot \(index + 1) invalid time format")
                 continue
             }
-
+            
             let startMinutes =
-                calendar.component(.hour, from: startTime) * 60 +
-                calendar.component(.minute, from: startTime)
-
+            calendar.component(.hour, from: startTime) * 60 +
+            calendar.component(.minute, from: startTime)
+            
             let endMinutes =
-                calendar.component(.hour, from: endTime) * 60 +
-                calendar.component(.minute, from: endTime)
-
+            calendar.component(.hour, from: endTime) * 60 +
+            calendar.component(.minute, from: endTime)
+            
             print("⏰ Slot \(index + 1):",
                   slot.start_time, "→", slot.end_time,
                   "| Minutes:", startMinutes, "→", endMinutes)
-
+            
             if nowMinutes >= startMinutes && nowMinutes <= endMinutes {
                 print("✅ SUCCESS: Time slot \(index + 1) matched")
                 print("──────── ACCESS GRANTED ────────")
@@ -1079,27 +1016,27 @@ struct DoorOpenView: View {
                 print("❌ Slot \(index + 1) not matched")
             }
         }
-
+        
         print("⛔ FAILED: No time slot matched")
         print("──────── ACCESS DENIED ────────")
         return false
     }
-
+    
     func startOfflineTimeObserver() {
-
+        
         guard offlineTimeCheckTimer == nil else { return }
-
+        
         //FIRST CHECK IMMEDIATELY
-         if !network.hasInternet {
-               let time = serverTimeVM.getEstimatedServerTime()
-               if time == nil {
-                   showTimeSyncAlert = true
-                   if selectedTab == 0 {
-                       stopAllScanningAndMonitoring()
-                   }
-                   return
-               }
-         }
+        if !network.hasInternet {
+            let time = serverTimeVM.getEstimatedServerTime()
+            if time == nil {
+                showTimeSyncAlert = true
+                if selectedTab == 0 {
+                    stopAllScanningAndMonitoring()
+                }
+                return
+            }
+        }
         offlineTimeCheckTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             guard !network.hasInternet else { return }
             let time = serverTimeVM.getEstimatedServerTime()
@@ -1115,7 +1052,7 @@ struct DoorOpenView: View {
                 }
             }
             else {
-
+                
                 DispatchQueue.main.async {
                     
                     // Stop timer so it doesn't fire repeatedly
@@ -1131,7 +1068,7 @@ struct DoorOpenView: View {
                         startBLEIfPossible()
                     }
                     
-                   
+                    
                 }
             }
         }
@@ -1157,9 +1094,9 @@ struct DoorOpenView: View {
     private func startBLEIfPossible() {
         
         guard !showTimeSyncAlert else {
-                print("⛔ Time sync required — BLE start blocked")
-                return
-            }
+            print("⛔ Time sync required — BLE start blocked")
+            return
+        }
         
         guard isViewVisible else { return }
         guard selectedTab == 0 else { return }
@@ -1227,9 +1164,6 @@ struct DoorOpenView: View {
                     }
                 }
                 
-                //                if hasRemoteAccess {
-                //
-                //                }
             }
             .padding(.horizontal, 15)
             .padding(.top,(hasDigitalKeyAccess && hasRemoteAccess) ? 15 : 0)
@@ -1245,16 +1179,9 @@ struct DoorOpenView: View {
                         .frame(width: UIScreen.main.bounds.width / 2 - 20, height: 2)
                         .animation(.easeInOut(duration: 0.07), value: selectedTab)
                         .padding(.horizontal,20)
-                } else {
-                    //                    Rectangle()
-                    //                        .fill(Color.white)
-                    //                        .frame(width: UIScreen.main.bounds.width - 40, height: 2)
-                    //                        .animation(.easeInOut(duration: 0.07), value: selectedTab)
-                    //                        .padding(.horizontal,20)
                 }
             }
             .padding(.top, 10)
-            //.padding(.bottom, 10)
         }
     }
     
@@ -1270,7 +1197,6 @@ struct DoorOpenView: View {
         rssiTimer = nil
         
         isScanningActive = false
-       // AceesMessage = "Scanning paused"
         AceesMessage = bleManager.isBluetoothOn
         ? "Scanning paused"
         : "Bluetooth is Off. Please turn it on."
@@ -1370,7 +1296,6 @@ struct DoorOpenView: View {
             lockIcon = "xmark"
             isOpening = false
             progress = 1.0
-            // overlayMessage = isRemoteUnlock ? "Remote Unlock Failed" : accessDeniedMessage
             
         }
         scheduleReset()
@@ -1384,7 +1309,6 @@ struct DoorOpenView: View {
             lockIcon = "clock.badge.exclamationmark"
             isOpening = false
             progress = 1.0
-            // overlayMessage = isRemoteUnlock ? "Remote Unlock Failed" : accessDeniedMessage
             
         }
         scheduleReset()
@@ -1425,7 +1349,7 @@ struct DoorOpenView: View {
                 
             }
             // 🔓 allow next BLE scan
-                isProcessingDoor = false
+            isProcessingDoor = false
         }
         
         animationResetTask = task
@@ -1441,7 +1365,6 @@ struct DoorOpenView: View {
         rssiTimer?.invalidate()
         rssiTimer = nil
         
-        // rssiTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
         let bleManager = self.bleManager
         let doorStorage = self.doorStorage
         
@@ -1458,11 +1381,8 @@ struct DoorOpenView: View {
             }
             
             //  wait until current process finishes
-               guard !isProcessingDoor else { return }
-            
-            // 1️⃣ Find the closest device (BLEManager already filters for Thimmo devices only)
+            guard !isProcessingDoor else { return }
             let nearbyDevices = bleManager.devices.compactMap { peripheral -> (peripheral: CBPeripheral, rssi: Int)? in
-                // let name = (peripheral.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                 let rssi = bleManager.monitoredDeviceRSSI ?? bleManager.deviceLastRSSI[peripheral.identifier] ?? -100
                 
                 return (peripheral, rssi)
@@ -1477,7 +1397,7 @@ struct DoorOpenView: View {
             print("🎯 Closest device: \(name) with RSSI: \(rssi)")
             
             // Only act if RSSI is strong
-            guard rssi > -30 && rssi < 0 else { return }
+            guard rssi > -35 && rssi < 0 else { return }
             
             if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
                 // Authorized door
@@ -1485,39 +1405,34 @@ struct DoorOpenView: View {
                 
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 isScanningActive = false
-//                bleManager.stopScanning()
-//                bleManager.stopMonitoringDevice()
-//                timer.invalidate()
-//                rssiTimer = nil
+                //                bleManager.stopScanning()
+                //                bleManager.stopMonitoringDevice()
+                //                timer.invalidate()
+                //                rssiTimer = nil
                 
                 stopAllScanningAndMonitoring()
                 
-              //  if door.deviceModel?.uppercased() == "M230" && door.deviceType == "all_in_one" {
-                    
-                    guard isWithinAccessWindow() else {
-                        print("⛔ Outside allowed time window")
-                        DispatchQueue.main.async {
-                            overlayMessage = door.name + ". " + deniedBase
-                            AceesMessage = deniedBase
-                            animateFailureOutSideTime()
-                            speakText(door.name + ". " + deniedBase + ". Time Restricted")
-                            UINotificationFeedbackGenerator().notificationOccurred(.error)
-                        }
-                        
-                        
-                        // Restart monitoring after 5 seconds
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-                            bleManager.startContinuousScanning()
-                            isScanningActive = true
-                            monitorAndAutoOpenNearbyDoor()
-                        }
-                        
-                        return
+                guard isWithinAccessWindow() else {
+                    print("⛔ Outside allowed time window")
+                    DispatchQueue.main.async {
+                        overlayMessage = door.name + ". " + deniedBase
+                        AceesMessage = deniedBase
+                        animateFailureOutSideTime()
+                        speakText(door.name + ". " + deniedBase + ". Time Restricted")
+                        UINotificationFeedbackGenerator().notificationOccurred(.error)
                     }
-            //   }
+                    
+                    // Restart monitoring after 5 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                        bleManager.startContinuousScanning()
+                        isScanningActive = true
+                        monitorAndAutoOpenNearbyDoor()
+                    }
+                    
+                    return
+                }
                 
                 doorManager.openSelectedDoor(door)
-                //  Activate 20s MQTT window
                 DoorManager.shared.activateMQTTWindow()
                 
                 
@@ -1532,10 +1447,10 @@ struct DoorOpenView: View {
                 //  Unauthorized Thimmo device
                 print("🚫 Unauthorized Thimmo device nearby: \(name)")
                 stopAllScanningAndMonitoring()
-//                bleManager.stopScanning()
-//                bleManager.stopMonitoringDevice()
-//                timer.invalidate()
-//                rssiTimer = nil
+                //                bleManager.stopScanning()
+                //                bleManager.stopMonitoringDevice()
+                //                timer.invalidate()
+                //                rssiTimer = nil
                 doorName = ""
                 doorId = nil
                 updateVoiceMessages(for: "")
@@ -1610,29 +1525,29 @@ struct HowItWorksView: View {
 }
 
 struct TimeSyncOverlayView: View {
-
+    
     var retryAction: () -> Void
-
+    
     var body: some View {
         ZStack {
-
+            
             Color.black.opacity(1.0)
-
+            
             VStack(spacing: 18) {
                 Image(systemName: "clock.badge.exclamationmark")
                     .font(.system(size: 40))
                     .foregroundColor(.white)
-
+                
                 Text("Time Sync Required")
                     .font(.custom("Inter-SemiBold", size: 20))
                     .foregroundColor(.white)
-
+                
                 Text("Please connect to the internet to synchronize server time. Door access will remain disabled until time is synced.")
                     .font(.custom("Inter-Regular", size: 15))
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
-
+                
                 Button(action: retryAction) {
                     HStack {
                         Image(systemName: "arrow.clockwise")
