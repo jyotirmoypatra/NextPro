@@ -356,9 +356,18 @@ struct UserAgreementScreen: View {
             
             await loginVM.login()
             if loginVM.loginSuccess {
-                isAdmin = loginVM.is_admin
-                navigateToHome = true
-            }else{
+                // Replace the root window with a fresh ContentView.
+                // is_logged_in = true is already set inside loginVM.login(), so
+                // the new ContentView routes directly to HomeView.
+                //
+                // We MUST NOT use navigationDestination here — doing so while
+                // UserAgreementScreen is still in the hierarchy (even with a delay)
+                // creates a ghost HomeView that:
+                //   1. Prevents logout from navigating back to LoginView.
+                //   2. Spawns a duplicate DoorOpenView whose onDisappear resets
+                //      DoorManager.isMQTTWindowActive → MQTT events are dropped.
+                KeychainManager.shared.resetToLogin()
+            } else {
                 showLoginError = true
             }
         }
