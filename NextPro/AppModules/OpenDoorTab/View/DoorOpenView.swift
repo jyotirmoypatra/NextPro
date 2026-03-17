@@ -699,67 +699,105 @@ struct DoorOpenView: View {
         
             .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in
                 
-                
-                guard
-                    let info = notification.userInfo,
-                    let rawUserID = info["userID"],
-                    let rawcardNumber = info["cardnumber"],
+                DispatchQueue.main.async {
+                    guard
+                        let info = notification.userInfo,
+                        let rawUserID = info["userID"],
+                        let rawcardNumber = info["cardnumber"],
+                        
+                            let cardNumber = (rawcardNumber as? NSNumber)?.intValue
+                            ?? (rawcardNumber as? Int)
+                            ?? Int(rawcardNumber as? String ?? ""),
+                        
+                            let userid = (rawUserID as? NSNumber)?.intValue
+                            ?? (rawUserID as? Int)
+                            ?? Int(rawUserID as? String ?? ""),
+                        
+                            let deviceUserId = deviceVM.deviceDetails?.deviceUserId,
+                        let digitalCardString = deviceVM.deviceDetails?.digitalCardNumber,
+                        let digitalCardNumber = Int(digitalCardString),
+                        
+                            (
+                                (userid == 0 && cardNumber == 999_999_999) ||
+                                (userid == 0 && cardNumber == 0) ||
+                                (userid == deviceUserId) ||
+                                (userid != 0 && cardNumber == digitalCardNumber) ||
+                                
+                                (userid == 0 && (info["sn"] as? String).map { deviceVM.allControllerSerials.contains($0)} == true)
+                            )
+                    else {
+                        return
+                    }
                     
-                        let cardNumber = (rawcardNumber as? NSNumber)?.intValue
-                        ?? (rawcardNumber as? Int)
-                        ?? Int(rawcardNumber as? String ?? ""),
+                    guard DoorManager.shared.shouldProcessMQTTEvent() else {
+                        print("🚫 MQTT ignored — outside 20s active window")
+                        return
+                    }
                     
-                        let userid = (rawUserID as? NSNumber)?.intValue
-                        ?? (rawUserID as? Int)
-                        ?? Int(rawUserID as? String ?? ""),
+                    didReceiveResponse = true
+                    let type = info["type"] as? Int
+                    doorId = info["doorID"] as? Int
+                    let sn = info["sn"] as? String
                     
-                        let deviceUserId = deviceVM.deviceDetails?.deviceUserId,
-                    let digitalCardString = deviceVM.deviceDetails?.digitalCardNumber,
-                    let digitalCardNumber = Int(digitalCardString),
+                    let resolvedDoorName = deviceVM.getDoorName(sn: sn, doorId: doorId)
+                    doorName = resolvedDoorName
+                    updateVoiceMessages(for: resolvedDoorName)
+                    let deniedTypes: Set<Int> = [
+                        41, // Non-effective time period
+                        42, // Illegal time period
+                        43, // Illegal access permission
+                        47, // Card not registered
+                        49, // Card expired
+                        53, // Card reported lost
+                        54, // Blacklist user
+                        55, // Verification mode error
+                        62  // User permission disabled
+                    ]
                     
-                        (
-                            (userid == 0 && cardNumber == 999_999_999) ||
-                            (userid == 0 && cardNumber == 0) ||
-                            (userid == deviceUserId) ||
-                            (userid != 0 && cardNumber == digitalCardNumber) ||
+                    
+                    if type == 0 {
+                        
+                        if isRemoteUnlock{
+                            guard let sn = sn, let doorId = doorId else { return }
                             
-                            (userid == 0 && (info["sn"] as? String).map { deviceVM.allControllerSerials.contains($0)} == true)
-                        )
-                else {
-                    return
-                }
-                
-                guard DoorManager.shared.shouldProcessMQTTEvent() else {
-                    print("🚫 MQTT ignored — outside 20s active window")
-                    return
-                }
-                
-                didReceiveResponse = true
-                let type = info["type"] as? Int
-                doorId = info["doorID"] as? Int
-                let sn = info["sn"] as? String
-                
-                let resolvedDoorName = deviceVM.getDoorName(sn: sn, doorId: doorId)
-                doorName = resolvedDoorName
-                updateVoiceMessages(for: resolvedDoorName)
-                let deniedTypes: Set<Int> = [
-                    41, // Non-effective time period
-                    42, // Illegal time period
-                    43, // Illegal access permission
-                    47, // Card not registered
-                    49, // Card expired
-                    53, // Card reported lost
-                    54, // Blacklist user
-                    55, // Verification mode error
-                    62  // User permission disabled
-                ]
-                
-                
-                if type == 0 {
-                    
-                    if isRemoteUnlock{
-                        guard let sn = sn, let doorId = doorId else { return }
+                            let key = "\(sn)_\(doorId)"
+                            remoteMqttResult = RemoteMQTTResult(
+                                doorKey: key,
+                                isSuccess: true,
+                                message: grantedBase
+                            )
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                        }else{
+                            animateSuccess()
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            AceesMessage =  accessGrantedMessage
+                            speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                            overlayMessage = accessGrantedMessage
+                        }
                         
+                    }
+                    else if type == 19 { //ble unlock
+                        if isRemoteUnlock{
+                            guard let sn = sn, let doorId = doorId else { return }
+                            let key = "\(sn)_\(doorId)"
+                            remoteMqttResult = RemoteMQTTResult(
+                                doorKey: key,
+                                isSuccess: true,
+                                message: grantedBase
+                            )
+                            speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        }else{
+                            animateSuccess()
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            AceesMessage =  accessGrantedMessage
+                            speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                            overlayMessage = accessGrantedMessage
+                        }
+                    }
+                    else if type == 8 { //wifi unlock
+                        guard let sn = sn, let doorId = doorId else { return }
                         let key = "\(sn)_\(doorId)"
                         remoteMqttResult = RemoteMQTTResult(
                             doorKey: key,
@@ -768,84 +806,46 @@ struct DoorOpenView: View {
                         )
                         UINotificationFeedbackGenerator().notificationOccurred(.success)
                         speakText(accessGrantedMessage + " - " + accessGreetingMessage)
-                    }else{
-                        animateSuccess()
-                        UINotificationFeedbackGenerator().notificationOccurred(.success)
-                        AceesMessage =  accessGrantedMessage
-                        speakText(accessGrantedMessage + " - " + accessGreetingMessage)
-                        overlayMessage = accessGrantedMessage
                     }
-                    
-                }
-                else if type == 19 { //ble unlock
-                    if isRemoteUnlock{
-                        guard let sn = sn, let doorId = doorId else { return }
-                        let key = "\(sn)_\(doorId)"
-                        remoteMqttResult = RemoteMQTTResult(
-                            doorKey: key,
-                            isSuccess: true,
-                            message: grantedBase
-                        )
-                        speakText(accessGrantedMessage + " - " + accessGreetingMessage)
-                        UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    }else{
-                        animateSuccess()
-                        UINotificationFeedbackGenerator().notificationOccurred(.success)
-                        AceesMessage =  accessGrantedMessage
-                        speakText(accessGrantedMessage + " - " + accessGreetingMessage)
-                        overlayMessage = accessGrantedMessage
-                    }
-                }
-                else if type == 8 { //wifi unlock
-                    guard let sn = sn, let doorId = doorId else { return }
-                    let key = "\(sn)_\(doorId)"
-                    remoteMqttResult = RemoteMQTTResult(
-                        doorKey: key,
-                        isSuccess: true,
-                        message: grantedBase
-                    )
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    speakText(accessGrantedMessage + " - " + accessGreetingMessage)
-                }
-                else if let type = type, deniedTypes.contains(type) {
-                    if isRemoteUnlock{
-                        guard let sn = sn, let doorId = doorId else { return }
-                        let key = "\(sn)_\(doorId)"
-                        remoteMqttResult = RemoteMQTTResult(
-                            doorKey: key,
-                            isSuccess: false,
-                            message: deniedBase
-                        )
-                        
-                        if type == 42 || type == 43 {
-                            speakText(accessDeniedMessage + ". " + "Time Restricted")
+                    else if let type = type, deniedTypes.contains(type) {
+                        if isRemoteUnlock{
+                            guard let sn = sn, let doorId = doorId else { return }
+                            let key = "\(sn)_\(doorId)"
+                            remoteMqttResult = RemoteMQTTResult(
+                                doorKey: key,
+                                isSuccess: false,
+                                message: deniedBase
+                            )
+                            
+                            if type == 42 || type == 43 {
+                                speakText(accessDeniedMessage + ". " + "Time Restricted")
+                            }else{
+                                speakText(accessDeniedMessage)
+                            }
+                            
+                            UINotificationFeedbackGenerator().notificationOccurred(.error)
                         }else{
-                            speakText(accessDeniedMessage)
+                            UINotificationFeedbackGenerator().notificationOccurred(.error)
+                            AceesMessage = accessDeniedMessage
+                            overlayMessage = accessDeniedMessage
+                            // speakText(accessDeniedMessage)
+                            if type == 42 || type == 43 {
+                                speakText(accessDeniedMessage + ". " + "Time Restricted")
+                            }else{
+                                speakText(accessDeniedMessage)
+                            }
+                            animateFailure()
                         }
                         
-                        UINotificationFeedbackGenerator().notificationOccurred(.error)
-                    }else{
-                        UINotificationFeedbackGenerator().notificationOccurred(.error)
-                        AceesMessage = accessDeniedMessage
-                        overlayMessage = accessDeniedMessage
-                        // speakText(accessDeniedMessage)
-                        if type == 42 || type == 43 {
-                            speakText(accessDeniedMessage + ". " + "Time Restricted")
-                        }else{
-                            speakText(accessDeniedMessage)
-                        }
-                        animateFailure()
                     }
-                    
+                    else {
+                        print("Ignored door event type:", type ?? -1)
+                        return
+                    }
+                    doorManager.closeMQTTWindow()
+                    doorManager.clearDoorEvent()
                 }
-                else {
-                    print("Ignored door event type:", type ?? -1)
-                    return
-                }
-                doorManager.closeMQTTWindow()
-                doorManager.clearDoorEvent()
             }
-        
         
         
             .onReceive(doorManager.$doorEvent.compactMap({ $0 })) { event in
