@@ -169,7 +169,7 @@ struct AddUserView: View {
                                 }
                                 
                                 LabeledTextField(
-                                    title: "NFC Card ID",
+                                    title: "Digital Key Fob ID",
                                     placeholder: "Generate NFC Card Id",
                                     isRequired: true,
                                     text: $nfcId,
@@ -195,7 +195,7 @@ struct AddUserView: View {
                                         
                                         // Digital
                                         CheckBoxView(
-                                            title: "Digital",
+                                            title: "Phone Tap",
                                             isChecked: $digitalAccess
                                         )
                                         

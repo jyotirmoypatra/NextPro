@@ -1151,13 +1151,13 @@ struct DoorOpenView: View {
             HStack {
                 if hasDigitalKeyAccess && hasRemoteAccess {
                     Button(action: { withAnimation { selectedTab = 0 } }) {
-                        Text("Digital Access")
+                        Text("Phone Tap")
                             .font(.custom("Inter-Bold", size: 15))
                             .foregroundColor(selectedTab == 0 ? .white : .gray)
                             .frame(maxWidth: .infinity)
                     }
                     Button(action: { withAnimation { selectedTab = 1 } }) {
-                        Text("Remote Access")
+                        Text("Remote")
                             .font(.custom("Inter-Bold", size: 15))
                             .foregroundColor(selectedTab == 1 ? .white : .gray)
                             .frame(maxWidth: .infinity)
