@@ -10,6 +10,7 @@ import SDWebImageSwiftUI
 struct ProfileEndUserView: View {
     @State private var notificationsEnabled = true
     @State private var navigateToUpdatePass = false
+    @State private var navigate_access_time = false
     @State private var navigateToEditProfile = false
     @State private var navigateToUserManagement = false
     @State private var username = ""
@@ -141,6 +142,15 @@ struct ProfileEndUserView: View {
                                 Divider().background(Color.white.opacity(0.15))
                                     .padding(.horizontal,20)
                             }
+                            
+                            
+                            UserProfileRow(title: "Access Time" , textColor: .white) {
+                                // Handle support action
+                                navigate_access_time = true
+                            }
+                            
+                            Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
                             
                             UserProfileRow(title: "Voice Message" , textColor: .white) {
                                 // Handle support action
@@ -277,6 +287,13 @@ struct ProfileEndUserView: View {
         }
         .navigationDestination(isPresented: $showFullImage) {
             FullScreenImageView(url: viewModel.image_url, isPresented: $showFullImage)
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
+                .interactiveDismissDisabled(true)
+        }
+        
+        .navigationDestination(isPresented: $navigate_access_time) {
+            AccessTimeView(userData : viewModel.userProfileData)
                 .navigationBarBackButtonHidden(true)
                 .navigationBarHidden(true)
                 .interactiveDismissDisabled(true)

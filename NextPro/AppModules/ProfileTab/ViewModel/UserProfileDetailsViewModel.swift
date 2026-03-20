@@ -28,6 +28,7 @@ class UserProfileDetailsViewModel: ObservableObject {
     
     private let networkManager = NetworkManager.shared
     @Published var isFailedDueToNoInternet = false
+    @Published var userProfileData : UserProfileData?
 
     
     func fetchUserProfile() async {
@@ -55,6 +56,7 @@ class UserProfileDetailsViewModel: ObservableObject {
             let response = try await networkManager.UserProfileDetails(id: userId)
             
             if response.status{
+                userProfileData = response.data
                 
                 isSuccess = true
                 // Assign response to UI (no UserDefaults save)
