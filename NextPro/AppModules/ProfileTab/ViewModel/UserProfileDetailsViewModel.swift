@@ -19,7 +19,6 @@ class UserProfileDetailsViewModel: ObservableObject {
     @Published var email = ""
     @Published var image_url = ""
     @Published var accountStatus = ""
-    @Published var organization = ""
     @Published var isLoading = false
     @Published var errorMessage = ""
     @Published var isSuccess = false
@@ -63,10 +62,9 @@ class UserProfileDetailsViewModel: ObservableObject {
                 phoneNumber = response.data.phone_number ?? ""
                 email = response.data.email ?? ""
                 accountStatus = response.data.status ?? ""
-                organization = response.data.organization ?? ""
                 image_url = response.data.image_url ?? ""
                 
-                 let  is_admin = response.data.is_admin ?? false
+                // let  is_admin = response.data.is_admin ?? false
 //                let oldValue = UserDefaults.standard.bool(forKey: "is_admin")
 //
 //                if oldValue != is_admin {
@@ -75,21 +73,21 @@ class UserProfileDetailsViewModel: ObservableObject {
 //                    NotificationCenter.default.post(name: .roleChanged, object: nil)
 //                }
                 
-                UserDefaults.standard.set(is_admin, forKey: "is_admin")
+               // UserDefaults.standard.set(is_admin, forKey: "is_admin")
                 
                 // Digital access Tab
-                let hasDigitalAccess = response.data.user_role_detail?.is_digital
+                let hasDigitalAccess = response.data.device_access_details?.is_digital
                 UserDefaults.standard.set(hasDigitalAccess, forKey: "digital_access")
 
                 // Remote access tab
-                let hasRemoteAccess = response.data.user_role_detail?.is_remote
+                let hasRemoteAccess = response.data.device_access_details?.is_remote
                 UserDefaults.standard.set(hasRemoteAccess, forKey: "remote_access")
                 
                 // Remote  wifi access
-                let hasRemoteWifiAccess = response.data.user_role_detail?.is_wifi
+                let hasRemoteWifiAccess = response.data.device_access_details?.is_wifi
                 UserDefaults.standard.set(hasRemoteWifiAccess, forKey: "remote_wifi")
                 // Remote access tab
-                let hasRemoteBleAccess = response.data.user_role_detail?.is_ble
+                let hasRemoteBleAccess = response.data.device_access_details?.is_ble
                 UserDefaults.standard.set(hasRemoteBleAccess, forKey: "remote_ble")
                 
                 // PERMISSION PARSING

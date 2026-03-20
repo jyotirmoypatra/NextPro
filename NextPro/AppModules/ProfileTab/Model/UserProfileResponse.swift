@@ -20,14 +20,9 @@ struct UserProfileData: Decodable {
     let username: String?
     let email: String?
     let user_type: String?
-    let is_admin: Bool?
 
     let phone_number: String?
     let status: String?
-    let organization: String?
-
-    let created_at: String?
-    let updated_at: String?
 
     let image_url: String?
 
@@ -35,6 +30,8 @@ struct UserProfileData: Decodable {
     let user_role_detail: UserRoleDetail?
 
     let permissions: Permissions?
+
+    let device_access_details: DeviceAccessDetails?
 
     let nfc_type: String?
     let nfc_physical: String?
@@ -56,44 +53,7 @@ struct UserProfileData: Decodable {
     let source: String?
 }
 
-struct UserRoleDetail: Decodable {
-    let id: String?
-    let role_name: String?
 
-    let is_web: Bool?
-    let is_mobile: Bool?
-
-    let is_digital: Bool?
-    let is_remote: Bool?
-    let is_ble: Bool?
-    let is_wifi: Bool?
-}
-
-struct Permissions: Decodable {
-    let sub_admin: PermissionAction?
-    let staff_role: PermissionAction?
-    let access_group: PermissionAction?
-    let facility_user: PermissionAction?
-    let device_mapping: PermissionAction?
-    let door_management: PermissionAction?
-    let device_management: PermissionAction?
-    let building_management: PermissionAction?
-    let facility_management: PermissionAction?
-}
-
-
-
-struct PermissionAction: Decodable {
-    let read: Bool?
-    let write: Bool?
-}
-
-
-
-
-
-
-//UserEditProfileResponse
 
 struct UserEditProfileResponse: Decodable {
     let status: Bool

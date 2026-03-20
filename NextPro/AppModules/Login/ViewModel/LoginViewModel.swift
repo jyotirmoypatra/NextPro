@@ -103,18 +103,18 @@ class LoginViewModel: ObservableObject {
                
 
                 // Digital access Tab
-                let hasDigitalAccess = response.user_role_detail?.is_digital  ?? false
+                let hasDigitalAccess = response.device_access_details?.is_digital  ?? false
                 UserDefaults.standard.set(hasDigitalAccess, forKey: "digital_access")
 
                 // Remote access tab
-                let hasRemoteAccess = response.user_role_detail?.is_remote  ?? false
+                let hasRemoteAccess = response.device_access_details?.is_remote  ?? false
                 UserDefaults.standard.set(hasRemoteAccess, forKey: "remote_access")
                 
                 // Remote  wifi access
-                let hasRemoteWifiAccess = response.user_role_detail?.is_wifi  ?? false
+                let hasRemoteWifiAccess = response.device_access_details?.is_wifi  ?? false
                 UserDefaults.standard.set(hasRemoteWifiAccess, forKey: "remote_wifi")
                 // Remote access tab
-                let hasRemoteBleAccess = response.user_role_detail?.is_ble  ?? false
+                let hasRemoteBleAccess = response.device_access_details?.is_ble  ?? false
                 UserDefaults.standard.set(hasRemoteBleAccess, forKey: "remote_ble")
                 
                 
