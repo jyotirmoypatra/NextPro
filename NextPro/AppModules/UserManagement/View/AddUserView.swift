@@ -26,6 +26,7 @@ struct AddUserView: View {
     @State private var password = "Password@2026"
     @State private var phone = ""
     @State private var nfcId = ""
+    @State private var nfcPhysicalNumber = ""
    
     @State private var digitalAccess = true
     @State private var remoteAccess = false
@@ -36,6 +37,10 @@ struct AddUserView: View {
     
     @State private var isSelectAccessGroup: Bool = true
     @State private var isSelectDoor: Bool = false
+    
+    @State private var isSelectMobileAPP: Bool = true
+    @State private var isSelectKeyFob: Bool = false
+    @State private var isSelectBoth: Bool = false
 
     @State private var showStartTimePicker = false
     @State private var showEndTimePicker = false
@@ -64,6 +69,7 @@ struct AddUserView: View {
     @State private var hasInitialized = false
     
     @State private var isInitialLoading = false
+    @State private var nfcType : String = "DIGITAL"
     
     
     enum Field {
@@ -181,34 +187,178 @@ struct AddUserView: View {
                                 
                                 
                                 
-                                VStack(alignment: .leading, spacing: 10) {
+//                                VStack(alignment: .leading, spacing: 10) {
+//                                    HStack(spacing: 2) {
+//                                        Text("DEVICE ACCESS")
+//                                            .font(.custom("Inter-Medium", size: 16))
+//                                            .foregroundColor(.white)
+//                                        
+//                                        Text("*")
+//                                            .foregroundColor(.red)
+//                                    }
+//                                    
+//                                    VStack(spacing: 20) {
+//                                        
+//                                        // Digital
+//                                        CheckBoxView(
+//                                            title: "Phone Tap",
+//                                            isChecked: $digitalAccess
+//                                        )
+//                                        
+//                                        // Remote
+//                                        CheckBoxView(
+//                                            title: "Remote",
+//                                            isChecked: $remoteAccess
+//                                        )
+//                                    }
+//                                    .padding(12)
+//                                    .background(Color.white.opacity(0.15))
+//                                    .cornerRadius(12)
+//                                }
+                                
+                                VStack(alignment: .leading, spacing: 12) {
+
                                     HStack(spacing: 2) {
                                         Text("DEVICE ACCESS")
                                             .font(.custom("Inter-Medium", size: 16))
                                             .foregroundColor(.white)
-                                        
-                                        Text("*")
-                                            .foregroundColor(.red)
+
+                                        Text("*").foregroundColor(.red)
                                     }
-                                    
+
                                     VStack(spacing: 20) {
+
+                                   
+                                        AccessTypeRow(
+                                            title: "Mobile App",
+                                            isSelected: isSelectMobileAPP
+                                        ) {
+                                            isSelectMobileAPP = true
+                                            isSelectKeyFob = false
+                                            isSelectBoth = false
+                                            digitalAccess = true
+                                            nfcType = "DIGITAL"
+                                        }
                                         
-                                        // Digital
-                                        CheckBoxView(
-                                            title: "Phone Tap",
-                                            isChecked: $digitalAccess
-                                        )
+                                        // One Time
+                                        AccessTypeRow(
+                                            title: "Key Fob/Card",
+                                            isSelected: isSelectKeyFob
+                                        ) {
+                                            isSelectMobileAPP = false
+                                            isSelectKeyFob = true
+                                            isSelectBoth = false
+                                            digitalAccess = false
+                                            remoteAccess = false
+                                            nfcType = "PHYSICAL"
+                                        }
                                         
-                                        // Remote
-                                        CheckBoxView(
-                                            title: "Remote",
-                                            isChecked: $remoteAccess
-                                        )
+                                        AccessTypeRow(
+                                            title: "Both",
+                                            isSelected: isSelectBoth
+                                        ) {
+                                            isSelectMobileAPP = false
+                                            isSelectKeyFob = false
+                                            isSelectBoth = true
+                                            digitalAccess = true
+                                            nfcType = "BOTH"
+                                        }
+
+                                        Divider()
+                                            .background(Color.white.opacity(0.15))
+                                            
+                               
+                                        if nfcType == "DIGITAL" || nfcType == "BOTH" {
+
+                                            VStack(alignment: .leading, spacing: 12) {
+
+                                                Text("Mobile App Options:")
+                                                    .foregroundColor(.white)
+                                                    .font(.system(size: 15, weight: .medium))
+
+//                                                VStack(spacing: 12) {
+//                                                    // Digital
+//                                                   CheckBoxView(
+//                                                       title: "Phone Tap",
+//                                                       isChecked: $digitalAccess
+//                                                   )
+//                                                    //remote
+//                                                    CheckBoxView(
+//                                                       title: "Remote",
+//                                                       isChecked: $remoteAccess
+//                                                   )
+//                                                    //bluetooth
+//                                                    CheckBoxView(
+//                                                       title: "Bluetooth",
+//                                                       isChecked: $remoteAccess
+//                                                    ).padding(.leading,10)
+//                                                }
+//                                                .padding()
+//                                                .background(
+//                                                    RoundedRectangle(cornerRadius: 12)
+//                                                        .stroke(Color.white.opacity(0.3))
+//                                                )
+                                                
+                                                VStack(spacing: 20) {
+
+                                                    // Phone Tap
+                                                    CheckBoxView(
+                                                        title: "Phone Tap",
+                                                        isChecked: $digitalAccess
+                                                    )
+
+                                                    // Remote + Bluetooth (Grouped)
+                                                    VStack(alignment: .leading, spacing: 10) {
+
+                                                        CheckBoxView(
+                                                            title: "Remote",
+                                                            isChecked: $remoteAccess
+                                                        )
+
+                                                        //Sub Option
+                                                        if remoteAccess {
+                                                            CheckBoxView(
+                                                                title: "Bluetooth",
+                                                                isChecked: $remoteAccess,
+                                                                isDisable : true
+                                                            )
+                                                            .padding(.leading, 28)
+                                                            .opacity(0.9)
+                                                        }
+                                                    }
+                                                }
+                                                .padding()
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .stroke(Color.white.opacity(0.3))
+                                                )
+                                            }
+                                        }
+
+                                        // MARK: - Key Fob Input
+                                        if nfcType == "PHYSICAL" || nfcType == "BOTH" {
+
+                                            VStack(alignment: .leading, spacing: 8) {
+
+                                                Text("Physical Key Fob/Card ID:")
+                                                    .foregroundColor(.white)
+                                                    .font(.system(size: 15, weight: .medium))
+
+                                                TextField("Enter key fob/card ID", text: $nfcPhysicalNumber)
+                                                    .padding()
+                                                    .background(Color.white.opacity(0.15))
+                                                    .cornerRadius(10)
+                                                    .foregroundColor(.white)
+                                            }
+                                        }
                                     }
-                                    .padding(12)
+                                    .padding()
                                     .background(Color.white.opacity(0.15))
                                     .cornerRadius(12)
                                 }
+                                
+                                
+                                
                                 
                                 // ACCESS TYPE
                                 VStack(alignment: .leading, spacing: 10) {
@@ -418,7 +568,7 @@ struct AddUserView: View {
                                         )
                                     }
                                     
-                                    // ✅ Selected Door List
+                                    // Selected Door List
                                     VStack{
                                         ForEach(selectedDoors) { door in
                                             HStack {
@@ -623,8 +773,28 @@ struct AddUserView: View {
                     email =  user.email
                     username = user.username ?? ""
                     
+                    nfcType = user.nfc_type
+                    
+                    if (nfcType == "DIGITAL") {
+                        isSelectMobileAPP = true
+                        isSelectKeyFob = false
+                        isSelectBoth = false
+                    }else if(nfcType == "PHYSICAL"){
+                        isSelectMobileAPP = false
+                        isSelectKeyFob = true
+                        isSelectBoth = false
+                    }
+                    else if(nfcType == "BOTH"){
+                        isSelectMobileAPP = false
+                        isSelectKeyFob = false
+                        isSelectBoth = true
+                    }
+                    
                     digitalAccess =  user.is_digital
                     remoteAccess =  user.is_remote
+                    
+                    nfcPhysicalNumber = user.nfc_physical ?? ""
+                    nfcId = user.nfc_digital ?? ""
                     
                     if user.creation_method == "door_selection" {
                         isSelectAccessGroup = false
@@ -815,12 +985,23 @@ struct AddUserView: View {
         }
 
         if nfcId.trimmingCharacters(in: .whitespaces).isEmpty {
-            return "NFC Card ID is required"
+            return "Digital Card ID is required"
         }
 
-        if !digitalAccess && !remoteAccess {
-            return "Please select at least one device access (Digital or Remote)"
+    
+        if isSelectMobileAPP || isSelectBoth
+        {
+            if !digitalAccess && !remoteAccess {
+                return "Please select at least one mobile app options (Phone Tap or Remote)"
+            }
         }
+        
+        if isSelectKeyFob  || isSelectBoth{
+            if nfcPhysicalNumber.trimmingCharacters(in: .whitespaces).isEmpty {
+                return "Physical Key Fob ID is required"
+            }
+        }
+        
         
         if isSelectDoor {
             
@@ -867,6 +1048,7 @@ struct AddUserView: View {
 
         return nil // All good
     }
+    
     
     
     func CreateUserApiCall(){
@@ -919,15 +1101,17 @@ struct AddUserView: View {
                 email: email,
                 phone_number: phone,
                 user_type: "non_staff",
+                
 
                 // Access
+                
                 is_digital: digitalAccess,
                 is_remote: remoteAccess,
 
                 // NFC
-                nfc_type: "DIGITAL",
-                nfc_physical: "",
-                nfc_digital: nfcId,
+                nfc_type: nfcType,
+                nfc_physical: (isSelectKeyFob || isSelectBoth) ? nfcPhysicalNumber : "",
+                nfc_digital: (isSelectMobileAPP || isSelectBoth) ? nfcId : "",
 
                 // Doors
                 doors: isSelectDoor ? selectedDoors.map { $0.id } : [],
@@ -955,7 +1139,7 @@ struct AddUserView: View {
                 resetForm()
                 showAddUserSuccess = true
             }else{
-                resetForm()
+              //  resetForm()
                 showAddUserVMError = true
             }
         }
@@ -1269,6 +1453,7 @@ struct CheckBoxView: View {
 
     let title: String
     @Binding var isChecked: Bool
+    var isDisable:  Bool = false
 
     var body: some View {
         Button(action: {
@@ -1277,14 +1462,19 @@ struct CheckBoxView: View {
             HStack{
 
                 Text(title)
-                    .foregroundColor(.white)
+                    .foregroundColor(isDisable ? .white.opacity(0.8) : .white)
                     .font(.custom("Inter-Regular", size: 15))
                 
                 Spacer()
-                
-                Image( isChecked ? "square-check" : "square-uncheck")
-                    .resizable()
-                    .frame(width: 22, height: 22)
+                if isDisable {
+                    Image( isChecked ? "gray_check" : "square-uncheck")
+                        .resizable()
+                        .frame(width: 22, height: 22)
+                }else{
+                    Image( isChecked ? "square-check" : "square-uncheck")
+                        .resizable()
+                        .frame(width: 22, height: 22)
+                }
 
                 
             }
