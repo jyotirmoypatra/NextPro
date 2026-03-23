@@ -64,15 +64,13 @@ struct EditProfileView: View {
                             Image(systemName: "arrow.left")
                                 .font(.system(size: 20, weight: .semibold))
                                 .foregroundColor(.white)
-                                .padding(10)
-                            // .background(Color.white.opacity(0.1))
                                 .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
                         
                         Spacer()
                         
                         Text("Edit Profile")
-                            .font(.custom("Inter-SemiBold", size: 18))
+                            .font(.custom("Inter-SemiBold", size: 16))
                             .foregroundColor(.white)
                         
                         Spacer()
@@ -86,8 +84,8 @@ struct EditProfileView: View {
                         }
                         .disabled(true)
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 16)
+                    .padding(.horizontal,10)
+                    .padding(.top, 10)
                     .frame(maxWidth: .infinity, alignment: .top)
                     .zIndex(999)
                     

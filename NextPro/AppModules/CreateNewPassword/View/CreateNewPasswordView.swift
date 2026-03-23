@@ -56,17 +56,15 @@ struct CreateNewPasswordView: View {
                             Image(systemName: "arrow.left")
                                 .font(.system(size: 20, weight: .semibold))
                                 .foregroundColor(.white)
-                                .padding(10)
-                            // .background(Color.white.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                            
                         }
                         
                         Spacer()
                         
                         
                     }
-                    .padding(.horizontal)
-                    // .background(Color.black)
+                    .padding(.horizontal,10)
+                    .padding(.top,10)
                     .frame(maxWidth: .infinity, alignment: .top)
                     .zIndex(999)
                     

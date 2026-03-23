@@ -85,7 +85,6 @@ struct VoiceAnnouncementsDoor: View {
                             Image(systemName: "arrow.left")
                                 .font(.system(size: 20, weight: .semibold))
                                 .foregroundColor(.white)
-                                .padding(10)
                                 .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
                         
@@ -98,8 +97,8 @@ struct VoiceAnnouncementsDoor: View {
                         Spacer()
                         
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 16)
+                    .padding(.horizontal,10)
+                    .padding(.top, 10)
                 //    .padding(.bottom, 5)
                     .frame(maxWidth: .infinity, alignment: .top)
                     .zIndex(111)
@@ -109,6 +108,7 @@ struct VoiceAnnouncementsDoor: View {
                         .foregroundColor(.gray)
                         .padding(.horizontal,15)
                         .padding(.bottom,5)
+                        .padding(.top,2)
                         .multilineTextAlignment(.center)
                     
                     VStack {
@@ -281,7 +281,7 @@ struct VoiceAnnouncementsDoor: View {
                         
 
                         
-                    }.padding(.horizontal, 20)
+                    }.padding(.horizontal, 10)
                 }
                 
             }

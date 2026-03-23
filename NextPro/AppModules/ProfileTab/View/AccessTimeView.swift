@@ -52,7 +52,7 @@ struct AccessTimeView: View {
                             .foregroundColor(.white)
                             .font(.custom("Inter-Bold", size: 16))
                     )
-                    .padding(.horizontal, 5)
+                    .padding(.horizontal, 10)
                     .padding(.top, 10)
                     .padding(.bottom, 15)
                     
@@ -192,7 +192,7 @@ struct AccessTimeView: View {
 
                             Spacer(minLength: 30)
                         }
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, 10)
                     }
                 }
             }

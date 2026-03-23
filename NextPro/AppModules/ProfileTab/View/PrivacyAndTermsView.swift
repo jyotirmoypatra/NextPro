@@ -34,48 +34,44 @@ struct  PrivacyAndTermsView: View {
                     .ignoresSafeArea()
                 
                 VStack{
+                    
                     HStack {
                         Button(action: {
                             dismiss()
                         }) {
-                            Image(systemName: "arrow.left")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(.white)
-                                .padding(10)
-                            // .background(Color.white.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                            HStack {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(.white)
+                                
+                                Text("Back")
+                                    .foregroundColor(.white)
+                                    .font(.custom("Inter-SemiBold", size: 16))
+                            }
                         }
                         
                         Spacer()
                         
-                        Text(WebViewType == "privacy" ? "Privacy Policy" : "Terms & Conditions")
-                            .font(.custom("Inter-SemiBold", size: 18))
-                            .foregroundColor(.white)
-                        
-                        Spacer()
-                        
-                        // Invisible button for symmetry
-                        Button(action: {}) {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 18))
-                                .foregroundColor(.clear)
-                                .padding(10)
-                        }
-                        .disabled(true)
+                        // RIGHT: Info Icon
+                        Image(systemName: "info.circle")
+                            .resizable()
+                            .frame(width: 20, height: 20)
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 16)
-                    .frame(maxWidth: .infinity, alignment: .top)
-                    .zIndex(1)
-                    
-                    
+                    .overlay(
+                        Text(WebViewType == "privacy" ? "Privacy Policy" : "Terms & Conditions")
+                            .font(.custom("Inter-SemiBold", size: 16))
+                            .foregroundColor(.white)
+                    )
+                    .padding(.horizontal, 10)
+                    .padding(.top, 10)
+                    .padding(.bottom, 15)
                     
                     
                     ScrollView {
                         WebContentView(
                             htmlString: HTMLString,
                             onContentHeightChange: { height in
-                                let bufferedHeight = height + 50   // 🔥 IMPORTANT
+                                let bufferedHeight = height + 50   //  IMPORTANT
                                 let clamped = max(300, bufferedHeight)
                                 
                                 if abs(clamped - webContentHeight) > 1 {

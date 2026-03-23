@@ -310,17 +310,17 @@ struct AddUserView: View {
                                         }
 
                                         
-                                        if nfcType == "DIGITAL" || nfcType == "BOTH" {
-                                            LabeledTextField(
-                                                title: "Digital Key Fob ID",
-                                                placeholder: "Generate NFC Card Id",
-                                                isRequired: true,
-                                                text: $nfcId,
-                                                isHaveBtn: true,
-                                                isEditMode: editUser != nil
-                                                
-                                            )
-                                        }
+//                                        if nfcType == "DIGITAL" || nfcType == "BOTH" {
+//                                            LabeledTextField(
+//                                                title: "Digital Key Fob ID",
+//                                                placeholder: "Generate NFC Card Id",
+//                                                isRequired: true,
+//                                                text: $nfcId,
+//                                                isHaveBtn: true,
+//                                                isEditMode: editUser != nil
+//
+//                                            )
+//                                        }
                                         
                                         // MARK: - Key Fob Input
                                         if nfcType == "PHYSICAL" || nfcType == "BOTH" {
