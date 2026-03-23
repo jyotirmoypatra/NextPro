@@ -13,6 +13,7 @@ struct AddUserView: View {
     let onDismiss: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @StateObject private var addUserVM = AddUserViewModel()
+    @StateObject private var generateNFCID = GenerateUniqueNfcViewModel()
     @StateObject private var getAccessGroupVM = GetAccessGroupListViewModel()
     @State private var showAddUserVMError = false
     @State private var showAccessGroupVMError = false
@@ -174,47 +175,16 @@ struct AddUserView: View {
                                     focusedField = nil
                                 }
                                 
-                                LabeledTextField(
-                                    title: "Digital Key Fob ID",
-                                    placeholder: "Generate NFC Card Id",
-                                    isRequired: true,
-                                    text: $nfcId,
-                                    isHaveBtn: true,
-                                    isEditMode: editUser != nil
-                                    
-                                )
-                                
-                                
-                                
-                                
-//                                VStack(alignment: .leading, spacing: 10) {
-//                                    HStack(spacing: 2) {
-//                                        Text("DEVICE ACCESS")
-//                                            .font(.custom("Inter-Medium", size: 16))
-//                                            .foregroundColor(.white)
-//                                        
-//                                        Text("*")
-//                                            .foregroundColor(.red)
-//                                    }
+//                                LabeledTextField(
+//                                    title: "Digital Key Fob ID",
+//                                    placeholder: "Generate NFC Card Id",
+//                                    isRequired: true,
+//                                    text: $nfcId,
+//                                    isHaveBtn: true,
+//                                    isEditMode: editUser != nil
 //                                    
-//                                    VStack(spacing: 20) {
-//                                        
-//                                        // Digital
-//                                        CheckBoxView(
-//                                            title: "Phone Tap",
-//                                            isChecked: $digitalAccess
-//                                        )
-//                                        
-//                                        // Remote
-//                                        CheckBoxView(
-//                                            title: "Remote",
-//                                            isChecked: $remoteAccess
-//                                        )
-//                                    }
-//                                    .padding(12)
-//                                    .background(Color.white.opacity(0.15))
-//                                    .cornerRadius(12)
-//                                }
+//                                )
+                                
                                 
                                 VStack(alignment: .leading, spacing: 12) {
 
@@ -238,6 +208,8 @@ struct AddUserView: View {
                                             isSelectBoth = false
                                             digitalAccess = true
                                             nfcType = "DIGITAL"
+                                            
+                                            handleNfcGeneration()
                                         }
                                         
                                         // One Time
@@ -262,6 +234,8 @@ struct AddUserView: View {
                                             isSelectBoth = true
                                             digitalAccess = true
                                             nfcType = "BOTH"
+                                            
+                                            handleNfcGeneration()
                                         }
 
                                         Divider()
@@ -335,6 +309,19 @@ struct AddUserView: View {
                                             }
                                         }
 
+                                        
+                                        if nfcType == "DIGITAL" || nfcType == "BOTH" {
+                                            LabeledTextField(
+                                                title: "Digital Key Fob ID",
+                                                placeholder: "Generate NFC Card Id",
+                                                isRequired: true,
+                                                text: $nfcId,
+                                                isHaveBtn: true,
+                                                isEditMode: editUser != nil
+                                                
+                                            )
+                                        }
+                                        
                                         // MARK: - Key Fob Input
                                         if nfcType == "PHYSICAL" || nfcType == "BOTH" {
 
@@ -725,7 +712,7 @@ struct AddUserView: View {
                 
                 
                 // LOADING OVERLAY
-                if addUserVM.isLoading || isInitialLoading{
+                if addUserVM.isLoading || isInitialLoading || generateNFCID.isLoading{
                     ZStack {
                         Color.black.opacity(0.6)
                             .ignoresSafeArea()
@@ -1049,7 +1036,25 @@ struct AddUserView: View {
         return nil // All good
     }
     
+    func handleNfcGeneration() {
+        
+        // If already exists → don't regenerate
+        if !nfcId.trimmingCharacters(in: .whitespaces).isEmpty {
+            return
+        }
+        
+        Task {
+            await generateNfcId()
+        }
+    }
     
+    func generateNfcId() async {
+        await generateNFCID.generateNfcId()
+        
+        if let id = generateNFCID.nfcCardId {
+            nfcId = String(id)
+        }
+    }
     
     func CreateUserApiCall(){
         if let error = validateForm() {
