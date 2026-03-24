@@ -860,6 +860,9 @@ struct AddUserView: View {
                         
                     }
                 }
+                else {
+                    handleNfcGeneration()
+                }
                 
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 isInitialLoading = false
