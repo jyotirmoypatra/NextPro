@@ -14,6 +14,9 @@ struct HomeView: View {
     @State private var previousIsAdmin: Bool
     @StateObject private var profileRefreshViewModel = UserProfileDetailsViewModel()
     private let tabBarHeight: CGFloat = 55
+    @State private var openDoorsRefreshID = UUID()
+    @State private var devicesRefreshID = UUID()
+    @State private var profileRefreshID = UUID()
     
     init(isAdmin: Bool, initialTab: Int = 0) {
            self.isAdmin = isAdmin
@@ -47,6 +50,7 @@ struct HomeView: View {
                             switch selectedTab {
                             case 0:
                                 DoorOpenView()
+                                    .id(openDoorsRefreshID)
                                     .navigationBarBackButtonHidden(true)
                                     .navigationBarHidden(true)
                                     .frame(
@@ -57,12 +61,14 @@ struct HomeView: View {
                                 
                             case 1:
                                 DeviceAdminTabView()
+                                    .id(devicesRefreshID)
                                     .navigationBarBackButtonHidden(true)
                                     .navigationBarHidden(true)
                                     .frame(height: geo.size.height - tabBarHeight)
                             case 2:
                                 
                                 ProfileEndUserView()
+                                    .id(profileRefreshID)
                                     .navigationBarBackButtonHidden(true)
                                     .navigationBarHidden(true)
                                     .frame(height: geo.size.height - tabBarHeight)
@@ -83,7 +89,7 @@ struct HomeView: View {
                                     inactiveIcon: "home-inactive",
                                     isSelected: selectedTab == 0
                                 )
-                                .onTapGesture { openDoorsTabSelected() }
+                                .onTapGesture { selectTab(0) }
                                 
                                 Spacer()
                                 
@@ -93,7 +99,7 @@ struct HomeView: View {
                                     inactiveIcon: "multi-window-inactive",
                                     isSelected: selectedTab == 1
                                 )
-                                .onTapGesture { selectedTab = 1 }
+                                .onTapGesture { selectTab(1) }
                                 
                                 Spacer()
                                 
@@ -103,7 +109,7 @@ struct HomeView: View {
                                     inactiveIcon: "profile-circle-inactive",
                                     isSelected: selectedTab == 2
                                 )
-                                .onTapGesture { selectedTab = 2 }
+                                .onTapGesture { selectTab(2) }
                             }
                             .padding(.horizontal, 30)
                         }
@@ -113,96 +119,21 @@ struct HomeView: View {
                     }
                     .frame(width: geo.size.width, height: geo.size.height)
                 }else{
-//                    VStack(spacing: 0) {
-//                       
-//                        VStack {
-//                            switch selectedTab {
-//                            case 0:
-//                                DoorOpenView()
-//                                    .navigationBarBackButtonHidden(true)
-//                                    .navigationBarHidden(true)
-//                                    .frame(
-//                                                    maxWidth: .infinity,
-//                                                    maxHeight: .infinity
-//                                                )
-//                            case 1:
-//                                MembershipEndUserView()
-//                                    .navigationBarBackButtonHidden(true)
-//                                    .navigationBarHidden(true)
-//                                    .frame(height: geo.size.height - tabBarHeight)
-//
-//                            case 2:
-//                                ProfileEndUserView()
-//                                    .navigationBarBackButtonHidden(true)
-//                                    .navigationBarHidden(true)
-//                                    .frame(height: geo.size.height - tabBarHeight)
-//
-//                            default:
-//                                EmptyView()
-//                            }
-//                        }
-//                        //.frame(maxWidth: .infinity, maxHeight: .infinity)
-//                        .transition(.opacity)
-//                        .animation(.easeInOut(duration: 0.25), value: selectedTab)
-//
-//                        
-//                        //tabv
-//                        VStack(spacing: 10){
-//                            Divider()
-//                                .background(Color.white.opacity(0.15))
-//                            HStack {
-//                                TabBarItemUser(
-//                                    title: "Open Doors",
-//                                    activeIcon: "key-active",
-//                                    inactiveIcon: "key-inactive",
-//                                    isSelected: selectedTab == 0
-//                                )
-//                                .onTapGesture { selectedTab = 0 }
-//                                
-//                                Spacer()
-//                                
-//                                TabBarItemUser(
-//                                    title: "Membership",
-//                                    activeIcon: "user-star-active",
-//                                    inactiveIcon: "user-star-inactive",
-//                                    isSelected: selectedTab == 1
-//                                )
-//                                .onTapGesture { selectedTab = 1 }
-//                                
-//                                Spacer()
-//                                
-//                                TabBarItemUser(
-//                                    title: "Profile",
-//                                    activeIcon: "profile-circle-active",
-//                                    inactiveIcon: "profile-circle-inactive",
-//                                    isSelected: selectedTab == 2
-//                                )
-//                                .onTapGesture { selectedTab = 2 }
-//                            }
-//                            .padding(.horizontal, 30)
-//                        }
-//                        .frame(height: tabBarHeight)
-//                        .background(Color.black.opacity(0.9))
-//                        .ignoresSafeArea(edges: .bottom)
-//                       
-//                    }
-                   // .frame(width: geo.size.width, height: geo.size.height)
-                    
-                    
-                    
-                    
+
                     VStack(spacing: 0) {
                            
                             VStack {
                                 switch selectedTab {
                                 case 0:
                                     DoorOpenView()
+                                        .id(openDoorsRefreshID)
                                         .navigationBarBackButtonHidden(true)
                                         .navigationBarHidden(true)
                                         .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                                 case 1:
                                     ProfileEndUserView()
+                                        .id(profileRefreshID)
                                         .navigationBarBackButtonHidden(true)
                                         .navigationBarHidden(true)
                                         .frame(height: geo.size.height - tabBarHeight)
@@ -225,7 +156,7 @@ struct HomeView: View {
                                         inactiveIcon: "key-inactive",
                                         isSelected: selectedTab == 0
                                     )
-                                    .onTapGesture { openDoorsTabSelected() }
+                                    .onTapGesture { selectTab(0) }
                                     
                                     Spacer()
                                     
@@ -235,7 +166,7 @@ struct HomeView: View {
                                         inactiveIcon: "profile-circle-inactive",
                                         isSelected: selectedTab == 1
                                     )
-                                    .onTapGesture { selectedTab = 1 }
+                                    .onTapGesture { selectTab(1) }
                                 }
                                 .padding(.horizontal, 60)
                             }
@@ -264,11 +195,38 @@ struct HomeView: View {
         }
     }
     
-    private func openDoorsTabSelected() {
-        selectedTab = 0
+    private func selectTab(_ tab: Int) {
+          silentlyRefreshProfile()
         
-        Task {
-            await profileRefreshViewModel.fetchUserProfile()
+          if selectedTab == tab {
+              refreshCurrentTab(tab)
+              return
+          }
+          
+          selectedTab = tab
+
+      }
+    
+    private func refreshCurrentTab(_ tab: Int) {
+          switch tab {
+          case 0:
+              openDoorsRefreshID = UUID()
+          case 1:
+              if isAdmin {
+                  devicesRefreshID = UUID()
+              } else {
+                  profileRefreshID = UUID()
+              }
+          case 2:
+              profileRefreshID = UUID()
+          default:
+              break
+          }
+      }
+    
+    private func silentlyRefreshProfile() {
+            Task {
+                await profileRefreshViewModel.fetchUserProfile()
+            }
         }
-    }
 }
