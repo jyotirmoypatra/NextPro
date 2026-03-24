@@ -11,11 +11,14 @@ import SwiftUI
 struct HomeView: View {
     let isAdmin: Bool
     @State private var selectedTab = 0
+    @State private var previousIsAdmin: Bool
+    @StateObject private var profileRefreshViewModel = UserProfileDetailsViewModel()
     private let tabBarHeight: CGFloat = 55
     
     init(isAdmin: Bool, initialTab: Int = 0) {
            self.isAdmin = isAdmin
            _selectedTab = State(initialValue: initialTab)
+           _previousIsAdmin = State(initialValue: isAdmin)
        }
     
 
@@ -80,7 +83,7 @@ struct HomeView: View {
                                     inactiveIcon: "home-inactive",
                                     isSelected: selectedTab == 0
                                 )
-                                .onTapGesture { selectedTab = 0 }
+                                .onTapGesture { openDoorsTabSelected() }
                                 
                                 Spacer()
                                 
@@ -222,7 +225,7 @@ struct HomeView: View {
                                         inactiveIcon: "key-inactive",
                                         isSelected: selectedTab == 0
                                     )
-                                    .onTapGesture { selectedTab = 0 }
+                                    .onTapGesture { openDoorsTabSelected() }
                                     
                                     Spacer()
                                     
@@ -246,10 +249,26 @@ struct HomeView: View {
 
             }
         }
-        .onChange(of: isAdmin) { _ in
-            selectedTab = 0
+        .onChange(of: isAdmin) { newValue in
+            let oldValue = previousIsAdmin
+            let oldProfileTab = oldValue ? 2 : 1
+            let newProfileTab = newValue ? 2 : 1
+            
+            if selectedTab == oldProfileTab {
+                selectedTab = newProfileTab
+            } else if oldValue && !newValue && selectedTab == 1 {
+                selectedTab = 0
+            }
+            
+            previousIsAdmin = newValue
+        }
+    }
+    
+    private func openDoorsTabSelected() {
+        selectedTab = 0
+        
+        Task {
+            await profileRefreshViewModel.fetchUserProfile()
         }
     }
 }
-
-
