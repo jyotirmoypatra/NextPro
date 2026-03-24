@@ -325,18 +325,26 @@ struct AddUserView: View {
                                         // MARK: - Key Fob Input
                                         if nfcType == "PHYSICAL" || nfcType == "BOTH" {
 
-                                            VStack(alignment: .leading, spacing: 8) {
-
-                                                Text("Physical Key Fob/Card ID:")
-                                                    .foregroundColor(.white)
-                                                    .font(.system(size: 15, weight: .medium))
-
-                                                TextField("Enter key fob/card ID", text: $nfcPhysicalNumber)
-                                                    .padding()
-                                                    .background(Color.white.opacity(0.15))
-                                                    .cornerRadius(10)
-                                                    .foregroundColor(.white)
-                                            }
+//                                            VStack(alignment: .leading, spacing: 8) {
+//
+//                                                Text("Physical Key Fob/Card ID:")
+//                                                    .foregroundColor(.white)
+//                                                    .font(.system(size: 15, weight: .medium))
+//
+//                                                TextField("Enter key fob/card ID", text: $nfcPhysicalNumber)
+//                                                    .padding()
+//                                                    .background(Color.white.opacity(0.15))
+//                                                    .cornerRadius(10)
+//                                                    .foregroundColor(.white)
+//                                            }
+                                            
+                                            LabeledTextField(
+                                                title: "Physical Key Fob/Card ID:",
+                                                placeholder: "Enter key fob/card ID",
+                                                text: $nfcPhysicalNumber,
+                                                keyboardType: .numberPad
+                                                
+                                            )
                                         }
                                     }
                                     .padding()
