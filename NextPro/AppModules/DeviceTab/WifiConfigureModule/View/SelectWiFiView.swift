@@ -11,17 +11,32 @@ import SwiftUI
 import SystemConfiguration.CaptiveNetwork
 import CoreLocation
 import NetworkExtension
+import UIKit
 
 
 struct SelectWiFiView: View {
     var selectedDevice: AssignDevice
     @State private var availableWiFiList: [String] = []
     @State private var navigateToWifiPassword = false
+    @State private var selectedWiFiName = ""
+    @State private var showLocationAlert = false
+    @State private var locationAlertMessage = ""
+    @State private var emptyStateMessage = "No Wi-Fi networks found."
+    @State private var isEmptyStateError = false
     @Environment(\.dismiss) private var dismiss
     @State private var selectedWiFiIndex: Int? = nil
     @State private var isLoadingWiFi = true
     @State private var locationManager = CLLocationManager()
     @State private var locationDelegate: CLLocationDelegate?
+    @State private var willEnterForegroundObserver: NSObjectProtocol?
+
+    private var selectedWiFiNetwork: String? {
+        guard let index = selectedWiFiIndex,
+              availableWiFiList.indices.contains(index) else {
+            return nil
+        }
+        return availableWiFiList[index]
+    }
 
     var body: some View {
         
@@ -100,8 +115,10 @@ struct SelectWiFiView: View {
                             .padding(.top, 30)
                             .frame(height: 200)
                     } else if availableWiFiList.isEmpty {
-                        Text("No Wi-Fi networks found.")
-                            .foregroundColor(.white.opacity(0.6))
+                        Text(emptyStateMessage)
+                            .foregroundColor(isEmptyStateError ? .red : .white.opacity(0.6))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 12)
                             .padding(.top, 20)
                     } else {
                         ScrollView(showsIndicators: false) {
@@ -153,6 +170,8 @@ struct SelectWiFiView: View {
                     
                     
                     Button {
+                        guard let selectedWiFiNetwork else { return }
+                        selectedWiFiName = selectedWiFiNetwork
                         navigateToWifiPassword = true
                     } label: {
                         Text("Next")
@@ -161,15 +180,15 @@ struct SelectWiFiView: View {
                             .frame(maxWidth: .infinity)
                             .padding()
                     }
-                    .background(selectedWiFiIndex == nil ? Color.gray : Color.white)
+                    .background(selectedWiFiNetwork == nil ? Color.gray : Color.white)
                     .cornerRadius(12)
-                    .disabled(selectedWiFiIndex == nil)
+                    .disabled(selectedWiFiNetwork == nil)
                     .padding(.bottom, 10)
                     .navigationDestination(isPresented: $navigateToWifiPassword) {
-                        if let index = selectedWiFiIndex {
+                        if !selectedWiFiName.isEmpty {
                             SetWiFiPassword(
                                 selectedDevice: selectedDevice,
-                                selectedWiFiNetwork: availableWiFiList[index]
+                                selectedWiFiNetwork: selectedWiFiName
                             )
                         }
                     }
@@ -180,6 +199,16 @@ struct SelectWiFiView: View {
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
+        .alert("Location Required", isPresented: $showLocationAlert) {
+            Button("Open Settings") {
+                openAppSettings()
+            }
+            Button("Cancel", role: .cancel) {
+                showLocationAlert = false
+            }
+        } message: {
+            Text(locationAlertMessage)
+        }
 
         .onAppear {
             // Create delegate
@@ -192,6 +221,27 @@ struct SelectWiFiView: View {
 
             // Check permission and load Wi-Fi if already authorized
             checkLocationPermissionAndFetchWiFi()
+
+            willEnterForegroundObserver = NotificationCenter.default.addObserver(
+                forName: UIApplication.willEnterForegroundNotification,
+                object: nil,
+                queue: .main
+            ) { _ in
+                checkLocationPermissionAndFetchWiFi()
+            }
+        }
+        .onDisappear {
+            if let observer = willEnterForegroundObserver {
+                NotificationCenter.default.removeObserver(observer)
+                willEnterForegroundObserver = nil
+            }
+        }
+        .onChange(of: availableWiFiList) { newValue in
+            guard let selectedWiFiIndex else { return }
+
+            if !newValue.indices.contains(selectedWiFiIndex) {
+                self.selectedWiFiIndex = nil
+            }
         }
 
         .navigationBarBackButtonHidden(true)
@@ -200,29 +250,72 @@ struct SelectWiFiView: View {
     private func handleLocationAuthStatus(_ status: CLAuthorizationStatus) {
         switch status {
         case .authorizedAlways, .authorizedWhenInUse:
-            loadConnectedWiFi() // ✅ Only called after user grants permission
+            checkLocationPermissionAndFetchWiFi()
+        case .denied, .restricted:
+            clearWiFiList(
+                """
+                Location permission required
+                
+                Go to:
+                Settings → Apps → Zlyx → Location → Allow While Using App
+                """
+            )
+            presentLocationAlert(locationAlertMessage)
         default:
             break
         }
     }
 
     private func checkLocationPermissionAndFetchWiFi() {
+        guard CLLocationManager.locationServicesEnabled() else {
+            clearWiFiList(
+                """
+                Location Services are OFF
+                
+                Go to:
+                Settings → Privacy & Security → Location Services → Turn ON
+                """
+            )
+            presentLocationAlert(locationAlertMessage)
+            return
+        }
+
         let status = locationManager.authorizationStatus
 
         switch status {
         case .notDetermined:
             // Ask user for permission
+            resetEmptyState()
             locationManager.requestWhenInUseAuthorization()
         case .authorizedWhenInUse, .authorizedAlways:
+            guard locationManager.accuracyAuthorization == .fullAccuracy else {
+                clearWiFiList(
+                    """
+                    Precise Location is OFF
+                    
+                    Go to:
+                    Settings → Apps → Zlyx → Location → Turn ON Precise Location
+                    """
+                )
+                presentLocationAlert(locationAlertMessage)
+                return
+            }
+
             // Permission granted → load Wi-Fi
             loadConnectedWiFi()
         case .denied, .restricted:
             // No permission → show empty or message
-            availableWiFiList = []
-            isLoadingWiFi = false
+            clearWiFiList(
+                """
+                Location permission required
+                
+                Go to:
+                Settings → Apps → Zlyx → Location → Allow While Using App
+                """
+            )
+            presentLocationAlert(locationAlertMessage)
         @unknown default:
-            availableWiFiList = []
-            isLoadingWiFi = false
+            clearWiFiList("No Wi-Fi networks found.", isError: false)
         }
     }
 
@@ -230,18 +323,45 @@ struct SelectWiFiView: View {
     private func loadConnectedWiFi() {
         // Show loader briefly
         self.isLoadingWiFi = true
+        resetEmptyState()
         
         NEHotspotNetwork.fetchCurrent { network in
             DispatchQueue.main.async {
                 if let ssid = network?.ssid {
                     print("✅ Connected to WiFi via NEHotspotNetwork:", ssid)
                     self.availableWiFiList = [ssid]
+                    self.resetEmptyState()
                 } else {
                     print("⚠️ No Wi-Fi network detected via NEHotspotNetwork")
-                    self.availableWiFiList = []
+                    self.clearWiFiList("No Wi-Fi networks found.", isError: false)
                 }
                 self.isLoadingWiFi = false
             }
+        }
+    }
+
+    private func presentLocationAlert(_ message: String) {
+        locationAlertMessage = message
+        showLocationAlert = true
+    }
+
+    private func clearWiFiList(_ message: String, isError: Bool = true) {
+        availableWiFiList = []
+        selectedWiFiIndex = nil
+        isLoadingWiFi = false
+        emptyStateMessage = message
+        isEmptyStateError = isError
+        locationAlertMessage = message
+    }
+
+    private func resetEmptyState() {
+        emptyStateMessage = "No Wi-Fi networks found."
+        isEmptyStateError = false
+    }
+
+    private func openAppSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
         }
     }
 
