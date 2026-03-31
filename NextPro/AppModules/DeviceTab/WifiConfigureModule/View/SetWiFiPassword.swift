@@ -9,6 +9,11 @@
 import SwiftUI
 import CoreLocation
 
+private struct LocationAlertPayload: Identifiable {
+    let id = UUID()
+    let message: String
+}
+
 struct SetWiFiPassword: View {
     var selectedDevice: AssignDevice
     var selectedWiFiNetwork: String
@@ -22,8 +27,7 @@ struct SetWiFiPassword: View {
     @State private var showPassword = false
     @State private var showError = false
     @State private var statusMessage = ""
-    @State private var locationErrorMessage = ""
-    @State private var showLocationError = false
+    @State private var locationAlertPayload: LocationAlertPayload?
     @State private var loadingMessage = ""
     @StateObject private var locationManager = LocationManager()
     
@@ -192,15 +196,20 @@ struct SetWiFiPassword: View {
                 buttonTitle: "OK"
             ) { showError = false }
         }
-        .alert("Location Required", isPresented: $showLocationError) {
-            Button("Open Settings") {
-                openAppSettings()
-            }
-            Button("Cancel", role: .cancel) {
-                showLocationError = false
-            }
-        } message: {
-            Text(locationErrorMessage)
+        .modernAlert(item: $locationAlertPayload) { payload in
+            ModernAlertView(
+                title: "Location Required",
+                message: payload.message,
+                isSuccess: false,
+                buttonTitle: "Cancel",
+                action: {
+                    locationAlertPayload = nil
+                },
+                secondaryButtonTitle: "Open Settings",
+                secondaryAction: {
+                    openAppSettings()
+                }
+            )
         }
     }
     // MARK: - WiFi Configuration
@@ -298,9 +307,6 @@ struct SetWiFiPassword: View {
     }
 
     private func validateLocationRequirements() -> Bool {
-        showLocationError = false
-        locationErrorMessage = ""
-
         guard locationManager.isLocationServicesEnabled else {
             presentLocationAlert(
                 """
@@ -348,12 +354,7 @@ struct SetWiFiPassword: View {
     }
 
     private func presentLocationAlert(_ message: String) {
-        showLocationError = false
-        locationErrorMessage = message
-
-        DispatchQueue.main.async {
-            showLocationError = true
-        }
+        locationAlertPayload = LocationAlertPayload(message: message)
     }
     
     func openAppSettings() {

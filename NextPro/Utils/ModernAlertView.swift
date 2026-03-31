@@ -111,9 +111,9 @@ struct ModernAlertView: View {
 }
 
 
-struct ModernAlertModifier: ViewModifier {
+struct ModernAlertModifier<AlertContent: View>: ViewModifier {
     @Binding var isPresented: Bool
-    let alertView: () -> ModernAlertView
+    let alertView: () -> AlertContent
     
     func body(content: Content) -> some View {
         ZStack {
@@ -132,9 +132,34 @@ struct ModernAlertModifier: ViewModifier {
     }
 }
 
+struct ModernAlertItemModifier<Item: Identifiable, AlertContent: View>: ViewModifier {
+    @Binding var item: Item?
+    let alertView: (Item) -> AlertContent
+    
+    func body(content: Content) -> some View {
+        ZStack {
+            content
+            
+            if let item {
+                Color.black.opacity(0.8)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                
+                alertView(item)
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .animation(.spring(), value: item != nil)
+    }
+}
+
 extension View {
-    func modernAlert(isPresented: Binding<Bool>, @ViewBuilder alertView: @escaping () -> ModernAlertView) -> some View {
+    func modernAlert<AlertContent: View>(isPresented: Binding<Bool>, @ViewBuilder alertView: @escaping () -> AlertContent) -> some View {
         self.modifier(ModernAlertModifier(isPresented: isPresented, alertView: alertView))
+    }
+    
+    func modernAlert<Item: Identifiable, AlertContent: View>(item: Binding<Item?>, @ViewBuilder alertView: @escaping (Item) -> AlertContent) -> some View {
+        self.modifier(ModernAlertItemModifier(item: item, alertView: alertView))
     }
 }
 
@@ -164,6 +189,22 @@ extension View {
 //              buttonTitle: "Great"
 //          ) { showSuccess = false }
 //      }
+
+//    .modernAlert(item: $locationAlertPayload) { payload in
+//        ModernAlertView(
+//            title: "Location Required",
+//            message: payload.message,
+//            isSuccess: false,
+//            buttonTitle: "Cancel",
+//            action: {
+//                locationAlertPayload = nil
+//            },
+//            secondaryButtonTitle: "Open Settings",
+//            secondaryAction: {
+//                openAppSettings()
+//            }
+//        )
+//    }
 
 
 struct BluetoothAlertView: View {
