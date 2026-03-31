@@ -199,17 +199,34 @@ struct SelectWiFiView: View {
             }
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
-        .alert("Location Required", isPresented: $showLocationAlert) {
-            Button("Open Settings") {
-                openAppSettings()
-            }
-            Button("Cancel", role: .cancel) {
-                showLocationAlert = false
-            }
-        } message: {
-            Text(locationAlertMessage)
-        }
+//        .alert("Location Required", isPresented: $showLocationAlert) {
+//            Button("Open Settings") {
+//                openAppSettings()
+//            }
+//            Button("Cancel", role: .cancel) {
+//                showLocationAlert = false
+//            }
+//        } message: {
+//            Text(locationAlertMessage)
+//        }
 
+        
+        .modernAlert(isPresented: $showLocationAlert) {
+            ModernAlertView(
+                title: "Location Required",
+                message: locationAlertMessage,
+                isSuccess: false,
+                buttonTitle: "Cancel",
+                action: {
+                    showLocationAlert = false
+                },
+                secondaryButtonTitle: "Open Settings",
+                secondaryAction: {
+                    openAppSettings()
+                }
+            )
+        }
+        
         .onAppear {
             // Create delegate
             locationDelegate = CLLocationDelegate { status in
@@ -286,6 +303,7 @@ struct SelectWiFiView: View {
         case .notDetermined:
             // Ask user for permission
             resetEmptyState()
+            showLocationAlert = false
             locationManager.requestWhenInUseAuthorization()
         case .authorizedWhenInUse, .authorizedAlways:
             guard locationManager.accuracyAuthorization == .fullAccuracy else {
@@ -302,6 +320,7 @@ struct SelectWiFiView: View {
             }
 
             // Permission granted → load Wi-Fi
+            showLocationAlert = false
             loadConnectedWiFi()
         case .denied, .restricted:
             // No permission → show empty or message
@@ -330,6 +349,7 @@ struct SelectWiFiView: View {
                 if let ssid = network?.ssid {
                     print("✅ Connected to WiFi via NEHotspotNetwork:", ssid)
                     self.availableWiFiList = [ssid]
+                    self.showLocationAlert = false
                     self.resetEmptyState()
                 } else {
                     print("⚠️ No Wi-Fi network detected via NEHotspotNetwork")
