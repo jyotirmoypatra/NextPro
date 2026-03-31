@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct SuccessConnctionView: View {
-    @State private var navigateToHome = false
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         GeometryReader { geometry in
@@ -66,7 +65,7 @@ struct SuccessConnctionView: View {
                             .padding(.horizontal, 20)
                         
                         Button {
-                            navigateToHome = true
+                            KeychainManager.shared.resetToHome(initialTab: 1)
                         } label: {
                             HStack(spacing: 8) {
                                 Text("Continue")
@@ -82,10 +81,6 @@ struct SuccessConnctionView: View {
                             .padding()
                             .background(Color.white)
                             .cornerRadius(10)
-                        }
-                        .navigationDestination(isPresented: $navigateToHome) {
-                           // HomeViewAdmin(initialTab: 1)
-                            HomeView(isAdmin: true, initialTab: 1)
                         }
                     }
                     .padding(.vertical, 30)

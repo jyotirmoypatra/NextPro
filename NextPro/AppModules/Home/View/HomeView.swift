@@ -10,6 +10,7 @@ import SwiftUI
 
 struct HomeView: View {
     let isAdmin: Bool
+    @AppStorage("home_initial_tab") private var homeInitialTab = 0
     @State private var selectedTab = 0
     @State private var previousIsAdmin: Bool
     @StateObject private var profileRefreshViewModel = UserProfileDetailsViewModel()
@@ -192,6 +193,17 @@ struct HomeView: View {
             }
             
             previousIsAdmin = newValue
+        }
+        .onAppear {
+            if homeInitialTab != 0 {
+                if selectedTab != homeInitialTab {
+                    selectedTab = homeInitialTab
+                }
+                
+                DispatchQueue.main.async {
+                    homeInitialTab = 0
+                }
+            }
         }
     }
     

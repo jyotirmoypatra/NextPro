@@ -103,5 +103,17 @@ class KeychainManager {
         }
     }
 
+    func resetToHome(initialTab: Int = 0) {
+        UserDefaults.standard.set(initialTab, forKey: "home_initial_tab")
+        
+        DispatchQueue.main.async {
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = scene.windows.first {
+                window.rootViewController = UIHostingController(rootView: ContentView(skipSplash: true))
+                window.makeKeyAndVisible()
+            }
+        }
+    }
+
 
 }
