@@ -28,18 +28,69 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
+        authorizationStatus = manager.authorizationStatus
     }
     
     func requestLocationAccess() {
         manager.requestWhenInUseAuthorization()
     }
+
+    var isLocationServicesEnabled: Bool {
+        CLLocationManager.locationServicesEnabled()
+    }
+
+    var currentAuthorizationStatus: CLAuthorizationStatus {
+        manager.authorizationStatus
+    }
+
+    var isPreciseLocationEnabled: Bool {
+        manager.accuracyAuthorization == .fullAccuracy
+    }
     
     func startLocation() {
+        authorizationStatus = manager.authorizationStatus
+
+        guard isLocationServicesEnabled else {
+            onLocationError?(
+                """
+                Location Services are OFF
+
+                Go to:
+                Settings → Privacy & Security → Location Services → Turn ON
+                """
+            )
+            return
+        }
+
+        guard currentAuthorizationStatus == .authorizedWhenInUse || currentAuthorizationStatus == .authorizedAlways else {
+            onLocationError?(
+                """
+                Location permission required
+
+                Go to:
+                Settings → Apps → Zlyx → Location → Allow While Using App
+                """
+            )
+            return
+        }
+
+        guard isPreciseLocationEnabled else {
+            onLocationError?(
+                """
+                Precise Location is OFF
+
+                Go to:
+                Settings → Apps → Zlyx → Location → Turn ON Precise Location
+                """
+            )
+            return
+        }
+
         updateCount = 0
         latitude = ""
         longitude = ""
         address = ""
-      manager.startUpdatingLocation()
+        manager.startUpdatingLocation()
 
     }
     
@@ -48,6 +99,45 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard CLLocationManager.locationServicesEnabled() else {
+            manager.stopUpdatingLocation()
+            onLocationError?(
+                """
+                Location Services are OFF
+
+                Go to:
+                Settings → Privacy & Security → Location Services → Turn ON
+                """
+            )
+            return
+        }
+
+        guard manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways else {
+            manager.stopUpdatingLocation()
+            onLocationError?(
+                """
+                Location permission required
+
+                Go to:
+                Settings → Apps → Zlyx → Location → Allow While Using App
+                """
+            )
+            return
+        }
+
+        guard manager.accuracyAuthorization == .fullAccuracy else {
+            manager.stopUpdatingLocation()
+            onLocationError?(
+                """
+                Precise Location is OFF
+
+                Go to:
+                Settings → Apps → Zlyx → Location → Turn ON Precise Location
+                """
+            )
+            return
+        }
+
         guard let location = locations.last else { return }
         
         updateCount += 1
@@ -84,5 +174,9 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             }
         }
     }
-}
 
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        manager.stopUpdatingLocation()
+        onLocationError?(error.localizedDescription)
+    }
+}

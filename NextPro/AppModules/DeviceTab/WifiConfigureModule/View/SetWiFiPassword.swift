@@ -192,20 +192,15 @@ struct SetWiFiPassword: View {
                 buttonTitle: "OK"
             ) { showError = false }
         }
-        .modernAlert(isPresented: $showLocationError) {
-            ModernAlertView(
-                title: "Location Required",
-                message: locationErrorMessage,
-                isSuccess: false,
-                buttonTitle: "Cancel",
-                action: {
-                    showLocationError = false
-                },
-                secondaryButtonTitle: "Open Settings",
-                secondaryAction: {
-                    openAppSettings()
-                }
-            )
+        .alert("Location Required", isPresented: $showLocationError) {
+            Button("Open Settings") {
+                openAppSettings()
+            }
+            Button("Cancel", role: .cancel) {
+                showLocationError = false
+            }
+        } message: {
+            Text(locationErrorMessage)
         }
     }
     // MARK: - WiFi Configuration
@@ -214,43 +209,8 @@ struct SetWiFiPassword: View {
             statusMessage = "Please enter Wi-Fi password."
             return
         }
-        
-        // Location OFF
-        let isLocationEnabled = CLLocationManager.locationServicesEnabled()
 
-        if !isLocationEnabled {
-            DispatchQueue.main.async {
-                locationErrorMessage = """
-                Location Services are OFF
-                
-                Go to:
-                Settings → Privacy & Security → Location Services → Turn ON
-                """
-                showLocationError = true
-            }
-            return
-        }
-
-        // 2️⃣ Then check permission
-        let status = locationManager.authorizationStatus
-
-        if status != .authorizedWhenInUse && status != .authorizedAlways {
-            
-            locationManager.requestLocationAccess()
-            
-            DispatchQueue.main.async {
-                locationErrorMessage = """
-                Location permission required
-                
-                Go to:
-                Settings → Apps → Zlyx → Location → Allow While Using App
-                """
-                showLocationError = true
-            }
-            return
-        }
-        
-        
+        guard validateLocationRequirements() else { return }
         
         isConfiguring = true
         statusMessage = ""
@@ -322,9 +282,78 @@ struct SetWiFiPassword: View {
                 }
             }
         }
+
+        locationManager.onLocationError = { message in
+            Task { @MainActor in
+                isConfiguring = false
+                loadingMessage = ""
+                presentLocationAlert(
+                    message.isEmpty ? "Unable to access location. Please check your settings and try again." : message
+                )
+            }
+        }
         
         // 🚀 START LOCATION ONLY AFTER CLICK
-            locationManager.startLocation()
+        locationManager.startLocation()
+    }
+
+    private func validateLocationRequirements() -> Bool {
+        showLocationError = false
+        locationErrorMessage = ""
+
+        guard locationManager.isLocationServicesEnabled else {
+            presentLocationAlert(
+                """
+                Location Services are OFF
+                
+                Go to:
+                Settings → Privacy & Security → Location Services → Turn ON
+                """
+            )
+            return false
+        }
+
+        let status = locationManager.currentAuthorizationStatus
+
+        if status == .notDetermined {
+            locationManager.requestLocationAccess()
+        }
+
+        guard status == .authorizedWhenInUse || status == .authorizedAlways else {
+            presentLocationAlert(
+                """
+                Location permission required
+                
+                Go to:
+                Settings → Apps → Zlyx → Location → Allow While Using App
+                """
+            )
+            return false
+        }
+
+        guard locationManager.isPreciseLocationEnabled else {
+            
+            presentLocationAlert(
+                """
+                Precise Location is OFF
+                
+                Go to:
+                Settings → Apps → Zlyx → Location → Turn ON Precise Location
+                """
+            )
+            return false
+        }
+
+        return true
+    }
+
+    private func presentLocationAlert(_ message: String) {
+        showLocationError = false
+        locationErrorMessage = message
+
+        DispatchQueue.main.async {
+            showLocationError = true
+        }
     }
     
     func openAppSettings() {
@@ -334,4 +363,3 @@ struct SetWiFiPassword: View {
     }
     
 }
-
