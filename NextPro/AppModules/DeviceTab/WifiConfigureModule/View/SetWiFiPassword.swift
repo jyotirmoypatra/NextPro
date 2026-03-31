@@ -7,6 +7,7 @@
 
 
 import SwiftUI
+import CoreLocation
 
 struct SetWiFiPassword: View {
     var selectedDevice: AssignDevice
@@ -21,7 +22,10 @@ struct SetWiFiPassword: View {
     @State private var showPassword = false
     @State private var showError = false
     @State private var statusMessage = ""
+    @State private var locationErrorMessage = ""
+    @State private var showLocationError = false
     @State private var loadingMessage = ""
+    @StateObject private var locationManager = LocationManager()
     
     
     var body: some View {
@@ -170,6 +174,9 @@ struct SetWiFiPassword: View {
                 UIApplication.shared.hideKeyboard()
             }
             .onAppear{
+                
+                locationManager.requestLocationAccess()
+                
                 print("WIFI-> \(selectedWiFiNetwork)")
                 print("Device Serial-> \(selectedDevice)")
             }
@@ -185,6 +192,21 @@ struct SetWiFiPassword: View {
                 buttonTitle: "OK"
             ) { showError = false }
         }
+        .modernAlert(isPresented: $showLocationError) {
+            ModernAlertView(
+                title: "Location Required",
+                message: locationErrorMessage,
+                isSuccess: false,
+                buttonTitle: "Cancel",
+                action: {
+                    showLocationError = false
+                },
+                secondaryButtonTitle: "Open Settings",
+                secondaryAction: {
+                    openAppSettings()
+                }
+            )
+        }
     }
     // MARK: - WiFi Configuration
     private func configureWiFi() {
@@ -193,59 +215,121 @@ struct SetWiFiPassword: View {
             return
         }
         
+        // Location OFF
+        let isLocationEnabled = CLLocationManager.locationServicesEnabled()
+
+        if !isLocationEnabled {
+            DispatchQueue.main.async {
+                locationErrorMessage = """
+                Location Services are OFF
+                
+                Go to:
+                Settings → Privacy & Security → Location Services → Turn ON
+                """
+                showLocationError = true
+            }
+            return
+        }
+
+        // 2️⃣ Then check permission
+        let status = locationManager.authorizationStatus
+
+        if status != .authorizedWhenInUse && status != .authorizedAlways {
+            
+            locationManager.requestLocationAccess()
+            
+            DispatchQueue.main.async {
+                locationErrorMessage = """
+                Location permission required
+                
+                Go to:
+                Settings → Apps → Zlyx → Location → Allow While Using App
+                """
+                showLocationError = true
+            }
+            return
+        }
+        
+        
+        
         isConfiguring = true
         statusMessage = ""
-        loadingMessage = "You are almost there!"
+        loadingMessage = "Getting your location..."
         
-        WiFiConfigureManager.configureDeviceWiFi(
-            device: selectedDevice,
-            wifiName: selectedWiFiNetwork,
-            wifiPassword: password,
-        ) { success, message in
-            
+        
+        // FLOW CONTROLLER
+        locationManager.onLocationReady = {
             Task { @MainActor in
                 
-                statusMessage = message
-                loadingMessage = message
-                // ⏱ 1 second delay HERE
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                // STEP 1: set location
+                successVM.lat = locationManager.latitude
+                successVM.long = locationManager.longitude
+                successVM.address = locationManager.address
                 
-                if success {
-                    // navigateToSuccessView = true
-                    //WiFi configured → now call API
-                    loadingMessage = "Saving Device Configuration to Cloud..."
+                // STEP 2: update loader
+                loadingMessage = "Configuring device..."
+                
+                
+                WiFiConfigureManager.configureDeviceWiFi(
+                    device: selectedDevice,
+                    wifiName: selectedWiFiNetwork,
+                    wifiPassword: password,
+                ) { success, message in
                     
-                    await successVM.successConfig(
-                        isSuccess: true,
-                        deviceSerial: selectedDevice.serial,
-                        wifiSSid: selectedWiFiNetwork,
-                        wifiPass: password
-                    )
-                    
-                    if successVM.success && successVM.errorMessage == nil {
-                        isConfiguring = false
-                        loadingMessage = ""
-                        navigateToSuccessView = true
+                    Task { @MainActor in
                         
-                    } else {
-                        isConfiguring = false
-                        loadingMessage = ""
-                        statusMessage = successVM.errorMessage ?? "Something went wrong"
-                        showError = true
+                        statusMessage = message
+                        loadingMessage = message
+                        // ⏱ 1 second delay HERE
+                        try? await Task.sleep(nanoseconds: 1_000_000_000)
+                        
+                        if success {
+                            // navigateToSuccessView = true
+                            //WiFi configured → now call API
+                            loadingMessage = "Saving Device Configuration to Cloud..."
+                            
+                            await successVM.successConfig(
+                                isSuccess: true,
+                                deviceSerial: selectedDevice.serial,
+                                wifiSSid: selectedWiFiNetwork,
+                                wifiPass: password
+                            )
+                            
+                            if successVM.success && successVM.errorMessage == nil {
+                                isConfiguring = false
+                                loadingMessage = ""
+                                navigateToSuccessView = true
+                                
+                            } else {
+                                isConfiguring = false
+                                loadingMessage = ""
+                                statusMessage = successVM.errorMessage ?? "Something went wrong"
+                                showError = true
+                            }
+                            //  }
+                        }else{
+                            // WiFi failed
+                            
+                            isConfiguring = false
+                            loadingMessage = ""
+                            statusMessage = message
+                            showError = true
+                            
+                            
+                            
+                        }
                     }
-                    //  }
-                }else{
-                    // WiFi failed
-                    
-                    isConfiguring = false
-                    loadingMessage = ""
-                    statusMessage = message
-                    showError = true
-                    
-                    
-                    
                 }
             }
+        }
+        
+        // 🚀 START LOCATION ONLY AFTER CLICK
+            locationManager.startLocation()
+    }
+    
+    func openAppSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
         }
     }
     

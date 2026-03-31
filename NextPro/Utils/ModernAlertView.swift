@@ -15,6 +15,9 @@ struct ModernAlertView: View {
     let buttonTitle: String
     let action: () -> Void
     
+    var secondaryButtonTitle: String? = nil
+    var secondaryAction: (() -> Void)? = nil
+    
     var body: some View {
         VStack(spacing:10){
             
@@ -40,14 +43,61 @@ struct ModernAlertView: View {
             
             
             // Button
-            Button(action: action) {
-                Text(buttonTitle)
-                    .font(.custom("Inter-Bold", size: 16))
-                    .frame(maxWidth: .infinity)
-                    .padding(10)
-                    .foregroundColor(.black)
-                    .background(isSuccess ? Color.green.opacity(0.8) : Color.red.opacity(0.8))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+//            Button(action: action) {
+//                Text(buttonTitle)
+//                    .font(.custom("Inter-Bold", size: 16))
+//                    .frame(maxWidth: .infinity)
+//                    .padding(10)
+//                    .foregroundColor(.black)
+//                    .background(isSuccess ? Color.green.opacity(0.8) : Color.red.opacity(0.8))
+//                    .clipShape(RoundedRectangle(cornerRadius: 12))
+//            }
+            
+            // MARK: Buttons
+
+            if let secondaryTitle = secondaryButtonTitle,
+               let secondaryAction = secondaryAction {
+                
+                HStack(spacing: 10) {
+                    
+                    
+                    // Secondary Button
+                    Button(action: secondaryAction) {
+                        Text(secondaryTitle)
+                            .font(.custom("Inter-Medium", size: 15))
+                            .frame(maxWidth: .infinity)
+                            .padding(10)
+                            .foregroundColor(.white)
+                            .background(Color.gray.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    
+                    // Primary Button
+                    Button(action: action) {
+                        Text(buttonTitle)
+                            .font(.custom("Inter-Bold", size: 16))
+                            .frame(maxWidth: .infinity)
+                            .padding(10)
+                            .foregroundColor(.black)
+                            .background(isSuccess ? Color.green.opacity(0.8) : Color.red.opacity(0.8))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    
+                   
+                }
+                
+            } else {
+                
+                // Only Primary Button (default)
+                Button(action: action) {
+                    Text(buttonTitle)
+                        .font(.custom("Inter-Bold", size: 16))
+                        .frame(maxWidth: .infinity)
+                        .padding(10)
+                        .foregroundColor(.black)
+                        .background(isSuccess ? Color.green.opacity(0.8) : Color.red.opacity(0.8))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
             }
             
         }

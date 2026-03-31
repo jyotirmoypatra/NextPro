@@ -451,7 +451,10 @@ class NetworkManager: ObservableObject {
         isSuccess: Bool,
         deviceSerial: String,
         ssid: String,
-        password: String
+        password: String,
+        latitude : String,
+        longitude : String,
+        current_address : String
     ) async throws -> successDeviceConfigResposne {
 
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.successWifiConfig))!
@@ -464,7 +467,10 @@ class NetworkManager: ObservableObject {
                 "device_serial": deviceSerial,
                 "wifi_ssid_name": ssid,
                 "wifi_password": password,
-                "is_configured": isSuccess
+                "is_configured": isSuccess,
+                "latitude" : latitude,
+                "longitude" : longitude,
+                "current_address" : current_address
             ],
             requiresAuth: true,
             responseType: successDeviceConfigResposne.self,

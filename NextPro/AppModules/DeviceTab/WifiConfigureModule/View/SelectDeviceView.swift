@@ -187,6 +187,19 @@ struct SelectDeviceView: View {
                     }
                     .zIndex(10)
                 }
+                
+                if isCheckingDevice{
+                    ZStack {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.8)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                }
 
             }
         }
