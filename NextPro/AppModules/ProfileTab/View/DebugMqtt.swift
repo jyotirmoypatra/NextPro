@@ -36,7 +36,7 @@ struct DebugMqtt: View {
     
     var body: some View {
         
-        VStack(spacing: 20) {
+        VStack(spacing: 10) {
             
             // Header
             HStack {
@@ -57,7 +57,7 @@ struct DebugMqtt: View {
 
               
             }
-            .padding()
+            .padding(10)
             
            
             
@@ -67,9 +67,9 @@ struct DebugMqtt: View {
                 .background(Color.white.opacity(0.1))
                 .cornerRadius(10)
                 .foregroundColor(.white)
-                .padding(.horizontal)
+                .padding(.horizontal,10)
             
-            HStack(spacing: 12) {
+            HStack(spacing: 5) {
                 
                 Button {
                     subscribeUP()
@@ -81,7 +81,7 @@ struct DebugMqtt: View {
                             .font(.system(size: 12, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity, minHeight: 65)
-                    .background(Color.blue.opacity(0.2))
+                    .background(Color.white.opacity(0.2))
                     .foregroundColor(.blue)
                     .cornerRadius(12)
                 }
@@ -96,10 +96,26 @@ struct DebugMqtt: View {
                             .font(.system(size: 12, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity, minHeight: 65)
-                    .background(Color.orange.opacity(0.2))
+                    .background(Color.white.opacity(0.2))
                     .foregroundColor(.orange)
                     .cornerRadius(12)
                 }
+                
+                Button {
+                    MQTTManager.shared.sendHeartbeatCheck(to: serialNumber)
+                } label: {
+                    VStack(spacing: 6) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 20))
+                        Text("HeartBeat")
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 65)
+                    .background(Color.white.opacity(0.2))
+                    .foregroundColor(.pink)
+                    .cornerRadius(12)
+                }
+                
                 
                 Button {
                     clearDeviceData()
@@ -111,15 +127,15 @@ struct DebugMqtt: View {
                             .font(.system(size: 12, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity, minHeight: 65)
-                    .background(Color.red.opacity(0.2))
+                    .background(Color.white.opacity(0.2))
                     .foregroundColor(.red)
                     .cornerRadius(12)
                 }
 
             }
-            .padding(.horizontal)
+            .padding(.horizontal,10)
             
-            HStack(spacing: 16) {
+            HStack(spacing: 10) {
                 
                 Button {
                     startUpload()
@@ -131,7 +147,7 @@ struct DebugMqtt: View {
                             .font(.system(size: 12, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity, minHeight: 70)
-                    .background(Color.green.opacity(0.2))
+                    .background(Color.white.opacity(0.2))
                     .foregroundColor(.green)
                     .cornerRadius(12)
                 }
@@ -146,7 +162,7 @@ struct DebugMqtt: View {
                             .font(.system(size: 12, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity, minHeight: 70)
-                    .background(Color.yellow.opacity(0.2))
+                    .background(Color.white.opacity(0.2))
                     .foregroundColor(.yellow)
                     .cornerRadius(12)
                 }
@@ -161,47 +177,14 @@ struct DebugMqtt: View {
                             .font(.system(size: 12, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity, minHeight: 70)
-                    .background(Color.red.opacity(0.2))
+                    .background(Color.white.opacity(0.2))
                     .foregroundColor(.red)
                     .cornerRadius(12)
                 }
 
             }
-            .padding(.horizontal)
-            
-//            ScrollView {
-//                VStack(alignment: .leading, spacing: 16) {
-//                    
-//                    ForEach(logs) { log in
-//                        
-//                        VStack(alignment: .leading, spacing: 6) {
-//                            
-//                            Text(log.direction)
-//                                .font(.system(size: 13, weight: .bold))
-//                                .foregroundColor(log.direction == "UP" ? .blue : .orange)
-//                            
-//                            Divider()
-//                                .background(Color.gray.opacity(0.4))
-//                            
-//                            Text("Topic: \(log.topic)")
-//                                .font(.system(size: 11))
-//                                .foregroundColor(.gray)
-//                            
-//                            Text(log.message)
-//                                .font(.system(size: 12, design: .monospaced))
-//                                .foregroundColor(.green)
-//                                .textSelection(.enabled)
-//                        }
-//                        .padding(10)
-//                        .background(Color.black.opacity(0.8))
-//                        .cornerRadius(8)
-//                    }
-//                }
-//                .padding()
-//            }
-//            .background(Color.black)
-//            .cornerRadius(12)
-//            .padding()
+            .padding(.horizontal,10)
+        
             
             ScrollViewReader { proxy in
                 
@@ -228,7 +211,7 @@ struct DebugMqtt: View {
                                     .foregroundColor(.green)
                                     .textSelection(.enabled)
                             }
-                            .padding(10)
+                            .padding(.vertical,10)
                             .background(Color.black.opacity(0.8))
                             .cornerRadius(8)
                             .id(log.id)   // important
@@ -238,7 +221,7 @@ struct DebugMqtt: View {
                 }
                 .background(Color.black)
                 .cornerRadius(12)
-                .padding()
+                .padding(5)
                 
                 .onChange(of: logs.count) { _ in
                     
@@ -258,36 +241,6 @@ struct DebugMqtt: View {
         .onTapGesture {
             UIApplication.shared.hideKeyboard()
         }
-
-        
-        
-//        .onReceive(MQTTManager.shared.$lastMessage) { msg in
-//            
-//            guard !msg.isEmpty else { return }
-//
-//            let sn = serialNumber.trimmingCharacters(in: .whitespaces)
-//
-//            logs.append(
-//                MQTTLog(
-//                    direction: "UP",
-//                    topic: "up/\(sn)/rtdata",
-//                    message: msg
-//                )
-//            )
-//
-//            if uploading && waitingForResponse {
-//
-//                if msg.lowercased().contains("ok") {
-//
-//                    timeoutTask?.cancel()
-//
-//                    waitingForResponse = false
-//                    currentIndex += 1
-//
-//                    sendNextCommand()
-//                }
-//            }
-//        }
         
         .onReceive(MQTTManager.shared.$lastMessage) { msg in
             
@@ -316,38 +269,6 @@ struct DebugMqtt: View {
 
             if uploading && waitingForResponse {
 
-//                if msg.lowercased().contains("ok") {
-//
-//                    timeoutTask?.cancel()
-//
-//                    waitingForResponse = false
-//                    currentIndex += 1
-//
-//                    sendNextCommand()
-//                }
-                
-//                if msg.lowercased().contains("ok") {
-//
-//                    timeoutTask?.cancel()
-//                    waitingForResponse = false
-//
-//                    // After every 4 commands -> one user completed
-//                    if (currentIndex + 1) % 4 == 0 {
-//
-//                        logs.append(
-//                            MQTTLog(
-//                                direction: "INFO",
-//                                topic: "UPLOAD",
-//                                message: "User \(currentUserID) uploaded successfully"
-//                            )
-//                        )
-//
-//                        currentUserID += 1
-//                    }
-//
-//                    currentIndex += 1
-//                    sendNextCommand()
-//                }
                 
                 if msg.lowercased().contains("ok") {
 

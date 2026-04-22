@@ -29,7 +29,7 @@ struct AddUserView: View {
     @State private var nfcId = ""
     @State private var nfcPhysicalNumber = ""
    
-    @State private var digitalAccess = true
+    @State private var digitalAccess = false
     @State private var remoteAccess = false
 
 
@@ -39,15 +39,14 @@ struct AddUserView: View {
     @State private var isSelectAccessGroup: Bool = true
     @State private var isSelectDoor: Bool = false
     
-    @State private var isSelectMobileAPP: Bool = true
+    @State private var isSelectMobileAPP: Bool = false
     @State private var isSelectKeyFob: Bool = false
-    @State private var isSelectBoth: Bool = false
 
-    @State private var showStartTimePicker = false
-    @State private var showEndTimePicker = false
+    @State private var showTimePicker = false
+    @State private var timeSlots: [TimeSlotUI] = [TimeSlotUI()]
+    @State private var selectedTimeIndex: Int? = nil
+    @State private var isSelectingStart: Bool = true
     
-    @State private var accessStartTime: Date? = nil
-    @State private var accessEndTime: Date? = nil
     
     @State private var showStartDatePicker = false
     @State private var showEndDatePicker = false
@@ -72,11 +71,16 @@ struct AddUserView: View {
     @State private var isInitialLoading = false
     @State private var nfcType : String = "DIGITAL"
     
+    @State private var isEditModeLoaded = false
+    
     
     enum Field {
         case fullName
         case email
         case phone
+    }
+    var maxSlots: Int {
+        return isOneTimeAccess ? 1 : 3
     }
     
     @FocusState private var focusedField: Field?
@@ -199,50 +203,82 @@ struct AddUserView: View {
                                     VStack(spacing: 20) {
 
                                    
-                                        AccessTypeRow(
-                                            title: "Mobile App",
-                                            isSelected: isSelectMobileAPP
-                                        ) {
-                                            isSelectMobileAPP = true
-                                            isSelectKeyFob = false
-                                            isSelectBoth = false
-                                            digitalAccess = true
-                                            nfcType = "DIGITAL"
+//                                        AccessTypeRow(
+//                                            title: "Mobile App",
+//                                            isSelected: isSelectMobileAPP
+//                                        ) {
+//                                            isSelectMobileAPP = true
+//                                            isSelectKeyFob = false
+//                                            nfcType = "DIGITAL"
+//                                            
+//                                            handleNfcGeneration()
+//                                        }
+//                                        
+//                                
+//                                        AccessTypeRow(
+//                                            title: "Key Fob/Card",
+//                                            isSelected: isSelectKeyFob
+//                                        ) {
+//                                            isSelectMobileAPP = false
+//                                            isSelectKeyFob = true
+//                                            digitalAccess = false
+//                                            remoteAccess = false
+//                                            nfcType = "PHYSICAL"
+//                                        }
+//                                        
+//                                        AccessTypeRow(
+//                                            title: "Both",
+//                                            isSelected: isSelectBoth
+//                                        ) {
+//                                            isSelectMobileAPP = false
+//                                            isSelectKeyFob = false
+//                                            isSelectBoth = true
+//                                            digitalAccess = true
+//                                            nfcType = "BOTH"
+//                                            
+//                                            handleNfcGeneration()
+//                                        }
+                                        
+                                        
+                                        VStack(spacing: 16) {
+                                          
+                                            Toggle(isOn: $isSelectMobileAPP) {
+                                                Text("Mobile App")
+                                                    .foregroundColor(.white)
+                                                    .font(.system(size: 15, weight: .medium))
+                                            }
+                                            .tint(.green)
                                             
-                                            handleNfcGeneration()
+                                            Toggle(isOn: $isSelectKeyFob) {
+                                                Text("Key Fob / Card")
+                                                    .foregroundColor(.white)
+                                                    .font(.system(size: 15, weight: .medium))
+                                            }
+                                            .tint(.green)
                                         }
                                         
-                                        // One Time
-                                        AccessTypeRow(
-                                            title: "Key Fob/Card",
-                                            isSelected: isSelectKeyFob
-                                        ) {
-                                            isSelectMobileAPP = false
-                                            isSelectKeyFob = true
-                                            isSelectBoth = false
-                                            digitalAccess = false
-                                            remoteAccess = false
-                                            nfcType = "PHYSICAL"
-                                        }
+//                                        .onChange(of: isSelectMobileAPP) { _ in updateNfcType() }
+//                                        .onChange(of: isSelectKeyFob) { _ in updateNfcType() }
                                         
-                                        AccessTypeRow(
-                                            title: "Both",
-                                            isSelected: isSelectBoth
-                                        ) {
-                                            isSelectMobileAPP = false
-                                            isSelectKeyFob = false
-                                            isSelectBoth = true
-                                            digitalAccess = true
-                                            nfcType = "BOTH"
-                                            
-                                            handleNfcGeneration()
+                                        .onChange(of: isSelectMobileAPP) { _ in
+                                            if editUser == nil {
+                                                updateNfcType()
+                                            }
                                         }
+
+                                        .onChange(of: isSelectKeyFob) { _ in
+                                            if editUser == nil {
+                                                updateNfcType()
+                                            }
+                                        }
+                                       
 
                                         Divider()
                                             .background(Color.white.opacity(0.15))
                                             
                                
-                                        if nfcType == "DIGITAL" || nfcType == "BOTH" {
+                                      //  if nfcType == "DIGITAL" || nfcType == "BOTH" {
+                                        if isSelectMobileAPP {
 
                                             VStack(alignment: .leading, spacing: 12) {
 
@@ -250,54 +286,54 @@ struct AddUserView: View {
                                                     .foregroundColor(.white)
                                                     .font(.system(size: 15, weight: .medium))
 
-//                                                VStack(spacing: 12) {
-//                                                    // Digital
-//                                                   CheckBoxView(
-//                                                       title: "Phone Tap",
-//                                                       isChecked: $digitalAccess
-//                                                   )
-//                                                    //remote
-//                                                    CheckBoxView(
-//                                                       title: "Remote",
-//                                                       isChecked: $remoteAccess
-//                                                   )
-//                                                    //bluetooth
-//                                                    CheckBoxView(
-//                                                       title: "Bluetooth",
-//                                                       isChecked: $remoteAccess
-//                                                    ).padding(.leading,10)
-//                                                }
-//                                                .padding()
-//                                                .background(
-//                                                    RoundedRectangle(cornerRadius: 12)
-//                                                        .stroke(Color.white.opacity(0.3))
-//                                                )
                                                 
                                                 VStack(spacing: 20) {
 
                                                     // Phone Tap
-                                                    CheckBoxView(
-                                                        title: "Phone Tap",
-                                                        isChecked: $digitalAccess
-                                                    )
+//                                                    CheckBoxView(
+//                                                        title: "Phone Tap",
+//                                                        isChecked: $digitalAccess
+//                                                    )
+                                                    
+                                                    Toggle(isOn: $digitalAccess) {
+                                                        Text("Phone Tap")
+                                                            .foregroundColor(.white)
+                                                            .font(.system(size: 15, weight: .medium))
+                                                    }
+                                                    .tint(.green)
 
                                                     // Remote + Bluetooth (Grouped)
                                                     VStack(alignment: .leading, spacing: 10) {
 
-                                                        CheckBoxView(
-                                                            title: "Remote",
-                                                            isChecked: $remoteAccess
-                                                        )
-
+//                                                        CheckBoxView(
+//                                                            title: "Remote",
+//                                                            isChecked: $remoteAccess
+//                                                        )
+                                                        
+                                                        Toggle(isOn: $remoteAccess) {
+                                                            Text("Remote")
+                                                                .foregroundColor(.white)
+                                                                .font(.system(size: 15, weight: .medium))
+                                                        }
+                                                        .tint(.green)
+                                                        
                                                         //Sub Option
                                                         if remoteAccess {
-                                                            CheckBoxView(
-                                                                title: "Bluetooth",
-                                                                isChecked: $remoteAccess,
-                                                                isDisable : true
-                                                            )
-                                                            .padding(.leading, 28)
-                                                            .opacity(0.9)
+//                                                            CheckBoxView(
+//                                                                title: "Bluetooth",
+//                                                                isChecked: $remoteAccess,
+//                                                                isDisable : true
+//                                                            )
+//                                                            .padding(.leading, 28)
+//                                                            .opacity(0.9)
+                                                            
+                                                            Toggle(isOn: $remoteAccess) {
+                                                                Text("Bluetooth")
+                                                                    .foregroundColor(.white.opacity(0.5))
+                                                                    .font(.system(size: 15, weight: .medium))
+                                                            }
+                                                            .tint(Color.green.opacity(0.5))
+                                                            .padding(.leading, 15)
                                                         }
                                                     }
                                                 }
@@ -323,20 +359,8 @@ struct AddUserView: View {
 //                                        }
                                         
                                         // MARK: - Key Fob Input
-                                        if nfcType == "PHYSICAL" || nfcType == "BOTH" {
+                                        if isSelectKeyFob {
 
-//                                            VStack(alignment: .leading, spacing: 8) {
-//
-//                                                Text("Physical Key Fob/Card ID:")
-//                                                    .foregroundColor(.white)
-//                                                    .font(.system(size: 15, weight: .medium))
-//
-//                                                TextField("Enter key fob/card ID", text: $nfcPhysicalNumber)
-//                                                    .padding()
-//                                                    .background(Color.white.opacity(0.15))
-//                                                    .cornerRadius(10)
-//                                                    .foregroundColor(.white)
-//                                            }
                                             
                                             LabeledTextField(
                                                 title: "Physical Key Fob/Card ID:",
@@ -432,6 +456,11 @@ struct AddUserView: View {
                                         ) {
                                             isOneTimeAccess = true
                                             isScheduledAccess = false
+                                            
+                                            //reset time slot ui
+                                           // timeSlots = [TimeSlotUI()]
+                                            
+                                            timeSlots = [timeSlots.first ?? TimeSlotUI()]
                                         }
                                     }
                                     .padding(12)
@@ -468,40 +497,96 @@ struct AddUserView: View {
                                         .cornerRadius(10)
                                 }
                                 
-                                
-                                
                                 VStack(alignment: .leading, spacing: 16) {
-                                    HStack(spacing: 2) {
-                                    Text("ACCESS TIME")
-                                        .font(.custom("Inter-Medium", size: 16))
-                                        .foregroundColor(.white)
-                                        Text("*")
-                                            .foregroundColor(.red)
-                                    }
-                                    VStack(alignment: .leading, spacing: 16) {
-                                        // From
-                                        timeBox(
-                                            title: "Start Time",
-                                            value: accessStartTime,
-                                            action: {
-                                                showStartTimePicker = true
-                                            }
-                                        )
-                                        
-                                        // To
-                                        timeBox(
-                                            title: "End Time",
-                                            value: accessEndTime,
-                                            action: {
-                                                showEndTimePicker = true
+
+                                        HStack(spacing: 2) {
+                                            Text("ACCESS TIME")
+                                                .font(.custom("Inter-Medium", size: 16))
+                                                .foregroundColor(.white)
+                                            Text("*").foregroundColor(.red)
+                                        }
+
+                                        VStack(spacing: 10) {
+                                            ForEach(timeSlots.indices, id: \.self) { index in
                                                 
+                                             
+                                                    
+                                                    VStack(spacing: 18) {
+                                                        if isScheduledAccess {
+                                                            HStack{
+                                                                Text("Time Slot \(index + 1) :")
+                                                                    .font(.custom("Inter-Medium", size: 17))
+                                                                    .foregroundColor(.white.opacity(0.9))
+                                                                
+                                                                Spacer()
+                                                                
+                                                                if timeSlots.count > 1{
+                                                                    // MINUS
+                                                                    Button {
+                                                                        timeSlots.remove(at: index)
+                                                                    } label: {
+                                                                        Image(systemName: "minus.circle.fill")
+                                                                            .foregroundColor(.red)
+                                                                            .font(.system(size: 22))
+                                                                    }
+                                                                }
+                                                               
+                                                            }.frame(height: 30)
+                                                            .padding(.bottom,5)
+                                                            
+                                                        }
+                                                        
+                                                        // Start Time
+                                                        timeBox(
+                                                            title: "Start Time",
+                                                            value: timeSlots[index].startTime
+                                                        ) {
+                                                            showTimePicker = true
+                                                            selectedTimeIndex = index
+                                                            isSelectingStart = true
+                                                        }
+                                                        
+                                                        // End Time
+                                                        timeBox(
+                                                            title: "End Time",
+                                                            value: timeSlots[index].endTime
+                                                        ) {
+                                                            showTimePicker = true
+                                                            selectedTimeIndex = index
+                                                            isSelectingStart = false
+                                                        }
+                                                        
+                                                       
+                                                        
+                                                    
+                                                        
+                                                    }.padding()
+                                                    .background(Color.white.opacity(0.05))
+                                                    .cornerRadius(10)
+                                                      
+                                                  
                                             }
-                                        )
+                                            
+                                            
+                                            if isScheduledAccess && timeSlots.count < maxSlots {
+                                                HStack{
+                                                    Spacer()
+                                                    Button {
+                                                        timeSlots.append(TimeSlotUI())
+                                                    } label: {
+                                                        Image(systemName: "plus.circle.fill")
+                                                            .foregroundColor(.green)
+                                                            .font(.system(size: 22))
+                                                    }
+                                                }
+                                                //.padding(8)
+                                                .padding(.trailing,10)
+                                            }
+                                        }
+                                        .padding(10)
+                                        .background(Color.white.opacity(0.15))
+                                        .cornerRadius(10)
                                     }
-                                    .padding()
-                                    .background(Color.white.opacity(0.15))
-                                    .cornerRadius(10)
-                                }
                                 
                                 
                                 if isScheduledAccess {
@@ -528,7 +613,7 @@ struct AddUserView: View {
                                                 }
                                             }
                                         }
-                                        .padding()   // ✅ indent
+                                        .padding()   //  indent
                                         .background(Color.white.opacity(0.15))
                                         .cornerRadius(10)
                                     }
@@ -630,23 +715,27 @@ struct AddUserView: View {
                                     }
                                 }
                             
-                                .sheet(isPresented: $showStartTimePicker) {
-                                    pickerSheet(
-                                        title: "Select Start Time",
-                                        selection: $accessStartTime,
-                                        components: .hourAndMinute
-                                    ) {
-                                        showStartTimePicker = false
-                                    }
-                                }
                             
-                                .sheet(isPresented: $showEndTimePicker) {
+                             .sheet(isPresented: $showTimePicker) {
                                     pickerSheet(
-                                        title: "Select End Time",
-                                        selection: $accessEndTime,
+                                        title: "Select Time",
+                                        selection: Binding<Date?>(
+                                            get: {
+                                                guard let index = selectedTimeIndex else { return nil }
+                                                return isSelectingStart ? timeSlots[index].startTime : timeSlots[index].endTime
+                                            },
+                                            set: { newValue in
+                                                guard let index = selectedTimeIndex else { return }
+                                                if isSelectingStart {
+                                                    timeSlots[index].startTime = newValue
+                                                } else {
+                                                    timeSlots[index].endTime = newValue
+                                                }
+                                            }
+                                        ),
                                         components: .hourAndMinute
                                     ) {
-                                        showEndTimePicker = false
+                                        showTimePicker = false
                                     }
                                 }
                             
@@ -755,6 +844,7 @@ struct AddUserView: View {
             guard !hasInitialized else { return }
                hasInitialized = true
             Task {
+                
                 isInitialLoading = true
                 await getAccessGroupVM.getAccessGroupList()
                 await doorListVM.getDoorList(force: true)
@@ -770,23 +860,28 @@ struct AddUserView: View {
                     
                     nfcType = user.nfc_type
                     
-                    if (nfcType == "DIGITAL") {
+
+                    
+                    if nfcType == "DIGITAL" {
                         isSelectMobileAPP = true
                         isSelectKeyFob = false
-                        isSelectBoth = false
-                    }else if(nfcType == "PHYSICAL"){
+                        
+                        
+                    } else if nfcType == "PHYSICAL" {
                         isSelectMobileAPP = false
                         isSelectKeyFob = true
-                        isSelectBoth = false
+                        
                     }
-                    else if(nfcType == "BOTH"){
-                        isSelectMobileAPP = false
-                        isSelectKeyFob = false
-                        isSelectBoth = true
+                    else if nfcType == "BOTH" {
+                        isSelectMobileAPP = true
+                        isSelectKeyFob = true
+                        
                     }
                     
                     digitalAccess =  user.is_digital
                     remoteAccess =  user.is_remote
+                    
+                    isEditModeLoaded = true
                     
                     nfcPhysicalNumber = user.nfc_physical ?? ""
                     nfcId = user.nfc_digital ?? ""
@@ -830,15 +925,24 @@ struct AddUserView: View {
                             accessEndDate = apiDateFormatter.date(from: endDateString)
                         }
                         
-                        if let firstSlot = user.time_slots.first {
+                        
+                        // Set time slots from backend
+                        if !user.time_slots.isEmpty {
                             
-                            if let startTime = apiTimeFormatter.date(from: firstSlot.start_time) {
-                                accessStartTime = startTime
+                            timeSlots = user.time_slots.map { slot in
+                                TimeSlotUI(
+                                    startTime: apiTimeFormatter.date(from: slot.start_time),
+                                    endTime: apiTimeFormatter.date(from: slot.end_time)
+                                )
                             }
                             
-                            if let endTime = apiTimeFormatter.date(from: firstSlot.end_time) {
-                                accessEndTime = endTime
+                            // Safety: max 3
+                            if timeSlots.count > 3 {
+                                timeSlots = Array(timeSlots.prefix(3))
                             }
+                            
+                        } else {
+                            timeSlots = [TimeSlotUI()]
                         }
                         
                         if user.schedule_type == "schedule"{
@@ -866,6 +970,9 @@ struct AddUserView: View {
                 
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 isInitialLoading = false
+                
+                
+               
                 
             }
             
@@ -961,6 +1068,30 @@ struct AddUserView: View {
             selectedWeekdays.insert(day)
         }
     }
+    
+    
+    func updateNfcType() {
+        
+    
+       
+        if isSelectMobileAPP && !isSelectKeyFob{
+            nfcType = "DIGITAL"
+            digitalAccess = false
+            remoteAccess = false
+            handleNfcGeneration()
+        }
+        else if !isSelectMobileAPP && isSelectKeyFob{
+            nfcType = "PHYSICAL"
+            digitalAccess = false
+            remoteAccess = false
+        }
+        else if isSelectMobileAPP && isSelectKeyFob{
+            nfcType = "BOTH"
+            digitalAccess = false
+            remoteAccess = false
+            handleNfcGeneration()
+        }
+    }
    
     func validateForm() -> String? {
         
@@ -982,19 +1113,23 @@ struct AddUserView: View {
             return "Please enter a valid email address"
         }
 
-        if nfcId.trimmingCharacters(in: .whitespaces).isEmpty {
-            return "Digital Card ID is required"
+        
+        if !isSelectMobileAPP && !isSelectKeyFob{
+            return "Please select at least one device access method"
         }
-
     
-        if isSelectMobileAPP || isSelectBoth
+        if isSelectMobileAPP
         {
             if !digitalAccess && !remoteAccess {
                 return "Please select at least one mobile app options (Phone Tap or Remote)"
             }
+            
+            if nfcId.trimmingCharacters(in: .whitespaces).isEmpty {
+                return "Digital Card ID is not generated"
+            }
         }
         
-        if isSelectKeyFob  || isSelectBoth{
+        if isSelectKeyFob {
             if nfcPhysicalNumber.trimmingCharacters(in: .whitespaces).isEmpty {
                 return "Physical Key Fob ID is required"
             }
@@ -1014,18 +1149,46 @@ struct AddUserView: View {
             }
             
             
-            if accessStartTime == nil || accessEndTime == nil {
-                return "Please select access start and end time"
+            if timeSlots.contains(where: { $0.startTime == nil || $0.endTime == nil }) {
+                return "Please fill a time slots"
             }
             
+           
+            // 1️⃣ Validate start & end (allow overnight)
+            let calendar = Calendar.current
+
+            let normalizedSlots: [(start: Date, end: Date)] = timeSlots.compactMap { slot in
+                guard let start = slot.startTime,
+                      let end = slot.endTime else { return nil }
+                
+                var adjustedStart = start
+                var adjustedEnd = end
+                
+                // 👉 Handle overnight (e.g. 11 PM → 2 AM)
+                if end <= start {
+                    adjustedEnd = calendar.date(byAdding: .day, value: 1, to: end)!
+                }
+                
+                return (adjustedStart, adjustedEnd)
+            }
+
+
+            // 2️⃣ Sort by start time
+            let sortedSlots = normalizedSlots.sorted { $0.start < $1.start }
+
+
+            // 3️⃣ Check overlap
+            for i in 0..<sortedSlots.count - 1 {
+                let current = sortedSlots[i]
+                let next = sortedSlots[i + 1]
+
+                if current.end > next.start {
+                    return "Time slots cannot overlap."
+                }
+            }
             
 
-            // Time check
-            if let startTime = accessStartTime,
-               let endTime = accessEndTime,
-               endTime < startTime {
-                return "End time must be later than or same as start time"
-            }
+
             
             if isScheduledAccess {
                 if selectedWeekdays.isEmpty {
@@ -1086,19 +1249,30 @@ struct AddUserView: View {
           
             let isEditMode = editUser != nil
 
-            let timeSlots: [TimeSlot] = {
-                guard let start = accessStartTime,
-                      let end = accessEndTime else {
-                    return []
-                }
-                return [
-                    TimeSlot(
+//            let timeSlots: [TimeSlot] = {
+//                guard let start = accessStartTime,
+//                      let end = accessEndTime else {
+//                    return []
+//                }
+//                return [
+//                    TimeSlot(
+//                        start_time: start.toAPITime(),
+//                        end_time: end.toAPITime()
+//                    )
+//                ]
+//            }()
+            
+            
+            let apiTimeSlots: [TimeSlot] = timeSlots.compactMap { slot in
+                if let start = slot.startTime,
+                   let end = slot.endTime {
+                    return TimeSlot(
                         start_time: start.toAPITime(),
                         end_time: end.toAPITime()
                     )
-                ]
-            }()
-            
+                }
+                return nil
+            }
             
             let weekDaysString: String? = isScheduledAccess
                 ? selectedWeekdays
@@ -1123,11 +1297,10 @@ struct AddUserView: View {
                 
                 is_digital: digitalAccess,
                 is_remote: remoteAccess,
-
                 // NFC
                 nfc_type: nfcType,
-                nfc_physical: (isSelectKeyFob || isSelectBoth) ? nfcPhysicalNumber : "",
-                nfc_digital: (isSelectMobileAPP || isSelectBoth) ? nfcId : "",
+                nfc_physical: isSelectKeyFob  ? nfcPhysicalNumber : "",
+                nfc_digital: isSelectMobileAPP  ? nfcId : "",
 
                 // Doors
                 doors: isSelectDoor ? selectedDoors.map { $0.id } : [],
@@ -1138,7 +1311,7 @@ struct AddUserView: View {
                 // Schedule
                 start_date: isSelectDoor ? accessStartDate?.toAPIDate() : "",
                 end_date: isSelectDoor ?  accessEndDate?.toAPIDate() : "",
-                time_slots:  isSelectDoor ?  timeSlots : [],
+                time_slots:  isSelectDoor ?  apiTimeSlots : [],
                 week_days: isSelectDoor ?  weekDaysString : "",
 
 
@@ -1211,8 +1384,11 @@ struct AddUserView: View {
         // MARK: - Dates & Time
         accessStartDate = nil
         accessEndDate = nil
-        accessStartTime = nil
-        accessEndTime = nil
+//        accessStartTime = nil
+//        accessEndTime = nil
+        
+        timeSlots = [TimeSlotUI()]
+        
         
         // MARK: - Weekdays
         selectedWeekdays.removeAll()
@@ -1726,4 +1902,10 @@ struct AccessGroupDropDown: View {
             }
         }
     }
+}
+
+struct TimeSlotUI: Identifiable {
+    let id = UUID()
+    var startTime: Date? = nil
+    var endTime: Date? = nil
 }
