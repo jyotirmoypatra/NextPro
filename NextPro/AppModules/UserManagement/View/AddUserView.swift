@@ -41,6 +41,7 @@ struct AddUserView: View {
     
     @State private var isSelectMobileAPP: Bool = false
     @State private var isSelectKeyFob: Bool = false
+    @State private var isSharedLink: Bool = false
 
     @State private var showTimePicker = false
     @State private var timeSlots: [TimeSlotUI] = [TimeSlotUI()]
@@ -255,6 +256,13 @@ struct AddUserView: View {
                                                     .font(.system(size: 15, weight: .medium))
                                             }
                                             .tint(.green)
+                                            
+                                            Toggle(isOn: $isSharedLink) {
+                                                Text("Allow Access Using Share Link")
+                                                    .foregroundColor(.white)
+                                                    .font(.system(size: 15, weight: .medium))
+                                            }
+                                            .tint(.green)
                                         }
                                         
 //                                        .onChange(of: isSelectMobileAPP) { _ in updateNfcType() }
@@ -272,9 +280,10 @@ struct AddUserView: View {
                                             }
                                         }
                                        
-
-                                        Divider()
-                                            .background(Color.white.opacity(0.15))
+                                        if isSelectMobileAPP || isSelectKeyFob {
+                                            Divider()
+                                                .background(Color.white.opacity(0.15))
+                                        }
                                             
                                
                                       //  if nfcType == "DIGITAL" || nfcType == "BOTH" {
@@ -880,6 +889,7 @@ struct AddUserView: View {
                     
                     digitalAccess =  user.is_digital
                     remoteAccess =  user.is_remote
+                    isSharedLink = user.is_shared_link 
                     
                     isEditModeLoaded = true
                     
@@ -1114,7 +1124,7 @@ struct AddUserView: View {
         }
 
         
-        if !isSelectMobileAPP && !isSelectKeyFob{
+        if !isSelectMobileAPP && !isSelectKeyFob && !isSharedLink{
             return "Please select at least one device access method"
         }
     
@@ -1318,6 +1328,7 @@ struct AddUserView: View {
                 // Meta
                 source: "app",
                 is_mqtt_sync: true,
+                is_shared_link: isSharedLink,
                 creation_method: isSelectDoor ? "door_selection" : "access_group",
                 schedule_type: isSelectDoor ? (isOneTimeAccess ? "one_time" : "schedule") : ""
             )

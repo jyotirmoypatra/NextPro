@@ -40,6 +40,7 @@ struct AddUserRequest: Codable {
     // MARK: - Meta
     let source: String
     let is_mqtt_sync: Bool
+    let is_shared_link: Bool
     let creation_method: String   // door_selection / access_group
     let schedule_type: String     // one_time / schedule
 }

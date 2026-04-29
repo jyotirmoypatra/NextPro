@@ -34,6 +34,7 @@ struct GetUserData: Codable {
     
     let doors: [String]
     
+    let is_shared_link: Bool
     let schedule_type: String
     let start_date: String?
     let end_date: String?
