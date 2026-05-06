@@ -250,12 +250,94 @@ struct AddUserView: View {
                                             }
                                             .tint(.green)
                                             
+                                            
+                                            if isSelectMobileAPP {
+
+                                                VStack(alignment: .leading, spacing: 12) {
+
+                                                    Text("Mobile App Options:")
+                                                        .foregroundColor(.white)
+                                                        .font(.system(size: 15, weight: .medium))
+
+                                                    
+                                                    VStack(spacing: 20) {
+
+                                                        // Phone Tap
+    //                                                    CheckBoxView(
+    //                                                        title: "Phone Tap",
+    //                                                        isChecked: $digitalAccess
+    //                                                    )
+                                                        
+                                                        Toggle(isOn: $digitalAccess) {
+                                                            Text("Phone Tap")
+                                                                .foregroundColor(.white)
+                                                                .font(.system(size: 15, weight: .medium))
+                                                        }
+                                                        .tint(.green)
+
+                                                        // Remote + Bluetooth (Grouped)
+                                                        VStack(alignment: .leading, spacing: 20) {
+
+    //                                                        CheckBoxView(
+    //                                                            title: "Remote",
+    //                                                            isChecked: $remoteAccess
+    //                                                        )
+                                                            
+                                                            Toggle(isOn: $remoteAccess) {
+                                                                Text("Remote")
+                                                                    .foregroundColor(.white)
+                                                                    .font(.system(size: 15, weight: .medium))
+                                                            }
+                                                            .tint(.green)
+                                                            
+                                                            //Sub Option
+                                                            if remoteAccess {
+    //                                                            CheckBoxView(
+    //                                                                title: "Bluetooth",
+    //                                                                isChecked: $remoteAccess,
+    //                                                                isDisable : true
+    //                                                            )
+    //                                                            .padding(.leading, 28)
+    //                                                            .opacity(0.9)
+                                                                
+                                                                Toggle(isOn: $remoteAccess) {
+                                                                    Text("Bluetooth")
+                                                                        .foregroundColor(.white.opacity(0.5))
+                                                                        .font(.system(size: 15, weight: .medium))
+                                                                }
+                                                                .tint(Color.green.opacity(0.5))
+                                                                .padding(.leading, 15)
+                                                            }
+                                                        }
+                                                    }
+                                                    .padding()
+                                                    .background(
+                                                        RoundedRectangle(cornerRadius: 12)
+                                                            .stroke(Color.white.opacity(0.3))
+                                                    )
+                                                }
+                                            }
+                                            
+                                            
                                             Toggle(isOn: $isSelectKeyFob) {
                                                 Text("Key Fob / Card")
                                                     .foregroundColor(.white)
                                                     .font(.system(size: 15, weight: .medium))
                                             }
                                             .tint(.green)
+                                            
+                                            // MARK: - Key Fob Input
+                                            if isSelectKeyFob {
+
+                                                
+                                                LabeledTextField(
+                                                    title: "Physical Key Fob/Card ID:",
+                                                    placeholder: "Enter key fob/card ID",
+                                                    text: $nfcPhysicalNumber,
+                                                    keyboardType: .numberPad
+                                                    
+                                                )
+                                            }
                                             
                                             Toggle(isOn: $isSharedLink) {
                                                 Text("Allow Access Using Share Link")
@@ -264,9 +346,7 @@ struct AddUserView: View {
                                             }
                                             .tint(.green)
                                         }
-                                        
-//                                        .onChange(of: isSelectMobileAPP) { _ in updateNfcType() }
-//                                        .onChange(of: isSelectKeyFob) { _ in updateNfcType() }
+
                                         
                                         .onChange(of: isSelectMobileAPP) { _ in
                                             if editUser == nil {
@@ -280,105 +360,6 @@ struct AddUserView: View {
                                             }
                                         }
                                        
-                                        if isSelectMobileAPP || isSelectKeyFob {
-                                            Divider()
-                                                .background(Color.white.opacity(0.15))
-                                        }
-                                            
-                               
-                                      //  if nfcType == "DIGITAL" || nfcType == "BOTH" {
-                                        if isSelectMobileAPP {
-
-                                            VStack(alignment: .leading, spacing: 12) {
-
-                                                Text("Mobile App Options:")
-                                                    .foregroundColor(.white)
-                                                    .font(.system(size: 15, weight: .medium))
-
-                                                
-                                                VStack(spacing: 20) {
-
-                                                    // Phone Tap
-//                                                    CheckBoxView(
-//                                                        title: "Phone Tap",
-//                                                        isChecked: $digitalAccess
-//                                                    )
-                                                    
-                                                    Toggle(isOn: $digitalAccess) {
-                                                        Text("Phone Tap")
-                                                            .foregroundColor(.white)
-                                                            .font(.system(size: 15, weight: .medium))
-                                                    }
-                                                    .tint(.green)
-
-                                                    // Remote + Bluetooth (Grouped)
-                                                    VStack(alignment: .leading, spacing: 10) {
-
-//                                                        CheckBoxView(
-//                                                            title: "Remote",
-//                                                            isChecked: $remoteAccess
-//                                                        )
-                                                        
-                                                        Toggle(isOn: $remoteAccess) {
-                                                            Text("Remote")
-                                                                .foregroundColor(.white)
-                                                                .font(.system(size: 15, weight: .medium))
-                                                        }
-                                                        .tint(.green)
-                                                        
-                                                        //Sub Option
-                                                        if remoteAccess {
-//                                                            CheckBoxView(
-//                                                                title: "Bluetooth",
-//                                                                isChecked: $remoteAccess,
-//                                                                isDisable : true
-//                                                            )
-//                                                            .padding(.leading, 28)
-//                                                            .opacity(0.9)
-                                                            
-                                                            Toggle(isOn: $remoteAccess) {
-                                                                Text("Bluetooth")
-                                                                    .foregroundColor(.white.opacity(0.5))
-                                                                    .font(.system(size: 15, weight: .medium))
-                                                            }
-                                                            .tint(Color.green.opacity(0.5))
-                                                            .padding(.leading, 15)
-                                                        }
-                                                    }
-                                                }
-                                                .padding()
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .stroke(Color.white.opacity(0.3))
-                                                )
-                                            }
-                                        }
-
-                                        
-//                                        if nfcType == "DIGITAL" || nfcType == "BOTH" {
-//                                            LabeledTextField(
-//                                                title: "Digital Key Fob ID",
-//                                                placeholder: "Generate NFC Card Id",
-//                                                isRequired: true,
-//                                                text: $nfcId,
-//                                                isHaveBtn: true,
-//                                                isEditMode: editUser != nil
-//
-//                                            )
-//                                        }
-                                        
-                                        // MARK: - Key Fob Input
-                                        if isSelectKeyFob {
-
-                                            
-                                            LabeledTextField(
-                                                title: "Physical Key Fob/Card ID:",
-                                                placeholder: "Enter key fob/card ID",
-                                                text: $nfcPhysicalNumber,
-                                                keyboardType: .numberPad
-                                                
-                                            )
-                                        }
                                     }
                                     .padding()
                                     .background(Color.white.opacity(0.15))
