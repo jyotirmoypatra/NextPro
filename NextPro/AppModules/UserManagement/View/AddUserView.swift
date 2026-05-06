@@ -340,7 +340,7 @@ struct AddUserView: View {
                                             }
                                             
                                             Toggle(isOn: $isSharedLink) {
-                                                Text("Allow Access Using Share Link")
+                                                Text("Share Link")
                                                     .foregroundColor(.white)
                                                     .font(.system(size: 15, weight: .medium))
                                             }
@@ -349,15 +349,17 @@ struct AddUserView: View {
 
                                         
                                         .onChange(of: isSelectMobileAPP) { _ in
-                                            if editUser == nil {
-                                                updateNfcType()
-                                            }
+//                                            if editUser == nil {
+//                                                updateNfcType()
+//                                            }
+                                            updateNfcType()
                                         }
 
                                         .onChange(of: isSelectKeyFob) { _ in
-                                            if editUser == nil {
-                                                updateNfcType()
-                                            }
+//                                            if editUser == nil {
+//                                                updateNfcType()
+//                                            }
+                                              updateNfcType()
                                         }
                                        
                                     }
@@ -1067,21 +1069,23 @@ struct AddUserView: View {
        
         if isSelectMobileAPP && !isSelectKeyFob{
             nfcType = "DIGITAL"
-            digitalAccess = false
-            remoteAccess = false
+//            digitalAccess = false
+//            remoteAccess = false
             handleNfcGeneration()
         }
         else if !isSelectMobileAPP && isSelectKeyFob{
             nfcType = "PHYSICAL"
-            digitalAccess = false
-            remoteAccess = false
+//            digitalAccess = false
+//            remoteAccess = false
         }
         else if isSelectMobileAPP && isSelectKeyFob{
             nfcType = "BOTH"
-            digitalAccess = false
-            remoteAccess = false
+//            digitalAccess = false
+//            remoteAccess = false
             handleNfcGeneration()
         }
+        
+        print("nfctype : \(nfcType)")
     }
    
     func validateForm() -> String? {
@@ -1286,8 +1290,8 @@ struct AddUserView: View {
 
                 // Access
                 
-                is_digital: digitalAccess,
-                is_remote: remoteAccess,
+                is_digital: (isSelectMobileAPP && digitalAccess) ? true : false,
+                is_remote: (isSelectMobileAPP && remoteAccess) ? true : false,
                 // NFC
                 nfc_type: nfcType,
                 nfc_physical: isSelectKeyFob  ? nfcPhysicalNumber : "",
