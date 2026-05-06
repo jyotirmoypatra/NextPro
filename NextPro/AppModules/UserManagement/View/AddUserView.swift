@@ -360,6 +360,10 @@ struct AddUserView: View {
 //                                                updateNfcType()
 //                                            }
                                               updateNfcType()
+                                            if isSelectKeyFob {
+                                                    isSelectAccessGroup = true
+                                                    isSelectDoor = false
+                                            }
                                         }
                                        
                                     }
@@ -384,7 +388,7 @@ struct AddUserView: View {
                                     
                                     VStack(spacing: 20) {
                                         
-                                        // Schedule
+                                       
                                         AccessTypeRow(
                                             title: "Select Access group",
                                             isSelected: isSelectAccessGroup
@@ -393,13 +397,14 @@ struct AddUserView: View {
                                             isSelectDoor = false
                                         }
                                         
-                                        // One Time
-                                        AccessTypeRow(
-                                            title: "Select Doors",
-                                            isSelected: isSelectDoor
-                                        ) {
-                                            isSelectAccessGroup = false
-                                            isSelectDoor = true
+                                        if !isSelectKeyFob {
+                                            AccessTypeRow(
+                                                title: "Select Doors",
+                                                isSelected: isSelectDoor
+                                            ) {
+                                                isSelectAccessGroup = false
+                                                isSelectDoor = true
+                                            }
                                         }
                                     }
                                     .padding(12)
@@ -1860,7 +1865,7 @@ struct AccessGroupDropDown: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             
-            // 🔹 Dropdown List
+            //  Dropdown List
             if isOpen {
                 VStack(spacing: 0) {
                     ForEach(options) { item in
