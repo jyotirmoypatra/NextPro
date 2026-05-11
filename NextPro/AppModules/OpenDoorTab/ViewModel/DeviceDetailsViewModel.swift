@@ -23,11 +23,6 @@ class DeviceDetailsViewModel: ObservableObject {
     private let network = NetworkManager.shared
     private var fetchTask: Task<Void, Never>?
     
-   @Published var time_slots : [TimeSlot]?
-    @Published var startDate: String?
-    @Published var weekday: String?
-    @Published var endDate : String?
-
     func fetchDeviceDetailsIfNeeded(force: Bool = false) async {
         // 🔴 Cancel previous fetch if any
         fetchTask?.cancel()
@@ -59,11 +54,6 @@ class DeviceDetailsViewModel: ObservableObject {
             do {
                 let response = try await network.deviceDetails(userID: userId)
                 self.deviceDetails = response
-                startDate = response.accessGroups?.first?.startDate
-                endDate = response.accessGroups?.first?.endDate
-                time_slots = response.accessGroups?.first?.timeSlots
-                weekday = response.accessGroups?.first?.weekDays
-                
                 issuccess=true
                 saveDetailsLocally(response)
                 updateAndSubscribeAllDevices()
@@ -90,10 +80,6 @@ class DeviceDetailsViewModel: ObservableObject {
         if let data = UserDefaults.standard.data(forKey: "device_details"),
            let decoded = try? JSONDecoder().decode(DeviceDetailsResponse.self, from: data) {
             self.deviceDetails = decoded
-            startDate = self.deviceDetails?.accessGroups?.first?.startDate
-            endDate = self.deviceDetails?.accessGroups?.first?.endDate
-            time_slots = self.deviceDetails?.accessGroups?.first?.timeSlots
-            weekday = self.deviceDetails?.accessGroups?.first?.weekDays
             updateAndSubscribeAllDevices()
             issuccess = true
             

@@ -234,23 +234,16 @@ struct DoorOpenView: View {
                                                                     Text(deviceVM.deviceDetails?.userFullName ?? "")
                                                                         .font(.custom("Inter-Regular", size: 12))
                                                                         .foregroundColor(.gray)
-                                                                    
-                                                                    Text(maskCardNumber(deviceVM.deviceDetails?.digitalCardNumber ?? ""))
-                                                                        .font(.custom("Inter-Regular", size: 12))
-                                                                        .foregroundColor(.gray)
-                                                                    
+                                                                   
                                                                 }
                                                                 
                                                                 Spacer()
                                                                 
                                                                 VStack(alignment: .trailing, spacing: 2) {
-                                                                    Text("Exp")
-                                                                        .font(.custom("Inter-Regular", size: 12))
-                                                                        .foregroundColor(.white)
-                                                                    //.toFormattedDate(outputFormat: "yyyy")
-                                                                    Text(deviceVM.deviceDetails?.accessGroups?.first?.endDate ?? "")
+                                                                    Text(maskCardNumber(deviceVM.deviceDetails?.digitalCardNumber ?? ""))
                                                                         .font(.custom("Inter-Regular", size: 12))
                                                                         .foregroundColor(.gray)
+                                                                    
                                                                 }
                                                             }
                                                             
@@ -893,134 +886,138 @@ struct DoorOpenView: View {
     }
     
     func isWithinAccessWindow() -> Bool {
-        
-        guard
-            //   let currentDateTime = serverTimeVM.localServerDate,
-            let currentDateTime = serverTimeVM.getEstimatedServerTime(),
-            let tzID = serverTimeVM.localTimeZoneID,
-            let accessTZ = TimeZone(identifier: tzID),
-            let startDateStr = deviceVM.startDate,
-            let endDateStr = deviceVM.endDate,
-            let timeSlots = deviceVM.time_slots,
-            let weekDaysStr = deviceVM.weekday
-        else {
-            DispatchQueue.main.async {
-                showTimeSyncAlert = true
-            }
-            
-            return false
-        }
-        
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = accessTZ
-        
-        let debugFormatter = DateFormatter()
-        debugFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        debugFormatter.timeZone = accessTZ
-        
-        print("🕒 Current Time:", debugFormatter.string(from: currentDateTime))
-        print("📅 Start Date:", startDateStr)
-        print("📅 End Date:", endDateStr)
-        print("📆 Allowed Weekdays:", weekDaysStr)
-        print("⏰ Total Time Slots:", timeSlots.count)
-        
-        // MARK: 1️⃣ DATE RANGE CHECK
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        dateFormatter.timeZone = accessTZ
-        
-        guard
-            let startDate = dateFormatter.date(from: startDateStr),
-            let endDate = dateFormatter.date(from: endDateStr)
-        else {
-            print("❌ Invalid start/end date format")
-            return false
-        }
-        
-        let today = calendar.startOfDay(for: currentDateTime)
-        let start = calendar.startOfDay(for: startDate)
-        let end = calendar.startOfDay(for: endDate)
-        
-        if !(today >= start && today <= end) {
-            print("⛔ FAILED: Outside date range")
-            print("👉 Today:", debugFormatter.string(from: today))
-            print("👉 Valid Between:", debugFormatter.string(from: start),
-                  "to", debugFormatter.string(from: end))
-            return false
-        }
-        
-        print("✅ Date range check passed")
-        
-        // MARK: 2️⃣ WEEKDAY CHECK
-        
-        let iosWeekday = calendar.component(.weekday, from: currentDateTime)
-        // iOS: 1=Sun, 2=Mon ... 7=Sat
-        
-        // Convert to backend format: 1=Mon ... 7=Sun
-        let backendWeekday = iosWeekday == 1 ? 7 : iosWeekday - 1
-        
-        let allowedWeekdays: [Int] = weekDaysStr
-            .split(separator: ",")
-            .compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
-        
-        print("📆 iOS Weekday:", iosWeekday)
-        print("📆 Backend Weekday:", backendWeekday)
-        print("📆 Allowed Weekday Array:", allowedWeekdays)
-        
-        if !allowedWeekdays.contains(backendWeekday) {
-            print("⛔ FAILED: Weekday not allowed")
-            return false
-        }
-        
-        print("✅ Weekday check passed")
-        
-        // MARK: 3️⃣ MULTIPLE TIME SLOT CHECK
-        
-        let timeFormatter = DateFormatter()
-        timeFormatter.dateFormat = "HH:mm"
-        timeFormatter.timeZone = accessTZ
-        
-        let nowComponents = calendar.dateComponents([.hour, .minute], from: currentDateTime)
-        let nowMinutes = (nowComponents.hour ?? 0) * 60 + (nowComponents.minute ?? 0)
-        
-        print("🕒 Current Minutes:", nowMinutes)
-        
-        for (index, slot) in timeSlots.enumerated() {
-            
-            guard
-                let startTime = timeFormatter.date(from: slot.start_time),
-                let endTime = timeFormatter.date(from: slot.end_time)
-            else {
-                print("⚠️ Slot \(index + 1) invalid time format")
-                continue
-            }
-            
-            let startMinutes =
-            calendar.component(.hour, from: startTime) * 60 +
-            calendar.component(.minute, from: startTime)
-            
-            let endMinutes =
-            calendar.component(.hour, from: endTime) * 60 +
-            calendar.component(.minute, from: endTime)
-            
-            print("⏰ Slot \(index + 1):",
-                  slot.start_time, "→", slot.end_time,
-                  "| Minutes:", startMinutes, "→", endMinutes)
-            
-            if nowMinutes >= startMinutes && nowMinutes <= endMinutes {
-                print("✅ SUCCESS: Time slot \(index + 1) matched")
-                print("──────── ACCESS GRANTED ────────")
-                return true
-            } else {
-                print("❌ Slot \(index + 1) not matched")
-            }
-        }
-        
-        print("⛔ FAILED: No time slot matched")
-        print("──────── ACCESS DENIED ────────")
-        return false
+        return true
     }
+    
+//    func isWithinAccessWindow() -> Bool {
+//        
+//        guard
+//            //   let currentDateTime = serverTimeVM.localServerDate,
+//            let currentDateTime = serverTimeVM.getEstimatedServerTime(),
+//            let tzID = serverTimeVM.localTimeZoneID,
+//            let accessTZ = TimeZone(identifier: tzID),
+//            let startDateStr = deviceVM.startDate,
+//            let endDateStr = deviceVM.endDate,
+//            let timeSlots = deviceVM.time_slots,
+//            let weekDaysStr = deviceVM.weekday
+//        else {
+//            DispatchQueue.main.async {
+//                showTimeSyncAlert = true
+//            }
+//            
+//            return false
+//        }
+//        
+//        var calendar = Calendar(identifier: .gregorian)
+//        calendar.timeZone = accessTZ
+//        
+//        let debugFormatter = DateFormatter()
+//        debugFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+//        debugFormatter.timeZone = accessTZ
+//        
+//        print("🕒 Current Time:", debugFormatter.string(from: currentDateTime))
+//        print("📅 Start Date:", startDateStr)
+//        print("📅 End Date:", endDateStr)
+//        print("📆 Allowed Weekdays:", weekDaysStr)
+//        print("⏰ Total Time Slots:", timeSlots.count)
+//        
+//        // MARK: 1️⃣ DATE RANGE CHECK
+//        
+//        let dateFormatter = DateFormatter()
+//        dateFormatter.dateFormat = "yyyy-MM-dd"
+//        dateFormatter.timeZone = accessTZ
+//        
+//        guard
+//            let startDate = dateFormatter.date(from: startDateStr),
+//            let endDate = dateFormatter.date(from: endDateStr)
+//        else {
+//            print("❌ Invalid start/end date format")
+//            return false
+//        }
+//        
+//        let today = calendar.startOfDay(for: currentDateTime)
+//        let start = calendar.startOfDay(for: startDate)
+//        let end = calendar.startOfDay(for: endDate)
+//        
+//        if !(today >= start && today <= end) {
+//            print("⛔ FAILED: Outside date range")
+//            print("👉 Today:", debugFormatter.string(from: today))
+//            print("👉 Valid Between:", debugFormatter.string(from: start),
+//                  "to", debugFormatter.string(from: end))
+//            return false
+//        }
+//        
+//        print("✅ Date range check passed")
+//        
+//        // MARK: 2️⃣ WEEKDAY CHECK
+//        
+//        let iosWeekday = calendar.component(.weekday, from: currentDateTime)
+//        // iOS: 1=Sun, 2=Mon ... 7=Sat
+//        
+//        // Convert to backend format: 1=Mon ... 7=Sun
+//        let backendWeekday = iosWeekday == 1 ? 7 : iosWeekday - 1
+//        
+//        let allowedWeekdays: [Int] = weekDaysStr
+//            .split(separator: ",")
+//            .compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+//        
+//        print("📆 iOS Weekday:", iosWeekday)
+//        print("📆 Backend Weekday:", backendWeekday)
+//        print("📆 Allowed Weekday Array:", allowedWeekdays)
+//        
+//        if !allowedWeekdays.contains(backendWeekday) {
+//            print("⛔ FAILED: Weekday not allowed")
+//            return false
+//        }
+//        
+//        print("✅ Weekday check passed")
+//        
+//        // MARK: 3️⃣ MULTIPLE TIME SLOT CHECK
+//        
+//        let timeFormatter = DateFormatter()
+//        timeFormatter.dateFormat = "HH:mm"
+//        timeFormatter.timeZone = accessTZ
+//        
+//        let nowComponents = calendar.dateComponents([.hour, .minute], from: currentDateTime)
+//        let nowMinutes = (nowComponents.hour ?? 0) * 60 + (nowComponents.minute ?? 0)
+//        
+//        print("🕒 Current Minutes:", nowMinutes)
+//        
+//        for (index, slot) in timeSlots.enumerated() {
+//            
+//            guard
+//                let startTime = timeFormatter.date(from: slot.start_time),
+//                let endTime = timeFormatter.date(from: slot.end_time)
+//            else {
+//                print("⚠️ Slot \(index + 1) invalid time format")
+//                continue
+//            }
+//            
+//            let startMinutes =
+//            calendar.component(.hour, from: startTime) * 60 +
+//            calendar.component(.minute, from: startTime)
+//            
+//            let endMinutes =
+//            calendar.component(.hour, from: endTime) * 60 +
+//            calendar.component(.minute, from: endTime)
+//            
+//            print("⏰ Slot \(index + 1):",
+//                  slot.start_time, "→", slot.end_time,
+//                  "| Minutes:", startMinutes, "→", endMinutes)
+//            
+//            if nowMinutes >= startMinutes && nowMinutes <= endMinutes {
+//                print("✅ SUCCESS: Time slot \(index + 1) matched")
+//                print("──────── ACCESS GRANTED ────────")
+//                return true
+//            } else {
+//                print("❌ Slot \(index + 1) not matched")
+//            }
+//        }
+//        
+//        print("⛔ FAILED: No time slot matched")
+//        print("──────── ACCESS DENIED ────────")
+//        return false
+//    }
     
     func startOfflineTimeObserver() {
         

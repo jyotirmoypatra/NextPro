@@ -17,7 +17,6 @@ struct DeviceDetailsResponse: Codable {
     let userFullName: String?
     let physicalCardNumber: String?
     let digitalCardNumber: String?
-    let accessGroups: [AccessGroups]?
     let controllers: [Controller]?
     let standaloneAllInOne: [Standalone_All_In_One_Door]?
     let standaloneController: [StandaloneController]?
@@ -31,36 +30,9 @@ struct DeviceDetailsResponse: Codable {
         case userFullName = "user_full_name"
         case physicalCardNumber = "physical_card_number"
         case digitalCardNumber = "digital_card_number"
-        case accessGroups = "access_groups"
         case controllers = "controllers"
         case standaloneAllInOne = "standalone_all_in_one"
         case standaloneController = "standalone_controller"
-    }
-}
-
-struct AccessGroups: Codable {
-    let accessGroupId: String
-    let accessGroupName: String?
-    let tpgId: Int?
-    let isInternal: Bool?
-    let scheduleType: String?
-    let startDate: String?
-    let endDate: String?
-    let timeSlots: [TimeSlot]?
-    let weekDays: String?
-    let doors: [AccessDoor]?
-
-    enum CodingKeys: String, CodingKey {
-        case accessGroupId = "access_group_id"
-        case accessGroupName = "access_group_name"
-        case tpgId = "tpg_id"
-        case isInternal = "is_internal"
-        case scheduleType = "schedule_type"
-        case startDate = "start_date"
-        case endDate = "end_date"
-        case timeSlots = "time_slots"
-        case weekDays = "week_days"
-        case doors
     }
 }
 
@@ -84,6 +56,9 @@ struct Controller: Codable {
     let controllerModel: String?
     let controllerCommType: String?
     let maxDoorsSupported: Int?
+    let latitude: Double?
+    let longitude: Double?
+    let currentAddress: String?
     let doors: [Door]?
 
     enum CodingKeys: String, CodingKey {
@@ -95,9 +70,14 @@ struct Controller: Codable {
         case controllerModel = "controller_model"
         case controllerCommType = "controller_comm_type"
         case maxDoorsSupported = "max_doors_supported"
+        case latitude
+        case longitude
+        case currentAddress = "current_address"
         case doors
     }
 }
+
+
 
 
 struct Door: Codable {
@@ -112,6 +92,7 @@ struct Door: Codable {
     let openType: Int?
     let doorCommType: String?
     let isStandalone: Bool?
+    let accessGroups: [AccessGroups]?
 
     enum CodingKeys: String, CodingKey {
         case doorId = "door_id"
@@ -125,6 +106,7 @@ struct Door: Codable {
         case openType = "open_type"
         case doorCommType = "door_comm_type"
         case isStandalone = "is_standalone"
+        case accessGroups = "access_groups"
     }
 }
 
@@ -141,6 +123,10 @@ struct Standalone_All_In_One_Door: Codable {
     let controllerBased: Bool?
     let devType: Int?
     let openType: Int?
+    let latitude: Double?
+    let longitude: Double?
+    let currentAddress: String?
+    let accessGroups: [AccessGroups]?
 
     enum CodingKeys: String, CodingKey {
         case doorId = "door_id"
@@ -154,6 +140,10 @@ struct Standalone_All_In_One_Door: Codable {
         case controllerBased = "controller_based"
         case devType = "dev_type"
         case openType = "open_type"
+        case latitude
+        case longitude
+        case currentAddress = "current_address"
+        case accessGroups = "access_groups"
     }
 }
 
@@ -169,6 +159,9 @@ struct StandaloneController: Codable {
     let controllerCommType: String?
     let controllerType : String?
     let maxDoorsSupported: Int?
+    let latitude: Double?
+    let longitude: Double?
+    let currentAddress: String?
     let doors: [SensorlessDoor]?
 
     enum CodingKeys: String, CodingKey {
@@ -181,6 +174,9 @@ struct StandaloneController: Codable {
         case controllerCommType = "controller_comm_type"
         case controllerType = "controller_type"
         case maxDoorsSupported = "max_doors_supported"
+        case latitude
+        case longitude
+        case currentAddress = "current_address"
         case doors
     }
 }
@@ -192,13 +188,42 @@ struct SensorlessDoor: Codable {
     let doorId: String
     let doorName: String?
     let doorNumber: Int?
+    let accessGroups: [AccessGroups]?
     
     enum CodingKeys: String, CodingKey {
         case doorId = "door_id"
         case doorName = "door_name"
         case doorNumber = "door_number"
+        case accessGroups = "access_groups"
+        
     }
 }
+
+
+struct AccessGroups: Codable {
+    let accessGroupId: String
+    let accessGroupName: String?
+    let tpgId: Int?
+    let isInternal: Bool?
+    let scheduleType: String?
+    let startDate: String?
+    let endDate: String?
+    let timeSlots: [TimeSlot]?
+    let weekDays: String?
+
+    enum CodingKeys: String, CodingKey {
+        case accessGroupId = "access_group_id"
+        case accessGroupName = "access_group_name"
+        case tpgId = "tpg_id"
+        case isInternal = "is_internal"
+        case scheduleType = "schedule_type"
+        case startDate = "start_date"
+        case endDate = "end_date"
+        case timeSlots = "time_slots"
+        case weekDays = "week_days"
+    }
+}
+
 
 struct ServerTimeResponse: Codable {
     
@@ -212,3 +237,4 @@ struct ServerTimeResponse: Codable {
         case localTimezone = "local_timezone"
     }
 }
+
