@@ -64,7 +64,8 @@ struct AddUserView: View {
     @State private var shouldScrollToDoorSection = false
 
     
-    @State private var selectedAccessGroup: AccessGroupItem? = nil
+    //@State private var selectedAccessGroup: AccessGroupItem? = nil
+    @State private var selectedAccessGroups: [AccessGroupItem] = []
     @State private var openSection: Int? = nil
     
     @State private var hasInitialized = false
@@ -414,10 +415,16 @@ struct AddUserView: View {
                                 
                                 if isSelectAccessGroup {
                                     
+//                                    AccessGroupDropDown(
+//                                        id: 0,
+//                                        options: getAccessGroupVM.accessGroupList,
+//                                        selectedGroup: $selectedAccessGroup,
+//                                        openSection: $openSection
+//                                    )
                                     AccessGroupDropDown(
                                         id: 0,
                                         options: getAccessGroupVM.accessGroupList,
-                                        selectedGroup: $selectedAccessGroup,
+                                        selectedGroups: $selectedAccessGroups,
                                         openSection: $openSection
                                     )
                                     .id("ACCESS_GROUP_SECTION")
@@ -893,15 +900,27 @@ struct AddUserView: View {
                     }
                     
                     
-                    if user.creation_method == "access_group",
-                       let firstGroup = user.access_groups_detail.first {
-                        
-                        selectedAccessGroup = AccessGroupItem(
-                            id: firstGroup.access_group_id,
-                            name: firstGroup.access_group_name,
-                            description: nil,
-                            doors: user.doors
-                        )
+//                    if user.creation_method == "access_group",
+//                       let firstGroup = user.access_groups_detail.first {
+//                        
+//                        selectedAccessGroup = AccessGroupItem(
+//                            id: firstGroup.access_group_id,
+//                            name: firstGroup.access_group_name,
+//                            description: nil,
+//                            doors: user.doors
+//                        )
+//                    }
+                    
+                    if user.creation_method == "access_group" {
+
+                        selectedAccessGroups = user.access_groups_detail.map {
+                            AccessGroupItem(
+                                id: $0.access_group_id,
+                                name: $0.access_group_name,
+                                description: nil,
+                                doors: user.doors
+                            )
+                        }
                     }
                     
                     
@@ -1201,9 +1220,14 @@ struct AddUserView: View {
             }
         }
         
+//        if isSelectAccessGroup {
+//            if selectedAccessGroup == nil {
+//                    return "Please select an access group"
+//            }
+//        }
         if isSelectAccessGroup {
-            if selectedAccessGroup == nil {
-                    return "Please select an access group"
+            if selectedAccessGroups.isEmpty {
+                return "Please select at least one access group"
             }
         }
 
@@ -1306,7 +1330,9 @@ struct AddUserView: View {
                 doors: isSelectDoor ? selectedDoors.map { $0.id } : [],
 
                 //access group
-                access_groups: isSelectAccessGroup ? (selectedAccessGroup != nil ? [selectedAccessGroup!.id] : nil)  : [],
+//                access_groups: isSelectAccessGroup ? (selectedAccessGroup != nil ? [selectedAccessGroup!.id] : nil)  : [],
+                
+                access_groups: isSelectAccessGroup ? selectedAccessGroups.map { String($0.id) } : [],
                 
                 // Schedule
                 start_date: isSelectDoor ? accessStartDate?.toAPIDate() : "",
@@ -1398,7 +1424,8 @@ struct AddUserView: View {
         selectedDoors.removeAll()
         
         // MARK: - Access Group
-        selectedAccessGroup = nil
+//        selectedAccessGroup = nil
+        selectedAccessGroups.removeAll()
         openSection = nil
         
         // MARK: - Scroll
@@ -1819,44 +1846,142 @@ func shortDay(_ day: Int) -> String {
 
 
 
+//struct AccessGroupDropDown: View {
+//    
+//    let id: Int
+//    let options: [AccessGroupItem]
+//    
+//    @Binding var selectedGroup: AccessGroupItem?
+//    @Binding var openSection: Int?
+//    
+//    private var isOpen: Bool {
+//        openSection == id
+//    }
+//    
+//    var body: some View {
+//        
+//        VStack(alignment: .leading, spacing: 10) {
+//            
+//            HStack(spacing: 2) {
+//                Text("Door Access Group")
+//                    .font(.custom("Inter-Medium", size: 16))
+//                    .foregroundColor(.white)
+//                Text("*")
+//                    .foregroundColor(.red)
+//            }
+//            
+//            // 🔹 Dropdown Button
+//            Button {
+//                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+//                    openSection = isOpen ? nil : id
+//                }
+//            } label: {
+//                HStack {
+//                    
+//                    Text(selectedGroup?.name ?? "Select Access Group")
+//                        .foregroundColor(selectedGroup == nil ? .white.opacity(0.6) : .white)
+//                        .font(.custom("Inter-Regular", size: 14))
+//                    
+//                    Spacer()
+//                    
+//                    Image(systemName: isOpen ? "chevron.up" : "chevron.down")
+//                        .foregroundColor(.white.opacity(0.8))
+//                }
+//                .padding()
+//                .background(Color.white.opacity(0.2))
+//                .clipShape(RoundedRectangle(cornerRadius: 12))
+//            }
+//            
+//            //  Dropdown List
+//            if isOpen {
+//                VStack(spacing: 0) {
+//                    ForEach(options) { item in
+//                        
+//                        Button {
+//                            selectedGroup = item
+//                            withAnimation {
+//                                openSection = nil
+//                            }
+//                        } label: {
+//                            HStack {
+//                                Text(item.name)
+//                                    .foregroundColor(.white)
+//                                    .font(.custom("Inter-Regular", size: 14))
+//                                
+//                                Spacer()
+//                                
+//                                if selectedGroup?.id == item.id {
+//                                    Image(systemName: "checkmark")
+//                                        .foregroundColor(.green)
+//                                }
+//                            }
+//                            .padding(.vertical, 10)
+//                            .padding(.horizontal, 12)
+//                        }
+//                        
+//                        Divider()
+//                            .overlay(Color.white.opacity(0.08))
+//                    }
+//                }
+//                .background(Color.gray.opacity(0.2))
+//                .clipShape(RoundedRectangle(cornerRadius: 12))
+//                .transition(.opacity)
+//                .padding(.top, -9)
+//            }
+//        }
+//    }
+//}
+
+
 struct AccessGroupDropDown: View {
-    
+
     let id: Int
     let options: [AccessGroupItem]
-    
-    @Binding var selectedGroup: AccessGroupItem?
+
+    @Binding var selectedGroups: [AccessGroupItem]
     @Binding var openSection: Int?
-    
+
     private var isOpen: Bool {
         openSection == id
     }
-    
+
     var body: some View {
-        
+
         VStack(alignment: .leading, spacing: 10) {
-            
+
             HStack(spacing: 2) {
                 Text("Door Access Group")
                     .font(.custom("Inter-Medium", size: 16))
                     .foregroundColor(.white)
+
                 Text("*")
                     .foregroundColor(.red)
             }
-            
-            // 🔹 Dropdown Button
+
             Button {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                     openSection = isOpen ? nil : id
                 }
             } label: {
+
                 HStack {
-                    
-                    Text(selectedGroup?.name ?? "Select Access Group")
-                        .foregroundColor(selectedGroup == nil ? .white.opacity(0.6) : .white)
-                        .font(.custom("Inter-Regular", size: 14))
-                    
+
+                    Text(
+                        selectedGroups.isEmpty
+                        ? "Select Access Group"
+                        : selectedGroups.map { $0.name }.joined(separator: ", ")
+                    )
+                    .foregroundColor(
+                        selectedGroups.isEmpty
+                        ? .white.opacity(0.6)
+                        : .white
+                    )
+                    .font(.custom("Inter-Regular", size: 14))
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+
                     Spacer()
-                    
+
                     Image(systemName: isOpen ? "chevron.up" : "chevron.down")
                         .foregroundColor(.white.opacity(0.8))
                 }
@@ -1864,34 +1989,47 @@ struct AccessGroupDropDown: View {
                 .background(Color.white.opacity(0.2))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
-            
-            //  Dropdown List
+
             if isOpen {
+
                 VStack(spacing: 0) {
+
                     ForEach(options) { item in
-                        
+
                         Button {
-                            selectedGroup = item
-                            withAnimation {
-                                openSection = nil
+
+                            if selectedGroups.contains(where: { $0.id == item.id }) {
+
+                                selectedGroups.removeAll { $0.id == item.id }
+
+                            } else {
+
+                                selectedGroups.append(item)
                             }
+
                         } label: {
+
                             HStack {
+
                                 Text(item.name)
                                     .foregroundColor(.white)
                                     .font(.custom("Inter-Regular", size: 14))
-                                
+
                                 Spacer()
+
+                                Image(
+                                    systemName: selectedGroups.contains(where: { $0.id == item.id })
+                                    ? "checkmark.square.fill"
+                                    : "square"
+                                )
+                                .font(.system(size: 22, weight: .medium))
+                                .foregroundColor(.green)
                                 
-                                if selectedGroup?.id == item.id {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.green)
-                                }
                             }
-                            .padding(.vertical, 10)
+                            .padding(.vertical, 15)
                             .padding(.horizontal, 12)
                         }
-                        
+
                         Divider()
                             .overlay(Color.white.opacity(0.08))
                     }
