@@ -21,6 +21,13 @@ class NetworkManager: ObservableObject {
     @Published var didCheckInternet: Bool = false
     
     @Published var showSessionExpiredAlert = false
+    private var sessionExpirationState: SessionExpirationState = .idle
+
+    private enum SessionExpirationState: Equatable {
+        case idle
+        case presenting
+        case loggedOut
+    }
 
     private init() {
         startMonitoring()
@@ -103,6 +110,28 @@ class NetworkManager: ObservableObject {
         }
         return nil
     }
+
+    func requestSessionExpiredAlert() {
+        DispatchQueue.main.async {
+            guard self.sessionExpirationState == .idle else { return }
+            self.sessionExpirationState = .presenting
+            self.showSessionExpiredAlert = true
+        }
+    }
+
+    func completeSessionExpiredLogout() {
+        DispatchQueue.main.async {
+            self.sessionExpirationState = .loggedOut
+            self.showSessionExpiredAlert = false
+        }
+    }
+
+    func resetSessionExpirationState() {
+        DispatchQueue.main.async {
+            self.sessionExpirationState = .idle
+            self.showSessionExpiredAlert = false
+        }
+    }
     
     // MARK: - Generic Authorized Request Executor
     private func performRequest<T: Decodable>(
@@ -155,7 +184,16 @@ class NetworkManager: ObservableObject {
            if http.statusCode == 401, retry {
                print("🔁 Access token expired. Refreshing...")
 
-               let refreshResponse = try await refressToken()
+               let refreshResponse: RefreshTokenResponse
+               do {
+                   refreshResponse = try await refressToken()
+               } catch APIError.unAuthorized {
+                   requestSessionExpiredAlert()
+                   throw APIError.unAuthorized
+               } catch APIError.serverError(let code, _) where code == 401 {
+                   requestSessionExpiredAlert()
+                   throw APIError.unAuthorized
+               }
 
                if let newAccess = refreshResponse.access {
                    KeychainManager.shared.save(newAccess, forKey: "access_token")
@@ -181,11 +219,7 @@ class NetworkManager: ObservableObject {
 
                 print("🚪 Session expired after retry. Showing alert...")
 
-                DispatchQueue.main.async {
-                    if !NetworkManager.shared.showSessionExpiredAlert {
-                        NetworkManager.shared.showSessionExpiredAlert = true
-                    }
-                }
+                requestSessionExpiredAlert()
 
                 throw APIError.unAuthorized
         }

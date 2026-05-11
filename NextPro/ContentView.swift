@@ -79,7 +79,12 @@ struct ContentView: View {
                 KeychainManager.shared.clearUserDefaultsAndKeychainData()
                 UserDefaults.standard.set(false, forKey: "is_logged_in")
                 KeychainManager.shared.resetToLogin()
-                networkManager.showSessionExpiredAlert = false
+                networkManager.completeSessionExpiredLogout()
+            }
+        }
+        .onChange(of: isLoggedIn) { loggedIn in
+            if loggedIn {
+                networkManager.resetSessionExpirationState()
             }
         }
 
