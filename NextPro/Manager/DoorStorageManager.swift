@@ -21,6 +21,7 @@ struct DoorModelUser: Identifiable, Codable {
     let cardno: String
     let deviceType: String?
     let deviceModel: String?
+    let accessGroups: [AccessGroups]?
     
     init(
         id: UUID = UUID(),
@@ -32,7 +33,8 @@ struct DoorModelUser: Identifiable, Codable {
         eKey: String,
         cardno: String,
         deviceType : String?,
-        deviceModel : String?
+        deviceModel : String?,
+        accessGroups: [AccessGroups]? = nil
     ) {
         self.id = id
         self.name = name
@@ -44,6 +46,7 @@ struct DoorModelUser: Identifiable, Codable {
         self.cardno = cardno
         self.deviceType = deviceType
         self.deviceModel = deviceModel
+        self.accessGroups = accessGroups
     }
 }
 
@@ -55,6 +58,7 @@ struct RemoteDoorItem: Identifiable {
     let doorType: String?
     let doorControllerType: String?
     let sensorDetails: DoorModelUser?
+    let accessGroups: [AccessGroups]?
     var key: String {
             "\(serial)_\(doorNumber)"
         }

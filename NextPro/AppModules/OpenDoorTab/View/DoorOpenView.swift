@@ -409,7 +409,7 @@ struct DoorOpenView: View {
                                                             )
                                                         },
                                                         canOpenDoor: {
-                                                            isWithinAccessWindow()
+                                                            isWithinAccessWindow(accessGroups: door.accessGroups)
                                                         }
                                                     )
                                                 }
@@ -885,8 +885,164 @@ struct DoorOpenView: View {
             }
     }
     
-    func isWithinAccessWindow() -> Bool {
-        return true
+    func isWithinAccessWindow(accessGroups: [AccessGroups]?) -> Bool {
+        guard
+            let currentDateTime = serverTimeVM.getEstimatedServerTime(),
+            let tzID = serverTimeVM.localTimeZoneID,
+            let accessTZ = TimeZone(identifier: tzID)
+        else {
+            DispatchQueue.main.async {
+                showTimeSyncAlert = true
+            }
+            return false
+        }
+
+        guard let accessGroups, !accessGroups.isEmpty else {
+            print("⛔ FAILED: No access groups found for this door")
+            return false
+        }
+
+        for (index, accessGroup) in accessGroups.enumerated() {
+            print("🔐 Checking access group \(index + 1):", accessGroup.accessGroupName ?? accessGroup.accessGroupId)
+
+            if isWithinAccessWindow(
+                currentDateTime: currentDateTime,
+                accessTZ: accessTZ,
+                accessGroup: accessGroup
+            ) {
+                print("✅ ACCESS GRANTED by access group:", accessGroup.accessGroupName ?? accessGroup.accessGroupId)
+                return true
+            }
+        }
+
+        print("⛔ FAILED: No access group matched")
+        print("──────── ACCESS DENIED ────────")
+        return false
+    }
+
+    private func isWithinAccessWindow(
+        currentDateTime: Date,
+        accessTZ: TimeZone,
+        accessGroup: AccessGroups
+    ) -> Bool {
+        guard
+            let startDateStr = accessGroup.startDate,
+            let endDateStr = accessGroup.endDate,
+            let timeSlots = accessGroup.timeSlots,
+            let weekDaysStr = accessGroup.weekDays
+        else {
+            print("⛔ FAILED: Access group schedule details missing")
+            return false
+        }
+
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = accessTZ
+
+        let debugFormatter = DateFormatter()
+        debugFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        debugFormatter.locale = Locale(identifier: "en_US_POSIX")
+        debugFormatter.timeZone = accessTZ
+
+        print("🕒 Current Time:", debugFormatter.string(from: currentDateTime))
+        print("📅 Start Date:", startDateStr)
+        print("📅 End Date:", endDateStr)
+        print("📆 Allowed Weekdays:", weekDaysStr)
+        print("⏰ Total Time Slots:", timeSlots.count)
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.timeZone = accessTZ
+
+        guard
+            let startDate = dateFormatter.date(from: startDateStr),
+            let endDate = dateFormatter.date(from: endDateStr)
+        else {
+            print("❌ Invalid start/end date format")
+            return false
+        }
+
+        let today = calendar.startOfDay(for: currentDateTime)
+        let start = calendar.startOfDay(for: startDate)
+        let end = calendar.startOfDay(for: endDate)
+
+        if !(today >= start && today <= end) {
+            print("⛔ FAILED: Outside date range")
+            print("👉 Today:", debugFormatter.string(from: today))
+            print("👉 Valid Between:", debugFormatter.string(from: start),
+                  "to", debugFormatter.string(from: end))
+            return false
+        }
+
+        print("✅ Date range check passed")
+
+        let iosWeekday = calendar.component(.weekday, from: currentDateTime)
+        let backendWeekday = iosWeekday == 1 ? 7 : iosWeekday - 1
+
+        let allowedWeekdays = parseWeekdays(from: weekDaysStr)
+
+        print("📆 iOS Weekday:", iosWeekday)
+        print("📆 Backend Weekday:", backendWeekday)
+        print("📆 Allowed Weekday Array:", allowedWeekdays)
+
+        if !allowedWeekdays.contains(backendWeekday) {
+            print("⛔ FAILED: Weekday not allowed")
+            return false
+        }
+
+        print("✅ Weekday check passed")
+
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "HH:mm"
+        timeFormatter.locale = Locale(identifier: "en_US_POSIX")
+        timeFormatter.timeZone = accessTZ
+
+        let nowComponents = calendar.dateComponents([.hour, .minute], from: currentDateTime)
+        let nowMinutes = (nowComponents.hour ?? 0) * 60 + (nowComponents.minute ?? 0)
+
+        print("🕒 Current Minutes:", nowMinutes)
+
+        for (index, slot) in timeSlots.enumerated() {
+            guard
+                let startTime = timeFormatter.date(from: slot.start_time),
+                let endTime = timeFormatter.date(from: slot.end_time)
+            else {
+                print("⚠️ Slot \(index + 1) invalid time format")
+                continue
+            }
+
+            let startMinutes =
+            calendar.component(.hour, from: startTime) * 60 +
+            calendar.component(.minute, from: startTime)
+
+            let endMinutes =
+            calendar.component(.hour, from: endTime) * 60 +
+            calendar.component(.minute, from: endTime)
+
+            print("⏰ Slot \(index + 1):",
+                  slot.start_time, "→", slot.end_time,
+                  "| Minutes:", startMinutes, "→", endMinutes)
+
+            if nowMinutes >= startMinutes && nowMinutes <= endMinutes {
+                print("✅ SUCCESS: Time slot \(index + 1) matched")
+                return true
+            } else {
+                print("❌ Slot \(index + 1) not matched")
+            }
+        }
+
+        print("⛔ FAILED: No time slot matched")
+        return false
+    }
+
+    private func parseWeekdays(from weekDaysStr: String) -> [Int] {
+        weekDaysStr
+            .replacingOccurrences(of: "[", with: "")
+            .replacingOccurrences(of: "]", with: "")
+            .replacingOccurrences(of: "'", with: "")
+            .replacingOccurrences(of: "\"", with: "")
+            .split(separator: ",")
+            .compactMap { Int($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
     }
     
 //    func isWithinAccessWindow() -> Bool {
@@ -1409,7 +1565,7 @@ struct DoorOpenView: View {
                 
                 stopAllScanningAndMonitoring()
                 
-                guard isWithinAccessWindow() else {
+                guard isWithinAccessWindow(accessGroups: door.accessGroups) else {
                     print("⛔ Outside allowed time window")
                     DispatchQueue.main.async {
                         overlayMessage = door.name + ". " + deniedBase

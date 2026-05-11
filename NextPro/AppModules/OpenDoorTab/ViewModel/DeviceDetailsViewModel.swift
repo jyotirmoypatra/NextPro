@@ -185,7 +185,8 @@ class DeviceDetailsViewModel: ObservableObject {
                         eKey: key,
                         cardno: cardNo,
                         deviceType: "standard",
-                        deviceModel: controller.controllerModel
+                        deviceModel: controller.controllerModel,
+                        accessGroups: door.accessGroups
                     )
                 )
             }
@@ -209,7 +210,8 @@ class DeviceDetailsViewModel: ObservableObject {
                     eKey: key,
                     cardno: cardNo,
                     deviceType: "all_in_one",
-                    deviceModel: door.doorModel
+                    deviceModel: door.doorModel,
+                    accessGroups: door.accessGroups
                 )
             )
         }
@@ -239,7 +241,8 @@ class DeviceDetailsViewModel: ObservableObject {
                             eKey: door.doorKey ?? "",
                             cardno: deviceDetails?.digitalCardNumber ?? deviceDetails?.physicalCardNumber ?? "",
                             deviceType: "standard",
-                            deviceModel: controller.controllerModel
+                            deviceModel: controller.controllerModel,
+                            accessGroups: door.accessGroups
                         )
                 
                 result.append(
@@ -250,6 +253,7 @@ class DeviceDetailsViewModel: ObservableObject {
                         doorType: "standard",
                         doorControllerType: controller.controllerModel,
                         sensorDetails: sensorDetails,
+                        accessGroups: door.accessGroups
                         
                     )
                 )
@@ -269,7 +273,8 @@ class DeviceDetailsViewModel: ObservableObject {
                         eKey: door.doorKey ?? "",
                         cardno: deviceDetails?.digitalCardNumber ?? deviceDetails?.physicalCardNumber ?? "",
                         deviceType: "all_in_one",
-                        deviceModel: door.doorModel
+                        deviceModel: door.doorModel,
+                        accessGroups: door.accessGroups
                     )
             
             result.append(
@@ -280,6 +285,7 @@ class DeviceDetailsViewModel: ObservableObject {
                     doorType: "all_in_one",
                     doorControllerType: door.doorModel,
                     sensorDetails: sensorDetails,
+                    accessGroups: door.accessGroups
                 )
             )
         }
@@ -299,7 +305,8 @@ class DeviceDetailsViewModel: ObservableObject {
                             eKey: controller.controllerKey ?? "",
                             cardno: deviceDetails?.digitalCardNumber ?? deviceDetails?.physicalCardNumber ?? "",
                             deviceType: "standalone_controller",
-                            deviceModel: controller.controllerModel
+                            deviceModel: controller.controllerModel,
+                            accessGroups: door.accessGroups
                         )
                 
                 result.append(
@@ -309,7 +316,8 @@ class DeviceDetailsViewModel: ObservableObject {
                         serial: controllerSerial,
                         doorType: "standalone_controller",
                         doorControllerType: controller.controllerModel,
-                        sensorDetails: sensorDetails
+                        sensorDetails: sensorDetails,
+                        accessGroups: door.accessGroups
                     )
                 )
             }
