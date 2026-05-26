@@ -144,13 +144,13 @@ struct ProfileEndUserView: View {
                             }
                             
                             
-                            UserProfileRow(title: "Access Time" , textColor: .white) {
-                                // Handle support action
-                                navigate_access_time = true
-                            }
-                            
-                            Divider().background(Color.white.opacity(0.15))
-                                .padding(.horizontal,20)
+//                            UserProfileRow(title: "Access Time" , textColor: .white) {
+//                                // Handle support action
+//                                navigate_access_time = true
+//                            }
+//                            
+//                            Divider().background(Color.white.opacity(0.15))
+//                                .padding(.horizontal,20)
                             
                             UserProfileRow(title: "Voice Message" , textColor: .white) {
                                 // Handle support action
