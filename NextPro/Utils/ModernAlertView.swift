@@ -19,7 +19,7 @@ struct ModernAlertView: View {
     var secondaryAction: (() -> Void)? = nil
     
     var body: some View {
-        VStack(spacing:10){
+        VStack(spacing:20){
             
             HStack(alignment: .center, spacing: 12){
                 // Icon

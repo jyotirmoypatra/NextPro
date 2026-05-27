@@ -56,7 +56,8 @@ class NetworkManager: ObservableObject {
             case .invalidResponse:
                 return "Invalid server response."
             case .serverError(let code, let message):
-                return "Error \(code): \(message)"
+               // return "Error \(code): \(message)"
+                return "\(message)"
             case .backend(let message):
                 return message
             case .network(let message):
@@ -659,6 +660,20 @@ class NetworkManager: ObservableObject {
             ],
             requiresAuth: true,
             responseType: DeleteUserResponse.self,
+            retry: true
+        )
+    }
+    
+    func deleteAccount() async throws -> DeleteAccountResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.deleteAccount))!
+        print("Delete Account  Api called")
+
+        return try await performRequest(
+            url: url,
+            method: "DELETE",
+            requiresAuth: true,
+            responseType: DeleteAccountResponse.self,
             retry: true
         )
     }

@@ -39,6 +39,7 @@ static let baseURL = "https://devapi.nextprotechnologies.com"
         static let getUserDetails = "/api/facility-manager/detail/"
         static let getAccessGroupList = "/api/access-group/list/"
         static let deleteUser = "/api/facility-manager/delete/"
+        static let deleteAccount = "/api/facility-user/account/delete/"
     }
     
     

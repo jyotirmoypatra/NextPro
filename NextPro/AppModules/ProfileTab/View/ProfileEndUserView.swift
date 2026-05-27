@@ -531,56 +531,77 @@ struct LogoutSheetView: View {
 
 }
 
-
-
-struct  DeleteConfirmationSheet: View {
+struct DeleteConfirmationSheet: View {
+    
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) var colorScheme
+    
+    @StateObject private var deleteAccountViewModel = DeleteAccountViewModel()
+
     var body: some View {
-        
+
         ZStack {
             VStack(spacing: 20) {
-                
-                // Drag indicator
+
                 Capsule()
                     .fill(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.3))
                     .frame(width: 40, height: 5)
-                
+
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 36))
-                    .foregroundColor(colorScheme == .dark ? .red : .red)
+                    .foregroundColor(.red)
                     .padding(.top, 5)
 
-                
                 Text("Delete Account")
                     .font(.custom("Inter-SemiBold", size: 18))
                     .foregroundColor(colorScheme == .dark ? .white : .black)
-                
-                Text("Are you sure you want to delete  your account?.This action cannot be undone and all your data will be permanently removed.")
+
+                Text("Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.")
                     .font(.custom("Inter-Regular", size: 16))
                     .foregroundColor(colorScheme == .dark ? .white : .black)
                     .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                
-                
-                Divider().background(colorScheme == .dark ? .white.opacity(0.3) : .black.opacity(0.3))
-                
-                Button(action: {
-                    dismiss()
-                }) {
-                    Text("YES, DELETE MY ACCOUNT")
-                        .font(.custom("Inter-Bold", size: 16))
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(colorScheme == .dark ? .white : .black)
-                        .foregroundColor(colorScheme == .dark ? .black : .white)
-                        .cornerRadius(10)
+
+                Divider()
+                    .background(colorScheme == .dark ? .white.opacity(0.3) : .black.opacity(0.3))
+
+                Button {
+
+                    Task {
+                        await deleteAccountViewModel.deleteAccount()
+
+                        if deleteAccountViewModel.isDeleteSuccess {
+
+                            // Clear login data
+                            KeychainManager.shared.clearUserDefaultsAndKeychainData()
+                            UserDefaults.standard.set(false, forKey: "is_logged_in")
+
+                            dismiss()
+                        }
+                    }
+
+                } label: {
+
+                    ZStack {
+
+                        if deleteAccountViewModel.isLoading {
+                            ProgressView()
+                                .tint(colorScheme == .dark ? .black : .white)
+                        } else {
+                            Text("YES, DELETE MY ACCOUNT")
+                                .font(.custom("Inter-Bold", size: 16))
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(colorScheme == .dark ? .white : .black)
+                    .foregroundColor(colorScheme == .dark ? .black : .white)
+                    .cornerRadius(10)
                 }
+                .disabled(deleteAccountViewModel.isLoading)
                 .padding(.horizontal)
-                
+
                 Button {
                     dismiss()
-                   // resetToLogin()
                 } label: {
                     Text("Cancel")
                         .font(.custom("Inter-Bold", size: 15))
@@ -588,21 +609,99 @@ struct  DeleteConfirmationSheet: View {
                         .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.8))
                         .padding(.top,10)
                 }
+
                 
-                
+                // Error Message
+                if !deleteAccountViewModel.errorMessage.isEmpty {
+                    Text(deleteAccountViewModel.errorMessage)
+                        .foregroundColor(.red)
+                        .font(.system(size: 14))
+                        .padding(.horizontal)
+                }
+
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 20)
             .padding(.bottom, 30)
             .cornerRadius(24)
             .padding(.horizontal, 10)
-            
+
         }
-        .presentationDetents([.height(360)])
+        .presentationDetents([.height(380)])
     }
-    
-   
 }
+
+
+//struct  DeleteConfirmationSheet: View {
+//    @Environment(\.dismiss) private var dismiss
+//    @Environment(\.colorScheme) var colorScheme
+//    var body: some View {
+//        
+//        ZStack {
+//            VStack(spacing: 20) {
+//                
+//                // Drag indicator
+//                Capsule()
+//                    .fill(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.3))
+//                    .frame(width: 40, height: 5)
+//                
+//                Image(systemName: "xmark.circle.fill")
+//                    .font(.system(size: 36))
+//                    .foregroundColor(colorScheme == .dark ? .red : .red)
+//                    .padding(.top, 5)
+//
+//                
+//                Text("Delete Account")
+//                    .font(.custom("Inter-SemiBold", size: 18))
+//                    .foregroundColor(colorScheme == .dark ? .white : .black)
+//                
+//                Text("Are you sure you want to delete  your account?.This action cannot be undone and all your data will be permanently removed.")
+//                    .font(.custom("Inter-Regular", size: 16))
+//                    .foregroundColor(colorScheme == .dark ? .white : .black)
+//                    .multilineTextAlignment(.center)
+//                    .fixedSize(horizontal: false, vertical: true)
+//                
+//                
+//                Divider().background(colorScheme == .dark ? .white.opacity(0.3) : .black.opacity(0.3))
+//                
+//                Button(action: {
+//                    dismiss()
+//                }) {
+//                    Text("YES, DELETE MY ACCOUNT")
+//                        .font(.custom("Inter-Bold", size: 16))
+//                        .frame(maxWidth: .infinity)
+//                        .padding()
+//                        .background(colorScheme == .dark ? .white : .black)
+//                        .foregroundColor(colorScheme == .dark ? .black : .white)
+//                        .cornerRadius(10)
+//                }
+//                .padding(.horizontal)
+//                
+//                Button {
+//                    dismiss()
+//                   // resetToLogin()
+//                } label: {
+//                    Text("Cancel")
+//                        .font(.custom("Inter-Bold", size: 15))
+//                        .frame(maxWidth: .infinity)
+//                        .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.8))
+//                        .padding(.top,10)
+//                }
+//                
+//                
+//            }
+//            .frame(maxWidth: .infinity)
+//            .padding(.top, 20)
+//            .padding(.bottom, 30)
+//            .cornerRadius(24)
+//            .padding(.horizontal, 10)
+//            
+//        }
+//        .presentationDetents([.height(360)])
+//    }
+//    
+//   
+//}
 
 
 //struct ProfileImageView: View {
@@ -674,7 +773,7 @@ struct ProfileImageView: View {
     var body: some View {
         ZStack {
 
-            // ✅ Shimmer only when loading VALID image
+            // Shimmer only when loading VALID image
             if isLoading {
                 Circle()
                     .fill(Color.gray.opacity(0.3))
@@ -685,7 +784,7 @@ struct ProfileImageView: View {
                             .clipShape(Circle())
                     )
             } else {
-                // ✅ Placeholder (invalid URL or failure)
+                // Placeholder (invalid URL or failure)
                 Image(systemName: "person.circle.fill")
                     .resizable()
                     .scaledToFill()
@@ -693,7 +792,7 @@ struct ProfileImageView: View {
                     .frame(width: size, height: size)
             }
 
-            // ✅ Remote image loader (only if URL valid)
+            // Remote image loader (only if URL valid)
             if let urlString = imageUrl,
                let url = URL(string: urlString),
                !urlString.isEmpty {
