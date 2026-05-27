@@ -609,13 +609,26 @@ struct DoorOpenView: View {
                         return
                     }
                     // Restart BLE scanning with a small delay to ensure everything is ready
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        guard isViewVisible else {
-                            return
-                        }
-                        bleManager.startContinuousScanning()
-                        isScanningActive = true
-                        monitorAndAutoOpenNearbyDoor()
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+//                        guard isViewVisible else {
+//                            return
+//                        }
+//                        bleManager.startContinuousScanning()
+//                        isScanningActive = true
+//                        monitorAndAutoOpenNearbyDoor()
+//                    }
+                    
+                    
+                    if !isScanningActive || bleManager.devices.isEmpty {
+
+                        print("⚠️ BLE inactive after foreground, restarting")
+
+                        restartBLEAfterForeground()
+
+                    } else {
+
+                        print("✅ BLE already active, no restart needed")
+
                     }
                     
                 case .inactive:
@@ -1263,6 +1276,49 @@ struct DoorOpenView: View {
         monitorAndAutoOpenNearbyDoor()
     }
     
+    private func restartBLEAfterForeground() {
+
+        print("🔄 Restarting BLE after foreground")
+
+        // stop all previous sessions
+        bleManager.stopContinuousScanning()
+        bleManager.stopMonitoringDevice()
+        bleManager.stopScanning()
+
+        rssiTimer?.invalidate()
+        rssiTimer = nil
+
+        isScanningActive = false
+
+        AceesMessage = "Preparing Scan..."
+
+        // IMPORTANT
+        // give CoreBluetooth time to recover
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+
+            guard isViewVisible else { return }
+
+            guard bleManager.isBluetoothOn else {
+                print("❌ Bluetooth not ready yet")
+                return
+            }
+
+            print("✅ Restarting BLE scan")
+
+            bleManager.startContinuousScanning()
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+
+                isScanningActive = true
+
+                monitorAndAutoOpenNearbyDoor()
+
+                AceesMessage = "Walk closer to the door"
+
+                print("✅ BLE fully restarted")
+            }
+        }
+    }
     
     
     private func handleRemoteOpen(for door: RemoteDoorItem) {

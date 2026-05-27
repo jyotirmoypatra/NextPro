@@ -294,34 +294,83 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         stopContinuousScanning()
     }
 
-     func startContinuousScanning() {
+//     func startContinuousScanning() {
+//        guard centralManager.state == .poweredOn else {
+//            print("⚠️ Cannot start continuous scanning - Bluetooth not powered on")
+//            return
+//        }
+//
+//        print("🔄 Starting continuous BLE scanning...")
+//        isScanning = true
+//        bluetoothStateMessage = "Monitoring for device..."
+//
+//        // Continuous scanning with shorter intervals
+//        continuousScanTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+//            guard let self = self, self.isScanning else { return }
+//            self.centralManager.scanForPeripherals(withServices: nil, options: nil)
+//
+//            // Stop scan after 0.8 seconds, then restart
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+//                if self.isScanning {
+//                    self.centralManager.stopScan()
+//                }
+//            }
+//        }
+//
+//        // Start first scan immediately
+//        centralManager.scanForPeripherals(withServices: nil, options: nil)
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+//            if self.isScanning {
+//                self.centralManager.stopScan()
+//            }
+//        }
+//    }
+    
+    func startContinuousScanning() {
+
         guard centralManager.state == .poweredOn else {
             print("⚠️ Cannot start continuous scanning - Bluetooth not powered on")
             return
         }
 
+        // IMPORTANT FIX
+       stopContinuousScanning()
+
         print("🔄 Starting continuous BLE scanning...")
+
+        devices.removeAll()
+        deviceLastRSSI.removeAll()
+
         isScanning = true
         bluetoothStateMessage = "Monitoring for device..."
 
-        // Continuous scanning with shorter intervals
-        continuousScanTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            guard let self = self, self.isScanning else { return }
-            self.centralManager.scanForPeripherals(withServices: nil, options: nil)
-
-            // Stop scan after 0.8 seconds, then restart
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                if self.isScanning {
-                    self.centralManager.stopScan()
-                }
-            }
-        }
-
         // Start first scan immediately
-        centralManager.scanForPeripherals(withServices: nil, options: nil)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            if self.isScanning {
-                self.centralManager.stopScan()
+        centralManager.scanForPeripherals(
+            withServices: nil,
+            options: [
+                CBCentralManagerScanOptionAllowDuplicatesKey: true
+            ]
+        )
+
+        continuousScanTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+
+            guard let self = self else { return }
+            guard self.isScanning else { return }
+
+            print("🔄 Refreshing BLE scan session")
+
+            self.centralManager.stopScan()
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+
+                guard self.isScanning else { return }
+
+                self.centralManager.scanForPeripherals(
+                    withServices: nil,
+                    options: [
+                        CBCentralManagerScanOptionAllowDuplicatesKey: true
+                    ]
+                )
             }
         }
     }
