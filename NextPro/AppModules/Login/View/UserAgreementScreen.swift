@@ -12,6 +12,7 @@ import WebKit
 
 struct UserAgreementScreen: View {
     var password : String?
+    var  fromLogin: Bool?
     
     @State private var showAggremntError = false
     @State private var showLoginError = false
@@ -326,19 +327,27 @@ struct UserAgreementScreen: View {
 
                 if viewModel.Successflag {
 
-                    if let pwd = password,
-                       !pwd.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-
-                        LoginApiCall()   // password exists → call login
-
+                   if let fromLoggedin = fromLogin {
+                       UserDefaults.standard.set(true, forKey: "is_logged_in")
+                       KeychainManager.shared.resetToLogin()
+                       
+                       
                     } else {
-                        toastManager.show(
-                            message: "Your account is ready.Please login your account",
-                            type: .success,
-                            duration: 1.0
-                        )
-                       // loginVM.email = UserDefaults.standard.string(forKey: "email") ?? ""
-                        navigateToLogin = true
+                        
+                        if let pwd = password,
+                           !pwd.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            
+                            LoginApiCall()   // password exists → call login
+                            
+                        } else {
+                            toastManager.show(
+                                message: "Your account is ready.Please login your account",
+                                type: .success,
+                                duration: 1.0
+                            )
+                            // loginVM.email = UserDefaults.standard.string(forKey: "email") ?? ""
+                            navigateToLogin = true
+                        }
                     }
 
                 } else {

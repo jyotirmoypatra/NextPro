@@ -20,6 +20,7 @@ class LoginViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var loginSuccess = false
     @Published var is_admin = false
+    @Published var is_accept_aggrement = false
     @Published var userName = ""
     @Published var isPasswordReset = true
 
@@ -52,6 +53,11 @@ class LoginViewModel: ObservableObject {
             loginError = "Please enter both email and password."
             return
         }
+        
+        guard isValidEmail(trimmedEmail) else {
+            loginError = "Please enter a valid email address."
+            return
+        }
 
         // POLICY CHECK
         guard isPasswordValid(trimmedPassword) else {
@@ -79,6 +85,7 @@ class LoginViewModel: ObservableObject {
                 //is_admin = true
                 userName = response.username ?? ""
                 isPasswordReset = response.is_reset_password ?? true
+                is_accept_aggrement = response.is_aggrement_accept ?? false
                 loginSuccess = true
                 
                 // Save tokens
@@ -90,8 +97,12 @@ class LoginViewModel: ObservableObject {
                     KeychainManager.shared.save(refresh, forKey: "refresh_token")
                 }
                 
-                UserDefaults.standard.set(true, forKey: "is_logged_in")
+              // UserDefaults.standard.set(true, forKey: "is_logged_in")
+                if response.is_aggrement_accept == true {
+                    UserDefaults.standard.set(true, forKey: "is_logged_in")
+                }
                 // Save user details
+                UserDefaults.standard.set(trimmedEmail, forKey: "email")
                 UserDefaults.standard.set(response.user_id ?? "", forKey: "user_id")
                 UserDefaults.standard.set(response.facility_id ?? "", forKey: "facility_id")
                 UserDefaults.standard.set(response.username ?? "", forKey: "username")

@@ -24,6 +24,7 @@ struct LoginView: View {
     @State private var showPassword = false
     @State private var navigateToHome = false
     @State private var isAdmin = false
+    @State private var goAggrementFromLogin = false
     @State private var isDeviceprov = false
     @State private var didPrefillEmail = false
     @State private var emailToSend = ""
@@ -274,9 +275,15 @@ struct LoginView: View {
                                             // Navigate after a short delay to show the toast
                                             try? await Task.sleep(nanoseconds: 500_000_000)
                                             
-                                            isAdmin = vm.is_admin
                                             
-                                            navigateToHome = true
+                                            
+                                            if vm.is_accept_aggrement {
+                                                isAdmin = vm.is_admin
+                                                navigateToHome = true
+                                            }else{
+                                                goAggrementFromLogin  = true
+                                                navigateToAggremnt = true
+                                            }
                                           
                                             
                                         } else {
@@ -308,15 +315,7 @@ struct LoginView: View {
                             Button(action: {
                                 print("continue account setup")
                                 Task {
-                                    
-                                    ///------THIS Is for Testing Purpose
-                                    if validateVM.email == "admin" {
-                                        isUserInitialSetupDone = true
-                                        vm.email = validateVM.email
-                                        return
-                                    }
-                                    ///-----THIS Is for Testing Purpose - remove later
-                                    
+                                
                                     await validateVM.validate()
                                     if validateVM.validateSuccess {
                                         
@@ -415,7 +414,7 @@ struct LoginView: View {
                     .interactiveDismissDisabled(true)
             }
             .navigationDestination(isPresented: $navigateToAggremnt) { //forget password navigate
-                UserAgreementScreen()
+                UserAgreementScreen(fromLogin:  goAggrementFromLogin)
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
             }

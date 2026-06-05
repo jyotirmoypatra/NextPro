@@ -899,27 +899,29 @@ struct AddUserView: View {
                         isSelectDoor = false
                     }
                     
+                
                     
-//                    if user.creation_method == "access_group",
-//                       let firstGroup = user.access_groups_detail.first {
-//                        
-//                        selectedAccessGroup = AccessGroupItem(
-//                            id: firstGroup.access_group_id,
-//                            name: firstGroup.access_group_name,
-//                            description: nil,
-//                            doors: user.doors
-//                        )
+//                    if user.creation_method == "access_group" {
+//
+//                        selectedAccessGroups = user.access_groups_detail.map {
+//                            AccessGroupItem(
+//                                id: $0.access_group_id,
+//                                name: $0.access_group_name,
+//                                description: nil,
+//                                doors: user.doors
+//                            )
+//                        }
 //                    }
+                    
                     
                     if user.creation_method == "access_group" {
 
-                        selectedAccessGroups = user.access_groups_detail.map {
-                            AccessGroupItem(
-                                id: $0.access_group_id,
-                                name: $0.access_group_name,
-                                description: nil,
-                                doors: user.doors
-                            )
+                        let selectedIds = user.access_groups_detail.map {
+                            $0.access_group_id
+                        }
+
+                        selectedAccessGroups = getAccessGroupVM.accessGroupList.filter {
+                            selectedIds.contains($0.id)
                         }
                     }
                     
