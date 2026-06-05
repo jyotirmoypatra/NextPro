@@ -258,12 +258,7 @@ struct LoginView: View {
                                     return
                                 }
                                 
-                                ///------THIS Is for Testing Purpose - remove later
-                                if vm.email == "admin" && vm.password == "admin"{
-                                    navigateToHome = true
-                                    // isDeviceprov = true
-                                    isAdmin = true
-                                }else{
+                               
                                     Task {
                                         
                                         await vm.login()
@@ -288,7 +283,7 @@ struct LoginView: View {
                                             showLoginFailedAlert = true
                                         }
                                     }
-                                }
+                                
                                 
                                 
                             }) {

@@ -219,13 +219,13 @@ struct ProfileEndUserView: View {
                                 showLogoutAlert = true
                             }
                             
-                            Divider().background(Color.white.opacity(0.15))
-                                .padding(.horizontal,20)
-                            
-                            UserProfileRow(title: "Debug MQTT" , textColor: .white) {
-                                // Handle support action
-                                navigate_Debug = true
-                            }
+//                            Divider().background(Color.white.opacity(0.15))
+//                                .padding(.horizontal,20)
+//                            
+//                            UserProfileRow(title: "Debug MQTT" , textColor: .white) {
+//                                // Handle support action
+//                                navigate_Debug = true
+//                            }
 
                            
                         }
