@@ -338,12 +338,14 @@ struct CreateNewPasswordView: View {
             .modernAlert(isPresented: $showSuccessUpdateAlert) {
                 ModernAlertView(
                     title: "Success!",
-                    message: "Your Password updated successfully",
+                    message: "Your password has been updated successfully. You will be logged out and need to sign in again using your new password.",
                     isSuccess: true,
                     buttonTitle: "OK"
                 ) {
                     showSuccessUpdateAlert = false
-                    dismiss()
+                    KeychainManager.shared.clearUserDefaultsAndKeychainData()
+                    UserDefaults.standard.set(false, forKey: "is_logged_in")
+                    KeychainManager.shared.resetToLogin()
                 }
             }
             .navigationDestination(isPresented: $navigateToAggrement) {
