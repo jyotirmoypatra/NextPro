@@ -1166,7 +1166,7 @@ struct AddUserView: View {
             if let start = accessStartDate,
                let end = accessEndDate,
                end < start {
-                return "End date must be later than or same as start date"
+                return "End date must be greater than or same as start date"
             }
             
             
@@ -1174,41 +1174,85 @@ struct AddUserView: View {
                 return "Please fill a time slots"
             }
             
-           
-            // 1️⃣ Validate start & end (allow overnight)
+
+            // MARK: - Time Slot Validation
+
             let calendar = Calendar.current
 
-            let normalizedSlots: [(start: Date, end: Date)] = timeSlots.compactMap { slot in
+            // Validate each individual slot first
+            for (index, slot) in timeSlots.enumerated() {
+
                 guard let start = slot.startTime,
-                      let end = slot.endTime else { return nil }
-                
-                var adjustedStart = start
-                var adjustedEnd = end
-                
-                // 👉 Handle overnight (e.g. 11 PM → 2 AM)
-                if end <= start {
-                    adjustedEnd = calendar.date(byAdding: .day, value: 1, to: end)!
+                      let end = slot.endTime else {
+                    return "Please fill all time slots"
                 }
-                
-                return (adjustedStart, adjustedEnd)
+
+                let startHour = calendar.component(.hour, from: start)
+                let startMinute = calendar.component(.minute, from: start)
+
+                let endHour = calendar.component(.hour, from: end)
+                let endMinute = calendar.component(.minute, from: end)
+
+                let startTotalMinutes = startHour * 60 + startMinute
+                let endTotalMinutes = endHour * 60 + endMinute
+
+                print("Slot \(index + 1)")
+                print("Start: \(amPmFormatter.string(from: start))")
+                print("End: \(amPmFormatter.string(from: end))")
+
+                // ❌ 11:00 AM -> 11:00 AM
+                if startTotalMinutes == endTotalMinutes {
+                    return "Start time and end time cannot be the same"
+                }
+
+                // ❌ 10:00 AM -> 09:00 AM
+                // ❌ 11:00 PM -> 01:10 AM
+                if endTotalMinutes < startTotalMinutes {
+                    return "End time must be later than start time"
+                }
             }
 
+            // Convert for comparison
+            let sortedSlots = timeSlots
+                .compactMap { slot -> (startMinutes: Int, endMinutes: Int)? in
 
-            // 2️⃣ Sort by start time
-            let sortedSlots = normalizedSlots.sorted { $0.start < $1.start }
+                    guard let start = slot.startTime,
+                          let end = slot.endTime else {
+                        return nil
+                    }
 
+                    let startMinutes =
+                        calendar.component(.hour, from: start) * 60 +
+                        calendar.component(.minute, from: start)
 
-            // 3️⃣ Check overlap
-            for i in 0..<sortedSlots.count - 1 {
+                    let endMinutes =
+                        calendar.component(.hour, from: end) * 60 +
+                        calendar.component(.minute, from: end)
+
+                    return (startMinutes, endMinutes)
+                }
+                .sorted { $0.startMinutes < $1.startMinutes }
+
+            // Compare slots with each other
+            for i in 0..<(sortedSlots.count - 1) {
+
                 let current = sortedSlots[i]
                 let next = sortedSlots[i + 1]
 
-                if current.end > next.start {
-                    return "Time slots cannot overlap."
+                // ❌ Overlap
+                // 10:00-11:00
+                // 10:30-11:30
+                if current.endMinutes > next.startMinutes {
+                    return "Time slots cannot overlap"
+                }
+
+                // ❌ Touching
+                // 10:00-11:00
+                // 11:00-12:00
+                if current.endMinutes == next.startMinutes {
+                    return "One slot's end time cannot equal another slot's start time"
                 }
             }
-            
-
 
             
             if isScheduledAccess {
