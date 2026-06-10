@@ -1208,7 +1208,7 @@ struct AddUserView: View {
                 // ❌ 10:00 AM -> 09:00 AM
                 // ❌ 11:00 PM -> 01:10 AM
                 if endTotalMinutes < startTotalMinutes {
-                    return "End time must be later than start time"
+                    return "End time must be greater than start time"
                 }
             }
 
