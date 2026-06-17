@@ -78,7 +78,7 @@ class LoginViewModel: ObservableObject {
             
             if response.status {
                 
-                print("✅ Login success")
+                print("Login success")
                 
                 // Update values
                 is_admin = response.is_admin ?? false
@@ -143,7 +143,37 @@ class LoginViewModel: ObservableObject {
                 UserDefaults.standard.set(deviceRead, forKey: "device_management_read")
                 UserDefaults.standard.set(deviceWrite, forKey: "device_management_write")
                 
-                
+                guard let ctxBlob = response.ctx_blob,
+                      let accessToken = response.access,
+                      let userId = response.user_id else {
+                    print("Missing ctx_blob/access/user_id")
+                    return
+                }
+
+                do {
+
+                    let creds = try MQTTBlobDecoder.decrypt(
+                        ctxBlob: ctxBlob,
+                        accessToken: accessToken,
+                        userId: userId
+                    )
+
+                    print("MQTT HOST: \(creds.host)")
+                    print("MQTT PORT: \(creds.port)")
+                    print("MQTT USERNAME: \(creds.username)")
+                    print("MQTT PASSWORD: \(creds.password)")
+
+                    KeychainManager.shared.save(creds.host,              forKey: "mqtt_host")
+                    KeychainManager.shared.save(String(creds.port),      forKey: "mqtt_port")
+                    KeychainManager.shared.save(creds.username,          forKey: "mqtt_username")
+                    KeychainManager.shared.save(creds.password,          forKey: "mqtt_password")
+                    print("MQTT credentials saved to Keychain")
+
+                } catch {
+
+                    print("❌ MQTT decrypt failed: \(error)")
+
+                }
                
             } else {
                 // Backend error message
