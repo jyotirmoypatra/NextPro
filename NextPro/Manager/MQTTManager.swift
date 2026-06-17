@@ -47,39 +47,53 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
     private var subscribedTopics = Set<String>()
 
     private override init() {}
-
-    // Connect to NextPro MQTT Broker
-//    func connect() {
-//        let clientID = "ios-client-\(UUID().uuidString.prefix(6))"
-//        let mqttClient = CocoaMQTT(clientID: clientID, host: "13.223.139.54", port: 1883)
-//        mqttClient.username = "nexpromqtt"
-//        mqttClient.password = "secret"
-//        mqttClient.keepAlive = 60
-//        mqttClient.autoReconnect = true
-//        mqttClient.delegate = self
-//        mqttClient.connect()
-//        mqtt = mqttClient
-//    }
     
     func getUDID() -> String {
         return UIDevice.current.identifierForVendor?.uuidString ?? "unknown-device"
     }
     
+//    func connect() {
+//
+//        let clientID = getUDID()
+//        let mqttClient = CocoaMQTT(clientID: clientID, host: "13.223.139.54", port: 1883)
+//        mqttClient.username = "nexpromqtt"
+//        mqttClient.password = "neXpr02o25MqtT"
+//        mqttClient.keepAlive = 120
+//        mqttClient.cleanSession = true
+//        mqttClient.willMessage = nil
+//        mqttClient.autoReconnect = true
+//        mqttClient.enableSSL = false
+//        mqttClient.delegate = self
+//        mqtt = mqttClient
+//        _ = mqttClient.connect()
+//    }
+
     func connect() {
-        
-        let clientID = getUDID()
-        let mqttClient = CocoaMQTT(clientID: clientID, host: "13.223.139.54", port: 1883)
-        mqttClient.username = "nexpromqtt"
-        mqttClient.password = "neXpr02o25MqtT"
-        mqttClient.keepAlive = 120
-        mqttClient.cleanSession = true  // ✅ Don't store old messages
-        mqttClient.willMessage = nil
+        let host     = KeychainManager.shared.get("mqtt_host")     ?? ""
+        let portStr  = KeychainManager.shared.get("mqtt_port")     ?? "1883"
+        let username = KeychainManager.shared.get("mqtt_username") ?? ""
+        let password = KeychainManager.shared.get("mqtt_password") ?? ""
+        let port     = UInt16(portStr) ?? 1883
+
+        guard !host.isEmpty, !username.isEmpty, !password.isEmpty else {
+            print("❌ MQTT credentials missing from Keychain — cannot connect")
+            return
+        }
+
+        print("🔌 Connecting to MQTT broker: \(host):\(port) as \(username)")
+
+        let clientID   = getUDID()
+        let mqttClient = CocoaMQTT(clientID: clientID, host: host, port: port)
+        mqttClient.username     = username
+        mqttClient.password     = password
+        mqttClient.keepAlive    = 120
+        mqttClient.cleanSession = true
+        mqttClient.willMessage  = nil
         mqttClient.autoReconnect = true
-        mqttClient.enableSSL = false
-        mqttClient.delegate = self
-      //  mqttClient.logLevel = .debug
+        mqttClient.enableSSL    = false
+        mqttClient.delegate     = self
         mqtt = mqttClient
-        _ = mqttClient.connect() // store result just to silence compiler
+        _ = mqttClient.connect()
     }
 
 

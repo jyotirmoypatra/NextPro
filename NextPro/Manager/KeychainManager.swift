@@ -67,6 +67,10 @@ class KeychainManager {
         
         KeychainManager.shared.delete("access_token")
         KeychainManager.shared.delete("refresh_token")
+        KeychainManager.shared.delete("mqtt_host")
+        KeychainManager.shared.delete("mqtt_port")
+        KeychainManager.shared.delete("mqtt_username")
+        KeychainManager.shared.delete("mqtt_password")
         
         
         // Remove all stored keys for this app
