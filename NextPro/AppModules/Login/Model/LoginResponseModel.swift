@@ -29,6 +29,8 @@ struct LoginResponseModel: Decodable {
     
     let refresh: String?
     let access: String?
+    let ctx_blob: String?
+    
 }
 
 struct DeviceAccessDetails: Decodable {

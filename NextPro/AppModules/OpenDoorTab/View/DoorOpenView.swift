@@ -777,9 +777,14 @@ struct DoorOpenView: View {
                         }else{
                             animateSuccess()
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
-                            AceesMessage =  accessGrantedMessage
-                            speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                            AceesMessage = accessGrantedMessage
                             overlayMessage = accessGrantedMessage
+                            speakAndReset(accessGrantedMessage + " - " + accessGreetingMessage) {
+                                guard !self.isScanningActive else { return }
+                                self.bleManager.startContinuousScanning()
+                                self.isScanningActive = true
+                                self.monitorAndAutoOpenNearbyDoor()
+                            }
                         }
                         
                     }
@@ -797,9 +802,14 @@ struct DoorOpenView: View {
                         }else{
                             animateSuccess()
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
-                            AceesMessage =  accessGrantedMessage
-                            speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                            AceesMessage = accessGrantedMessage
                             overlayMessage = accessGrantedMessage
+                            speakAndReset(accessGrantedMessage + " - " + accessGreetingMessage) {
+                                guard !self.isScanningActive else { return }
+                                self.bleManager.startContinuousScanning()
+                                self.isScanningActive = true
+                                self.monitorAndAutoOpenNearbyDoor()
+                            }
                         }
                     }
                     else if type == 8 { //wifi unlock
@@ -834,13 +844,16 @@ struct DoorOpenView: View {
                             UINotificationFeedbackGenerator().notificationOccurred(.error)
                             AceesMessage = accessDeniedMessage
                             overlayMessage = accessDeniedMessage
-                            // speakText(accessDeniedMessage)
-                            if type == 42 || type == 43 {
-                                speakText(accessDeniedMessage + ". " + "Time Restricted")
-                            }else{
-                                speakText(accessDeniedMessage)
-                            }
                             animateFailure()
+                            let deniedSpeech = (type == 42 || type == 43)
+                                ? accessDeniedMessage + ". " + "Time Restricted"
+                                : accessDeniedMessage
+                            speakAndReset(deniedSpeech) {
+                                guard !self.isScanningActive else { return }
+                                self.bleManager.startContinuousScanning()
+                                self.isScanningActive = true
+                                self.monitorAndAutoOpenNearbyDoor()
+                            }
                         }
                         
                     }
@@ -1425,6 +1438,16 @@ struct DoorOpenView: View {
     }
     
     
+    private func speakAndReset(_ text: String, onComplete: (() -> Void)? = nil) {
+        speakText(text) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.animationResetTask?.cancel()
+                self.resetOverlayState()
+                onComplete?()
+            }
+        }
+    }
+
     func scheduleReset() {
         // Cancel any previous reset
         animationResetTask?.cancel()
@@ -1492,7 +1515,7 @@ struct DoorOpenView: View {
             print("🎯 Closest device: \(name) with RSSI: \(rssi)")
             
             // Only act if RSSI is strong
-            guard rssi > -40 && rssi < 0 else { return }
+            guard rssi > -37 && rssi < 0 else { return }
             
             if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
                 // Authorized door
@@ -1513,26 +1536,23 @@ struct DoorOpenView: View {
                         overlayMessage = door.name + ". " + deniedBase
                         AceesMessage = deniedBase
                         animateFailureOutSideTime()
-                        speakText(door.name + ". " + deniedBase + ". Time Restricted")
                         UINotificationFeedbackGenerator().notificationOccurred(.error)
+                        speakAndReset(door.name + ". " + deniedBase + ". Time Restricted") {
+                            guard !isScanningActive else { return }
+                            bleManager.startContinuousScanning()
+                            isScanningActive = true
+                            monitorAndAutoOpenNearbyDoor()
+                        }
                     }
-                    
-                    // Restart monitoring after 5 seconds
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-                        bleManager.startContinuousScanning()
-                        isScanningActive = true
-                        monitorAndAutoOpenNearbyDoor()
-                    }
-                    
                     return
                 }
                 
                 doorManager.openSelectedDoor(door)
                 DoorManager.shared.activateMQTTWindow()
-                
-                
-                // Restart monitoring after 5 seconds
+
+                // Fallback: restart if MQTT never fires (voice-completion path handles the normal case)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 11.0) {
+                    guard !isScanningActive else { return }
                     bleManager.startContinuousScanning()
                     isScanningActive = true
                     monitorAndAutoOpenNearbyDoor()
@@ -1564,14 +1584,12 @@ struct DoorOpenView: View {
                     unauthorised()
                     AceesMessage = accessUnAuthorizedMessage
                     UINotificationFeedbackGenerator().notificationOccurred(.error)
-                    speakText(accessUnAuthorizedMessage)
-                }
-                
-                // Restart scanning after 5 seconds
-                DispatchQueue.main.asyncAfter(deadline: .now() + 7.0) {
-                    bleManager.startContinuousScanning()
-                    isScanningActive = true
-                    monitorAndAutoOpenNearbyDoor()
+                    speakAndReset(accessUnAuthorizedMessage) {
+                        guard !isScanningActive else { return }
+                        bleManager.startContinuousScanning()
+                        isScanningActive = true
+                        monitorAndAutoOpenNearbyDoor()
+                    }
                 }
             }
         }

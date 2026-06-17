@@ -252,8 +252,8 @@ extension Date {
     }
 }
 
-func speakText(_ text: String) {
-    SpeechManager.shared.speak(text)
+func speakText(_ text: String, onFinish: (() -> Void)? = nil) {
+    SpeechManager.shared.speak(text, onFinish: onFinish)
 }
 
 

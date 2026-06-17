@@ -15,6 +15,7 @@ final class SpeechManager: NSObject, AVSpeechSynthesizerDelegate {
 
     private var synthesizer = AVSpeechSynthesizer()
     private let audioSession = AVAudioSession.sharedInstance()
+    private var onFinishCallback: (() -> Void)?
 
     private override init() {
         super.init()
@@ -22,9 +23,13 @@ final class SpeechManager: NSObject, AVSpeechSynthesizerDelegate {
         setupNotifications()
     }
 
-    func speak(_ text: String) {
-        guard !text.isEmpty else { return }
+    func speak(_ text: String, onFinish: (() -> Void)? = nil) {
+        guard !text.isEmpty else {
+            onFinish?()
+            return
+        }
 
+        onFinishCallback = onFinish
         prepareAudioSession()
 
         if synthesizer.isSpeaking {
@@ -36,10 +41,16 @@ final class SpeechManager: NSObject, AVSpeechSynthesizerDelegate {
         utterance.rate = 0.45
         utterance.pitchMultiplier = 0.9
         utterance.volume = 0.9
-        utterance.postUtteranceDelay = 0.1   // small pause after speaking
+        utterance.postUtteranceDelay = 0.1
 
         synthesizer.speak(utterance)
-        
+    }
+
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        DispatchQueue.main.async {
+            self.onFinishCallback?()
+            self.onFinishCallback = nil
+        }
     }
     
     private func prepareAudioSession() {
