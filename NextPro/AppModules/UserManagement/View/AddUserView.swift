@@ -71,7 +71,7 @@ struct AddUserView: View {
     @State private var hasInitialized = false
     
     @State private var isInitialLoading = false
-    @State private var nfcType : String = "DIGITAL"
+    @State private var nfcType : String = ""
     
     @State private var isEditModeLoaded = false
     
@@ -1133,6 +1133,12 @@ struct AddUserView: View {
         if !isValidEmail(email) {
             return "Please enter a valid email address"
         }
+        
+        if !phone.trimmingCharacters(in: .whitespaces).isEmpty {
+            if phone.count != 10 {
+                return "Phone number must be 10 digits"
+            }
+        }
 
         
         if !isSelectMobileAPP && !isSelectKeyFob && !isSharedLink{
@@ -1156,11 +1162,25 @@ struct AddUserView: View {
             }
         }
         
+        if isSharedLink {
+            if phone.trimmingCharacters(in: .whitespaces).isEmpty {
+                    return "Phone number is required when Share Link is enabled"
+            }
+
+            if phone.count != 10 {
+                return "Phone number must be 10 digits"
+            }
+        }
+        
         
         if isSelectDoor {
             
-            if accessStartDate == nil || accessEndDate == nil {
-                return "Please select access start and end date"
+//            if accessStartDate == nil || accessEndDate == nil {
+//                return "Please select access start and end date"
+//            }
+            
+            if accessStartDate == nil {
+                return "Please select access start date"
             }
             
             if let start = accessStartDate,
