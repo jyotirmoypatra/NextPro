@@ -159,12 +159,14 @@ class LoginViewModel: ObservableObject {
                     )
 
                     print("MQTT HOST: \(creds.host)")
-                    print("MQTT PORT: \(creds.port)")
+                    print("MQTT PORT: \(creds.app_port)")
+                    print("DEVICE PORT: \(creds.device_port)")
                     print("MQTT USERNAME: \(creds.username)")
                     print("MQTT PASSWORD: \(creds.password)")
 
                     KeychainManager.shared.save(creds.host,              forKey: "mqtt_host")
-                    KeychainManager.shared.save(String(creds.port),      forKey: "mqtt_port")
+                    KeychainManager.shared.save(String(creds.app_port),      forKey: "mqtt_port")
+                    KeychainManager.shared.save(String(creds.device_port),      forKey: "device_port")
                     KeychainManager.shared.save(creds.username,          forKey: "mqtt_username")
                     KeychainManager.shared.save(creds.password,          forKey: "mqtt_password")
                     print("MQTT credentials saved to Keychain")

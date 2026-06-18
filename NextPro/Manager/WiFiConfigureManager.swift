@@ -39,8 +39,16 @@ class WiFiConfigureManager {
         devModel.eKey   = device.key
         devModel.devType = 13   // keep as-is
 
-        let serverIP = "13.223.139.54"
-        let serverPort = 6010
+//        let serverIP = "13.223.139.54"
+//        let serverPort = 6010
+        
+        let serverIP = KeychainManager.shared.get("mqtt_host") ?? ""
+        let serverPort = Int(KeychainManager.shared.get("device_port") ?? "6010") ?? 6010
+
+        guard !serverIP.isEmpty else {
+            completion(false, "Server IP missing from Keychain")
+            return
+        }
 
       // let isTCDevice = deviceModel.uppercased().hasPrefix("TC")
         let isTCDevice = device.modelName.uppercased().hasPrefix("TC")

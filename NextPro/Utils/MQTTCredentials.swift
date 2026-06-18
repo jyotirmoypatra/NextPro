@@ -12,7 +12,8 @@ struct MQTTCredentials: Codable {
     let username: String
     let password: String
     let host: String
-    let port: Int
+    let app_port: Int
+    let device_port: Int
 }
 
 enum MQTTBlobError: Error {
