@@ -862,7 +862,7 @@ struct AddUserView: View {
                     email =  user.email
                     username = user.username ?? ""
                     
-                    nfcType = user.nfc_type
+                    nfcType = user.nfc_type ?? ""
                     
 
                     
@@ -1109,6 +1109,9 @@ struct AddUserView: View {
 //            digitalAccess = false
 //            remoteAccess = false
             handleNfcGeneration()
+        }else{
+            nfcType = ""
+           
         }
         
         print("nfctype : \(nfcType)")

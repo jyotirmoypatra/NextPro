@@ -25,7 +25,7 @@ struct GetUserData: Codable {
     let is_digital: Bool
     let is_remote: Bool
     
-    let nfc_type: String
+    let nfc_type: String?
     let nfc_physical: String?
     let nfc_digital: String?
     
