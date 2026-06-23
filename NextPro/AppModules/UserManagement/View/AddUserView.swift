@@ -1430,30 +1430,6 @@ struct AddUserView: View {
         }
     }
     
-//    func resetForm() {
-//        fullName = ""
-//        email = ""
-//        username = ""
-//        password = ""
-//        phone = ""
-//        nfcId = ""
-//
-//        digitalAccess = false
-//        remoteAccess = false
-//
-//        isOneTimeAccess = true
-//        isScheduledAccess = false
-//
-//        accessStartDate = nil
-//        accessEndDate = nil
-//        accessStartTime = nil
-//        accessEndTime = nil
-//
-//        selectedWeekdays.removeAll()
-//        selectedDoors.removeAll()
-//
-//        shouldScrollToDoorSection = false
-//    }
     
     func resetForm() {
         
@@ -1463,7 +1439,16 @@ struct AddUserView: View {
         username = ""
         password = ""
         phone = ""
+        
+        // MARK: - NFC
         nfcId = ""
+        nfcPhysicalNumber = ""
+        nfcType = ""
+        
+        // MARK: - Device Access Toggles
+       isSelectMobileAPP = false
+       isSelectKeyFob = false
+       isSharedLink = false
         
         // MARK: - Access Mode
         digitalAccess = false
@@ -1480,9 +1465,6 @@ struct AddUserView: View {
         // MARK: - Dates & Time
         accessStartDate = nil
         accessEndDate = nil
-//        accessStartTime = nil
-//        accessEndTime = nil
-        
         timeSlots = [TimeSlotUI()]
         
         
@@ -1913,93 +1895,6 @@ func shortDay(_ day: Int) -> String {
     ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][day - 1]
 }
 
-
-
-//struct AccessGroupDropDown: View {
-//    
-//    let id: Int
-//    let options: [AccessGroupItem]
-//    
-//    @Binding var selectedGroup: AccessGroupItem?
-//    @Binding var openSection: Int?
-//    
-//    private var isOpen: Bool {
-//        openSection == id
-//    }
-//    
-//    var body: some View {
-//        
-//        VStack(alignment: .leading, spacing: 10) {
-//            
-//            HStack(spacing: 2) {
-//                Text("Door Access Group")
-//                    .font(.custom("Inter-Medium", size: 16))
-//                    .foregroundColor(.white)
-//                Text("*")
-//                    .foregroundColor(.red)
-//            }
-//            
-//            // 🔹 Dropdown Button
-//            Button {
-//                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-//                    openSection = isOpen ? nil : id
-//                }
-//            } label: {
-//                HStack {
-//                    
-//                    Text(selectedGroup?.name ?? "Select Access Group")
-//                        .foregroundColor(selectedGroup == nil ? .white.opacity(0.6) : .white)
-//                        .font(.custom("Inter-Regular", size: 14))
-//                    
-//                    Spacer()
-//                    
-//                    Image(systemName: isOpen ? "chevron.up" : "chevron.down")
-//                        .foregroundColor(.white.opacity(0.8))
-//                }
-//                .padding()
-//                .background(Color.white.opacity(0.2))
-//                .clipShape(RoundedRectangle(cornerRadius: 12))
-//            }
-//            
-//            //  Dropdown List
-//            if isOpen {
-//                VStack(spacing: 0) {
-//                    ForEach(options) { item in
-//                        
-//                        Button {
-//                            selectedGroup = item
-//                            withAnimation {
-//                                openSection = nil
-//                            }
-//                        } label: {
-//                            HStack {
-//                                Text(item.name)
-//                                    .foregroundColor(.white)
-//                                    .font(.custom("Inter-Regular", size: 14))
-//                                
-//                                Spacer()
-//                                
-//                                if selectedGroup?.id == item.id {
-//                                    Image(systemName: "checkmark")
-//                                        .foregroundColor(.green)
-//                                }
-//                            }
-//                            .padding(.vertical, 10)
-//                            .padding(.horizontal, 12)
-//                        }
-//                        
-//                        Divider()
-//                            .overlay(Color.white.opacity(0.08))
-//                    }
-//                }
-//                .background(Color.gray.opacity(0.2))
-//                .clipShape(RoundedRectangle(cornerRadius: 12))
-//                .transition(.opacity)
-//                .padding(.top, -9)
-//            }
-//        }
-//    }
-//}
 
 
 struct AccessGroupDropDown: View {
