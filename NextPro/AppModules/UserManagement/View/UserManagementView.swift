@@ -318,12 +318,13 @@ struct UserManagementView: View {
             AddUserView(
                 editUser: selectedUserForEdit,
                 onDismiss: {
+                    selectedUserForEdit = nil
                     Task {
                         await fetchUserVM.refreshAfterAddOrEditUser()
                         scrollToTop = true
                     }
                 }
-            )
+            ).id(selectedUserForEdit?.id ?? UUID().uuidString)
         }
         .onAppear {
             

@@ -20,7 +20,7 @@ class GetUserDetailsViewModel: ObservableObject {
     @Published var userData :  GetUserData?
     
     func getUserDetails() async {
-
+        userData = nil
 
         guard networkManager.hasInternet else {
            errorMessage = nil
@@ -42,11 +42,14 @@ class GetUserDetailsViewModel: ObservableObject {
             let response = try await networkManager.getUserDetails(userId: userid)
             if response.status {
                 userData = response.data
+                print("👉 ViewModel:", response.data.id, response.data.full_name)
             }else{
                 errorMessage =  "Something Went Wrong!"
             }
         } catch {
+            userData = nil
             errorMessage = error.localizedDescription
+            print("❌ Decode/API Error:", error)
         }
     }
 

@@ -68,7 +68,6 @@ struct AddUserView: View {
     @State private var selectedAccessGroups: [AccessGroupItem] = []
     @State private var openSection: Int? = nil
     
-    @State private var hasInitialized = false
     
     @State private var isInitialLoading = false
     @State private var nfcType : String = ""
@@ -204,43 +203,6 @@ struct AddUserView: View {
 
                                     VStack(spacing: 20) {
 
-                                   
-//                                        AccessTypeRow(
-//                                            title: "Mobile App",
-//                                            isSelected: isSelectMobileAPP
-//                                        ) {
-//                                            isSelectMobileAPP = true
-//                                            isSelectKeyFob = false
-//                                            nfcType = "DIGITAL"
-//                                            
-//                                            handleNfcGeneration()
-//                                        }
-//                                        
-//                                
-//                                        AccessTypeRow(
-//                                            title: "Key Fob/Card",
-//                                            isSelected: isSelectKeyFob
-//                                        ) {
-//                                            isSelectMobileAPP = false
-//                                            isSelectKeyFob = true
-//                                            digitalAccess = false
-//                                            remoteAccess = false
-//                                            nfcType = "PHYSICAL"
-//                                        }
-//                                        
-//                                        AccessTypeRow(
-//                                            title: "Both",
-//                                            isSelected: isSelectBoth
-//                                        ) {
-//                                            isSelectMobileAPP = false
-//                                            isSelectKeyFob = false
-//                                            isSelectBoth = true
-//                                            digitalAccess = true
-//                                            nfcType = "BOTH"
-//                                            
-//                                            handleNfcGeneration()
-//                                        }
-                                        
                                         
                                         VStack(spacing: 16) {
                                           
@@ -263,11 +225,6 @@ struct AddUserView: View {
                                                     
                                                     VStack(spacing: 20) {
 
-                                                        // Phone Tap
-    //                                                    CheckBoxView(
-    //                                                        title: "Phone Tap",
-    //                                                        isChecked: $digitalAccess
-    //                                                    )
                                                         
                                                         Toggle(isOn: $digitalAccess) {
                                                             Text("Phone Tap")
@@ -279,11 +236,6 @@ struct AddUserView: View {
                                                         // Remote + Bluetooth (Grouped)
                                                         VStack(alignment: .leading, spacing: 20) {
 
-    //                                                        CheckBoxView(
-    //                                                            title: "Remote",
-    //                                                            isChecked: $remoteAccess
-    //                                                        )
-                                                            
                                                             Toggle(isOn: $remoteAccess) {
                                                                 Text("Remote")
                                                                     .foregroundColor(.white)
@@ -293,13 +245,6 @@ struct AddUserView: View {
                                                             
                                                             //Sub Option
                                                             if remoteAccess {
-    //                                                            CheckBoxView(
-    //                                                                title: "Bluetooth",
-    //                                                                isChecked: $remoteAccess,
-    //                                                                isDisable : true
-    //                                                            )
-    //                                                            .padding(.leading, 28)
-    //                                                            .opacity(0.9)
                                                                 
                                                                 Toggle(isOn: $remoteAccess) {
                                                                     Text("Bluetooth")
@@ -350,16 +295,10 @@ struct AddUserView: View {
 
                                         
                                         .onChange(of: isSelectMobileAPP) { _ in
-//                                            if editUser == nil {
-//                                                updateNfcType()
-//                                            }
                                             updateNfcType()
                                         }
 
                                         .onChange(of: isSelectKeyFob) { _ in
-//                                            if editUser == nil {
-//                                                updateNfcType()
-//                                            }
                                               updateNfcType()
                                             if isSelectKeyFob {
                                                     isSelectAccessGroup = true
@@ -415,12 +354,6 @@ struct AddUserView: View {
                                 
                                 if isSelectAccessGroup {
                                     
-//                                    AccessGroupDropDown(
-//                                        id: 0,
-//                                        options: getAccessGroupVM.accessGroupList,
-//                                        selectedGroup: $selectedAccessGroup,
-//                                        openSection: $openSection
-//                                    )
                                     AccessGroupDropDown(
                                         id: 0,
                                         options: getAccessGroupVM.accessGroupList,
@@ -462,7 +395,7 @@ struct AddUserView: View {
                                             isScheduledAccess = false
                                             
                                             //reset time slot ui
-                                           // timeSlots = [TimeSlotUI()]
+                                    
                                             
                                             timeSlots = [timeSlots.first ?? TimeSlotUI()]
                                         }
@@ -845,21 +778,20 @@ struct AddUserView: View {
         }
         
         .onAppear {
-            guard !hasInitialized else { return }
-               hasInitialized = true
             Task {
                 
                 isInitialLoading = true
+                resetForm()
                 await getAccessGroupVM.getAccessGroupList()
                 await doorListVM.getDoorList(force: true)
                 
                 
                 if let user = editUser {
                     
-                    fullName = user.full_name
+                    fullName = user.full_name ?? ""
                     phone = user.phone_number ?? ""
                     nfcId = user.nfc_digital ?? ""
-                    email =  user.email
+                    email =  user.email ?? ""
                     username = user.username ?? ""
                     
                     nfcType = user.nfc_type ?? ""
@@ -899,20 +831,6 @@ struct AddUserView: View {
                         isSelectDoor = false
                     }
                     
-                
-                    
-//                    if user.creation_method == "access_group" {
-//
-//                        selectedAccessGroups = user.access_groups_detail.map {
-//                            AccessGroupItem(
-//                                id: $0.access_group_id,
-//                                name: $0.access_group_name,
-//                                description: nil,
-//                                doors: user.doors
-//                            )
-//                        }
-//                    }
-                    
                     
                     if user.creation_method == "access_group" {
 
@@ -946,23 +864,43 @@ struct AddUserView: View {
                         
                         
                         // Set time slots from backend
-                        if !user.time_slots.isEmpty {
-                            
-                            timeSlots = user.time_slots.map { slot in
+//                        if !user.time_slots.isEmpty {
+//                            
+//                            timeSlots = user.time_slots.map { slot in
+//                                TimeSlotUI(
+//                                    startTime: apiTimeFormatter.date(from: slot.start_time),
+//                                    endTime: apiTimeFormatter.date(from: slot.end_time)
+//                                )
+//                            }
+//                            
+//                            // Safety: max 3
+//                            if timeSlots.count > 3 {
+//                                timeSlots = Array(timeSlots.prefix(3))
+//                            }
+//                            
+//                        } else {
+//                            timeSlots = [TimeSlotUI()]
+//                        }
+                        
+                        
+                        
+                        if let apiSlots = user.time_slots, !apiSlots.isEmpty {
+
+                            timeSlots = apiSlots.map { slot in
                                 TimeSlotUI(
                                     startTime: apiTimeFormatter.date(from: slot.start_time),
                                     endTime: apiTimeFormatter.date(from: slot.end_time)
                                 )
                             }
-                            
-                            // Safety: max 3
+
                             if timeSlots.count > 3 {
                                 timeSlots = Array(timeSlots.prefix(3))
                             }
-                            
+
                         } else {
                             timeSlots = [TimeSlotUI()]
                         }
+                        
                         
                         if user.schedule_type == "schedule"{
                             if let weekDays = user.week_days {
@@ -990,9 +928,6 @@ struct AddUserView: View {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 isInitialLoading = false
                 
-                
-               
-                
             }
             
            
@@ -1012,6 +947,7 @@ struct AddUserView: View {
         }
         
         .onDisappear {
+            resetForm()
             onDismiss?()
         }
         

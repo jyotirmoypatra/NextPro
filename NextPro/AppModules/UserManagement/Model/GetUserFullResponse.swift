@@ -15,10 +15,10 @@ struct GetUserData: Codable {
     
     let id: String
     let user_id: String
-    let full_name: String
+    let full_name: String?
    let username: String?
-    let email: String
-    let user_type: String
+    let email: String?
+    let user_type: String?
     let phone_number: String?
     let status: String
     
@@ -35,14 +35,14 @@ struct GetUserData: Codable {
     let doors: [String]
     
     let is_shared_link: Bool
-    let schedule_type: String
+    let schedule_type: String?
     let start_date: String?
     let end_date: String?
-    let time_slots: [TimeSlot]
+    let time_slots: [TimeSlot]?
     let week_days: String?
     
-    let creation_method: String
-    let source: String
+    let creation_method: String?
+    let source: String?
 }
 
 
