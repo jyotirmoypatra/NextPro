@@ -746,14 +746,22 @@ struct AddUserView: View {
                 
                 
                 // LOADING OVERLAY
-                if addUserVM.isLoading || isInitialLoading || generateNFCID.isLoading{
+                if addUserVM.isLoading || isInitialLoading || generateNFCID.isLoading {
                     ZStack {
                         Color.black.opacity(0.6)
                             .ignoresSafeArea()
 
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(1.8)
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(1.8)
+
+                            if addUserVM.isLoading {
+                                Text(editUser != nil ? "Updating User. Please wait..." : "Creating User. Please wait...")
+                                    .font(.custom("Inter-Medium", size: 14))
+                                    .foregroundColor(.white)
+                            }
+                        }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ignoresSafeArea()
