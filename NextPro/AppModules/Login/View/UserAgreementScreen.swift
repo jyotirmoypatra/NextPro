@@ -338,8 +338,8 @@ struct UserAgreementScreen: View {
                 await viewModel.accept()
 
                 if viewModel.Successflag {
-
-                   if let fromLoggedin = fromLogin {
+                    
+                   if let fromLoggedin = fromLogin, fromLoggedin {
                        UserDefaults.standard.set(true, forKey: "is_logged_in")
                        KeychainManager.shared.resetToLogin()
                        
