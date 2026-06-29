@@ -42,6 +42,10 @@ static let baseURL = "https://devapi.nextprotechnologies.com"
         static let deleteAccount = "/api/facility-user/account/delete/"
     }
     
+    struct Web {
+        static let privacy = "https://dev.nextprotechnologies.com/privacy-policy"
+        static let terms = "https://dev.nextprotechnologies.com/terms-and-conditions"
+    }
     
     
     

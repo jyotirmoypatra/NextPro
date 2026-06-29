@@ -52,10 +52,10 @@ struct  PrivacyAndTermsView: View {
                         
                         Spacer()
                         
-                        // RIGHT: Info Icon
-                        Image(systemName: "info.circle")
-                            .resizable()
-                            .frame(width: 20, height: 20)
+//                        // RIGHT: Info Icon
+//                        Image(systemName: "info.circle")
+//                            .resizable()
+//                            .frame(width: 20, height: 20)
                     }
                     .overlay(
                         Text(WebViewType == "privacy" ? "Privacy Policy" : "Terms & Conditions")
@@ -67,27 +67,34 @@ struct  PrivacyAndTermsView: View {
                     .padding(.bottom, 15)
                     
                     
-                    ScrollView {
-                        WebContentView(
-                            htmlString: HTMLString,
-                            onContentHeightChange: { height in
-                                let bufferedHeight = height + 50   //  IMPORTANT
-                                let clamped = max(300, bufferedHeight)
-                                
-                                if abs(clamped - webContentHeight) > 1 {
-                                    withAnimation(.easeInOut(duration: 0.15)) {
-                                        webContentHeight = clamped
-                                    }
-                                }
-                            }
-                        )
-                        .background(.clear)
-                        .frame(height: webContentHeight)
-                        .clipped()
+//                    ScrollView {
+//                        WebContentView(
+//                            htmlString: HTMLString,
+//                            onContentHeightChange: { height in
+//                                let bufferedHeight = height + 50   //  IMPORTANT
+//                                let clamped = max(300, bufferedHeight)
+//                                
+//                                if abs(clamped - webContentHeight) > 1 {
+//                                    withAnimation(.easeInOut(duration: 0.15)) {
+//                                        webContentHeight = clamped
+//                                    }
+//                                }
+//                            }
+//                        )
+//                        .background(.clear)
+//                        .frame(height: webContentHeight)
+//                        .clipped()
+//                    }
+//                    .scrollIndicators(.hidden)
+                    
+                    ZStack {
+                        WebView(url: webURL, isLoading: $isLoading)
+
+                        if isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                        }
                     }
-                    .scrollIndicators(.hidden)
-                    
-                    
                     
                     
                 }
@@ -97,22 +104,28 @@ struct  PrivacyAndTermsView: View {
             .navigationBarBackButtonHidden()
             
         }
-        .onAppear{
-            if  WebViewType == "privacy" {
-                HTMLString = ""
-                HTMLString = loadHTML("privacy")
-            }else{
-                HTMLString = ""
-                HTMLString = loadHTML("terms")
-            }
-            
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    showWebContent = true
-                }
-            }
-        }
+//        .onAppear{
+//            if  WebViewType == "privacy" {
+//                HTMLString = ""
+//                HTMLString = loadHTML("privacy")
+//            }else{
+//                HTMLString = ""
+//                HTMLString = loadHTML("terms")
+//            }
+//            
+//            
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+//                withAnimation(.easeInOut(duration: 0.2)) {
+//                    showWebContent = true
+//                }
+//            }
+//        }
+    }
+    
+    private var webURL: String {
+        WebViewType == "privacy"
+        ? APIConfig.Web.privacy
+        :  APIConfig.Web.terms
     }
     
 }

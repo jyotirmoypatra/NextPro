@@ -30,6 +30,7 @@ struct ProfileEndUserView: View {
     @State private var goToLogin = false
     @State private var showLogoutAlert = false
     @State private var showDeleteAccountAlert = false
+    @State private var navigateToSupport = false
     @State private var navigate_Webview_PrivacyTerms = false
     @State private var navigate_voice_message = false
     @State private var navigate_Debug = false
@@ -202,7 +203,7 @@ struct ProfileEndUserView: View {
 
                             // Support
                             UserProfileRow(title: "Support",textColor: .white) {
-                                // Handle support action
+                                navigateToSupport = true
                             }
                             
                             Divider().background(Color.white.opacity(0.15))
@@ -377,6 +378,11 @@ struct ProfileEndUserView: View {
                 }
             }
         
+        .navigationDestination(isPresented: $navigateToSupport) {
+            SupportView()
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
+        }
         .sheet(isPresented: $showLogoutAlert) {
             LogoutSheetView()
         }
@@ -970,6 +976,95 @@ struct ShimmerView: View {
                     move = 0.7
                 }
             }
+    }
+}
+
+struct SupportView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                Image("backgroundimg")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .ignoresSafeArea()
+
+                Color.black.opacity(0.9)
+                    .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    // Nav bar
+                    HStack {
+                        Button(action: { dismiss() }) {
+                            HStack {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(.white)
+                                Text("Back")
+                                    .foregroundColor(.white)
+                                    .font(.custom("Inter-SemiBold", size: 16))
+                            }
+                        }
+                        Spacer()
+                    }
+                    .overlay(
+                        Text("Support")
+                            .font(.custom("Inter-SemiBold", size: 16))
+                            .foregroundColor(.white)
+                    )
+                    .padding(.horizontal, 10)
+                    .padding(.top, 10)
+                    .padding(.bottom, 15)
+
+                    ScrollView(showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 20) {
+
+                            Text("How to Contact Us")
+                                .font(.custom("Inter-Bold", size: 15))
+                                .foregroundColor(.white)
+
+                            Divider().background(Color.white.opacity(0.15))
+
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Nextpro Technologies, Inc. (d/b/a ZYLX)")
+                                    .font(.custom("Inter-SemiBold", size: 15))
+                                    .foregroundColor(.white)
+
+                                Text("8 The Green, Dover, Delaware 19901, United States")
+                                    .font(.custom("Inter-Regular", size: 14))
+                                    .foregroundColor(.gray)
+
+                                HStack(spacing: 6) {
+                                    Text("Privacy contact:")
+                                        .font(.custom("Inter-Regular", size: 14))
+                                        .foregroundColor(.gray)
+                                    Link("admin@getzylx.io", destination: URL(string: "mailto:admin@getzylx.io")!)
+                                        .font(.custom("Inter-Medium", size: 14))
+                                        .foregroundColor(.blue)
+                                }
+                            }
+
+                            Divider().background(Color.white.opacity(0.15))
+
+                            Text("For End Users who were enrolled by a specific Organization Administrator, you may also contact that Organization Administrator directly, which can often resolve straightforward requests (such as a lost card or a request to switch to a non-biometric credential) most quickly.")
+                                .font(.custom("Inter-Regular", size: 15))
+                                .foregroundColor(.gray)
+                                .lineSpacing(5)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+                        .padding(.bottom, 30)
+                        .background(Color.black.opacity(0.8))
+                        .cornerRadius(14)
+                        .padding(.horizontal, 10)
+                    }
+                    .padding(.horizontal, 4)
+                }
+            }
+            .navigationBarBackButtonHidden()
+        }
     }
 }
 
