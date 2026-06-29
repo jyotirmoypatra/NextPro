@@ -113,18 +113,18 @@ struct DoorOpenView: View {
                             
                             Spacer()
                             
-                            Button(action: {
-                                // Notification action
-                            }) {
-                                Image(systemName: "bell")
-                                    .font(.system(size: 18))
-                                    .foregroundColor(.white)
-                                    .padding(10)
-                                    .background(Color.white.opacity(0.1))
-                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                            }
+//                            Button(action: {
+//                                // Notification action
+//                            }) {
+//                                Image(systemName: "bell")
+//                                    .font(.system(size: 18))
+//                                    .foregroundColor(.white)
+//                                    .padding(10)
+//                                    .background(Color.white.opacity(0.1))
+//                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+//                            }
                         }
-                        .padding(.top, 16)
+                        .padding(.top, 10)
                         .padding(.bottom, 12)
                         .padding(.horizontal,10)
                         

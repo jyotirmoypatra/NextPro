@@ -46,26 +46,26 @@ struct ProfileEndUserView: View {
         ZStack {
             VStack(spacing: 0) {
                 // MARK: - Header
-                HStack {
-                    Text("Profile")
-                        .font(.custom("Inter-SemiBold", size: 18))
-                        .foregroundColor(.white)
-
-                    Spacer()
-
-                    Button(action: {
-                        // Notification action
-                    }) {
-                        Image(systemName: "bell")
-                            .font(.system(size: 18))
-                            .foregroundColor(.white)
-                            .padding(10)
-                            .background(Color.white.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                    }
-                }
-                .padding(.top, 16)
-                .padding(.bottom, 12)
+//                HStack {
+//                    Text("Profile")
+//                        .font(.custom("Inter-SemiBold", size: 18))
+//                        .foregroundColor(.white)
+//
+//                    Spacer()
+//
+////                    Button(action: {
+////                        // Notification action
+////                    }) {
+////                        Image(systemName: "bell")
+////                            .font(.system(size: 18))
+////                            .foregroundColor(.white)
+////                            .padding(10)
+////                            .background(Color.white.opacity(0.1))
+////                            .clipShape(RoundedRectangle(cornerRadius: 10))
+////                    }
+//                }
+//                .padding(.top, 10)
+//                .padding(.bottom, 12)
 
                 // MARK: - Scroll Content
                 ScrollView(showsIndicators: false) {
@@ -434,7 +434,7 @@ struct UserProfileRow: View {
                     .font(.system(size: 15, weight: .medium))
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 30) // 
+            .padding(.vertical, 25) //
             .contentShape(Rectangle()) // makes the entire row tappable
         }
     }
