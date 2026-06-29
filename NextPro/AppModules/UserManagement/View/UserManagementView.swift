@@ -324,7 +324,7 @@ struct UserManagementView: View {
                         scrollToTop = true
                     }
                 }
-            ).id(selectedUserForEdit?.id ?? UUID().uuidString)
+            )
         }
         .onAppear {
             

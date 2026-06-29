@@ -73,6 +73,7 @@ struct AddUserView: View {
     @State private var nfcType : String = ""
     
     @State private var isEditModeLoaded = false
+    @State private var hasLoaded = false
     
     
     enum Field {
@@ -786,8 +787,10 @@ struct AddUserView: View {
         }
         
         .onAppear {
+            guard !hasLoaded else { return }
+            hasLoaded = true
             Task {
-                
+
                 isInitialLoading = true
                 resetForm()
                 await getAccessGroupVM.getAccessGroupList()
@@ -1381,7 +1384,7 @@ struct AddUserView: View {
         fullName = ""
         email = ""
         username = ""
-        password = ""
+       // password = ""
         phone = ""
         
         // MARK: - NFC
