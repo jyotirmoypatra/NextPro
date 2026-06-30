@@ -64,7 +64,8 @@ struct ImagePicker: UIViewControllerRepresentable {
 
                 // Make circle crop
              
-                cropVC.aspectRatioLockEnabled = true
+                cropVC.setAspectRatioPreset(CGSize(width: 1, height: 1), animated: false)
+                cropVC.aspectRatioLockEnabled = false
                 cropVC.resetAspectRatioEnabled = true
                
                 

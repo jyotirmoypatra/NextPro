@@ -189,34 +189,6 @@ struct EditProfileView: View {
                                             .padding(.leading, 14)
                                     }
                                     
-//                                    TextField("", text: Binding(
-//
-//                                        
-//                                        get: {
-//                                                   phoneNumber.formattedUSPhone()
-//                                               },
-//                                               set: { newValue in
-//                                                   
-//                                                   let digits = newValue.filter { $0.isNumber }
-//                                                   
-//                                                   if digits.count > 10 {
-//                                                       let generator = UIImpactFeedbackGenerator(style: .medium)
-//                                                       generator.impactOccurred()
-//                                                       return
-//                                                   }
-//                                                   
-//                                                   phoneNumber = digits
-//                                               }
-//                                    ))
-//                                    .foregroundColor(.white)
-//                                    .font(.custom("Inter-Regular", size: 16))
-//                                    .padding(.horizontal, 14)
-//                                    .frame(height: 50)
-//                                    .background(Color.white.opacity(0.15))
-//                                    .cornerRadius(10)
-//                                    .keyboardType(.phonePad)
-                                    
-                                    
                                     TextField(
                                         "",
                                         text: Binding(
@@ -369,7 +341,7 @@ struct EditProfileView: View {
                 sourceType: source
             ) { cropped in
 
-                if let compressed = cropped.compressTo(maxKB: 300) {
+                if let compressed = cropped.compressTo(maxKB: 200) {
                     viewModel.ImgBase64 = compressed.base64EncodedString()
 
                     Task {

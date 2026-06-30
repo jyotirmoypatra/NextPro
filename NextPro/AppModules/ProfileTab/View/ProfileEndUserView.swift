@@ -73,11 +73,6 @@ struct ProfileEndUserView: View {
                         // MARK: - Profile Info Section
                         VStack(spacing: 12) {
 
-
-//                            ProfileImageView(imageUrl: viewModel.image_url)
-//                                .onTapGesture {
-//                                    showFullImage = true
-//                                }
                             
                             ProfileImageView(imageUrl: viewModel.image_url)
                                 .onTapGesture {
@@ -484,33 +479,7 @@ struct LogoutSheetView: View {
                         .cornerRadius(10)
                 }
                 .padding(.horizontal)
-                
-//                Button(action: {
-//                    isLoggingOut = true
-//
-//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-//                        KeychainManager.shared.clearUserDefaultsAndKeychainData()
-//                        UserDefaults.standard.set(false, forKey: "is_logged_in")
-//                    }
-//
-//                }) {
-//                    ZStack {
-//                        if isLoggingOut {
-//                            ProgressView()
-//                                .tint(colorScheme == .dark ? .black : .white)
-//                        } else {
-//                            Text("YES, LOGOUT")
-//                                .font(.custom("Inter-Bold", size: 16))
-//                        }
-//                    }
-//                    .frame(maxWidth: .infinity)
-//                    .padding()
-//                    .background(colorScheme == .dark ? .white : .black)
-//                    .foregroundColor(colorScheme == .dark ? .black : .white)
-//                    .cornerRadius(10)
-//                }
-//                .disabled(isLoggingOut)
-//                .padding(.horizontal)
+            
                 
                 Button {
                     dismiss()
@@ -633,143 +602,12 @@ struct DeleteConfirmationSheet: View {
             .padding(.horizontal, 10)
 
         }
-        .presentationDetents([.height(380)])
+        .presentationDetents([.height(390)])
     }
 }
 
 
-//struct  DeleteConfirmationSheet: View {
-//    @Environment(\.dismiss) private var dismiss
-//    @Environment(\.colorScheme) var colorScheme
-//    var body: some View {
-//        
-//        ZStack {
-//            VStack(spacing: 20) {
-//                
-//                // Drag indicator
-//                Capsule()
-//                    .fill(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.3))
-//                    .frame(width: 40, height: 5)
-//                
-//                Image(systemName: "xmark.circle.fill")
-//                    .font(.system(size: 36))
-//                    .foregroundColor(colorScheme == .dark ? .red : .red)
-//                    .padding(.top, 5)
-//
-//                
-//                Text("Delete Account")
-//                    .font(.custom("Inter-SemiBold", size: 18))
-//                    .foregroundColor(colorScheme == .dark ? .white : .black)
-//                
-//                Text("Are you sure you want to delete  your account?.This action cannot be undone and all your data will be permanently removed.")
-//                    .font(.custom("Inter-Regular", size: 16))
-//                    .foregroundColor(colorScheme == .dark ? .white : .black)
-//                    .multilineTextAlignment(.center)
-//                    .fixedSize(horizontal: false, vertical: true)
-//                
-//                
-//                Divider().background(colorScheme == .dark ? .white.opacity(0.3) : .black.opacity(0.3))
-//                
-//                Button(action: {
-//                    dismiss()
-//                }) {
-//                    Text("YES, DELETE MY ACCOUNT")
-//                        .font(.custom("Inter-Bold", size: 16))
-//                        .frame(maxWidth: .infinity)
-//                        .padding()
-//                        .background(colorScheme == .dark ? .white : .black)
-//                        .foregroundColor(colorScheme == .dark ? .black : .white)
-//                        .cornerRadius(10)
-//                }
-//                .padding(.horizontal)
-//                
-//                Button {
-//                    dismiss()
-//                   // resetToLogin()
-//                } label: {
-//                    Text("Cancel")
-//                        .font(.custom("Inter-Bold", size: 15))
-//                        .frame(maxWidth: .infinity)
-//                        .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.8))
-//                        .padding(.top,10)
-//                }
-//                
-//                
-//            }
-//            .frame(maxWidth: .infinity)
-//            .padding(.top, 20)
-//            .padding(.bottom, 30)
-//            .cornerRadius(24)
-//            .padding(.horizontal, 10)
-//            
-//        }
-//        .presentationDetents([.height(360)])
-//    }
-//    
-//   
-//}
 
-
-//struct ProfileImageView: View {
-//    let imageUrl: String?
-//    let size: CGFloat = 100
-//    
-//    @State private var isLoading: Bool = true
-//
-//    var body: some View {
-//        ZStack {
-//
-//            // Shimmer placeholder while loading
-//            if isLoading {
-//                Circle()
-//                    .fill(Color.gray.opacity(0.3))
-//                    .frame(width: size, height: size)
-//                    .overlay(
-//                        ShimmerView()
-//                            .frame(width: size, height: size)
-//                            .clipShape(Circle())
-//                    )
-//            } else {
-//                // Fallback placeholder if image fails
-//                Image(systemName: "person.circle.fill")
-//                    .resizable()
-//                    .scaledToFill()
-//                    .foregroundColor(.gray.opacity(0.6))
-//                    .frame(width: size, height: size)
-//            }
-//
-//            // Remote image loader
-//            if let urlString = imageUrl,
-//               let url = URL(string: urlString) {
-//
-//                WebImage(url: url)
-//                    .onSuccess { _, _, _ in
-//                        DispatchQueue.main.async {
-//                            withAnimation { isLoading = false }
-//                        }
-//                    }
-//                    .onFailure { _ in
-//                        DispatchQueue.main.async {
-//                            withAnimation { isLoading = false }
-//                        }
-//                    }
-//                    .resizable()
-//                    .scaledToFill()
-//                    .frame(width: size, height: size)
-//                    .clipShape(Circle())
-//            }
-//        }
-//        .clipShape(Circle())
-//        .overlay(
-//            Circle().stroke(Color.white.opacity(0.7), lineWidth: 1)
-//        )
-//        .shadow(radius: 6)
-//        // Reset shimmer when URL changes
-//                .onChange(of: imageUrl) { _ in
-//                    isLoading = true
-//                }
-//    }
-//}
 struct ProfileImageView: View {
     let imageUrl: String?
     let size: CGFloat = 100
