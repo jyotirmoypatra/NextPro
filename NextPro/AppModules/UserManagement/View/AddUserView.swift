@@ -1358,7 +1358,8 @@ struct AddUserView: View {
 
 
                 // Meta
-                source: "app",
+                source: isEditMode ? nil : "app",
+                
                 is_mqtt_sync: true,
                 is_shared_link: isSharedLink,
                 creation_method: isSelectDoor ? "door_selection" : "access_group",
