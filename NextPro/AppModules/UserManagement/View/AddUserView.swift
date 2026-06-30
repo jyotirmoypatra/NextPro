@@ -749,7 +749,7 @@ struct AddUserView: View {
                 // LOADING OVERLAY
                 if addUserVM.isLoading || isInitialLoading || generateNFCID.isLoading {
                     ZStack {
-                        Color.black.opacity(0.6)
+                        Color.black.opacity(0.8)
                             .ignoresSafeArea()
 
                         VStack(spacing: 16) {
@@ -759,7 +759,7 @@ struct AddUserView: View {
 
                             if addUserVM.isLoading {
                                 Text(editUser != nil ? "Updating User. Please wait..." : "Creating User. Please wait...")
-                                    .font(.custom("Inter-Medium", size: 14))
+                                    .font(.custom("Inter-Medium", size: 16))
                                     .foregroundColor(.white)
                             }
                         }
