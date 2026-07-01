@@ -31,6 +31,7 @@ struct SetupDeviceRelayConfig: View {
 
     @State private var showSuccessAlert = false
     @State private var successMessage = ""
+    @State private var loaderText = "Checking device..."
 
     private var isValidInput: Bool {
         guard let value = Int(durationText), value >= 1, value <= 254 else { return false }
@@ -89,9 +90,14 @@ struct SetupDeviceRelayConfig: View {
                 if isCheckingDevice {
                     ZStack {
                         Color.black.opacity(0.8).ignoresSafeArea()
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(1.8)
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(1.8)
+                            Text(loaderText)
+                                .font(.custom("Inter-Regular", size: 14))
+                                .foregroundColor(.white.opacity(0.8))
+                        }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ignoresSafeArea()
@@ -279,6 +285,7 @@ struct SetupDeviceRelayConfig: View {
         pendingOpenTime = openTime
         isCheckingDevice = true
         tcDeviceFound = false
+        loaderText = "Checking device..."
 
         tcScanTask?.cancel()
         tcScanTimeoutTask?.cancel()
@@ -295,6 +302,7 @@ struct SetupDeviceRelayConfig: View {
                         print("Device detected via BLE:", name)
 
                         tcDeviceFound = true
+                        loaderText = "Setting duration..."
                         stopTCScan()
                         sendSetDeviceConfig(openTime: pendingOpenTime)
                         return
