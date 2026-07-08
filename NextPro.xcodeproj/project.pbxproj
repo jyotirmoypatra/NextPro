@@ -313,8 +313,8 @@
 				CODE_SIGN_ENTITLEMENTS = NextPro/NextPro.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 48;
-				DEVELOPMENT_TEAM = 48M2N88866;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = FF6DJYXQG8;
 				ENABLE_PREVIEWS = YES;
 				EXCLUDED_ARCHS = "";
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
@@ -327,7 +327,7 @@
 				INFOPLIST_KEY_NFCReaderUsageDescription = "This app uses NFC to scan smart cards.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app requires Bluetooth access to connect and control nearby smart devices.";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "This app uses Bluetooth to discover and connect to compatible devices.";
-				INFOPLIST_KEY_NSBluetoothWhileInUseUsageDescription = "";
+				INFOPLIST_KEY_NSBluetoothWhileInUseUsageDescription = "Bluetooth is used to detect nearby access devices and unlock doors securely.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera to take a profile picture.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location access is needed to detect and connect to Bluetooth devices even when the app is in background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access is required to scan for nearby Bluetooth devices.";
@@ -344,7 +344,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.utl.NextPro;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nextpro.zylx;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -356,7 +356,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "NextPro/NextPro-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -369,8 +369,8 @@
 				CODE_SIGN_ENTITLEMENTS = NextPro/NextPro.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 48;
-				DEVELOPMENT_TEAM = 48M2N88866;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = FF6DJYXQG8;
 				ENABLE_PREVIEWS = YES;
 				EXCLUDED_ARCHS = "";
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/NextPro";
@@ -382,7 +382,7 @@
 				INFOPLIST_KEY_NFCReaderUsageDescription = "This app uses NFC to scan smart cards.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app requires Bluetooth access to connect and control nearby smart devices.";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "This app uses Bluetooth to discover and connect to compatible devices.";
-				INFOPLIST_KEY_NSBluetoothWhileInUseUsageDescription = "";
+				INFOPLIST_KEY_NSBluetoothWhileInUseUsageDescription = "Bluetooth is used to detect nearby access devices and unlock doors securely.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera to take a profile picture.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Location access is needed to detect and connect to Bluetooth devices even when the app is in background.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access is required to scan for nearby Bluetooth devices.";
@@ -399,7 +399,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.utl.NextPro;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nextpro.zylx;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -411,7 +411,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "NextPro/NextPro-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
