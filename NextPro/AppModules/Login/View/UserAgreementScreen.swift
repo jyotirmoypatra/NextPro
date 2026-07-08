@@ -44,6 +44,13 @@ struct UserAgreementScreen: View {
     @State private var privacyContentHeight: CGFloat = 300
     @State private var showWebContent = false
 
+    // private let termsURL = APIConfig.Web.privacy
+     private let termsURL = "https://b115-103-75-162-119.ngrok-free.app/privacy/privacy.html"
+   //  private let privacyURL = APIConfig.Web.terms
+     private let privacyURL = "https://b115-103-75-162-119.ngrok-free.app/privacy/privacy.html"
+
+    @State private var showScrollDownButton = true
+    @State private var animateArrow = false
     
     private let scrollSpaceName = "AgreementScroll"
     
