@@ -33,14 +33,15 @@ struct UserAgreementScreen: View {
     // check & unlock states
     @State private var termsUnlocked = false
     @State private var privacyUnlocked = false
-    
+
+    @State private var termsLoaded = false
+    @State private var privacyLoaded = false
+
     @State private var termsAccepted = false
     @State private var privacyAccepted = false
-    
-    @State private var webContentHeight: CGFloat = 300
-    
-    @State private var  termsHTML: String = ""
-    @State private var  privacyHTML: String = ""
+
+    @State private var termsContentHeight: CGFloat = 300
+    @State private var privacyContentHeight: CGFloat = 300
     @State private var showWebContent = false
 
     
@@ -77,52 +78,78 @@ struct UserAgreementScreen: View {
                     tabsSection
 
                     // WebView card — fills all remaining space between tabs and button
-                    GeometryReader { outerProxy in
+                    // Single ScrollView owns all scrolling; WKWebView internal scroll is disabled.
+                    ZStack(alignment: .top) {
                         ScrollViewReader { proxy in
                             ScrollView {
                                 VStack(spacing: 0) {
-                                    Color.clear
-                                        .frame(height: 1)
-                                        .id("TOP_ANCHOR")
+                                    Color.clear.frame(height: 1).id("TOP_ANCHOR")
 
                                     if showWebContent {
+                                        // Terms WebView (always in hierarchy, hidden when not active)
                                         WebContentView(
-                                            htmlString: selectedTab == 0 ? termsHTML : privacyHTML,
+                                            urlString: termsURL,
                                             onContentHeightChange: { height in
                                                 let clamped = max(200, height)
-                                                if abs(clamped - webContentHeight) > 1 {
-                                                    withAnimation(.easeInOut(duration: 0.15)) {
-                                                        webContentHeight = clamped
-                                                    }
+                                                if abs(clamped - termsContentHeight) > 1 {
+                                                    termsContentHeight = clamped
                                                 }
+                                            },
+                                            onLoadFinished: {
+                                                termsLoaded = true
                                             }
                                         )
-                                        .frame(height: webContentHeight)
+                                        .frame(height: termsContentHeight)
+                                        .opacity(selectedTab == 0 ? 1 : 0)
+                                        .frame(height: selectedTab == 0 ? termsContentHeight : 0)
                                         .clipped()
-                                        .transition(.opacity)
+
+                                        // Privacy WebView (always in hierarchy, hidden when not active)
+                                        WebContentView(
+                                            urlString: privacyURL,
+                                            onContentHeightChange: { height in
+                                                let clamped = max(200, height)
+                                                if abs(clamped - privacyContentHeight) > 1 {
+                                                    privacyContentHeight = clamped
+                                                }
+                                            },
+                                            onLoadFinished: {
+                                                privacyLoaded = true
+                                            }
+                                        )
+                                        .frame(height: privacyContentHeight)
+                                        .opacity(selectedTab == 1 ? 1 : 0)
+                                        .frame(height: selectedTab == 1 ? privacyContentHeight : 0)
+                                        .clipped()
                                     }
 
-                                    Color.clear
-                                        .frame(height: 1)
-                                        .background(GeometryReader { geo -> Color in
-                                            let frame = geo.frame(in: .named(scrollSpaceName))
-                                            DispatchQueue.main.async {
-                                                let visibleHeight = outerProxy.size.height
-                                                let threshold: CGFloat = 10
-                                                let reachedBottom = frame.minY <= (visibleHeight + threshold)
+                                    // Bottom sentinel — only counts when page is fully loaded
+                                    let currentLoaded = selectedTab == 0 ? termsLoaded : privacyLoaded
+                                    GeometryReader { geo -> Color in
+                                        let frame = geo.frame(in: .named(scrollSpaceName))
+                                        DispatchQueue.main.async {
+                                            if currentLoaded {
+                                                let reachedBottom = frame.minY < UIScreen.main.bounds.height + 20
+                                                showScrollDownButton = !reachedBottom
                                                 if selectedTab == 0 {
                                                     if reachedBottom && !termsUnlocked { termsUnlocked = true }
                                                 } else {
                                                     if reachedBottom && !privacyUnlocked { privacyUnlocked = true }
                                                 }
                                             }
-                                            return Color.clear
-                                        })
-                                        .frame(height: 1)
+                                        }
+                                        return Color.clear
+                                    }
+                                    .frame(height: 1)
+                                   
 
-                                    Divider().background(Color.white.opacity(0.15))
+                                    // Checkbox — only visible after page loaded AND scrolled to bottom
+                                    let showCheckbox = selectedTab == 0
+                                        ? (termsLoaded && termsUnlocked)
+                                        : (privacyLoaded && privacyUnlocked)
 
-                                    if selectedTab == 0 ? termsUnlocked : privacyUnlocked {
+                                    if showCheckbox {
+                                        Divider().background(Color.white.opacity(0.15))
                                         HStack {
                                             Button(action: {
                                                 if selectedTab == 0 { termsAccepted.toggle() } else { privacyAccepted.toggle() }
@@ -142,17 +169,73 @@ struct UserAgreementScreen: View {
                                         .transition(.move(edge: .bottom).combined(with: .opacity))
                                     }
 
+                                    Color.clear
+                                        .frame(height: 1)
+                                        .id("BOTTOM_ANCHOR")
+
                                     Spacer(minLength: 10)
+                                   
                                 }
                                 .padding(10)
                             }
-                           // .scrollIndicators(.hidden)
+                            .scrollIndicators(.hidden)
+                            .coordinateSpace(name: scrollSpaceName)
                             .onChange(of: selectedTab) { _ in
                                 withAnimation(.easeInOut) {
                                     proxy.scrollTo("TOP_ANCHOR", anchor: .top)
                                 }
                             }
-                            .coordinateSpace(name: scrollSpaceName)
+                            
+                            .overlay(alignment: .bottomTrailing) {
+
+                                if showScrollDownButton {
+
+                                    Circle()
+                                        .fill(Color.white)
+                                        .frame(width: 30, height: 30)
+                                        .overlay {
+                                            Image(systemName: "chevron.down")
+                                                .font(.system(size: 16, weight: .bold))
+                                                .foregroundColor(.black)
+                                        }
+                                        .shadow(color: .black.opacity(0.3), radius: 8)
+                                        .offset(y: animateArrow ? 5 : -5)
+                                        .padding(.trailing, 18)
+                                        .padding(.bottom, 20)
+                                        .contentShape(Rectangle())
+                                        .allowsHitTesting(true)
+                                        .highPriorityGesture(
+                                            TapGesture().onEnded {
+                                                withAnimation(.easeInOut(duration: 0.8)) {
+                                                    proxy.scrollTo("BOTTOM_ANCHOR", anchor: .bottom)
+                                                }
+                                            }
+                                        )
+                                        .onAppear {
+                                            animateArrow = true
+                                        }
+                                        .animation(
+                                            .easeInOut(duration: 0.9)
+                                                .repeatForever(autoreverses: true),
+                                            value: animateArrow
+                                        )
+                                        .transition(.scale.combined(with: .opacity))
+                                        .zIndex(9999)
+                                }
+                            }
+                        }
+
+                        // Spinner — shown while active tab's page is still loading
+                        let isCurrentTabLoading = selectedTab == 0 ? !termsLoaded : !privacyLoaded
+                        if isCurrentTabLoading && showWebContent {
+                            VStack {
+                                Spacer()
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .scaleEffect(1.4)
+                                Spacer()
+                            }
+                            .frame(maxWidth: .infinity)
                         }
                     }
                     .background(Color(hex: "#242424"))
@@ -194,16 +277,13 @@ struct UserAgreementScreen: View {
         }
         .toast()
         .internetOverlay()
-        .onAppear{
-                termsHTML = loadHTML("terms")
-                privacyHTML = loadHTML("privacy")
-            
-            // Delay adding WebView so the screen appears first
-               DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                   withAnimation(.easeInOut(duration: 0.2)) {
-                       showWebContent = true
-                   }
-               }
+        .onAppear {
+            // Delay adding WebViews so the screen renders first
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showWebContent = true
+                }
+            }
         }
         .modernAlert(isPresented: $showAggremntError) {
             ModernAlertView(
@@ -416,99 +496,63 @@ struct UserAgreementScreen: View {
 
 
 
-// MARK: - WebContentView (non-scrolling WKWebView that reports contentHeight)
+// MARK: - WebContentView (URL-loading, non-scrolling WKWebView that reports contentHeight)
 struct WebContentView: UIViewRepresentable {
-    let htmlString: String
+    let urlString: String
     var onContentHeightChange: ((CGFloat) -> Void)? = nil
-    
-    func makeCoordinator() -> Coordinator { Coordinator(self, onContentHeightChange: onContentHeightChange) }
-    
+    var onLoadFinished: (() -> Void)? = nil
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onContentHeightChange: onContentHeightChange, onLoadFinished: onLoadFinished)
+    }
+
     func makeUIView(context: Context) -> WKWebView {
-        let config = WKWebViewConfiguration()
-        let webview = WKWebView(frame: .zero, configuration: config)
+        let webview = WKWebView(frame: .zero)
         webview.navigationDelegate = context.coordinator
-        
-        // IMPORTANT: disable internal scrolling so outer SwiftUI ScrollView controls scrolling
+        // Disable internal scroll — outer SwiftUI ScrollView handles all scrolling
         webview.scrollView.isScrollEnabled = false
         webview.isOpaque = false
         webview.backgroundColor = .clear
-        
-        // Load HTML
-        webview.loadHTMLString(htmlString, baseURL: nil)
+        webview.scrollView.backgroundColor = .clear
+        if let url = URL(string: urlString) {
+            context.coordinator.loadedURL = urlString
+            webview.load(URLRequest(url: url))
+        }
         return webview
     }
-    
-//    func updateUIView(_ uiView: WKWebView, context: Context) {
-//        // nothing else needed; navigation delegate will catch load finish
-//        applyBackground(to: uiView)
-//        uiView.loadHTMLString(htmlString, baseURL: nil)
-//        DispatchQueue.main.async {
-//            uiView.scrollView.setContentOffset(.zero, animated: false)
-//        }
-//    }
-    
-    
+
     func updateUIView(_ uiView: WKWebView, context: Context) {
-        // Only update the background (no reload)
-      //  applyBackground(to: uiView)
-        
-        // Optionally scroll to top when htmlString changes
-        if context.coordinator.lastHTMLString != htmlString {
-            uiView.loadHTMLString(htmlString, baseURL: nil)
-            context.coordinator.lastHTMLString = htmlString
-        }
-        
-        DispatchQueue.main.async {
-            uiView.scrollView.setContentOffset(.zero, animated: false)
+        // Reload only if the URL changes
+        if context.coordinator.loadedURL != urlString, let url = URL(string: urlString) {
+            context.coordinator.loadedURL = urlString
+            uiView.load(URLRequest(url: url))
         }
     }
 
-    
-    func applyBackground(to webView: WKWebView) {
-        
-        
-        let js = """
-        document.documentElement.style.backgroundColor = "#242424";
-        document.body.style.backgroundColor = "#242424";
-        document.body.style.color = "#C7C7C7";
-        document.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(function(h) {
-            h.style.color = "#C7C7C7";
-        });
-        """
-        
-        
-        webView.evaluateJavaScript(js, completionHandler: nil)
-    }
     class Coordinator: NSObject, WKNavigationDelegate {
-        var parent: WebContentView
         var onContentHeightChange: ((CGFloat) -> Void)?
-        var lastHTMLString: String?
-        
-        init(_ parent: WebContentView,onContentHeightChange: ((CGFloat) -> Void)?) {
+        var onLoadFinished: (() -> Void)?
+        var loadedURL: String?
+
+        init(onContentHeightChange: ((CGFloat) -> Void)?, onLoadFinished: (() -> Void)?) {
             self.onContentHeightChange = onContentHeightChange
-            self.parent = parent
-            self.lastHTMLString = nil
+            self.onLoadFinished = onLoadFinished
         }
-        
-        
-        
-        
+
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            // Query content height from the page
-           // parent.applyBackground(to: webView)
-            webView.evaluateJavaScript("document.body.scrollHeight") { result, error in
-                if let h = result as? CGFloat {
-                    DispatchQueue.main.async {
-                        self.onContentHeightChange?(h)
-                    }
-                } else if let hDouble = result as? Double {
-                    DispatchQueue.main.async {
-                        self.onContentHeightChange?(CGFloat(hDouble))
-                    }
+            webView.evaluateJavaScript("document.body.scrollHeight") { result, _ in
+                let height: CGFloat
+                if let h = result as? CGFloat { height = h }
+                else if let h = result as? Double { height = CGFloat(h) }
+                else { return }
+                DispatchQueue.main.async {
+                    self.onContentHeightChange?(height)
+                    self.onLoadFinished?()
                 }
             }
         }
     }
 }
+
 
 
