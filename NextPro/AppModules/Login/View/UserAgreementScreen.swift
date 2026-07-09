@@ -170,23 +170,24 @@ struct UserAgreementScreen: View {
                                         : (privacyLoaded && privacyUnlocked)
 
                                     if showCheckbox {
-                                        Divider().background(Color.white.opacity(0.15))
+                                        Divider().background(Color.black.opacity(0.15))
                                         HStack {
                                             Button(action: {
                                                 if selectedTab == 0 { termsAccepted.toggle() } else { privacyAccepted.toggle() }
                                             }) {
                                                 Image(systemName: (selectedTab == 0 ? termsAccepted : privacyAccepted) ? "checkmark.square.fill" : "square")
-                                                    .font(.title3)
-                                                    .foregroundColor(.white)
+                                                    .font(.system(size: 30))
+                                                    .foregroundColor(.black)
                                             }
                                             Text(selectedTab == 0 ?
                                                  "I have read and accept the Terms & Conditions" :
                                                  "I have read and accept the Privacy Policy")
-                                                .foregroundColor(.white)
-                                                .font(.custom("Inter-Regular", size: 14))
+                                                .foregroundColor(.black)
+                                                .font(.custom("Inter-Bold", size: 15))
                                             Spacer()
                                         }
-                                        .padding()
+                                        .padding(.horizontal,18)
+                                        .padding(.vertical,15)
                                         .transition(.move(edge: .bottom).combined(with: .opacity))
                                     }
 
@@ -269,14 +270,15 @@ struct UserAgreementScreen: View {
                             VStack {
                                 Spacer()
                                 ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .black))
                                     .scaleEffect(1.4)
                                 Spacer()
                             }
                             .frame(maxWidth: .infinity)
                         }
                     }
-                    .background(Color(hex: "#242424"))
+                   // .background(Color(hex: "#242424"))
+                    .background(Color.white)
                     .cornerRadius(20)
                     .padding(.horizontal)
                     .padding(.top, 16)
@@ -305,7 +307,7 @@ struct UserAgreementScreen: View {
                         Color.black.opacity(0.4)
                             .ignoresSafeArea()
                         ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .progressViewStyle(CircularProgressViewStyle(tint: .black))
                             .scaleEffect(1.8)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
