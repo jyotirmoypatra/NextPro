@@ -98,6 +98,7 @@ struct UserAgreementScreen: View {
                                         // Terms WebView (always in hierarchy, hidden when not active)
                                         WebContentView(
                                             urlString: termsURL,
+                                            isActive: selectedTab == 0,
                                             onContentHeightChange: { height in
                                                 let clamped = max(200, height)
                                                 if abs(clamped - termsContentHeight) > 1 {
@@ -122,6 +123,7 @@ struct UserAgreementScreen: View {
                                         // Privacy WebView (always in hierarchy, hidden when not active)
                                         WebContentView(
                                             urlString: privacyURL,
+                                            isActive: selectedTab == 1,
                                             onContentHeightChange: { height in
                                                 let clamped = max(200, height)
                                                 if abs(clamped - privacyContentHeight) > 1 {
@@ -206,7 +208,7 @@ struct UserAgreementScreen: View {
                             .scrollIndicators(.hidden)
                             .coordinateSpace(name: scrollSpaceName)
                             .onChange(of: selectedTab) { _ in
-                                proxy.scrollTo("TOP_ANCHOR", anchor: .top)
+                                resetAgreementScroll(proxy)
                                 if selectedTab == 0 ? termsLoaded : privacyLoaded {
                                     restartScrollDownAnimation()
                                 } else {
@@ -360,18 +362,6 @@ struct UserAgreementScreen: View {
         }
         
         .navigationDestination(isPresented: $navigateToHome) {
-//            if isAdmin {
-//               HomeViewAdmin()
-//                    .navigationBarBackButtonHidden(true)
-//                    .navigationBarHidden(true)
-//            }
-//            else {
-//                HomeViewEndUser()
-//                    .navigationBarBackButtonHidden(true)
-//                    .navigationBarHidden(true)
-//            }
-            
-            
             HomeView(isAdmin: isAdmin, initialTab: 0)
                 .navigationBarBackButtonHidden(true)
                 .navigationBarHidden(true)
@@ -384,23 +374,26 @@ struct UserAgreementScreen: View {
         
             if !termsAccepted && !privacyAccepted {
                 
-                selectedTab = 0   // move to Terms first
-                showAggremntAcceptMessage = "Please read and accept both. Go to each tab and scroll to the bottom and check the acceptance checkbox"
-                showAggremntAcceptError = true
+                switchToAgreementTabAndShowAlert(
+                    tab: 0,
+                    message: "Please read and accept both. Go to each tab and scroll to the bottom and check the acceptance checkbox"
+                )
                 
             }
             else if !termsAccepted {
                 
-                selectedTab = 0   // switch to Terms tab
-                showAggremntAcceptMessage = "Please go to Terms & Conditions tab, scroll to the bottom and check the acceptance checkbox"
-                showAggremntAcceptError = true
+                switchToAgreementTabAndShowAlert(
+                    tab: 0,
+                    message: "Please go to Terms & Conditions tab, scroll to the bottom and check the acceptance checkbox"
+                )
                 
             }
             else if !privacyAccepted {
                 
-                selectedTab = 1   // switch to Privacy tab
-                showAggremntAcceptMessage = "Please go to Privacy Policy tab, scroll to the bottom and check the acceptance checkbox"
-                showAggremntAcceptError = true
+                switchToAgreementTabAndShowAlert(
+                    tab: 1,
+                    message: "Please go to Privacy Policy tab, scroll to the bottom and check the acceptance checkbox"
+                )
                 
             }
         else{
@@ -455,6 +448,16 @@ struct UserAgreementScreen: View {
         }
     }
 
+    private func switchToAgreementTabAndShowAlert(tab: Int, message: String) {
+        showAggremntAcceptError = false
+        showAggremntAcceptMessage = message
+        selectedTab = tab
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            showAggremntAcceptError = true
+        }
+    }
+
     private func updateScrollDownButton(isAtBottom: Bool) {
         guard selectedTab == 0 ? termsLoaded : privacyLoaded else {
             showScrollDownButton = false
@@ -500,6 +503,20 @@ struct UserAgreementScreen: View {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             animateArrow = true
+        }
+    }
+
+    private func resetAgreementScroll(_ proxy: ScrollViewProxy) {
+        let delays: [Double] = [0, 0.05, 0.2]
+
+        for delay in delays {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    proxy.scrollTo("TOP_ANCHOR", anchor: .top)
+                }
+            }
         }
     }
     
@@ -569,6 +586,7 @@ struct UserAgreementScreen: View {
 // MARK: - WebContentView (URL-loading, non-scrolling WKWebView that reports contentHeight)
 struct WebContentView: UIViewRepresentable {
     let urlString: String
+    var isActive: Bool = true
     var onContentHeightChange: ((CGFloat) -> Void)? = nil
     var onLoadingStateChange: ((Bool) -> Void)? = nil
     var onLoadFinished: (() -> Void)? = nil
@@ -602,6 +620,17 @@ struct WebContentView: UIViewRepresentable {
             context.coordinator.loadedURL = urlString
             uiView.load(URLRequest(url: url))
         }
+
+        if context.coordinator.isActive != isActive {
+            context.coordinator.isActive = isActive
+            if isActive {
+                uiView.scrollView.setContentOffset(.zero, animated: false)
+                uiView.setNeedsLayout()
+                uiView.layoutIfNeeded()
+                uiView.setNeedsDisplay()
+                uiView.evaluateJavaScript("window.scrollTo(0, 0);", completionHandler: nil)
+            }
+        }
     }
 
     class Coordinator: NSObject, WKNavigationDelegate {
@@ -609,6 +638,7 @@ struct WebContentView: UIViewRepresentable {
         var onLoadingStateChange: ((Bool) -> Void)?
         var onLoadFinished: (() -> Void)?
         var loadedURL: String?
+        var isActive = true
         private var didReportLoadFinished = false
         private var lastMeasuredHeight: CGFloat = 0
         private var stableMeasurementCount = 0
