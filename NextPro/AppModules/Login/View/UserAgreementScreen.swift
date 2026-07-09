@@ -115,7 +115,7 @@ struct UserAgreementScreen: View {
                                             }
                                         )
                                         .frame(height: termsContentHeight)
-                                        .opacity(termsLoaded ? 1 : 0)
+                                        .opacity(selectedTab == 0 && termsLoaded ? 1 : 0)
                                         .frame(height: selectedTab == 0 ? termsContentHeight : 1)
                                         .clipped()
 
@@ -139,7 +139,7 @@ struct UserAgreementScreen: View {
                                             }
                                         )
                                         .frame(height: privacyContentHeight)
-                                        .opacity(privacyLoaded ? 1 : 0)
+                                        .opacity(selectedTab == 1 && privacyLoaded ? 1 : 0)
                                         .frame(height: selectedTab == 1 ? privacyContentHeight : 1)
                                         .clipped()
                                     }
