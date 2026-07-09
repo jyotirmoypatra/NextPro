@@ -44,13 +44,15 @@ struct UserAgreementScreen: View {
     @State private var privacyContentHeight: CGFloat = 300
     @State private var showWebContent = false
 
-    // private let termsURL = APIConfig.Web.privacy
-     private let termsURL = "https://b115-103-75-162-119.ngrok-free.app/privacy/privacy.html"
-   //  private let privacyURL = APIConfig.Web.terms
-     private let privacyURL = "https://b115-103-75-162-119.ngrok-free.app/privacy/privacy.html"
+     private let termsURL = APIConfig.Web.terms
+    // private let termsURL = "https://844c-103-75-162-119.ngrok-free.app/privacy/terms.html"
+     private let privacyURL = APIConfig.Web.privacy
+   // private let privacyURL = "https://844c-103-75-162-119.ngrok-free.app/privacy/privacy.html"
 
     @State private var showScrollDownButton = true
     @State private var animateArrow = false
+    @State private var arrowAnimationID = 0
+    @State private var isAutoScrollingToBottom = false
     
     private let scrollSpaceName = "AgreementScroll"
     
@@ -102,13 +104,19 @@ struct UserAgreementScreen: View {
                                                     termsContentHeight = clamped
                                                 }
                                             },
+                                            onLoadingStateChange: { isLoading in
+                                                termsLoaded = !isLoading
+                                                if isLoading {
+                                                    termsUnlocked = false
+                                                }
+                                            },
                                             onLoadFinished: {
                                                 termsLoaded = true
                                             }
                                         )
                                         .frame(height: termsContentHeight)
-                                        .opacity(selectedTab == 0 ? 1 : 0)
-                                        .frame(height: selectedTab == 0 ? termsContentHeight : 0)
+                                        .opacity(termsLoaded ? 1 : 0)
+                                        .frame(height: selectedTab == 0 ? termsContentHeight : 1)
                                         .clipped()
 
                                         // Privacy WebView (always in hierarchy, hidden when not active)
@@ -120,13 +128,19 @@ struct UserAgreementScreen: View {
                                                     privacyContentHeight = clamped
                                                 }
                                             },
+                                            onLoadingStateChange: { isLoading in
+                                                privacyLoaded = !isLoading
+                                                if isLoading {
+                                                    privacyUnlocked = false
+                                                }
+                                            },
                                             onLoadFinished: {
                                                 privacyLoaded = true
                                             }
                                         )
                                         .frame(height: privacyContentHeight)
-                                        .opacity(selectedTab == 1 ? 1 : 0)
-                                        .frame(height: selectedTab == 1 ? privacyContentHeight : 0)
+                                        .opacity(privacyLoaded ? 1 : 0)
+                                        .frame(height: selectedTab == 1 ? privacyContentHeight : 1)
                                         .clipped()
                                     }
 
@@ -137,7 +151,7 @@ struct UserAgreementScreen: View {
                                         DispatchQueue.main.async {
                                             if currentLoaded {
                                                 let reachedBottom = frame.minY < UIScreen.main.bounds.height + 20
-                                                showScrollDownButton = !reachedBottom
+                                                updateScrollDownButton(isAtBottom: reachedBottom)
                                                 if selectedTab == 0 {
                                                     if reachedBottom && !termsUnlocked { termsUnlocked = true }
                                                 } else {
@@ -188,14 +202,19 @@ struct UserAgreementScreen: View {
                             .scrollIndicators(.hidden)
                             .coordinateSpace(name: scrollSpaceName)
                             .onChange(of: selectedTab) { _ in
-                                withAnimation(.easeInOut) {
-                                    proxy.scrollTo("TOP_ANCHOR", anchor: .top)
+                                proxy.scrollTo("TOP_ANCHOR", anchor: .top)
+                                if selectedTab == 0 ? termsLoaded : privacyLoaded {
+                                    restartScrollDownAnimation()
+                                } else {
+                                    showScrollDownButton = false
+                                    animateArrow = false
                                 }
                             }
                             
                             .overlay(alignment: .bottomTrailing) {
 
-                                if showScrollDownButton {
+                                let currentLoaded = selectedTab == 0 ? termsLoaded : privacyLoaded
+                                if showScrollDownButton && currentLoaded {
 
                                     Circle()
                                         .fill(Color.white)
@@ -205,7 +224,7 @@ struct UserAgreementScreen: View {
                                                 .font(.system(size: 16, weight: .bold))
                                                 .foregroundColor(.black)
                                         }
-                                        .shadow(color: .black.opacity(0.3), radius: 8)
+                                        .shadow(color: .black.opacity(0.5), radius: 8)
                                         .offset(y: animateArrow ? 5 : -5)
                                         .padding(.trailing, 18)
                                         .padding(.bottom, 20)
@@ -213,8 +232,19 @@ struct UserAgreementScreen: View {
                                         .allowsHitTesting(true)
                                         .highPriorityGesture(
                                             TapGesture().onEnded {
+                                                isAutoScrollingToBottom = true
+                                                showScrollDownButton = false
+                                                animateArrow = false
                                                 withAnimation(.easeInOut(duration: 0.8)) {
                                                     proxy.scrollTo("BOTTOM_ANCHOR", anchor: .bottom)
+                                                }
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.85) {
+                                                    withAnimation(.easeInOut(duration: 0.25)) {
+                                                        proxy.scrollTo("BOTTOM_ANCHOR", anchor: .bottom)
+                                                    }
+                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                        isAutoScrollingToBottom = false
+                                                    }
                                                 }
                                             }
                                         )
@@ -227,6 +257,7 @@ struct UserAgreementScreen: View {
                                             value: animateArrow
                                         )
                                         .transition(.scale.combined(with: .opacity))
+                                        .id(arrowAnimationID)
                                         .zIndex(9999)
                                 }
                             }
@@ -345,17 +376,6 @@ struct UserAgreementScreen: View {
     }
    
     func AcceptAggrementCall() {
-//        if !termsAccepted && !privacyAccepted {
-//                showAggremntAcceptMessage = "Please read and accept both. Go to each tab and scroll to the bottom and check the acceptance checkbox"
-//                showAggremntAcceptError = true
-//            } else if !termsAccepted {
-//                showAggremntAcceptMessage = "Please go to Terms & Conditions tab, scroll to the bottom and check the acceptance checkbox"
-//                showAggremntAcceptError = true
-//            } else if !privacyAccepted {
-//                showAggremntAcceptMessage = "Please go to Privacy Policy tab, scroll to the bottom and check the acceptance checkbox"
-//                showAggremntAcceptError = true
-//            }
-        
         
             if !termsAccepted && !privacyAccepted {
                 
@@ -423,20 +443,58 @@ struct UserAgreementScreen: View {
             
             await loginVM.login()
             if loginVM.loginSuccess {
-                // Replace the root window with a fresh ContentView.
-                // is_logged_in = true is already set inside loginVM.login(), so
-                // the new ContentView routes directly to HomeView.
-                //
-                // We MUST NOT use navigationDestination here — doing so while
-                // UserAgreementScreen is still in the hierarchy (even with a delay)
-                // creates a ghost HomeView that:
-                //   1. Prevents logout from navigating back to LoginView.
-                //   2. Spawns a duplicate DoorOpenView whose onDisappear resets
-                //      DoorManager.isMQTTWindowActive → MQTT events are dropped.
                 KeychainManager.shared.resetToLogin()
             } else {
                 showLoginError = true
             }
+        }
+    }
+
+    private func updateScrollDownButton(isAtBottom: Bool) {
+        guard selectedTab == 0 ? termsLoaded : privacyLoaded else {
+            showScrollDownButton = false
+            animateArrow = false
+            return
+        }
+
+        if isAutoScrollingToBottom && !isAtBottom {
+            showScrollDownButton = false
+            animateArrow = false
+            return
+        }
+
+        if isAtBottom {
+            isAutoScrollingToBottom = false
+        }
+
+        let shouldShowButton = !isAtBottom
+
+        if showScrollDownButton != shouldShowButton {
+            showScrollDownButton = shouldShowButton
+
+            if shouldShowButton {
+                restartScrollDownAnimation()
+            } else {
+                animateArrow = false
+            }
+        } else if shouldShowButton && !animateArrow {
+            restartScrollDownAnimation()
+        }
+    }
+
+    private func restartScrollDownAnimation() {
+        guard selectedTab == 0 ? termsLoaded : privacyLoaded else {
+            showScrollDownButton = false
+            animateArrow = false
+            return
+        }
+
+        showScrollDownButton = true
+        animateArrow = false
+        arrowAnimationID += 1
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            animateArrow = true
         }
     }
     
@@ -507,10 +565,15 @@ struct UserAgreementScreen: View {
 struct WebContentView: UIViewRepresentable {
     let urlString: String
     var onContentHeightChange: ((CGFloat) -> Void)? = nil
+    var onLoadingStateChange: ((Bool) -> Void)? = nil
     var onLoadFinished: (() -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onContentHeightChange: onContentHeightChange, onLoadFinished: onLoadFinished)
+        Coordinator(
+            onContentHeightChange: onContentHeightChange,
+            onLoadingStateChange: onLoadingStateChange,
+            onLoadFinished: onLoadFinished
+        )
     }
 
     func makeUIView(context: Context) -> WKWebView {
@@ -538,28 +601,135 @@ struct WebContentView: UIViewRepresentable {
 
     class Coordinator: NSObject, WKNavigationDelegate {
         var onContentHeightChange: ((CGFloat) -> Void)?
+        var onLoadingStateChange: ((Bool) -> Void)?
         var onLoadFinished: (() -> Void)?
         var loadedURL: String?
+        private var didReportLoadFinished = false
+        private var lastMeasuredHeight: CGFloat = 0
+        private var stableMeasurementCount = 0
 
-        init(onContentHeightChange: ((CGFloat) -> Void)?, onLoadFinished: (() -> Void)?) {
+        init(
+            onContentHeightChange: ((CGFloat) -> Void)?,
+            onLoadingStateChange: ((Bool) -> Void)?,
+            onLoadFinished: (() -> Void)?
+        ) {
             self.onContentHeightChange = onContentHeightChange
+            self.onLoadingStateChange = onLoadingStateChange
             self.onLoadFinished = onLoadFinished
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            webView.evaluateJavaScript("document.body.scrollHeight") { result, _ in
+            didReportLoadFinished = false
+            lastMeasuredHeight = 0
+            stableMeasurementCount = 0
+            onLoadingStateChange?(true)
+            applyMobileDocumentFixes(to: webView)
+            measureContentHeight(in: webView, attempt: 0)
+        }
+
+        private func measureContentHeight(in webView: WKWebView, attempt: Int) {
+            let script = """
+            (function() {
+                var body = document.body || {};
+                var doc = document.documentElement || {};
+                return Math.max(
+                    body.scrollHeight || 0,
+                    body.offsetHeight || 0,
+                    doc.clientHeight || 0,
+                    doc.scrollHeight || 0,
+                    doc.offsetHeight || 0
+                );
+            })();
+            """
+
+            webView.evaluateJavaScript(script) { result, _ in
                 let height: CGFloat
                 if let h = result as? CGFloat { height = h }
                 else if let h = result as? Double { height = CGFloat(h) }
                 else { return }
                 DispatchQueue.main.async {
+                    let heightDelta = abs(height - self.lastMeasuredHeight)
+                    if heightDelta < 1 {
+                        self.stableMeasurementCount += 1
+                    } else {
+                        self.stableMeasurementCount = 0
+                        if heightDelta > 20 {
+                            self.didReportLoadFinished = false
+                            self.onLoadingStateChange?(true)
+                        }
+                    }
+                    self.lastMeasuredHeight = height
+
                     self.onContentHeightChange?(height)
-                    self.onLoadFinished?()
+                    let hasStableHeight = attempt >= 10 && self.stableMeasurementCount >= 3
+                    let isFinalAttempt = attempt >= 25
+                    if !self.didReportLoadFinished && (hasStableHeight || isFinalAttempt) {
+                        self.didReportLoadFinished = true
+                        self.onLoadingStateChange?(false)
+                        self.onLoadFinished?()
+                    }
+
+                    guard attempt < 25 else { return }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        self.applyMobileDocumentFixes(to: webView)
+                        self.measureContentHeight(in: webView, attempt: attempt + 1)
+                    }
                 }
             }
         }
+
+        private func applyMobileDocumentFixes(to webView: WKWebView) {
+            let script = """
+            (function() {
+                if (document.getElementById('nextpro-agreement-webview-fixes')) { return; }
+
+                var style = document.createElement('style');
+                style.id = 'nextpro-agreement-webview-fixes';
+                style.textContent = `
+                    html, body {
+                        width: 100% !important;
+                        min-width: 0 !important;
+                        overflow-x: hidden !important;
+                    }
+
+                    body {
+                        margin: 0 !important;
+                    }
+
+                    app-root,
+                    main,
+                    section,
+                    article,
+                    div,
+                    h1,
+                    h2,
+                    h3,
+                    p,
+                    ul,
+                    ol {
+                        max-width: 100% !important;
+                    }
+
+                    table {
+                        width: 100% !important;
+                        max-width: 100% !important;
+                        table-layout: fixed !important;
+                    }
+
+                    td,
+                    th,
+                    span,
+                    p,
+                    li {
+                        overflow-wrap: anywhere !important;
+                        word-break: normal !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            })();
+            """
+
+            webView.evaluateJavaScript(script, completionHandler: nil)
+        }
     }
 }
-
-
-
