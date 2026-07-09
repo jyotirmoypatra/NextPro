@@ -170,19 +170,22 @@ struct UserAgreementScreen: View {
                                         : (privacyLoaded && privacyUnlocked)
 
                                     if showCheckbox {
+                                        let isCurrentAccepted = selectedTab == 0 ? termsAccepted : privacyAccepted
+                                        let checkboxColor = isCurrentAccepted ? Color.black : Color.init(hex: "#383838")
+
                                         Divider().background(Color.black.opacity(0.15))
                                         HStack {
                                             Button(action: {
                                                 if selectedTab == 0 { termsAccepted.toggle() } else { privacyAccepted.toggle() }
                                             }) {
-                                                Image(systemName: (selectedTab == 0 ? termsAccepted : privacyAccepted) ? "checkmark.square.fill" : "square")
+                                                Image(systemName: isCurrentAccepted ? "checkmark.square.fill" : "square")
                                                     .font(.system(size: 30))
-                                                    .foregroundColor(.black)
+                                                    .foregroundColor(checkboxColor)
                                             }
                                             Text(selectedTab == 0 ?
                                                  "I have read and accept the Terms & Conditions" :
                                                  "I have read and accept the Privacy Policy")
-                                                .foregroundColor(.black)
+                                                .foregroundColor(checkboxColor)
                                                 .font(.custom("Inter-Bold", size: 15))
                                             Spacer()
                                         }
@@ -609,6 +612,7 @@ struct WebContentView: UIViewRepresentable {
         private var didReportLoadFinished = false
         private var lastMeasuredHeight: CGFloat = 0
         private var stableMeasurementCount = 0
+        private var lastNavigation: WKNavigation?
 
         init(
             onContentHeightChange: ((CGFloat) -> Void)?,
@@ -620,13 +624,28 @@ struct WebContentView: UIViewRepresentable {
             self.onLoadFinished = onLoadFinished
         }
 
+        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+            resetLoadingState(navigation: navigation)
+        }
+
+        func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+            resetLoadingState(navigation: navigation)
+        }
+
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            didReportLoadFinished = false
-            lastMeasuredHeight = 0
-            stableMeasurementCount = 0
-            onLoadingStateChange?(true)
+            resetLoadingState(navigation: navigation)
             applyMobileDocumentFixes(to: webView)
             measureContentHeight(in: webView, attempt: 0)
+        }
+
+        private func resetLoadingState(navigation: WKNavigation?) {
+            if lastNavigation !== navigation {
+                lastNavigation = navigation
+                didReportLoadFinished = false
+                lastMeasuredHeight = 0
+                stableMeasurementCount = 0
+            }
+            onLoadingStateChange?(true)
         }
 
         private func measureContentHeight(in webView: WKWebView, attempt: Int) {
@@ -634,21 +653,39 @@ struct WebContentView: UIViewRepresentable {
             (function() {
                 var body = document.body || {};
                 var doc = document.documentElement || {};
-                return Math.max(
+                var height = Math.max(
                     body.scrollHeight || 0,
                     body.offsetHeight || 0,
                     doc.clientHeight || 0,
                     doc.scrollHeight || 0,
                     doc.offsetHeight || 0
                 );
+
+                return {
+                    height: height,
+                    textLength: (body.innerText || '').trim().length,
+                    readyState: document.readyState
+                };
             })();
             """
 
             webView.evaluateJavaScript(script) { result, _ in
                 let height: CGFloat
-                if let h = result as? CGFloat { height = h }
-                else if let h = result as? Double { height = CGFloat(h) }
-                else { return }
+                let textLength: Int
+                let isDocumentComplete: Bool
+                if let result = result as? [String: Any] {
+                    if let h = result["height"] as? CGFloat { height = h }
+                    else if let h = result["height"] as? Double { height = CGFloat(h) }
+                    else { return }
+
+                    if let length = result["textLength"] as? Int { textLength = length }
+                    else if let length = result["textLength"] as? Double { textLength = Int(length) }
+                    else { textLength = 0 }
+
+                    isDocumentComplete = (result["readyState"] as? String) == "complete"
+                } else {
+                    return
+                }
                 DispatchQueue.main.async {
                     let heightDelta = abs(height - self.lastMeasuredHeight)
                     if heightDelta < 1 {
@@ -663,9 +700,10 @@ struct WebContentView: UIViewRepresentable {
                     self.lastMeasuredHeight = height
 
                     self.onContentHeightChange?(height)
-                    let hasStableHeight = attempt >= 10 && self.stableMeasurementCount >= 3
+                    let hasStableHeight = attempt >= 12 && self.stableMeasurementCount >= 4
+                    let hasRenderedContent = textLength > 100
                     let isFinalAttempt = attempt >= 25
-                    if !self.didReportLoadFinished && (hasStableHeight || isFinalAttempt) {
+                    if !self.didReportLoadFinished && ((hasStableHeight && hasRenderedContent && isDocumentComplete) || isFinalAttempt) {
                         self.didReportLoadFinished = true
                         self.onLoadingStateChange?(false)
                         self.onLoadFinished?()

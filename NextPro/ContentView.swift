@@ -37,20 +37,24 @@ struct ContentView: View {
                 
             } else {
                
+                UserAgreementScreen()
+                    .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
+                
                    
-                    if isLoggedIn {
-
-                        HomeView(
-                            isAdmin: deviceManagementRead || deviceManagementWrite,
-                            initialTab: homeInitialTab
-                        )
-                            .navigationBarBackButtonHidden(true)
-                            .navigationBarHidden(true)
-                    } else {
-                        LoginView(isUserInitialSetupCompleted: isUserInitialSetupDone)
-                            .navigationBarBackButtonHidden(true)
-                            .navigationBarHidden(true)
-                    }
+//                    if isLoggedIn {
+//
+//                        HomeView(
+//                            isAdmin: deviceManagementRead || deviceManagementWrite,
+//                            initialTab: homeInitialTab
+//                        )
+//                            .navigationBarBackButtonHidden(true)
+//                            .navigationBarHidden(true)
+//                    } else {
+//                        LoginView(isUserInitialSetupCompleted: isUserInitialSetupDone)
+//                            .navigationBarBackButtonHidden(true)
+//                            .navigationBarHidden(true)
+//                    }
                
                 }
                 
