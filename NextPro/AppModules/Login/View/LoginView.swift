@@ -420,21 +420,6 @@ struct LoginView: View {
             }
             
             .navigationDestination(isPresented: $navigateToHome) {
-//                if isAdmin {
-//                   HomeViewAdmin()
-//                   // OnboardPageDeviceScanView()
-//                  //  HomeViewEndUser()
-//                    
-//                        .navigationBarBackButtonHidden(true)
-//                        .navigationBarHidden(true)
-//                }
-//                else {
-//                   
-//                    HomeViewEndUser()
-//                    //OnboardPageDeviceScanView()
-//                        .navigationBarBackButtonHidden(true)
-//                        .navigationBarHidden(true)
-//                }
                 
                 HomeView(isAdmin: isAdmin, initialTab: 0)
                     .navigationBarBackButtonHidden(true)

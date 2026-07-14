@@ -242,3 +242,24 @@ struct HomeView: View {
             }
         }
 }
+
+
+struct TabBarItemUser: View {
+    var title: String
+    var activeIcon: String
+    var inactiveIcon: String
+    var isSelected: Bool
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(isSelected ? activeIcon : inactiveIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
+
+            Text(title)
+                .font(.caption)
+                .foregroundColor(isSelected ? .white : .gray)
+        }
+    }
+}

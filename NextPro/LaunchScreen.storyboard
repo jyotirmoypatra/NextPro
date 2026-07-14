@@ -29,10 +29,20 @@
                                             <constraint firstAttribute="width" constant="315" id="uwD-Y0-QOm"/>
                                         </constraints>
                                     </imageView>
+                                    <view opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="QxB-W7-vMx">
+	                                        <rect key="frame" x="10" y="822" width="373" height="0.0"/>
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" id="osU-3Z-buN"/>
+                                        </constraints>
+                                    </view>
                                 </subviews>
-                                <color key="backgroundColor" white="0.0" alpha="0.90448943661971826" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+	                                <color key="backgroundColor" white="0.0" alpha="0.90000000000000002" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstItem="DeH-zl-Fuh" firstAttribute="centerY" secondItem="aLn-Ms-jW3" secondAttribute="centerY" id="75s-te-47b"/>
+                                    <constraint firstItem="QxB-W7-vMx" firstAttribute="leading" secondItem="aLn-Ms-jW3" secondAttribute="leading" constant="10" id="Jc9-bw-DNn"/>
+	                                    <constraint firstAttribute="bottom" secondItem="QxB-W7-vMx" secondAttribute="bottom" constant="30" id="UzP-bU-1Wt"/>
+                                    <constraint firstAttribute="trailing" secondItem="QxB-W7-vMx" secondAttribute="trailing" constant="10" id="fQu-CW-lwT"/>
                                     <constraint firstItem="DeH-zl-Fuh" firstAttribute="centerX" secondItem="aLn-Ms-jW3" secondAttribute="centerX" id="qDM-0o-vph"/>
                                 </constraints>
                             </view>
@@ -40,13 +50,13 @@
                         <viewLayoutGuide key="safeArea" id="Bcu-3y-fUS"/>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="aLn-Ms-jW3" firstAttribute="leading" secondItem="Bcu-3y-fUS" secondAttribute="leading" id="AHl-W5-fD5"/>
-                            <constraint firstItem="aLn-Ms-jW3" firstAttribute="trailing" secondItem="Bcu-3y-fUS" secondAttribute="trailing" id="HyU-Tc-cZ5"/>
+                            <constraint firstItem="aLn-Ms-jW3" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="AHl-W5-fD5"/>
+                            <constraint firstAttribute="trailing" secondItem="aLn-Ms-jW3" secondAttribute="trailing" id="HyU-Tc-cZ5"/>
                             <constraint firstItem="aLn-Ms-jW3" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="Jx0-EI-Ko8"/>
                             <constraint firstAttribute="bottom" secondItem="aLn-Ms-jW3" secondAttribute="bottom" id="at7-54-7jW"/>
-                            <constraint firstItem="BkD-Le-Gnv" firstAttribute="trailing" secondItem="Bcu-3y-fUS" secondAttribute="trailing" id="fq2-zh-eIp"/>
+                            <constraint firstAttribute="trailing" secondItem="BkD-Le-Gnv" secondAttribute="trailing" id="fq2-zh-eIp"/>
                             <constraint firstAttribute="bottom" secondItem="BkD-Le-Gnv" secondAttribute="bottom" id="i2q-7m-3IX"/>
-                            <constraint firstItem="BkD-Le-Gnv" firstAttribute="leading" secondItem="Bcu-3y-fUS" secondAttribute="leading" id="sar-te-fwq"/>
+                            <constraint firstItem="BkD-Le-Gnv" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="sar-te-fwq"/>
                             <constraint firstItem="BkD-Le-Gnv" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="uRi-yA-4xh"/>
                         </constraints>
                     </view>

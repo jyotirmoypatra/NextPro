@@ -37,8 +37,8 @@ struct SplashScreen: View {
                 ZStack {
                     Image("zylx")
                      .resizable()
+                     .scaledToFit()
                      .frame(width: 315, height: 120)
-                     .padding(.bottom,40)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
