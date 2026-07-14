@@ -10,7 +10,8 @@ import Foundation
 
 struct APIConfig {
     
-    // MARK: - Base URL
+static let isProduction = true
+    
 static let baseURL = "https://devapi.nextprotechnologies.com"
 //static let baseURL = "https://stageapi.nextprotechnologies.com"
     
