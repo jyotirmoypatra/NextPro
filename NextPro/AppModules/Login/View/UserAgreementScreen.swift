@@ -175,7 +175,7 @@ struct UserAgreementScreen: View {
                                         let isCurrentAccepted = selectedTab == 0 ? termsAccepted : privacyAccepted
                                         let checkboxColor = isCurrentAccepted ? Color.black : Color.init(hex: "#383838")
 
-                                        Divider().background(Color.black.opacity(0.15))
+                                        Divider().background(Color.black.opacity(0.2))
                                         HStack {
                                             Button(action: {
                                                 if selectedTab == 0 { termsAccepted.toggle() } else { privacyAccepted.toggle() }
@@ -185,8 +185,8 @@ struct UserAgreementScreen: View {
                                                     .foregroundColor(checkboxColor)
                                             }
                                             Text(selectedTab == 0 ?
-                                                 "I have read and accept the Terms & Conditions" :
-                                                 "I have read and accept the Privacy Policy")
+                                                 "I have read and agree to the ZYLX Terms & Conditions" :
+                                                 "I have read and agree to the ZYLX Privacy Policy")
                                                 .foregroundColor(checkboxColor)
                                                 .font(.custom("Inter-Bold", size: 15))
                                             Spacer()
@@ -223,12 +223,12 @@ struct UserAgreementScreen: View {
                                 if showScrollDownButton && currentLoaded {
 
                                     Circle()
-                                        .fill(Color.white)
+                                        .fill(Color.black)
                                         .frame(width: 30, height: 30)
                                         .overlay {
                                             Image(systemName: "chevron.down")
                                                 .font(.system(size: 16, weight: .bold))
-                                                .foregroundColor(.black)
+                                                .foregroundColor(.white)
                                         }
                                         .shadow(color: .black.opacity(0.5), radius: 8)
                                         .offset(y: animateArrow ? 5 : -5)
@@ -272,14 +272,32 @@ struct UserAgreementScreen: View {
                         // Spinner — shown while active tab's page is still loading
                         let isCurrentTabLoading = selectedTab == 0 ? !termsLoaded : !privacyLoaded
                         if isCurrentTabLoading && showWebContent {
-                            VStack {
-                                Spacer()
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .black))
-                                    .scaleEffect(1.4)
-                                Spacer()
+//                            VStack {
+//                                Spacer()
+//                                ProgressView()
+//                                    .progressViewStyle(CircularProgressViewStyle(tint: .black))
+//                                    .scaleEffect(1.4)
+//                                Spacer()
+//                            }
+//                            .frame(maxWidth: .infinity)
+                            
+                            ZStack {
+
+                                VStack(spacing: 16) {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                                        .scaleEffect(1.8)
+                                   
+                                    Text(selectedTab == 0
+                                         ? "Loading Terms & Conditions..."
+                                         : "Loading Privacy Policy...")
+                                        .font(.custom("Inter-Medium", size: 16))
+                                        .foregroundColor(.black.opacity(0.7))
+                                    
+                                }
                             }
-                            .frame(maxWidth: .infinity)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .ignoresSafeArea()
                         }
                     }
                    // .background(Color(hex: "#242424"))
