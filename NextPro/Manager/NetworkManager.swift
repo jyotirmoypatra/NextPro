@@ -114,6 +114,10 @@ class NetworkManager: ObservableObject {
 
     func requestSessionExpiredAlert() {
         DispatchQueue.main.async {
+            guard self.isAuthenticatedSessionActive else {
+                self.resetSessionExpirationState()
+                return
+            }
             guard self.sessionExpirationState == .idle else { return }
             self.sessionExpirationState = .presenting
             self.showSessionExpiredAlert = true
@@ -132,6 +136,12 @@ class NetworkManager: ObservableObject {
             self.sessionExpirationState = .idle
             self.showSessionExpiredAlert = false
         }
+    }
+
+    private var isAuthenticatedSessionActive: Bool {
+        guard UserDefaults.standard.bool(forKey: "is_logged_in") else { return false }
+        guard let token = KeychainManager.shared.get("access_token"), !token.isEmpty else { return false }
+        return true
     }
     
     // MARK: - Generic Authorized Request Executor

@@ -10,12 +10,9 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var showSplash = true
- //   @State private var isLoggedIn = false
     @AppStorage("is_admin") private var isAdmin = false
     @AppStorage("device_management_read") private var deviceManagementRead = false
     @AppStorage("device_management_write") private var deviceManagementWrite = false
-   // @State private var isUserInitialSetupDone = false
-   // @State private var viewRefreshID = UUID()
     
     @AppStorage("is_logged_in") private var isLoggedIn = false
     @AppStorage("isUserInitialSetupCompleted") private var isUserInitialSetupDone = false
@@ -65,6 +62,13 @@ struct ContentView: View {
                             showSplash = false
                         }
                     }
+            
+            if isLoggedIn {
+                ServerTimeService.shared.start(forceImmediate: true)
+            } else {
+                ServerTimeService.shared.stop()
+                networkManager.resetSessionExpirationState()
+            }
         }
 
         
@@ -83,6 +87,10 @@ struct ContentView: View {
         }
         .onChange(of: isLoggedIn) { loggedIn in
             if loggedIn {
+                networkManager.resetSessionExpirationState()
+                ServerTimeService.shared.start(forceImmediate: true)
+            } else {
+                ServerTimeService.shared.stop()
                 networkManager.resetSessionExpirationState()
             }
         }

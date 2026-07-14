@@ -65,6 +65,7 @@ extension ServerTimeService {
 
     private func fetchTime() async {
         guard networkManager.hasInternet else { return }
+        guard UserDefaults.standard.bool(forKey: "is_logged_in") else { return }
         
         // ✅ If user not logged in, don't even try
             guard let token = KeychainManager.shared.get("access_token"),
