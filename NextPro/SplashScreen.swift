@@ -14,13 +14,16 @@ struct SplashScreen: View {
 
             guard !version.isEmpty else { return "" }
 
-            if APIConfig.isProduction {
-                return "Version \(version)"
-            } else {
-                return build.isEmpty
-                    ? "Version \(version)"
-                    : "Version \(version) (\(build))"
-            }
+            
+            switch APIConfig.environment {
+               case .development:
+                   return build.isEmpty
+                       ? "Version \(version)"
+                       : "Version \(version) (\(build))"
+
+               case .staging, .production:
+                   return "Version \(version)"
+               }
         }
     
     

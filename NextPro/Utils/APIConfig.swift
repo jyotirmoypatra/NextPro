@@ -10,10 +10,27 @@ import Foundation
 
 struct APIConfig {
     
-static let isProduction = true
+    enum Environment {
+           case development
+           case staging
+           case production
+    }
+
+  // Change only this line when switching environments
+   static let environment: Environment = .staging
     
-static let baseURL = "https://devapi.nextprotechnologies.com"
-//static let baseURL = "https://stageapi.nextprotechnologies.com"
+    static var baseURL: String {
+        switch environment {
+        case .development:
+            return "https://devapi.nextprotechnologies.com" // Change to your dev API
+
+        case .staging:
+            return "https://stageapi.nextprotechnologies.com" // Change to your stage API
+
+        case .production:
+            return "https://api.nextprotechnologies.com" // Change to your production API
+        }
+    }
     
     // MARK: - Endpoints
     struct Endpoints {
@@ -43,14 +60,39 @@ static let baseURL = "https://devapi.nextprotechnologies.com"
         static let deleteAccount = "/api/facility-user/account/delete/"
     }
     
-    struct Web {
-        static let privacy = "https://dev.nextprotechnologies.com/privacy-policy"
-        static let terms = "https://dev.nextprotechnologies.com/terms-and-conditions"
-    }
-    
-    
-    
     static func url(_ endpoint: String) -> String {
         return baseURL + endpoint
     }
+
+    // MARK: - Legal Doc Url
+    struct Web {
+
+        static var privacy: String {
+            switch APIConfig.environment {
+            case .development:
+                return "https://dev.nextprotechnologies.com/privacy-policy"
+
+            case .staging:
+                return "https://stage.nextprotechnologies.com/privacy-policy"
+
+            case .production:
+                return "https://nextprotechnologies.com/privacy-policy"
+            }
+        }
+
+        static var terms: String {
+            switch APIConfig.environment {
+            case .development:
+                return "https://dev.nextprotechnologies.com/terms-and-conditions"
+
+            case .staging:
+                return "https://stage.nextprotechnologies.com/terms-and-conditions"
+
+            case .production:
+                return "https://nextprotechnologies.com/terms-and-conditions"
+            }
+        }
+    }
+    
+    
 }
