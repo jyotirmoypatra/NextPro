@@ -318,7 +318,7 @@ struct UserManagementView: View {
             AddUserView(
                 editUser: selectedUserForEdit,
                 onDismiss: {
-                    selectedUserForEdit = nil
+                 //   selectedUserForEdit = nil
                     Task {
                         await fetchUserVM.refreshAfterAddOrEditUser()
                         scrollToTop = true

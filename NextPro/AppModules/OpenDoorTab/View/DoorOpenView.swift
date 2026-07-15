@@ -603,22 +603,16 @@ struct DoorOpenView: View {
                     guard hasDigitalKeyAccess else {
                         return
                     }
+                    guard hasAvailableDoor else {
+                        stopAllScanningAndMonitoring()
+                        return
+                    }
                     
                     if !bleManager.isBluetoothOn {
                         isScanningActive = false
                         return
                     }
-                    // Restart BLE scanning with a small delay to ensure everything is ready
-//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//                        guard isViewVisible else {
-//                            return
-//                        }
-//                        bleManager.startContinuousScanning()
-//                        isScanningActive = true
-//                        monitorAndAutoOpenNearbyDoor()
-//                    }
-                    
-                    
+
                     if !isScanningActive || bleManager.devices.isEmpty {
 
                         print("⚠️ BLE inactive after foreground, restarting")
@@ -652,6 +646,10 @@ struct DoorOpenView: View {
                     stopAllScanningAndMonitoring()
                     AceesMessage = "Remote access selected"
                 } else {
+                    guard hasAvailableDoor else {
+                        stopAllScanningAndMonitoring()
+                        return
+                    }
                     guard bleManager.isBluetoothOn else {
                         AceesMessage = "Bluetooth is Off. Please turn it on."
                         return
@@ -700,6 +698,12 @@ struct DoorOpenView: View {
                 default:
                     AceesMessage = "Checking Bluetooth status..."
                 }
+            }
+            .onChange(of: doorStorage.hasDoor) { _ in
+                syncBLEWithDoorAvailability()
+            }
+            .onChange(of: doorStorage.hasResolvedDoors) { _ in
+                syncBLEWithDoorAvailability()
             }
         
         
@@ -781,9 +785,7 @@ struct DoorOpenView: View {
                             overlayMessage = accessGrantedMessage
                             speakAndReset(accessGrantedMessage + " - " + accessGreetingMessage) {
                                 guard !self.isScanningActive else { return }
-                                self.bleManager.startContinuousScanning()
-                                self.isScanningActive = true
-                                self.monitorAndAutoOpenNearbyDoor()
+                                self.startBLEIfPossible()
                             }
                         }
                         
@@ -806,9 +808,7 @@ struct DoorOpenView: View {
                             overlayMessage = accessGrantedMessage
                             speakAndReset(accessGrantedMessage + " - " + accessGreetingMessage) {
                                 guard !self.isScanningActive else { return }
-                                self.bleManager.startContinuousScanning()
-                                self.isScanningActive = true
-                                self.monitorAndAutoOpenNearbyDoor()
+                                self.startBLEIfPossible()
                             }
                         }
                     }
@@ -850,9 +850,7 @@ struct DoorOpenView: View {
                                 : accessDeniedMessage
                             speakAndReset(deniedSpeech) {
                                 guard !self.isScanningActive else { return }
-                                self.bleManager.startContinuousScanning()
-                                self.isScanningActive = true
-                                self.monitorAndAutoOpenNearbyDoor()
+                                self.startBLEIfPossible()
                             }
                         }
                         
@@ -1110,6 +1108,10 @@ struct DoorOpenView: View {
                     guard selectedTab == 0 else { return }
                     // If scanning already running → do nothing
                     guard !isScanningActive else { return }
+                    guard hasAvailableDoor else {
+                        stopAllScanningAndMonitoring()
+                        return
+                    }
                     guard bleManager.isBluetoothOn else {
                         AceesMessage = "Bluetooth is Off. Please turn it on."
                         return
@@ -1141,6 +1143,22 @@ struct DoorOpenView: View {
         isProcessingDoor = false
     }
     
+    private var hasAvailableDoor: Bool {
+        doorStorage.hasResolvedDoors && doorStorage.hasDoor
+    }
+    
+    private func syncBLEWithDoorAvailability() {
+        guard selectedTab == 0 else { return }
+        guard hasDigitalKeyAccess else { return }
+        guard doorStorage.hasResolvedDoors else { return }
+        
+        if doorStorage.hasDoor {
+            startBLEIfPossible()
+        } else {
+            stopAllScanningAndMonitoring()
+        }
+    }
+    
     
     private func startBLEIfPossible() {
         
@@ -1152,6 +1170,10 @@ struct DoorOpenView: View {
         guard isViewVisible else { return }
         guard selectedTab == 0 else { return }
         guard hasDigitalKeyAccess else { return }
+        guard hasAvailableDoor else {
+            stopAllScanningAndMonitoring()
+            return
+        }
         guard bleManager.isBluetoothOn else { return }
         
         print("🟢 Starting BLE scanning")
@@ -1195,6 +1217,10 @@ struct DoorOpenView: View {
             guard isViewVisible else { return }
             guard selectedTab == 0 else { return }
             guard hasDigitalKeyAccess else { return }
+            guard hasAvailableDoor else {
+                stopAllScanningAndMonitoring()
+                return
+            }
 
             guard bleManager.isBluetoothOn else {
                 print("⚠️ BLE not ready yet (attempt \(retryIndex + 1)/\(delays.count)), retrying...")
@@ -1497,6 +1523,11 @@ struct DoorOpenView: View {
                 timer.invalidate()
                 return
             }
+            guard doorStorage.hasResolvedDoors && doorStorage.hasDoor else {
+                timer.invalidate()
+                stopAllScanningAndMonitoring()
+                return
+            }
             
             //  wait until current process finishes
             guard !isProcessingDoor else { return }
@@ -1523,11 +1554,6 @@ struct DoorOpenView: View {
                 
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 isScanningActive = false
-                //                bleManager.stopScanning()
-                //                bleManager.stopMonitoringDevice()
-                //                timer.invalidate()
-                //                rssiTimer = nil
-                
                 stopAllScanningAndMonitoring()
                 
                 guard isWithinAccessWindow(accessGroups: door.accessGroups) else {
@@ -1539,9 +1565,7 @@ struct DoorOpenView: View {
                         UINotificationFeedbackGenerator().notificationOccurred(.error)
                         speakAndReset(door.name + ". " + deniedBase + ". Time Restricted") {
                             guard !isScanningActive else { return }
-                            bleManager.startContinuousScanning()
-                            isScanningActive = true
-                            monitorAndAutoOpenNearbyDoor()
+                            startBLEIfPossible()
                         }
                     }
                     return
@@ -1553,19 +1577,13 @@ struct DoorOpenView: View {
                 // Fallback: restart if MQTT never fires (voice-completion path handles the normal case)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 11.0) {
                     guard !isScanningActive else { return }
-                    bleManager.startContinuousScanning()
-                    isScanningActive = true
-                    monitorAndAutoOpenNearbyDoor()
+                    startBLEIfPossible()
                 }
             }
             else {
                 //  Unauthorized Thimmo device
                 print("🚫 Unauthorized Thimmo device nearby: \(name)")
                 stopAllScanningAndMonitoring()
-                //                bleManager.stopScanning()
-                //                bleManager.stopMonitoringDevice()
-                //                timer.invalidate()
-                //                rssiTimer = nil
                 doorName = ""
                 doorId = nil
                 updateVoiceMessages(for: "")
@@ -1586,9 +1604,7 @@ struct DoorOpenView: View {
                     UINotificationFeedbackGenerator().notificationOccurred(.error)
                     speakAndReset(accessUnAuthorizedMessage) {
                         guard !isScanningActive else { return }
-                        bleManager.startContinuousScanning()
-                        isScanningActive = true
-                        monitorAndAutoOpenNearbyDoor()
+                        startBLEIfPossible()
                     }
                 }
             }
