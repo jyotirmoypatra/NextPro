@@ -15,9 +15,11 @@ struct CreateNewPasswordView: View {
     // var userType: String
     var userName: String
     var comingFrom: String
+    var isAggremntAccepted: Bool? 
     @Environment(\.dismiss) private var dismiss
     @StateObject var network = NetworkManager.shared
     @StateObject private var viewModel = CreateNewPasswordViewModel()
+    @StateObject private var loginViewModel = LoginViewModel()
     @StateObject private var toastManager = ToastManager.shared
     @State private var navigateToLogin = false
     @State private var showNoInternetAlert = false
@@ -27,6 +29,7 @@ struct CreateNewPasswordView: View {
     @State private var navigateToAggrement = false
     @State private var isAdmin = false
     @State private var showSuccessUpdateAlert = false
+    @State private var showLoginError = false
     
     enum NewPassField: Hashable {
         case newpass
@@ -232,6 +235,7 @@ struct CreateNewPasswordView: View {
                                 if comingFrom == "user_profile"{
                                     showSuccessUpdateAlert = true
                                 }
+                               // else if comingFrom == "validate_email"  && !(isAggremntAccepted ?? false){ //open this and hide bellow to check agrement accepted or not - Step 1
                                 else if comingFrom == "validate_email" { //come from setup user
                                     
                                     toastManager.show(
@@ -245,7 +249,13 @@ struct CreateNewPasswordView: View {
                                     
                                     // isAdmin = (userType == "facility_manager")
                                     navigateToAggrement = true
-                                } else {
+                                }
+                                
+                                //comment out this to check agrement if accepted then go to login api call - Step-2
+//                                else if comingFrom == "validate_email"  && (isAggremntAccepted ?? false){
+//                                    LoginApiCall()
+//                                }
+                                else {
                                     toastManager.show(
                                         message: "Password updated successfully!",
                                         type: .success,
@@ -348,6 +358,15 @@ struct CreateNewPasswordView: View {
                     KeychainManager.shared.resetToLogin()
                 }
             }
+            
+            .modernAlert(isPresented: $showLoginError) {
+                ModernAlertView(
+                    title: "Error!",
+                    message: loginViewModel.loginError.isEmpty ? "Invalid credentials." : loginViewModel.loginError,
+                    isSuccess: false,
+                    buttonTitle: "OK"
+                ) { showLoginError = false }
+            }
             .navigationDestination(isPresented: $navigateToAggrement) {
                 UserAgreementScreen(password:viewModel.confirmPassword)
                     .navigationBarBackButtonHidden(true)
@@ -361,6 +380,21 @@ struct CreateNewPasswordView: View {
         .toast()  // Add toast modifier
         
         
+    }
+    
+    func LoginApiCall() {
+        Task {
+        
+            loginViewModel.email = UserDefaults.standard.string(forKey: "email") ?? ""
+            loginViewModel.password = viewModel.confirmPassword
+            
+            await loginViewModel.login()
+            if loginViewModel.loginSuccess {
+                KeychainManager.shared.resetToLogin()
+            } else {
+                showLoginError = true
+            }
+        }
     }
 }
 

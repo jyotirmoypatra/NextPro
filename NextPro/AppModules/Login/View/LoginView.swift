@@ -28,6 +28,7 @@ struct LoginView: View {
     @State private var isDeviceprov = false
     @State private var didPrefillEmail = false
     @State private var emailToSend = ""
+    @State private var isAcceptedAgreement = false
 
     @State private var isUserInitialSetupDone = false
     
@@ -344,6 +345,7 @@ struct LoginView: View {
                                             )
                                             try? await Task.sleep(nanoseconds: 1_000_000_000)
                                             
+                                            isAcceptedAgreement = validateVM.isAggrementAccept
                                             emailToSend = validateVM.email
                                             
                                             navigateToCreatePassword = true
@@ -400,7 +402,7 @@ struct LoginView: View {
             .navigationBarBackButtonHidden(true)
             .ignoresSafeArea(.keyboard, edges: .bottom) // The key to stop resize
             .navigationDestination(isPresented: $navigateToCreatePassword) {
-                CreateNewPasswordView(userName: emailToSend, comingFrom: "validate_email")
+                CreateNewPasswordView(userName: emailToSend, comingFrom: "validate_email",isAggremntAccepted: isAcceptedAgreement)
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)

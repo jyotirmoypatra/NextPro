@@ -6,9 +6,68 @@
 //
 
 import SwiftUI
+import FirebaseCore
+import FirebaseMessaging
+import UserNotifications
+
+
+class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
+
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
+    ) -> Bool {
+
+        FirebaseApp.configure()
+
+        // Set delegates
+        UNUserNotificationCenter.current().delegate = self
+        Messaging.messaging().delegate = self
+
+        // Request notification permission
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+            print("Notification Permission: \(granted)")
+        }
+
+        // Register with APNs
+        application.registerForRemoteNotifications()
+
+        // Fetch FCM Token
+        Messaging.messaging().token { token, error in
+            if let error = error {
+                print("❌ Error fetching FCM token: \(error)")
+            } else if let token = token {
+                print("🔥 FCM Token:")
+                print(token)
+            }
+        }
+
+        return true
+    }
+
+    // APNs Token
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+
+        Messaging.messaging().apnsToken = deviceToken
+
+        let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+        print("📱 APNs Token:")
+        print(token)
+    }
+
+    // Called whenever the FCM token is created or refreshed
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        guard let token = fcmToken else { return }
+
+        print("🔥 New FCM Token:")
+        print(token)
+    }
+}
 
 @main
 struct NextProApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("is_logged_in") private var isLoggedIn = false
