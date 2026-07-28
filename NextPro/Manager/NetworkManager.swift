@@ -743,7 +743,43 @@ class NetworkManager: ObservableObject {
         )
     }
     
-    
+    func registerFCMToken(platform: String,fcmToken:String, appVersion:String) async throws -> RegisterFCMTokenResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.registerFCMToken))!
+        print("RegisterFCMToken Api called")
+
+        return try await performRequest(
+            url: url,
+            method: "POST",
+            body: [
+                "platform": platform,
+                "token": fcmToken,
+                "app_version":appVersion
+            ],
+            requiresAuth: true,
+            responseType: RegisterFCMTokenResponse.self,
+            retry: true
+        )
+    }
+
+    // MARK: - Unregister FCM Token api
+    func unRegisterFCMToken(tokenId: Int) async throws -> UnRegisterFCMTokenResponse {
+
+        let endpoint = APIConfig.Endpoints.unRegisterFCMToken.replacingOccurrences(
+            of: "{token_id}",
+            with: "\(tokenId)"
+        )
+        let url = URL(string: APIConfig.url(endpoint))!
+        print("unRegisterFCMToken Api called----")
+
+        return try await performRequest(
+            url: url,
+            method: "DELETE",
+            requiresAuth: true,
+            responseType: UnRegisterFCMTokenResponse.self,
+            retry: true
+        )
+    }
 
 }
 

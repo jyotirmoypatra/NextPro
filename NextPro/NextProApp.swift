@@ -39,6 +39,11 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             } else if let token = token {
                 print("🔥 FCM Token:")
                 print(token)
+
+                Task { @MainActor in
+                    FCMTokenManager.shared.handleNewToken(token)
+                    FCMTokenManager.shared.registerIfNeeded()
+                }
             }
         }
 
@@ -56,12 +61,19 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         print(token)
     }
 
-    // Called whenever the FCM token is created or refreshed
+    // Called whenever the FCM token is created or refreshed.
+    // Only stores the token + marks it pending — never registers it directly here.
+    // Registration only ever happens after a successful login (see FCMTokenManager.registerIfNeeded()),
+    // so a token refreshed mid-session is registered on the *next* login, not immediately.
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         guard let token = fcmToken else { return }
 
         print("🔥 New FCM Token:")
         print(token)
+
+        Task { @MainActor in
+            FCMTokenManager.shared.handleNewToken(token)
+        }
     }
 }
 

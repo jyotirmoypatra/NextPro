@@ -47,28 +47,6 @@ struct ProfileEndUserView: View {
         ZStack {
             VStack(spacing: 0) {
                 // MARK: - Header
-//                HStack {
-//                    Text("Profile")
-//                        .font(.custom("Inter-SemiBold", size: 18))
-//                        .foregroundColor(.white)
-//
-//                    Spacer()
-//
-//                    Button(action: {
-//                        // Notification action
-//                    }) {
-//                        Image(systemName: "bell")
-//                            .font(.system(size: 18))
-//                            .foregroundColor(.white)
-//                            .padding(10)
-//                            .background(Color.white.opacity(0.1))
-//                            .clipShape(RoundedRectangle(cornerRadius: 10))
-//                    }
-//                }
-//                .padding(.top, 10)
-//                .padding(.bottom, 12)
-                
-                
                 TopHeaderView(type: .title("Profile"), onBellTap: {
                     navigateToNotifications = true
                 })
@@ -454,6 +432,7 @@ struct UserProfileRow: View {
 struct LogoutSheetView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) var colorScheme
+    @StateObject private var toastManager = ToastManager.shared
     @State private var isLoggingOut = false
     var body: some View {
         
@@ -479,19 +458,36 @@ struct LogoutSheetView: View {
                 Divider().background(Color.white.opacity(0.2))
                 
                 Button(action: {
-                    KeychainManager.shared.clearUserDefaultsAndKeychainData()
-                    UserDefaults.standard.set(false, forKey: "is_logged_in")
-                   // KeychainManager.shared.resetToLogin()
-                   // dismiss()
+                    guard !isLoggingOut else { return }
+                    isLoggingOut = true
+                    Task {
+                        let result = await FCMTokenManager.shared.logoutStrict()
+                        isLoggingOut = false
+
+                        switch result {
+                        case .success:
+                            break
+                        case .failed(let message):
+                            toastManager.show(message: message, type: .error)
+                        }
+                    }
                 }) {
-                    Text("YES, LOGOUT")
-                        .font(.custom("Inter-Bold", size: 16))
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(colorScheme == .dark ? .white : .black)
-                        .foregroundColor(colorScheme == .dark ? .black : .white)
-                        .cornerRadius(10)
+                    ZStack {
+                        if isLoggingOut {
+                            ProgressView()
+                                .tint(colorScheme == .dark ? .black : .white)
+                        } else {
+                            Text("YES, LOGOUT")
+                                .font(.custom("Inter-Bold", size: 16))
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(colorScheme == .dark ? .white : .black)
+                    .foregroundColor(colorScheme == .dark ? .black : .white)
+                    .cornerRadius(10)
                 }
+                .disabled(isLoggingOut)
                 .padding(.horizontal)
             
                 
@@ -515,6 +511,7 @@ struct LogoutSheetView: View {
             
         }
         .presentationDetents([.height(270)])
+        .toast()
 
     }
 
@@ -561,8 +558,7 @@ struct DeleteConfirmationSheet: View {
                         if deleteAccountViewModel.isDeleteSuccess {
 
                             // Clear login data
-                            KeychainManager.shared.clearUserDefaultsAndKeychainData()
-                            UserDefaults.standard.set(false, forKey: "is_logged_in")
+                            await FCMTokenManager.shared.performLogout()
 
                             dismiss()
                         }

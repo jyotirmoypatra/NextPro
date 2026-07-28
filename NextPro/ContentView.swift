@@ -68,13 +68,14 @@ struct ContentView: View {
             if isLoggedIn {
                 ServerTimeService.shared.start(forceImmediate: true)
                 notificationCountVM.refreshUnreadCount()
+                FCMTokenManager.shared.registerIfNeeded()
             } else {
                 ServerTimeService.shared.stop()
                 networkManager.resetSessionExpirationState()
             }
         }
 
-        
+
         .SessionExpiredAlert(isPresented: $networkManager.showSessionExpiredAlert) {
             SessionExpiredAlertView(
                 title: "Session Expired!",
@@ -82,10 +83,11 @@ struct ContentView: View {
                 isSuccess: false,
                 buttonTitle: "OK"
             ) {
-                KeychainManager.shared.clearUserDefaultsAndKeychainData()
-                UserDefaults.standard.set(false, forKey: "is_logged_in")
-                KeychainManager.shared.resetToLogin()
-                networkManager.completeSessionExpiredLogout()
+                Task {
+                    await FCMTokenManager.shared.performLogout()
+                    KeychainManager.shared.resetToLogin()
+                    networkManager.completeSessionExpiredLogout()
+                }
             }
         }
         .onChange(of: isLoggedIn) { loggedIn in
@@ -93,6 +95,7 @@ struct ContentView: View {
                 networkManager.resetSessionExpirationState()
                 ServerTimeService.shared.start(forceImmediate: true)
                 notificationCountVM.refreshUnreadCount()
+                FCMTokenManager.shared.registerIfNeeded()
             } else {
                 ServerTimeService.shared.stop()
                 networkManager.resetSessionExpirationState()

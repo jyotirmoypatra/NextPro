@@ -1,42 +1,38 @@
 //
-//  RegisterFCMTokenViewModel.swift
+//  UnRegisterFCMTokenViewModel.swift
 //  NextPro
 //
-//  Created by JYOTIRMOY PATRA on 28/07/26.
+//  Created by JYOTIRMOY PATRA on 29/07/26.
 //
 
 import Foundation
 import Combine
 
 @MainActor
-final class RegisterFCMTokenViewModel: ObservableObject {
+final class UnRegisterFCMTokenViewModel: ObservableObject {
 
     @Published var isLoading = false
     @Published var errorMessage: String?
 
     private let networkManager = NetworkManager.shared
-
-    func register(fcmToken: String, platform: String, appVersion: String) async -> DeviceTokenData? {
+    
+    func unregister(tokenId: Int) async -> Bool {
         isLoading = true
         defer { isLoading = false }
 
         do {
-            let response = try await networkManager.registerFCMToken(
-                platform: platform,
-                fcmToken: fcmToken,
-                appVersion: appVersion
-            )
+            let response = try await networkManager.unRegisterFCMToken(tokenId: tokenId)
 
             if response.status ?? true {
                 errorMessage = nil
-                return response.data
+                return true
             } else {
                 errorMessage = response.message ?? "Something went wrong!"
-                return nil
+                return false
             }
         } catch {
             errorMessage = error.localizedDescription
-            return nil
+            return false
         }
     }
 }

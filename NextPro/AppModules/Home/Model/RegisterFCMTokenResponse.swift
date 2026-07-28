@@ -1,5 +1,5 @@
 //
-//  RegisterDeviceTokenResponse.swift
+//  RegisterFCMTokenResponse.swift
 //  NextPro
 //
 //  Created by JYOTIRMOY PATRA on 28/07/26.
@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct RegisterDeviceTokenResponse: Codable {
+struct RegisterFCMTokenResponse: Codable {
     let status: Bool?
     let message: String?
     let data: DeviceTokenData?
