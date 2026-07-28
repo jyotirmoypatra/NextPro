@@ -11,8 +11,15 @@ enum TopHeaderType {
 }
 
 struct TopHeaderView: View {
+    @EnvironmentObject private var notificationCountVM: NotificationCountViewModel
+
     let type: TopHeaderType
     var onBellTap: (() -> Void)? = nil
+
+    private var badgeText: String? {
+        guard notificationCountVM.unreadCount > 0 else { return nil }
+        return notificationCountVM.unreadCount > 99 ? "99+" : "\(notificationCountVM.unreadCount)"
+    }
 
     var body: some View {
         HStack {
@@ -49,6 +56,18 @@ struct TopHeaderView: View {
                     .padding(10)
                     .background(Color.white.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(alignment: .topTrailing) {
+                        if let badgeText {
+                            Text(badgeText)
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 2)
+                                .background(Color.red)
+                                .clipShape(Capsule())
+                                .offset(x: 6, y: -6)
+                        }
+                    }
             }
         }
         .frame(maxWidth: .infinity)

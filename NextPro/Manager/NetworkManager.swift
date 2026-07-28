@@ -718,7 +718,7 @@ class NetworkManager: ObservableObject {
     func MarkAllReadNotification() async throws -> MarkNotificationReadResponse {
 
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.readAllNotification))!
-        print("getUserDetails  Api called")
+        print("MarkAllReadNotification Api called")
 
         return try await performRequest(
             url: url,
@@ -728,6 +728,21 @@ class NetworkManager: ObservableObject {
             retry: true
         )
     }
+    
+    func getUnreadNotificationCount() async throws -> UnreadNotificationCountResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.unreadNotificationCount))!
+        print("get Unread NotificationCount Api called")
+
+        return try await performRequest(
+            url: url,
+            method: "GET",
+            requiresAuth: true,
+            responseType: UnreadNotificationCountResponse.self,
+            retry: true
+        )
+    }
+    
     
 
 }

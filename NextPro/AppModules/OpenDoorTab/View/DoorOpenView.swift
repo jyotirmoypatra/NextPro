@@ -11,6 +11,7 @@ import Combine
 import AVFoundation
 
 struct DoorOpenView: View {
+    @EnvironmentObject private var notificationCountVM: NotificationCountViewModel
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var toastManager = ToastManager.shared
     @StateObject private var mqttManager = MQTTManager.shared
@@ -494,7 +495,9 @@ struct DoorOpenView: View {
                 // Load access flags from UserDefaults
                 hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
                 hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
-                
+
+                notificationCountVM.refreshUnreadCount()
+
                 
                 // Automatically select first available tab
                 if hasDigitalKeyAccess {

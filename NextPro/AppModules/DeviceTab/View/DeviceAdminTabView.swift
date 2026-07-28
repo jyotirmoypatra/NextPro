@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct DeviceAdminTabView: View {
+    @EnvironmentObject private var notificationCountVM: NotificationCountViewModel
     @StateObject private var assignDeviceVM = AssignedDeviceViewModel()
     @State private var showAssignDeviceVMErrorAlert = false
     @State private var navigateToDeviceScanView = false
@@ -168,6 +169,8 @@ struct DeviceAdminTabView: View {
 
            canReadDevice = readDevice
            canWriteDevice = writeDevice
+
+            notificationCountVM.refreshUnreadCount()
         }
         .onDisappear {
             assignDeviceVM.stopHeartbeat()   

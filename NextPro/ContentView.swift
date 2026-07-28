@@ -19,7 +19,8 @@ struct ContentView: View {
     @AppStorage("home_initial_tab") private var homeInitialTab = 0
     
     @StateObject private var networkManager = NetworkManager.shared
-    
+    @StateObject private var notificationCountVM = NotificationCountViewModel()
+
     init(skipSplash: Bool = false) {
             _showSplash = State(initialValue: !skipSplash)
 
@@ -53,6 +54,7 @@ struct ContentView: View {
                 
             }
         }
+        .environmentObject(notificationCountVM)
         .transition(.move(edge: .trailing))
 
         .onAppear {
@@ -65,6 +67,7 @@ struct ContentView: View {
             
             if isLoggedIn {
                 ServerTimeService.shared.start(forceImmediate: true)
+                notificationCountVM.refreshUnreadCount()
             } else {
                 ServerTimeService.shared.stop()
                 networkManager.resetSessionExpirationState()
@@ -89,6 +92,7 @@ struct ContentView: View {
             if loggedIn {
                 networkManager.resetSessionExpirationState()
                 ServerTimeService.shared.start(forceImmediate: true)
+                notificationCountVM.refreshUnreadCount()
             } else {
                 ServerTimeService.shared.stop()
                 networkManager.resetSessionExpirationState()
