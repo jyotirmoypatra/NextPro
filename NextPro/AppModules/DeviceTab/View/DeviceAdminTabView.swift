@@ -17,31 +17,17 @@ struct DeviceAdminTabView: View {
     
     @State private var canReadDevice = false
     @State private var canWriteDevice = false
-    
+    @State private var navigateToNotifications = false
+
     var body: some View {
         ZStack {
             VStack(spacing: 10){
-                
-                HStack {
-                    Text("Devices")
-                        .font(.custom("Inter-SemiBold", size: 18))
-                        .foregroundColor(.white)
-                    
-                    Spacer()
-                    
-//                    Button(action: {
-//                        // Notification action
-//                    }) {
-//                        Image(systemName: "bell")
-//                            .font(.system(size: 18))
-//                            .foregroundColor(.white)
-//                            .padding(10)
-//                            .background(Color.white.opacity(0.1))
-//                            .clipShape(RoundedRectangle(cornerRadius: 10))
-//                    }
-                }
+
+                TopHeaderView(type: .title("Devices"), onBellTap: {
+                    navigateToNotifications = true
+                })
+                .padding(.top, 12)
                 .padding(.bottom, 12)
-                .padding(.top, 10)
                 if canWriteDevice{
                     Button(action: {
                         navigateToDeviceScanView = true
@@ -160,6 +146,11 @@ struct DeviceAdminTabView: View {
             if let device = selectedDevice {
                 DeviceInformationView(selectedDevice: device)
             }
+        }
+        .navigationDestination(isPresented: $navigateToNotifications) {
+            Notifications()
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
         }
 
         .internetOverlay()

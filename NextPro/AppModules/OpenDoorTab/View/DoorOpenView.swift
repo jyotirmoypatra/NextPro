@@ -70,6 +70,7 @@ struct DoorOpenView: View {
     
     @State private var showTimeSyncAlert = false
     @State private var offlineTimeCheckTimer: Timer?
+    @State private var navigateToNotifications = false
     
     var body: some View {
         ZStack {
@@ -95,35 +96,15 @@ struct DoorOpenView: View {
                 }
                 ZStack {
                     VStack{
-                        HStack {
-                            VStack(alignment: .leading,spacing: 5) {
-                                Text("Welcome!")
-                                    .font(.custom("Inter-SemiBold", size: 18))
-                                    .foregroundColor(.white)
-                                
-                                if deviceVM.isLoading {
-                                    ShimmerTextView(width: 100, height: 16)
-                                } else {
-                                    Text(deviceVM.deviceDetails?.userFullName ?? "")
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .foregroundColor(.gray)
-                                }
-                                
+                        TopHeaderView(
+                            type: .welcome(
+                                userName: deviceVM.deviceDetails?.userFullName ?? "",
+                                isLoading: deviceVM.isLoading
+                            ),
+                            onBellTap: {
+                                navigateToNotifications = true
                             }
-                            
-                            Spacer()
-                            
-//                            Button(action: {
-//                                // Notification action
-//                            }) {
-//                                Image(systemName: "bell")
-//                                    .font(.system(size: 18))
-//                                    .foregroundColor(.white)
-//                                    .padding(10)
-//                                    .background(Color.white.opacity(0.1))
-//                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-//                            }
-                        }
+                        )
                         .padding(.top, 10)
                         .padding(.bottom, 12)
                         .padding(.horizontal,10)
@@ -906,6 +887,11 @@ struct DoorOpenView: View {
                         }
                     }
                 )
+            }
+            .navigationDestination(isPresented: $navigateToNotifications) {
+                Notifications()
+                    .navigationBarBackButtonHidden(true)
+                    .navigationBarHidden(true)
             }
     }
     
