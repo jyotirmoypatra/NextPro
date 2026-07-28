@@ -509,6 +509,8 @@ struct DoorOpenView: View {
                 if !network.hasInternet {
                     startOfflineTimeObserver()
                 }
+
+                resumeBLEIfNeeded()
             }
             .onDisappear {
                 print("🛑 DoorOpenView disappeared — stopping all BLE and timers")
@@ -577,38 +579,8 @@ struct DoorOpenView: View {
                     rssiTimer = nil
                     
                 case .active:
-                    guard isViewVisible else {
-                        return
-                    }
-                    
-                    guard selectedTab == 0 else {
-                        return
-                    }
-                    guard hasDigitalKeyAccess else {
-                        return
-                    }
-                    guard hasAvailableDoor else {
-                        stopAllScanningAndMonitoring()
-                        return
-                    }
-                    
-                    if !bleManager.isBluetoothOn {
-                        isScanningActive = false
-                        return
-                    }
+                    resumeBLEIfNeeded()
 
-                    if !isScanningActive || bleManager.devices.isEmpty {
-
-                        print("⚠️ BLE inactive after foreground, restarting")
-
-                        restartBLEAfterForeground()
-
-                    } else {
-
-                        print("✅ BLE already active, no restart needed")
-
-                    }
-                    
                 case .inactive:
                     print("⏸️ App became inactive")
                     
@@ -1149,8 +1121,33 @@ struct DoorOpenView: View {
     }
     
     
+    /// Restarts BLE scanning if the digital-key tab is visible but scanning has stopped
+    /// (e.g. after returning from the foreground, or after this view reappears from being
+    /// pushed behind another screen like Notifications).
+    private func resumeBLEIfNeeded() {
+        guard isViewVisible else { return }
+        guard selectedTab == 0 else { return }
+        guard hasDigitalKeyAccess else { return }
+        guard hasAvailableDoor else {
+            stopAllScanningAndMonitoring()
+            return
+        }
+
+        if !bleManager.isBluetoothOn {
+            isScanningActive = false
+            return
+        }
+
+        if !isScanningActive || bleManager.devices.isEmpty {
+            print("⚠️ BLE inactive, restarting")
+            restartBLEAfterForeground()
+        } else {
+            print("✅ BLE already active, no restart needed")
+        }
+    }
+
     private func startBLEIfPossible() {
-        
+
         guard !showTimeSyncAlert else {
             print("⛔ Time sync required — BLE start blocked")
             return
