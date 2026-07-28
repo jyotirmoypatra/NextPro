@@ -8,6 +8,7 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 struct ProfileEndUserView: View {
+    @EnvironmentObject private var notificationCountVM: NotificationCountViewModel
     @State private var notificationsEnabled = true
     @State private var navigateToUpdatePass = false
     @State private var navigate_access_time = false
@@ -40,7 +41,7 @@ struct ProfileEndUserView: View {
     @State private var showFullImage = false
     
     @State private var isAdmin = false
-    
+    @State private var navigateToNotifications = false
    
     var body: some View {
         ZStack {
@@ -53,19 +54,26 @@ struct ProfileEndUserView: View {
 //
 //                    Spacer()
 //
-////                    Button(action: {
-////                        // Notification action
-////                    }) {
-////                        Image(systemName: "bell")
-////                            .font(.system(size: 18))
-////                            .foregroundColor(.white)
-////                            .padding(10)
-////                            .background(Color.white.opacity(0.1))
-////                            .clipShape(RoundedRectangle(cornerRadius: 10))
-////                    }
+//                    Button(action: {
+//                        // Notification action
+//                    }) {
+//                        Image(systemName: "bell")
+//                            .font(.system(size: 18))
+//                            .foregroundColor(.white)
+//                            .padding(10)
+//                            .background(Color.white.opacity(0.1))
+//                            .clipShape(RoundedRectangle(cornerRadius: 10))
+//                    }
 //                }
 //                .padding(.top, 10)
 //                .padding(.bottom, 12)
+                
+                
+                TopHeaderView(type: .title("Profile"), onBellTap: {
+                    navigateToNotifications = true
+                })
+                .padding(.top, 12)
+                .padding(.bottom, 12)
 
                 // MARK: - Scroll Content
                 ScrollView(showsIndicators: false) {
@@ -155,20 +163,20 @@ struct ProfileEndUserView: View {
 
                            
 
-//                            Divider().background(Color.white.opacity(0.15))
-//                                .padding(.horizontal,20)
-//
-//                            // Notifications Toggle
-//                            HStack {
-//                                Text("Notifications")
-//                                    .font(.custom("Inter-Medium", size: 16))
-//                                    .foregroundColor(.white)
-//                                Spacer()
-//                                Toggle("", isOn: $notificationsEnabled)
-//                                    .labelsHidden()
-//                            }
-//                            .padding(.horizontal, 20)
-//                            .padding(.vertical, 30) // consistent with other rows
+                            Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
+
+                            // Notifications Toggle
+                            HStack {
+                                Text("Notifications")
+                                    .font(.custom("Inter-Medium", size: 16))
+                                    .foregroundColor(.white)
+                                Spacer()
+                                Toggle("", isOn: $notificationsEnabled)
+                                    .labelsHidden()
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 30) // consistent with other rows
                             
                            
                             
@@ -315,6 +323,11 @@ struct ProfileEndUserView: View {
                 .navigationBarHidden(true)
                 .interactiveDismissDisabled(true)
         }
+        .navigationDestination(isPresented: $navigateToNotifications) {
+            Notifications()
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
+        }
 //        .onReceive(NetworkManager.shared.$hasInternet) { internet in
 //            if internet == true {
 //                Task {
@@ -342,6 +355,7 @@ struct ProfileEndUserView: View {
         }
         .onAppear {
             Task {
+                notificationCountVM.refreshUnreadCount()
                 loadUserData()
                 await viewModel.fetchUserProfile()
 //                if !viewModel.isSuccess{
