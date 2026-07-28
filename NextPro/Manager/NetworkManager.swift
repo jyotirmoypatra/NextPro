@@ -713,6 +713,22 @@ class NetworkManager: ObservableObject {
         )
     }
 
+    
+    // MARK: - Get User details  api
+    func MarkAllReadNotification() async throws -> MarkNotificationReadResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.readAllNotification))!
+        print("getUserDetails  Api called")
+
+        return try await performRequest(
+            url: url,
+            method: "POST",
+            requiresAuth: true,
+            responseType: MarkNotificationReadResponse.self,
+            retry: true
+        )
+    }
+    
 
 }
 

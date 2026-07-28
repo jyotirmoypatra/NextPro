@@ -10,6 +10,8 @@ import SwiftUI
 struct Notifications: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var notificationVM = NotificationListViewModel()
+    @StateObject private var readAllVM = NotificationReadAllViewModel()
+    @StateObject private var toastManager = ToastManager.shared
     @State private var pullToRefresh = false
     @State private var showErrorAlert = false
 
@@ -70,13 +72,29 @@ struct Notifications: View {
                         Spacer()
 
                         Button(action: {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                notificationVM.markAllAsRead()
+                            Task {
+                                let success = await readAllVM.markAllAsRead()
+                                if success {
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        notificationVM.markAllAsRead()
+                                    }
+                                    if let message = readAllVM.successMessage, !message.isEmpty {
+                                        toastManager.show(message: message, type: .success)
+                                    }
+                                } else if let error = readAllVM.errorMessage, !error.isEmpty {
+                                    showErrorAlert = true
+                                }
                             }
                         }) {
                             HStack(spacing: 6) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 13, weight: .semibold))
+                                if readAllVM.isLoading {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.7)
+                                } else {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 13, weight: .semibold))
+                                }
 
                                 Text("Read all")
                                     .font(.custom("Inter-SemiBold", size: 13))
@@ -202,6 +220,7 @@ struct Notifications: View {
         }
         .navigationBarBackButtonHidden(true)
         .navigationBarHidden(true)
+        .toast()
         .onAppear {
             guard !notificationVM.hasLoadedOnce else { return }
             Task {
@@ -231,7 +250,7 @@ struct Notifications: View {
         ) {
             ModernAlertView(
                 title: "Error!",
-                message: notificationVM.errorMessage ?? "Something went wrong!",
+                message: readAllVM.errorMessage ?? notificationVM.errorMessage ?? "Something went wrong!",
                 isSuccess: false,
                 buttonTitle: "OK"
             ) {

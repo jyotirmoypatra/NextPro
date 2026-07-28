@@ -58,7 +58,14 @@ struct APIConfig {
         static let getAccessGroupList = "/api/access-group/list/"
         static let deleteUser = "/api/facility-manager/delete/"
         static let deleteAccount = "/api/facility-user/account/delete/"
+        
+        
+        static let registerFCMToken = "/api/notifications/device-tokens/"
+        static let unRegisterFCMToken = "/api/notifications/device-tokens/{token_id}/"
         static let getNotificationList = "/api/notifications/mine/"
+        static let readAllNotification = "/api/notifications/mine/read-all/"
+        static let unreadNotificationCount = "/api/notifications/mine/unread-count/"
+        static let readNotification = "/api/notifications/mine/{notification_id}/read/"
     }
     
     static func url(_ endpoint: String) -> String {
