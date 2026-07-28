@@ -7,62 +7,14 @@
 
 import SwiftUI
 
-struct AppNotification: Identifiable {
-    let id = UUID()
-    let title: String
-    let message: String
-    let time: String
-    var isUnread: Bool
-}
-
 struct Notifications: View {
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var notificationVM = NotificationListViewModel()
+    @State private var pullToRefresh = false
+    @State private var showErrorAlert = false
 
     private let notificationIcon = "bell.fill"
     private let notificationIconColor: Color = .white
-
-    @State private var notifications: [AppNotification] = [
-        AppNotification(
-            title: "Door Unlocked",
-            message: "Main Entrance was unlocked using Digital Card.",
-            time: "2 min ago",
-            isUnread: true
-        ),
-        AppNotification(
-            title: "Access Denied",
-            message: "An unauthorized attempt was made at Back Door.",
-            time: "15 min ago",
-            isUnread: true
-        ),
-        AppNotification(
-            title: "Remote Unlock",
-            message: "Warehouse Gate was opened remotely via Wi-Fi.",
-            time: "1 hr ago",
-            isUnread: true
-        ),
-        AppNotification(
-            title: "New Device Assigned",
-            message: "A new device has been assigned to your account.",
-            time: "3 hr ago",
-            isUnread: false
-        ),
-        AppNotification(
-            title: "Time Sync Required",
-            message: "Please connect to the internet to sync server time.",
-            time: "Yesterday",
-            isUnread: false
-        ),
-        AppNotification(
-            title: "System Update",
-            message: "NextPro has been updated to the latest version.",
-            time: "2 days ago",
-            isUnread: false
-        )
-    ]
-
-    private var hasUnread: Bool {
-        notifications.contains(where: { $0.isUnread })
-    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -113,14 +65,13 @@ struct Notifications: View {
                     .padding(.bottom, 15)
 
                     // MARK: - Read All button
+                    if !notificationVM.notifications.isEmpty {
                     HStack {
                         Spacer()
 
                         Button(action: {
                             withAnimation(.easeInOut(duration: 0.3)) {
-                                for index in notifications.indices {
-                                    notifications[index].isUnread = false
-                                }
+                                notificationVM.markAllAsRead()
                             }
                         }) {
                             HStack(spacing: 6) {
@@ -130,14 +81,14 @@ struct Notifications: View {
                                 Text("Read all")
                                     .font(.custom("Inter-SemiBold", size: 13))
                             }
-                            .foregroundColor(hasUnread ? .white : .gray)
+                            .foregroundColor(notificationVM.hasUnread ? .white : .gray)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
                             .background(
                                 LinearGradient(
                                     gradient: Gradient(colors: [
-                                        Color.white.opacity(hasUnread ? 0.16 : 0.06),
-                                        Color.white.opacity(hasUnread ? 0.08 : 0.03)
+                                        Color.white.opacity(notificationVM.hasUnread ? 0.16 : 0.06),
+                                        Color.white.opacity(notificationVM.hasUnread ? 0.08 : 0.03)
                                     ]),
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
@@ -146,47 +97,158 @@ struct Notifications: View {
                             .clipShape(Capsule())
                             .overlay(
                                 Capsule()
-                                    .stroke(Color.white.opacity(hasUnread ? 0.25 : 0.1), lineWidth: 1)
+                                    .stroke(Color.white.opacity(notificationVM.hasUnread ? 0.25 : 0.1), lineWidth: 1)
                             )
                         }
-                        .disabled(!hasUnread)
+                        .disabled(!notificationVM.hasUnread)
                     }
                     .padding(.horizontal, 10)
                     .padding(.bottom, 6)
+                    }
 
                     // MARK: - Notification List
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 12) {
-                            ForEach(notifications) { notification in
-                                NotificationRowView(
-                                    notification: notification,
-                                    icon: notificationIcon,
-                                    iconColor: notificationIconColor
-                                )
-                                    .onTapGesture {
-                                        withAnimation(.easeInOut(duration: 0.25)) {
-                                            if let index = notifications.firstIndex(where: { $0.id == notification.id }) {
-                                                notifications[index].isUnread = false
+                    ScrollViewReader { proxy in
+                        ScrollView(.vertical, showsIndicators: false) {
+                            LazyVStack(spacing: 12) {
+                                Color.clear
+                                    .frame(height: 1)
+                                    .id("TOP")
+
+                                if !notificationVM.notifications.isEmpty {
+                                    ForEach(notificationVM.notifications) { notification in
+                                        NotificationRowView(
+                                            notification: notification,
+                                            icon: notificationIcon,
+                                            iconColor: notificationIconColor
+                                        )
+                                        .onTapGesture {
+                                            withAnimation(.easeInOut(duration: 0.25)) {
+                                                notificationVM.markAsRead(id: notification.id)
+                                            }
+                                        }
+                                        .onAppear {
+                                            let isLastItem = notification.id == notificationVM.notifications.last?.id
+                                            let hasMorePages = notificationVM.currentPage <= notificationVM.totalPages
+                                            let notLoading = !notificationVM.isLoadingMore && !notificationVM.isLoading
+                                            if isLastItem && hasMorePages && notLoading {
+                                                Task {
+                                                    await notificationVM.fetchNotificationList()
+                                                }
                                             }
                                         }
                                     }
+
+                                    if notificationVM.isLoadingMore {
+                                        HStack {
+                                            Spacer()
+                                            ProgressView()
+                                            Spacer()
+                                        }
+                                        .padding(.top, 10)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.bottom, 20)
+                        }
+                        .refreshable {
+                            pullToRefresh = true
+                            await notificationVM.fetchNotificationList(reset: true)
+                            pullToRefresh = false
+                            if let error = notificationVM.errorMessage, !error.isEmpty {
+                                showErrorAlert = true
                             }
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.bottom, 20)
                     }
+                }
+
+                if notificationVM.isLoading && !pullToRefresh {
+                    ZStack {
+                        Color.black.opacity(0.6)
+                            .ignoresSafeArea()
+
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.8)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                }
+
+                if notificationVM.hasLoadedOnce && !notificationVM.isLoading && notificationVM.notifications.isEmpty {
+                    ZStack {
+                        VStack(spacing: 14) {
+                            Image(systemName: "bell.slash")
+                                .font(.system(size: 40))
+                                .foregroundColor(.gray)
+
+                            Text("No Notifications Found")
+                                .font(.custom("Inter-SemiBold", size: 16))
+                                .foregroundColor(.white)
+
+                            Text("You don't have any notifications yet.")
+                                .font(.custom("Inter-Regular", size: 14))
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 32)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
                 }
             }
         }
         .navigationBarBackButtonHidden(true)
         .navigationBarHidden(true)
+        .onAppear {
+            guard !notificationVM.hasLoadedOnce else { return }
+            Task {
+                await notificationVM.fetchNotificationList(reset: true)
+                if let error = notificationVM.errorMessage, !error.isEmpty {
+                    showErrorAlert = true
+                }
+            }
+        }
+        .onReceive(NetworkManager.shared.$hasInternet) { hasInternet in
+            guard hasInternet else { return }
+            if notificationVM.isFailedDueToNoInternet {
+                Task {
+                    await notificationVM.fetchNotificationList(reset: true)
+                    if let error = notificationVM.errorMessage, !error.isEmpty {
+                        showErrorAlert = true
+                    }
+                }
+            }
+        }
+        .internetOverlay()
+        .modernAlert(
+            isPresented: Binding(
+                get: { showErrorAlert && !notificationVM.isFailedDueToNoInternet },
+                set: { showErrorAlert = $0 }
+            )
+        ) {
+            ModernAlertView(
+                title: "Error!",
+                message: notificationVM.errorMessage ?? "Something went wrong!",
+                isSuccess: false,
+                buttonTitle: "OK"
+            ) {
+                showErrorAlert = false
+            }
+        }
     }
 }
 
 struct NotificationRowView: View {
-    let notification: AppNotification
+    let notification: NotificationItem
     let icon: String
     let iconColor: Color
+
+    private var isUnread: Bool {
+        !(notification.isRead ?? false)
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -202,24 +264,24 @@ struct NotificationRowView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text(notification.title)
+                    Text(notification.title ?? notification.label ?? "Notification")
                         .font(.custom("Inter-SemiBold", size: 15))
                         .foregroundColor(.white)
 
                     Spacer()
 
-                    Text(notification.time)
+                    Text(notification.timeElapsed ?? notification.createdAt ?? "")
                         .font(.custom("Inter-Regular", size: 11))
                         .foregroundColor(.gray)
                 }
 
-                Text(notification.message)
+                Text(notification.description ?? "")
                     .font(.custom("Inter-Regular", size: 13))
                     .foregroundColor(.gray)
                     .lineLimit(2)
             }
 
-            if notification.isUnread {
+            if isUnread {
                 Circle()
                     .fill(Color.white)
                     .frame(width: 8, height: 8)
@@ -228,7 +290,7 @@ struct NotificationRowView: View {
         }
         .padding(14)
         .background(
-            notification.isUnread
+            isUnread
                 ? Color.white.opacity(0.14)
                 : Color.white.opacity(0.05)
         )
@@ -236,11 +298,9 @@ struct NotificationRowView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 14)
                 .stroke(
-                    notification.isUnread ? Color.white.opacity(0.22) : Color.white.opacity(0.1),
+                    isUnread ? Color.white.opacity(0.22) : Color.white.opacity(0.1),
                     lineWidth: 1
                 )
         )
     }
 }
-
-

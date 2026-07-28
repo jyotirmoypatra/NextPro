@@ -58,6 +58,7 @@ struct APIConfig {
         static let getAccessGroupList = "/api/access-group/list/"
         static let deleteUser = "/api/facility-manager/delete/"
         static let deleteAccount = "/api/facility-user/account/delete/"
+        static let getNotificationList = "/api/notifications/mine/"
     }
     
     static func url(_ endpoint: String) -> String {

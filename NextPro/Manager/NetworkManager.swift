@@ -687,6 +687,31 @@ class NetworkManager: ObservableObject {
             retry: true
         )
     }
+    // MARK: - Get Notification List api
+    func getNotificationList(page: Int, pageSize: Int) async throws -> NotificationResponse {
+
+        var components = URLComponents(
+            string: APIConfig.url(APIConfig.Endpoints.getNotificationList)
+        )!
+
+        components.queryItems = [
+            URLQueryItem(name: "page", value: "\(page)"),
+            URLQueryItem(name: "page_size", value: "\(pageSize)")
+        ]
+
+        guard let url = components.url else {
+            throw APIError.invalidURL
+        }
+
+        print("Get Notification List Api called----")
+        return try await performRequest(
+            url: url,
+            method: "GET",
+            requiresAuth: true,
+            responseType: NotificationResponse.self,
+            retry: true
+        )
+    }
 
 
 }
