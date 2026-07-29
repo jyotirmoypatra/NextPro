@@ -8,7 +8,7 @@
 
 import Foundation
 
-// MARK: - Mark Read Response
+// MARK: - Mark All Notification Read Response
 struct MarkNotificationReadResponse: Codable {
     let status: Bool?
     let message: String?
@@ -18,4 +18,12 @@ struct MarkNotificationReadResponse: Codable {
 // MARK: - Data
 struct MarkNotificationReadData: Codable {
     let updated: Int?
+}
+
+
+// MARK: - Mark Single Notification Read Response
+struct MarkSingleNotificationReadResponse: Codable {
+    let status: Bool?
+    let message: String?
+    //let data: MarkNotificationReadData?
 }

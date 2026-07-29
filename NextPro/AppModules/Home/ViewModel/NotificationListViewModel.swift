@@ -17,7 +17,8 @@ final class NotificationListViewModel: ObservableObject {
     @Published var isFailedDueToNoInternet = false
     @Published var hasLoadedOnce = false
 
-    @Published var notifications: [NotificationItem] = []
+    /// Notifications grouped by date, in the order the server returns them — one section per date.
+    @Published var sections: [NotificationSection] = []
 
     // MARK: - Pagination
     @Published var currentPage = 1
@@ -43,7 +44,7 @@ final class NotificationListViewModel: ObservableObject {
             isFailedDueToNoInternet = false
 
             if reset {
-                notifications = []
+                sections = []
                 currentPage = 1
                 totalPages = 1
                 print("🔄 Notification pagination reset → loading from page 1")
@@ -71,7 +72,7 @@ final class NotificationListViewModel: ObservableObject {
             }
 
             print("📤 Requesting notification page:", pageToFetch,
-                  "| current stored count:", notifications.count)
+                  "| current stored section count:", sections.count)
 
             do {
                 let response = try await networkManager.getNotificationList(
@@ -80,24 +81,23 @@ final class NotificationListViewModel: ObservableObject {
                 )
 
                 if response.status ?? true {
-                    let items = (response.data ?? []).flatMap { $0.notifications ?? [] }
+                    let newSections = response.data ?? []
 
                     print("📥 Received notification page:", pageToFetch,
-                          "| items received:", items.count)
+                          "| sections received:", newSections.count)
 
                     if pageToFetch == 1 {
-                        notifications = items
-                    } else {
-                        notifications.append(contentsOf: items)
+                        sections = []
                     }
+                    appendSections(newSections)
 
-                    let totalCount = response.total ?? notifications.count
+                    let totalCount = response.total ?? totalNotificationCount
                     totalPages = max(1, Int(ceil(Double(totalCount) / Double(pageSize))))
                     currentPage = pageToFetch + 1
                     hasLoadedOnce = true
 
                     print("✅ Notification list updated",
-                          "| total items now:", notifications.count,
+                          "| total items now:", totalNotificationCount,
                           "| next page will be:", currentPage)
                 } else {
                     errorMessage = response.message ?? "Something went wrong!"
@@ -116,17 +116,62 @@ final class NotificationListViewModel: ObservableObject {
         await fetchTask?.value
     }
 
+    /// Merges a freshly-fetched page of date-sections into `sections`, combining sections that
+    /// share the same date instead of creating a duplicate header when pagination splits a
+    /// date's notifications across two pages.
+    private func appendSections(_ newSections: [NotificationSection]) {
+        for section in newSections {
+            if let index = sections.firstIndex(where: { $0.date == section.date }) {
+                let combined = (sections[index].notifications ?? []) + (section.notifications ?? [])
+                sections[index] = NotificationSection(date: section.date, notifications: combined)
+            } else {
+                sections.append(section)
+            }
+        }
+    }
+
+    var isEmpty: Bool {
+        sections.allSatisfy { ($0.notifications ?? []).isEmpty }
+    }
+
+    var totalNotificationCount: Int {
+        sections.reduce(0) { $0 + ($1.notifications?.count ?? 0) }
+    }
+
+    /// The id of the very last notification across all sections — used to trigger loading the
+    /// next page once the user scrolls to the bottom of the list.
+    var lastNotificationId: String? {
+        for section in sections.reversed() {
+            if let id = section.notifications?.last?.id {
+                return id
+            }
+        }
+        return nil
+    }
+
     var hasUnread: Bool {
-        notifications.contains(where: { !($0.isRead ?? false) })
+        sections.contains { section in
+            (section.notifications ?? []).contains { !($0.isRead ?? false) }
+        }
     }
 
     func markAllAsRead() {
-        notifications = notifications.map { markRead($0) }
+        sections = sections.map { section in
+            NotificationSection(date: section.date, notifications: section.notifications?.map { markRead($0) })
+        }
     }
 
     func markAsRead(id: String?) {
-        guard let id, let index = notifications.firstIndex(where: { $0.id == id }) else { return }
-        notifications[index] = markRead(notifications[index])
+        guard let id else { return }
+
+        for sectionIndex in sections.indices {
+            guard var items = sections[sectionIndex].notifications,
+                  let itemIndex = items.firstIndex(where: { $0.id == id }) else { continue }
+
+            items[itemIndex] = markRead(items[itemIndex])
+            sections[sectionIndex] = NotificationSection(date: sections[sectionIndex].date, notifications: items)
+            return
+        }
     }
 
     private func markRead(_ item: NotificationItem) -> NotificationItem {
@@ -147,4 +192,7 @@ final class NotificationListViewModel: ObservableObject {
             timeElapsed: item.timeElapsed
         )
     }
+    
+    
+
 }

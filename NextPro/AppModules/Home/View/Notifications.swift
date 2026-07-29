@@ -12,6 +12,7 @@ struct Notifications: View {
     @EnvironmentObject private var notificationCountVM: NotificationCountViewModel
     @StateObject private var notificationVM = NotificationListViewModel()
     @StateObject private var readAllVM = NotificationReadAllViewModel()
+    @StateObject private var singleReadVM = SingleNotificationReadViewModel()
     @StateObject private var toastManager = ToastManager.shared
     @State private var pullToRefresh = false
     @State private var showErrorAlert = false
@@ -85,7 +86,7 @@ struct Notifications: View {
                     .padding(.bottom, 15)
 
                     // MARK: - Read All button
-                    if !notificationVM.notifications.isEmpty {
+                    if !notificationVM.sections.isEmpty {
                     HStack {
                         Spacer()
 
@@ -142,46 +143,39 @@ struct Notifications: View {
                     .padding(.bottom, 6)
                     }
 
-                    // MARK: - Notification List
+                    // MARK: - Notification List (grouped by date)
                     ScrollViewReader { proxy in
                         ScrollView(.vertical, showsIndicators: false) {
-                            LazyVStack(spacing: 12) {
+                            LazyVStack(spacing: 12, pinnedViews: [.sectionHeaders]) {
                                 Color.clear
                                     .frame(height: 1)
                                     .id("TOP")
 
-                                if !notificationVM.notifications.isEmpty {
-                                    ForEach(notificationVM.notifications) { notification in
-                                        NotificationRowView(
-                                            notification: notification,
-                                            icon: notificationIcon,
-                                            iconColor: notificationIconColor
-                                        )
-                                        .onTapGesture {
-                                            withAnimation(.easeInOut(duration: 0.25)) {
-                                                notificationVM.markAsRead(id: notification.id)
+                                ForEach(notificationVM.sections, id: \.date) { section in
+                                    Section(header: DateSectionHeaderView(dateString: section.date)) {
+                                        ForEach(section.notifications ?? []) { notification in
+                                            NotificationRowView(
+                                                notification: notification,
+                                                icon: notificationIcon,
+                                                iconColor: notificationIconColor
+                                            )
+                                            .onTapGesture {
+                                                handleTap(on: notification)
                                             }
-                                        }
-                                        .onAppear {
-                                            let isLastItem = notification.id == notificationVM.notifications.last?.id
-                                            let hasMorePages = notificationVM.currentPage <= notificationVM.totalPages
-                                            let notLoading = !notificationVM.isLoadingMore && !notificationVM.isLoading
-                                            if isLastItem && hasMorePages && notLoading {
-                                                Task {
-                                                    await notificationVM.fetchNotificationList()
-                                                }
+                                            .onAppear {
+                                                loadMoreIfNeeded(after: notification)
                                             }
                                         }
                                     }
+                                }
 
-                                    if notificationVM.isLoadingMore {
-                                        HStack {
-                                            Spacer()
-                                            ProgressView()
-                                            Spacer()
-                                        }
-                                        .padding(.top, 10)
+                                if notificationVM.isLoadingMore {
+                                    HStack {
+                                        Spacer()
+                                        ProgressView()
+                                        Spacer()
                                     }
+                                    .padding(.top, 10)
                                 }
                             }
                             .padding(.horizontal, 10)
@@ -212,7 +206,7 @@ struct Notifications: View {
                     .allowsHitTesting(false)
                 }
 
-                if notificationVM.hasLoadedOnce && !notificationVM.isLoading && notificationVM.notifications.isEmpty {
+                if notificationVM.hasLoadedOnce && !notificationVM.isLoading && notificationVM.sections.isEmpty {
                     ZStack {
                         VStack(spacing: 14) {
                             Image(systemName: "bell.slash")
@@ -268,13 +262,87 @@ struct Notifications: View {
         ) {
             ModernAlertView(
                 title: "Error!",
-                message: readAllVM.errorMessage ?? notificationVM.errorMessage ?? "Something went wrong!",
+                message: singleReadVM.errorMessage ?? readAllVM.errorMessage ?? notificationVM.errorMessage ?? "Something went wrong!",
                 isSuccess: false,
                 buttonTitle: "OK"
             ) {
                 showErrorAlert = false
             }
         }
+    }
+
+    // MARK: - Actions
+
+    private func handleTap(on notification: NotificationItem) {
+        guard !(notification.isRead ?? false) else { return }
+        guard let idString = notification.id else { return }
+
+        Task {
+            let success = await singleReadVM.markAsRead(notificationId: idString)
+
+            if success {
+                // Immediate UI feedback
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    notificationVM.markAsRead(id: notification.id)
+                }
+
+                // Keep badge + list in sync with the server
+                notificationCountVM.refreshUnreadCount()
+
+                pullToRefresh = true
+                await notificationVM.fetchNotificationList(reset: true)
+                pullToRefresh = false
+            } else if let error = singleReadVM.errorMessage, !error.isEmpty {
+                showErrorAlert = true
+            }
+        }
+    }
+
+    private func loadMoreIfNeeded(after notification: NotificationItem) {
+        let isLastItem = notification.id == notificationVM.lastNotificationId
+        let hasMorePages = notificationVM.currentPage <= notificationVM.totalPages
+        let notLoading = !notificationVM.isLoadingMore && !notificationVM.isLoading
+
+        guard isLastItem && hasMorePages && notLoading else { return }
+
+        Task {
+            await notificationVM.fetchNotificationList()
+        }
+    }
+}
+
+/// Sticky section header showing a notification group's date (e.g. "23 Jul 2026").
+private struct DateSectionHeaderView: View {
+    let dateString: String?
+
+    var body: some View {
+        HStack {
+            Text(DateSectionHeaderView.formattedDate(dateString))
+                .font(.custom("Inter-SemiBold", size: 13))
+                .foregroundColor(.white.opacity(0.6))
+                .textCase(nil)
+
+            Spacer()
+        }
+        .padding(.vertical, 8)
+        .background(Color.black.opacity(0.9))
+    }
+
+    /// Converts an API date string (`yyyy-MM-dd`) into a friendly display format (`23 Jul 2026`).
+    /// Falls back to the raw string if it can't be parsed.
+    private static func formattedDate(_ dateString: String?) -> String {
+        guard let dateString, !dateString.isEmpty else { return "" }
+
+        let inputFormatter = DateFormatter()
+        inputFormatter.dateFormat = "yyyy-MM-dd"
+        inputFormatter.locale = Locale(identifier: "en_US_POSIX")
+
+        guard let date = inputFormatter.date(from: dateString) else { return dateString }
+
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = "d MMM yyyy"
+        outputFormatter.locale = Locale(identifier: "en_US_POSIX")
+        return outputFormatter.string(from: date)
     }
 }
 

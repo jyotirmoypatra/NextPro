@@ -729,6 +729,25 @@ class NetworkManager: ObservableObject {
         )
     }
     
+    // MARK: - Unregister FCM Token api
+    func MarkSingleNotificationRead(notificationId: String) async throws -> MarkSingleNotificationReadResponse {
+
+        let endpoint = APIConfig.Endpoints.readNotification.replacingOccurrences(
+            of: "{notification_id}",
+            with: "\(notificationId)"
+        )
+        let url = URL(string: APIConfig.url(endpoint))!
+        print("MarkSingleNotificationRead Api called----")
+
+        return try await performRequest(
+            url: url,
+            method: "POST",
+            requiresAuth: true,
+            responseType: MarkSingleNotificationReadResponse.self,
+            retry: true
+        )
+    }
+    
     func getUnreadNotificationCount() async throws -> UnreadNotificationCountResponse {
 
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.unreadNotificationCount))!
