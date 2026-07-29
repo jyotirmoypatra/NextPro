@@ -86,7 +86,7 @@ struct Notifications: View {
                     .padding(.bottom, 15)
 
                     // MARK: - Read All button
-                    if !notificationVM.sections.isEmpty {
+                    if !notificationVM.sections.isEmpty && notificationVM.hasUnread {
                     HStack {
                         Spacer()
 
@@ -118,14 +118,14 @@ struct Notifications: View {
                                 Text("Read all")
                                     .font(.custom("Inter-SemiBold", size: 13))
                             }
-                            .foregroundColor(notificationVM.hasUnread ? .white : .gray)
+                            .foregroundColor(.white)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
                             .background(
                                 LinearGradient(
                                     gradient: Gradient(colors: [
-                                        Color.white.opacity(notificationVM.hasUnread ? 0.16 : 0.06),
-                                        Color.white.opacity(notificationVM.hasUnread ? 0.08 : 0.03)
+                                        Color.white.opacity(0.16),
+                                        Color.white.opacity(0.08)
                                     ]),
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
@@ -134,10 +134,10 @@ struct Notifications: View {
                             .clipShape(Capsule())
                             .overlay(
                                 Capsule()
-                                    .stroke(Color.white.opacity(notificationVM.hasUnread ? 0.25 : 0.1), lineWidth: 1)
+                                    .stroke(Color.white.opacity(0.25), lineWidth: 1)
                             )
                         }
-                        .disabled(!notificationVM.hasUnread)
+                        .disabled(readAllVM.isLoading)
                     }
                     .padding(.horizontal, 10)
                     .padding(.bottom, 6)
