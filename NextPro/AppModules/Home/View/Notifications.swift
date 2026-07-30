@@ -16,6 +16,7 @@ struct Notifications: View {
     @StateObject private var toastManager = ToastManager.shared
     @State private var pullToRefresh = false
     @State private var showErrorAlert = false
+    @State private var pendingNotificationIds: Set<String> = []
 
     private let notificationIcon = "bell.fill"
     private let notificationIconColor: Color = .white
@@ -157,7 +158,8 @@ struct Notifications: View {
                                             NotificationRowView(
                                                 notification: notification,
                                                 icon: notificationIcon,
-                                                iconColor: notificationIconColor
+                                                iconColor: notificationIconColor,
+                                                isProcessing: notification.id.map(pendingNotificationIds.contains) ?? false
                                             )
                                             .onTapGesture {
                                                 handleTap(on: notification)
@@ -276,25 +278,27 @@ struct Notifications: View {
     private func handleTap(on notification: NotificationItem) {
         guard !(notification.isRead ?? false) else { return }
         guard let idString = notification.id else { return }
+        guard !pendingNotificationIds.contains(idString) else { return }
+
+        // Immediate per-row feedback: this notification only, not the whole screen.
+        pendingNotificationIds.insert(idString)
 
         Task {
             let success = await singleReadVM.markAsRead(notificationId: idString)
 
             if success {
-                // Immediate UI feedback
                 withAnimation(.easeInOut(duration: 0.25)) {
                     notificationVM.markAsRead(id: notification.id)
                 }
 
-                // Keep badge + list in sync with the server
+                // Keep badge + list in sync with the server, without clearing the visible list.
                 notificationCountVM.refreshUnreadCount()
-
-                pullToRefresh = true
-                await notificationVM.fetchNotificationList(reset: true)
-                pullToRefresh = false
+                await notificationVM.refreshSilently()
             } else if let error = singleReadVM.errorMessage, !error.isEmpty {
                 showErrorAlert = true
             }
+
+            pendingNotificationIds.remove(idString)
         }
     }
 
@@ -333,6 +337,7 @@ struct NotificationRowView: View {
     let notification: NotificationItem
     let icon: String
     let iconColor: Color
+    var isProcessing: Bool = false
 
     private var isUnread: Bool {
         !(notification.isRead ?? false)
@@ -369,7 +374,13 @@ struct NotificationRowView: View {
                     .lineLimit(2)
             }
 
-            if isUnread {
+            if isProcessing {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .scaleEffect(0.6)
+                    .frame(width: 8, height: 8)
+                    .padding(.top, 4)
+            } else if isUnread {
                 Circle()
                     .fill(Color.white)
                     .frame(width: 8, height: 8)
@@ -390,5 +401,7 @@ struct NotificationRowView: View {
                     lineWidth: 1
                 )
         )
+        .opacity(isProcessing ? 0.6 : 1)
+        .allowsHitTesting(!isProcessing)
     }
 }

@@ -13,24 +13,21 @@ final class NotificationListViewModel: ObservableObject {
 
     @Published var isLoading: Bool = false
     @Published var isLoadingMore: Bool = false
+    @Published private(set) var isRefreshingSilently = false
     @Published var errorMessage: String?
     @Published var isFailedDueToNoInternet = false
     @Published var hasLoadedOnce = false
-
-    /// Notifications grouped by date, in the order the server returns them — one section per date.
     @Published var sections: [NotificationSection] = []
 
     // MARK: - Pagination
     @Published var currentPage = 1
     @Published var totalPages = 1
-    let pageSize = 10
+    let pageSize = 20
 
     // MARK: - Network
     private let networkManager = NetworkManager.shared
     private var fetchTask: Task<Void, Never>?
-
-    // MARK: - MAIN FETCH
-    /// Fetches notification list with server-side pagination.
+    
     /// - Parameter reset: If true, clears list, resets to page 1, and fetches first page (used for initial load and pull-to-refresh).
     func fetchNotificationList(reset: Bool = false) async {
         fetchTask?.cancel()
@@ -114,6 +111,33 @@ final class NotificationListViewModel: ObservableObject {
         }
 
         await fetchTask?.value
+    }
+
+    /// Re-fetches page 1 from the server and swaps it in once it arrives, without ever clearing
+    /// `sections` first — used after a single-item action (e.g. marking one notification read)
+    /// so the list stays fully visible with no blank/flicker state while resyncing with the server.
+    func refreshSilently() async {
+        guard networkManager.hasInternet else { return }
+        guard !isRefreshingSilently else { return }
+        isRefreshingSilently = true
+        defer { isRefreshingSilently = false }
+
+        do {
+            let response = try await networkManager.getNotificationList(page: 1, pageSize: pageSize)
+            guard !Task.isCancelled else { return }
+
+            if response.status ?? true {
+                let newSections = response.data ?? []
+                sections = newSections
+
+                let totalCount = response.total ?? newSections.reduce(0) { $0 + ($1.notifications?.count ?? 0) }
+                totalPages = max(1, Int(ceil(Double(totalCount) / Double(pageSize))))
+                currentPage = 2
+                hasLoadedOnce = true
+            }
+        } catch {
+            // Keep the existing list as-is; the optimistic local update already reflects the read.
+        }
     }
 
     /// Merges a freshly-fetched page of date-sections into `sections`, combining sections that
