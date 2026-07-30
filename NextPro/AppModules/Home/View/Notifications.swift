@@ -317,7 +317,7 @@ private struct DateSectionHeaderView: View {
 
     var body: some View {
         HStack {
-            Text(DateSectionHeaderView.formattedDate(dateString))
+            Text(dateString?.toFormattedDate(outputFormat: "d MMM yyyy") ?? "")
                 .font(.custom("Inter-SemiBold", size: 13))
                 .foregroundColor(.white.opacity(0.6))
                 .textCase(nil)
@@ -326,23 +326,6 @@ private struct DateSectionHeaderView: View {
         }
         .padding(.vertical, 8)
         .background(Color.black.opacity(0.9))
-    }
-
-    /// Converts an API date string (`yyyy-MM-dd`) into a friendly display format (`23 Jul 2026`).
-    /// Falls back to the raw string if it can't be parsed.
-    private static func formattedDate(_ dateString: String?) -> String {
-        guard let dateString, !dateString.isEmpty else { return "" }
-
-        let inputFormatter = DateFormatter()
-        inputFormatter.dateFormat = "yyyy-MM-dd"
-        inputFormatter.locale = Locale(identifier: "en_US_POSIX")
-
-        guard let date = inputFormatter.date(from: dateString) else { return dateString }
-
-        let outputFormatter = DateFormatter()
-        outputFormatter.dateFormat = "d MMM yyyy"
-        outputFormatter.locale = Locale(identifier: "en_US_POSIX")
-        return outputFormatter.string(from: date)
     }
 }
 
