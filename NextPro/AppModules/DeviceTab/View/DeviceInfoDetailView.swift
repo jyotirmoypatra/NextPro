@@ -94,10 +94,9 @@ struct DeviceInfoDetailView: View {
                 dismiss()
             } label: {
                 HStack(spacing: 6) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 18, weight: .semibold))
-                    Text("Back")
-                        .font(.custom("Inter-SemiBold", size: 16))
+                    Image(systemName: "arrow.left")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.white)
                 }
                 .foregroundColor(.white)
             }

@@ -47,22 +47,18 @@ struct UserManagementView: View {
                             dismiss()
                         }) {
                             HStack {
-                                Image(systemName: "chevron.left")
-                                    .font(.system(size: 18, weight: .semibold))
+                                Image(systemName: "arrow.left")
+                                    .font(.system(size: 20, weight: .semibold))
                                     .foregroundColor(.white)
-                                
-                                Text("Back")
-                                    .foregroundColor(.white)
-                                    .font(.custom("Inter-SemiBold", size: 16))
                             }
                         }
                         
                         Spacer()
                         
                         // RIGHT: Info Icon
-                        Image(systemName: "info.circle")
-                            .resizable()
-                            .frame(width: 20, height: 20)
+//                        Image(systemName: "info.circle")
+//                            .resizable()
+//                            .frame(width: 20, height: 20)
                     }
                     .overlay(
                         Text("User Management")

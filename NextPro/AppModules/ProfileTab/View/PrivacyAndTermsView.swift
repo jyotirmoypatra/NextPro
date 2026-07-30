@@ -40,13 +40,10 @@ struct  PrivacyAndTermsView: View {
                             dismiss()
                         }) {
                             HStack {
-                                Image(systemName: "chevron.left")
-                                    .font(.system(size: 18, weight: .semibold))
+                                Image(systemName: "arrow.left")
+                                    .font(.system(size: 20, weight: .semibold))
                                     .foregroundColor(.white)
-                                
-                                Text("Back")
-                                    .foregroundColor(.white)
-                                    .font(.custom("Inter-SemiBold", size: 16))
+
                             }
                         }
                         
