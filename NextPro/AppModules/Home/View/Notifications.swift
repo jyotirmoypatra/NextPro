@@ -101,6 +101,10 @@ struct Notifications: View {
                                     if let message = readAllVM.successMessage, !message.isEmpty {
                                         toastManager.show(message: message, type: .success)
                                     }
+
+                                    // Keep badge + list in sync with the server, without clearing the visible list.
+                                    notificationCountVM.refreshUnreadCount()
+                                    await notificationVM.refreshSilently()
                                 } else if let error = readAllVM.errorMessage, !error.isEmpty {
                                     showErrorAlert = true
                                 }
