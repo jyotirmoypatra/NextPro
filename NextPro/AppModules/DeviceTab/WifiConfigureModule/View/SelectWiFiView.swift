@@ -11,6 +11,7 @@ import SwiftUI
 import SystemConfiguration.CaptiveNetwork
 import CoreLocation
 import NetworkExtension
+import Network
 import UIKit
 
 
@@ -30,6 +31,8 @@ struct SelectWiFiView: View {
     @State private var locationDelegate: CLLocationDelegate?
     @State private var willEnterForegroundObserver: NSObjectProtocol?
     @State private var showInfo = false
+    @State private var pathMonitor: NWPathMonitor?
+    @State private var lastWiFiConnected = false
 
     private var selectedWiFiNetwork: String? {
         guard let index = selectedWiFiIndex,
@@ -116,51 +119,53 @@ struct SelectWiFiView: View {
                             .foregroundColor(.white)
                             .padding(.top, 30)
                             .frame(height: 200)
-                    } else if availableWiFiList.isEmpty {
-                        Text(emptyStateMessage)
-                            .foregroundColor(isEmptyStateError ? .red : .white.opacity(0.6))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 12)
-                            .padding(.top, 20)
                     } else {
                         ScrollView(showsIndicators: false) {
-                            VStack(spacing: 12) {
-                                ForEach(availableWiFiList.indices, id: \.self) { index in
-                                    HStack {
-                                        Image("wifi")
-                                            .resizable()
-                                            .frame(width: 24, height: 24)
-                                        
-                                        Image("lock")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 24, height: 24)
-                                        
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(availableWiFiList[index])
-                                                .font(.custom("Inter-SemiBold", size: 16))
-                                                .foregroundColor(.white)
-                                        }
-                                        
-                                        Spacer()
-                                        
-                                        Image(systemName: selectedWiFiIndex == index ? "checkmark.square.fill" : "square")
-                                            .resizable()
-                                            .frame(width: 24, height: 24)
-                                            .foregroundColor(selectedWiFiIndex == index ? .white : .white.opacity(0.6))
-                                            .onTapGesture {
-                                                selectedWiFiIndex = index
+                            if availableWiFiList.isEmpty {
+                                Text(emptyStateMessage)
+                                    .foregroundColor(isEmptyStateError ? .red : .white.opacity(0.6))
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 12)
+                                    .padding(.top, 20)
+                                    .frame(maxWidth: .infinity)
+                            } else {
+                                VStack(spacing: 12) {
+                                    ForEach(availableWiFiList.indices, id: \.self) { index in
+                                        HStack {
+                                            Image("wifi")
+                                                .resizable()
+                                                .frame(width: 24, height: 24)
+
+                                            Image("lock")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 24, height: 24)
+
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(availableWiFiList[index])
+                                                    .font(.custom("Inter-SemiBold", size: 16))
+                                                    .foregroundColor(.white)
                                             }
+
+                                            Spacer()
+
+                                            Image(systemName: selectedWiFiIndex == index ? "checkmark.square.fill" : "square")
+                                                .resizable()
+                                                .frame(width: 24, height: 24)
+                                                .foregroundColor(selectedWiFiIndex == index ? .white : .white.opacity(0.6))
+                                                .onTapGesture {
+                                                    selectedWiFiIndex = index
+                                                }
+                                        }
+                                        .padding()
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .fill(Color.white.opacity(0.1))
+                                        )
                                     }
-                                    .padding()
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .fill(Color.white.opacity(0.1))
-                                    )
                                 }
+                                .padding(.vertical, 10)
                             }
-                           
-                            .padding(.vertical, 10)
                         }
                         .refreshable {
                             checkLocationPermissionAndFetchWiFi() // 🔄 Refresh Wi-Fi list on swipe down
@@ -248,12 +253,16 @@ struct SelectWiFiView: View {
             ) { _ in
                 checkLocationPermissionAndFetchWiFi()
             }
+
+            startWiFiPathMonitor()
         }
         .onDisappear {
             if let observer = willEnterForegroundObserver {
                 NotificationCenter.default.removeObserver(observer)
                 willEnterForegroundObserver = nil
             }
+            pathMonitor?.cancel()
+            pathMonitor = nil
         }
         .onChange(of: availableWiFiList) { newValue in
             guard let selectedWiFiIndex else { return }
@@ -382,6 +391,23 @@ struct SelectWiFiView: View {
     private func resetEmptyState() {
         emptyStateMessage = "No Wi-Fi networks found."
         isEmptyStateError = false
+    }
+
+    private func startWiFiPathMonitor() {
+        pathMonitor?.cancel()
+
+        let monitor = NWPathMonitor(requiredInterfaceType: .wifi)
+        lastWiFiConnected = monitor.currentPath.status == .satisfied
+        monitor.pathUpdateHandler = { path in
+            let isConnected = path.status == .satisfied
+            DispatchQueue.main.async {
+                guard isConnected != self.lastWiFiConnected else { return }
+                self.lastWiFiConnected = isConnected
+                self.checkLocationPermissionAndFetchWiFi()
+            }
+        }
+        monitor.start(queue: .main)
+        pathMonitor = monitor
     }
 
     private func openAppSettings() {
