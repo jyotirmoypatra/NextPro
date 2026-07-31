@@ -29,6 +29,7 @@ struct SelectWiFiView: View {
     @State private var locationManager = CLLocationManager()
     @State private var locationDelegate: CLLocationDelegate?
     @State private var willEnterForegroundObserver: NSObjectProtocol?
+    @State private var showInfo = false
 
     private var selectedWiFiNetwork: String? {
         guard let index = selectedWiFiIndex,
@@ -66,9 +67,14 @@ struct SelectWiFiView: View {
                         
                         Spacer()
                         
-                        Image(systemName: "info.circle")
-                            .resizable()
-                            .frame(width: 24, height: 24)
+                        Button(action: {
+                            showInfo = true
+                        }) {
+                            Image(systemName: "info.circle")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .foregroundColor(.white)
+                        }
                     }
                     .overlay(
                         Text("Configure Device")
@@ -258,6 +264,9 @@ struct SelectWiFiView: View {
         }
 
         .navigationBarBackButtonHidden(true)
+        .fullScreenCover(isPresented: $showInfo) {
+            InfoScreenView(infoType: "device_config_info")
+        }
     }
 
     private func handleLocationAuthStatus(_ status: CLAuthorizationStatus) {

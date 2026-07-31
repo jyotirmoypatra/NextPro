@@ -30,8 +30,9 @@ struct SetWiFiPassword: View {
     @State private var locationAlertPayload: LocationAlertPayload?
     @State private var loadingMessage = ""
     @StateObject private var locationManager = LocationManager()
-    
-    
+    @State private var showInfo = false
+
+
     var body: some View {
         // Use GeometryReader to define a fixed, full-screen container
         GeometryReader { geometry in
@@ -46,7 +47,7 @@ struct SetWiFiPassword: View {
                 Color.black.opacity(0.8)
                     .ignoresSafeArea()
                 
-                VStack(spacing: 25) {
+                VStack(spacing: 15) {
                     
                     
                     HStack {
@@ -62,31 +63,59 @@ struct SetWiFiPassword: View {
                         
                         Spacer()
                         
-                        Image(systemName: "info.circle")
-                            .resizable()
-                            .frame(width: 24, height: 24)
+                        Button(action: {
+                            showInfo = true
+                        }) {
+                            Image(systemName: "info.circle")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .foregroundColor(.white)
+                        }
                     }
                     .overlay(
                         Text("Configure Device")
                             .foregroundColor(.white)
                             .font(.custom("Inter-Bold", size: 16))
                     )
+                    .padding(.horizontal, 5)
                     .padding(.top, 10)
+                    .padding(.bottom, 15)
                     
-                    
+                    VStack(spacing: 15) {
+                        Image("key-active")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 48, height: 48)
+
+                        Text("Enter Wi-Fi Password")
+                            .font(.custom("Inter-SemiBold", size: 16))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+
+                        Text("Enter the password for the selected Wi-Fi network to allow your device to connect securely.")
+                            .font(.custom("Inter-Regular", size: 16))
+                            .foregroundColor(Color.white.opacity(0.6))
+                            .multilineTextAlignment(.center)
+
+                        HStack(spacing: 6) {
+                            Image(systemName: "wifi")
+                                .foregroundColor(.white)
+
+                            Text(selectedWiFiNetwork)
+                                .font(.custom("Inter-SemiBold", size: 15))
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.white.opacity(0.11))
+                    )
                     // Password section
                     VStack(alignment: .leading, spacing: 6) {
                         // ... (Your password input code here)
-                        HStack(spacing: 0) {
-                            Text("Password")
-                                .font(.custom("Inter-Medium", size: 16))
-                                .foregroundColor(.white)
-                            Text(" *")
-                                .font(.system(size: 14))
-                                .foregroundColor(.red)
-                        }
-                        
-                        
+                       
                         ZStack(alignment: .trailing) {
                             ZStack(alignment: .leading) {
                                 if password.isEmpty {
@@ -124,7 +153,7 @@ struct SetWiFiPassword: View {
                             .padding(.trailing, 14)
                         }
                     }
-                    .padding(.top, 30)
+                    .padding(.top, 10)
                     
                     
                     
@@ -206,6 +235,9 @@ struct SetWiFiPassword: View {
                     openAppSettings()
                 }
             )
+        }
+        .fullScreenCover(isPresented: $showInfo) {
+            InfoScreenView(infoType: "device_config_info")
         }
     }
     // MARK: - WiFi Configuration

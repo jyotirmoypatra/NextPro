@@ -22,8 +22,9 @@ struct SelectDeviceView: View {
     @State private var tcScanTask: Task<Void, Never>?
     @State private var tcScanTimeoutTask: Task<Void, Never>?
     @State private var tcDeviceFound = false
+    @State private var showInfo = false
 
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -53,9 +54,14 @@ struct SelectDeviceView: View {
                         Spacer()
                         
                         // RIGHT: Info Icon
-                        Image(systemName: "info.circle")
-                            .resizable()
-                            .frame(width: 20, height: 20)
+                        Button(action: {
+                            showInfo = true
+                        }) {
+                            Image(systemName: "info.circle")
+                                .resizable()
+                                .frame(width: 20, height: 20)
+                                .foregroundColor(.white)
+                        }
                     }
                     .overlay(
                         Text("Configure Device")
@@ -207,7 +213,9 @@ struct SelectDeviceView: View {
         }
 
         .navigationBarBackButtonHidden(true)
-        
+        .fullScreenCover(isPresented: $showInfo) {
+            InfoScreenView(infoType: "device_config_info")
+        }
         .onReceive(bleManager.$bleState) { state in
             if state == .poweredOff {
                 icon = "bluetooth-red"
