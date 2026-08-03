@@ -14,6 +14,7 @@ struct Notifications: View {
     @StateObject private var readAllVM = NotificationReadAllViewModel()
     @StateObject private var singleReadVM = SingleNotificationReadViewModel()
     @StateObject private var toastManager = ToastManager.shared
+    @ObservedObject private var notificationNav = NotificationNavigationManager.shared
     @State private var pullToRefresh = false
     @State private var showErrorAlert = false
     @State private var pendingNotificationIds: Set<String> = []
@@ -242,6 +243,12 @@ struct Notifications: View {
                 if let error = notificationVM.errorMessage, !error.isEmpty {
                     showErrorAlert = true
                 }
+            }
+        }
+        .onChange(of: notificationNav.notificationsDidArrive) { _ in
+            guard notificationVM.hasLoadedOnce else { return }
+            Task {
+                await notificationVM.refreshSilently()
             }
         }
         .onReceive(NetworkManager.shared.$hasInternet) { hasInternet in

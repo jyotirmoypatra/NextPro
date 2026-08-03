@@ -11,6 +11,8 @@ import Combine
 @MainActor
 final class NotificationCountViewModel: ObservableObject {
 
+    static let shared = NotificationCountViewModel()
+
     @Published var unreadCount: Int = 0
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
@@ -33,6 +35,23 @@ final class NotificationCountViewModel: ObservableObject {
         fetchTask = Task { @MainActor [weak self] in
             await self?.fetchUnreadCount()
         }
+    }
+
+    /// Awaits the fetch to completion — for background-fetch callers that need to know when it's done.
+    @discardableResult
+    func refreshUnreadCountAwaiting() async -> Bool {
+        guard isAuthenticated else {
+            unreadCount = 0
+            return false
+        }
+
+        fetchTask?.cancel()
+        let task = Task { @MainActor [weak self] () -> Void in
+            await self?.fetchUnreadCount()
+        }
+        fetchTask = task
+        await task.value
+        return true
     }
 
     private func fetchUnreadCount() async {

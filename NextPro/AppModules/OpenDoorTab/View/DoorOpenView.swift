@@ -31,7 +31,6 @@ struct DoorOpenView: View {
     @State private var rssiTimer: Timer?
     @State private var isScanningActive = false
     @State private var isViewVisible = false
-    @State private var startMonitoringTask: DispatchWorkItem?
     @ObservedObject var network = NetworkManager.shared
     
     @State private var doorId : Int?
@@ -72,6 +71,7 @@ struct DoorOpenView: View {
     @State private var showTimeSyncAlert = false
     @State private var offlineTimeCheckTimer: Timer?
     @State private var navigateToNotifications = false
+    @ObservedObject private var notificationNav = NotificationNavigationManager.shared
     
     var body: some View {
         ZStack {
@@ -510,30 +510,28 @@ struct DoorOpenView: View {
                     startOfflineTimeObserver()
                 }
 
-                resumeBLEIfNeeded()
+                updateBLEState()
+
+                if notificationNav.shouldOpenNotifications {
+                    navigateToNotifications = true
+                    notificationNav.shouldOpenNotifications = false
+                }
+            }
+            .onChange(of: notificationNav.shouldOpenNotifications) { shouldOpen in
+                guard shouldOpen else { return }
+                navigateToNotifications = true
+                notificationNav.shouldOpenNotifications = false
             }
             .onDisappear {
                 print("🛑 DoorOpenView disappeared — stopping all BLE and timers")
-                
+
                 // Mark view as not visible
                 isViewVisible = false
-                
-                // Cancel any pending monitoring start task
-                startMonitoringTask?.cancel()
-                startMonitoringTask = nil
-                
-                // Stop continuous BLE scanning & monitoring
-                bleManager.stopContinuousScanning()
-                bleManager.stopMonitoringDevice()
-                bleManager.stopScanning()
-                isScanningActive = false
-                
-                // Stop RSSI monitoring timer
-                rssiTimer?.invalidate()
-                rssiTimer = nil
-                
+
+                stopBLE()
+
                 doorManager.clearDoorEvent()
-                
+
                 offlineTimeCheckTimer?.invalidate()
                 offlineTimeCheckTimer = nil
             }
@@ -567,19 +565,10 @@ struct DoorOpenView: View {
                 switch newPhase {
                 case .background:
                     print("🌙 App went to background — stopping BLE scanning and monitoring")
-                    // Stop all BLE activities
-                    bleManager.stopContinuousScanning()
-                    bleManager.stopMonitoringDevice()
-                    bleManager.stopScanning()
-                    isScanningActive = false
-                    AceesMessage = "Preparing Scan.."
-                    
-                    // Stop RSSI monitoring timer
-                    rssiTimer?.invalidate()
-                    rssiTimer = nil
-                    
+                    stopBLE(reason: "Preparing Scan..")
+
                 case .active:
-                    resumeBLEIfNeeded()
+                    updateBLEState()
 
                 case .inactive:
                     print("⏸️ App became inactive")
@@ -599,21 +588,20 @@ struct DoorOpenView: View {
                     successDoorKey = nil
                 }
                 if newTab == 1 {
-                    stopAllScanningAndMonitoring()
-                    AceesMessage = "Remote access selected"
+                    stopBLE(reason: "Remote access selected")
                 } else {
                     guard hasAvailableDoor else {
-                        stopAllScanningAndMonitoring()
+                        stopBLE()
                         return
                     }
                     guard bleManager.isBluetoothOn else {
                         AceesMessage = "Bluetooth is Off. Please turn it on."
                         return
                     }
-                    
+
                     AceesMessage = "Preparing Scan..."
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                        startBLEIfPossible()
+                        startBLE()
                     }
                 }
             }
@@ -621,17 +609,7 @@ struct DoorOpenView: View {
                 for: UIApplication.didEnterBackgroundNotification
             )) { _ in
                 print("🌙 didEnterBackground — force stop BLE")
-                
-                bleManager.stopContinuousScanning()
-                bleManager.stopMonitoringDevice()
-                bleManager.stopScanning()
-                isScanningActive = false
-                
-                rssiTimer?.invalidate()
-                rssiTimer = nil
-                
-                AceesMessage = "Preparing Scan.."
-                
+                stopBLE(reason: "Preparing Scan..")
             }
         
         
@@ -648,7 +626,7 @@ struct DoorOpenView: View {
                     
                     // Small delay ensures CoreBluetooth is fully ready
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        startBLEIfPossible()
+                        startBLE()
                     }
                     
                 default:
@@ -741,7 +719,7 @@ struct DoorOpenView: View {
                             overlayMessage = accessGrantedMessage
                             speakAndReset(accessGrantedMessage + " - " + accessGreetingMessage) {
                                 guard !self.isScanningActive else { return }
-                                self.startBLEIfPossible()
+                                self.startBLE()
                             }
                         }
                         
@@ -764,7 +742,7 @@ struct DoorOpenView: View {
                             overlayMessage = accessGrantedMessage
                             speakAndReset(accessGrantedMessage + " - " + accessGreetingMessage) {
                                 guard !self.isScanningActive else { return }
-                                self.startBLEIfPossible()
+                                self.startBLE()
                             }
                         }
                     }
@@ -806,7 +784,7 @@ struct DoorOpenView: View {
                                 : accessDeniedMessage
                             speakAndReset(deniedSpeech) {
                                 guard !self.isScanningActive else { return }
-                                self.startBLEIfPossible()
+                                self.startBLE()
                             }
                         }
                         
@@ -1042,7 +1020,7 @@ struct DoorOpenView: View {
             if time == nil {
                 showTimeSyncAlert = true
                 if selectedTab == 0 {
-                    stopAllScanningAndMonitoring()
+                    stopBLE()
                 }
                 return
             }
@@ -1050,27 +1028,27 @@ struct DoorOpenView: View {
         offlineTimeCheckTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             guard !network.hasInternet else { return }
             let time = serverTimeVM.getEstimatedServerTime()
-            
+
             if time == nil {
                 // Prevent repeating UI updates every second
                 guard !showTimeSyncAlert else { return }
                 DispatchQueue.main.async {
                     showTimeSyncAlert = true
                     if selectedTab == 0 {
-                        stopAllScanningAndMonitoring()
+                        stopBLE()
                     }
                 }
             }
             else {
-                
+
                 DispatchQueue.main.async {
-                    
+
                     // Stop timer so it doesn't fire repeatedly
                     guard selectedTab == 0 else { return }
                     // If scanning already running → do nothing
                     guard !isScanningActive else { return }
                     guard hasAvailableDoor else {
-                        stopAllScanningAndMonitoring()
+                        stopBLE()
                         return
                     }
                     guard bleManager.isBluetoothOn else {
@@ -1079,10 +1057,10 @@ struct DoorOpenView: View {
                     }
                     AceesMessage = "Preparing Scan..."
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                        startBLEIfPossible()
+                        startBLE()
                     }
-                    
-                    
+
+
                 }
             }
         }
@@ -1114,22 +1092,75 @@ struct DoorOpenView: View {
         guard doorStorage.hasResolvedDoors else { return }
         
         if doorStorage.hasDoor {
-            startBLEIfPossible()
+            startBLE()
         } else {
-            stopAllScanningAndMonitoring()
+            stopBLE()
         }
     }
-    
-    
-    /// Restarts BLE scanning if the digital-key tab is visible but scanning has stopped
-    /// (e.g. after returning from the foreground, or after this view reappears from being
-    /// pushed behind another screen like Notifications).
-    private func resumeBLEIfNeeded() {
+
+    // MARK: - BLE Lifecycle
+    //
+    // Every BLE start/stop/restart decision in this view funnels through the four methods
+    // below instead of each call site re-implementing its own guard chain:
+    //   - startBLE()      the one place that begins scanning
+    //   - stopBLE(reason:) the one place that ends scanning
+    //   - restartBLE()    stop, then retry-until-ready start (CoreBluetooth foreground recovery)
+    //   - updateBLEState() "should scanning be running right now?" reconciliation, used by
+    //                      any hook that just needs to resync (onAppear, scenePhase active,
+    //                      door/bluetooth availability changes)
+
+    /// THE single entry point for starting BLE scanning + nearby-door monitoring.
+    /// Safe to call from anywhere — no-ops if a time-sync alert is blocking access, or if the
+    /// view isn't visible, the digital-key tab isn't selected, there's no available door, or
+    /// Bluetooth is off.
+    private func startBLE() {
+        guard !showTimeSyncAlert else {
+            print("⛔ Time sync required — BLE start blocked")
+            return
+        }
         guard isViewVisible else { return }
         guard selectedTab == 0 else { return }
         guard hasDigitalKeyAccess else { return }
         guard hasAvailableDoor else {
-            stopAllScanningAndMonitoring()
+            stopBLE()
+            return
+        }
+        guard bleManager.isBluetoothOn else { return }
+
+        print("🟢 Starting BLE scanning")
+
+        bleManager.startContinuousScanning()
+        isScanningActive = true
+        monitorAndAutoOpenNearbyDoor()
+    }
+
+    /// THE single entry point for stopping BLE scanning, monitoring, and the RSSI timer.
+    /// Pass `reason` to show a specific status message; omit it to fall back to the same
+    /// Bluetooth-state-based message every caller used to compute for itself.
+    private func stopBLE(reason: String? = nil) {
+        bleManager.stopContinuousScanning()
+        bleManager.stopMonitoringDevice()
+        bleManager.stopScanning()
+
+        rssiTimer?.invalidate()
+        rssiTimer = nil
+
+        isScanningActive = false
+
+        AceesMessage = reason ?? (bleManager.isBluetoothOn
+            ? "Scanning paused"
+            : "Bluetooth is Off. Please turn it on.")
+    }
+
+    /// Re-evaluates whether BLE scanning should currently be running and reconciles state:
+    /// stops it if it shouldn't be running, restarts it if it should be but has gone
+    /// stale/inactive, or leaves it alone if everything already matches.
+    private func updateBLEState() {
+        guard isViewVisible else { return }
+        guard selectedTab == 0 else { return }
+        guard hasDigitalKeyAccess else { return }
+        guard hasAvailableDoor else {
+            stopBLE()
             return
         }
 
@@ -1140,56 +1171,21 @@ struct DoorOpenView: View {
 
         if !isScanningActive || bleManager.devices.isEmpty {
             print("⚠️ BLE inactive, restarting")
-            restartBLEAfterForeground()
+            restartBLE()
         } else {
             print("✅ BLE already active, no restart needed")
         }
     }
 
-    private func startBLEIfPossible() {
-
-        guard !showTimeSyncAlert else {
-            print("⛔ Time sync required — BLE start blocked")
-            return
+    /// Stops, then restarts BLE scanning with progressively longer delays while CoreBluetooth
+    /// recovers (e.g. after returning from the background). `retryIndex` drives the recursive
+    /// retry ladder — always call with the default (0) from the outside.
+    private func restartBLE(retryIndex: Int = 0) {
+        if retryIndex == 0 {
+            print("🔄 Restarting BLE after foreground")
+            stopBLE(reason: "Preparing Scan...")
         }
-        
-        guard isViewVisible else { return }
-        guard selectedTab == 0 else { return }
-        guard hasDigitalKeyAccess else { return }
-        guard hasAvailableDoor else {
-            stopAllScanningAndMonitoring()
-            return
-        }
-        guard bleManager.isBluetoothOn else { return }
-        
-        print("🟢 Starting BLE scanning")
-        
-        bleManager.startContinuousScanning()
-        isScanningActive = true
-        monitorAndAutoOpenNearbyDoor()
-    }
-    
-    private func restartBLEAfterForeground() {
 
-        print("🔄 Restarting BLE after foreground")
-
-        // stop all previous sessions
-        bleManager.stopContinuousScanning()
-        bleManager.stopMonitoringDevice()
-        bleManager.stopScanning()
-
-        rssiTimer?.invalidate()
-        rssiTimer = nil
-
-        isScanningActive = false
-
-        AceesMessage = "Preparing Scan..."
-
-        // IMPORTANT: give CoreBluetooth time to recover, with retries for long background periods
-        attemptBLERestart(retryIndex: 0)
-    }
-
-    private func attemptBLERestart(retryIndex: Int) {
         // Progressive delays: quick first try, then increasing waits as CoreBluetooth recovers
         let delays: [Double] = [0.15, 0.5, 1.0, 2.0, 3.0, 4.0]
 
@@ -1204,13 +1200,13 @@ struct DoorOpenView: View {
             guard selectedTab == 0 else { return }
             guard hasDigitalKeyAccess else { return }
             guard hasAvailableDoor else {
-                stopAllScanningAndMonitoring()
+                stopBLE()
                 return
             }
 
             guard bleManager.isBluetoothOn else {
                 print("⚠️ BLE not ready yet (attempt \(retryIndex + 1)/\(delays.count)), retrying...")
-                attemptBLERestart(retryIndex: retryIndex + 1)
+                restartBLE(retryIndex: retryIndex + 1)
                 return
             }
 
@@ -1230,7 +1226,7 @@ struct DoorOpenView: View {
             }
         }
     }
-    
+
     
     private func handleRemoteOpen(for door: RemoteDoorItem) {
         DoorManager.shared.activateMQTTWindow()
@@ -1303,24 +1299,6 @@ struct DoorOpenView: View {
             }
             .padding(.top, 10)
         }
-    }
-    
-    
-    private func stopAllScanningAndMonitoring() {
-        print("🛑 Stopping BLE scanning & monitoring (Tab switch)")
-        
-        bleManager.stopContinuousScanning()
-        bleManager.stopMonitoringDevice()
-        bleManager.stopScanning()
-        
-        rssiTimer?.invalidate()
-        rssiTimer = nil
-        
-        isScanningActive = false
-        AceesMessage = bleManager.isBluetoothOn
-        ? "Scanning paused"
-        : "Bluetooth is Off. Please turn it on."
-        
     }
     
     
@@ -1511,7 +1489,7 @@ struct DoorOpenView: View {
             }
             guard doorStorage.hasResolvedDoors && doorStorage.hasDoor else {
                 timer.invalidate()
-                stopAllScanningAndMonitoring()
+                stopBLE()
                 return
             }
             
@@ -1540,7 +1518,7 @@ struct DoorOpenView: View {
                 
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 isScanningActive = false
-                stopAllScanningAndMonitoring()
+                stopBLE()
                 
                 guard isWithinAccessWindow(accessGroups: door.accessGroups) else {
                     print("⛔ Outside allowed time window")
@@ -1551,7 +1529,7 @@ struct DoorOpenView: View {
                         UINotificationFeedbackGenerator().notificationOccurred(.error)
                         speakAndReset(door.name + ". " + deniedBase + ". Time Restricted") {
                             guard !isScanningActive else { return }
-                            startBLEIfPossible()
+                            startBLE()
                         }
                     }
                     return
@@ -1563,13 +1541,13 @@ struct DoorOpenView: View {
                 // Fallback: restart if MQTT never fires (voice-completion path handles the normal case)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 11.0) {
                     guard !isScanningActive else { return }
-                    startBLEIfPossible()
+                    startBLE()
                 }
             }
             else {
                 //  Unauthorized Thimmo device
                 print("🚫 Unauthorized Thimmo device nearby: \(name)")
-                stopAllScanningAndMonitoring()
+                stopBLE()
                 doorName = ""
                 doorId = nil
                 updateVoiceMessages(for: "")
@@ -1590,7 +1568,7 @@ struct DoorOpenView: View {
                     UINotificationFeedbackGenerator().notificationOccurred(.error)
                     speakAndReset(accessUnAuthorizedMessage) {
                         guard !isScanningActive else { return }
-                        startBLEIfPossible()
+                        startBLE()
                     }
                 }
             }

@@ -13,6 +13,7 @@ struct HomeView: View {
     @AppStorage("home_initial_tab") private var homeInitialTab = 0
     @State private var selectedTab = 0
     @State private var previousIsAdmin: Bool
+    @ObservedObject private var notificationNav = NotificationNavigationManager.shared
     @StateObject private var profileRefreshViewModel = UserProfileDetailsViewModel()
     private let tabBarHeight: CGFloat = 55
     @State private var openDoorsRefreshID = UUID()
@@ -203,6 +204,15 @@ struct HomeView: View {
                 DispatchQueue.main.async {
                     homeInitialTab = 0
                 }
+            }
+
+            if notificationNav.shouldOpenNotifications && selectedTab != 0 {
+                selectedTab = 0
+            }
+        }
+        .onChange(of: notificationNav.shouldOpenNotifications) { shouldOpen in
+            if shouldOpen && selectedTab != 0 {
+                selectedTab = 0
             }
         }
     }

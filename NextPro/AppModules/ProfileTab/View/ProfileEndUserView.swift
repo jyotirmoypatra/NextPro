@@ -141,20 +141,20 @@ struct ProfileEndUserView: View {
 
                            
 
-                            Divider().background(Color.white.opacity(0.15))
-                                .padding(.horizontal,20)
-
-                            // Notifications Toggle
-                            HStack {
-                                Text("Notifications")
-                                    .font(.custom("Inter-Medium", size: 16))
-                                    .foregroundColor(.white)
-                                Spacer()
-                                Toggle("", isOn: $notificationsEnabled)
-                                    .labelsHidden()
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 30) // consistent with other rows
+//                            Divider().background(Color.white.opacity(0.15))
+//                                .padding(.horizontal,20)
+//
+//                            // Notifications Toggle
+//                            HStack {
+//                                Text("Notifications")
+//                                    .font(.custom("Inter-Medium", size: 16))
+//                                    .foregroundColor(.white)
+//                                Spacer()
+//                                Toggle("", isOn: $notificationsEnabled)
+//                                    .labelsHidden()
+//                            }
+//                            .padding(.horizontal, 20)
+//                            .padding(.vertical, 30) // consistent with other rows
                             
                            
                             
