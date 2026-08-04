@@ -24,6 +24,7 @@ struct DeviceInformationView: View {
     @State private var isCheckingDevice = false
     @State private var alertMessage = ""
     @State private var icon = ""
+    @State private var loadingText = ""
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
@@ -194,24 +195,7 @@ struct DeviceInformationView: View {
                         Spacer(minLength: 30)
                         
                         VStack(spacing: 20){
-//                            HStack(){
-//                                Text("Get Device Information")
-//                                    .foregroundColor(.white)
-//                                    .font(.custom("Inter-Medium", size: 16))
-//                                    .padding(.trailing,10)
-//                                
-//                                Spacer()
-//                                
-//                                Image(systemName: "chevron.right")
-//                                    .foregroundColor(.white)
-//                                    .font(.system(size: 15, weight: .medium))
-//                                
-//                            }
-                            
                             Button {
-                                
-                                
-                                
                                 fetchDeviceInfo()
                             } label: {
                                 HStack {
@@ -238,23 +222,24 @@ struct DeviceInformationView: View {
                             Divider().background(Color.gray.opacity(0.3))
                             
                             Button {
-                                navigateToWiFiListView = true
+                                checkDeviceThenConfigureWifi()
                             } label: {
-                                
+
                                 HStack(){
                                     Text("Configure Wifi")
                                         .foregroundColor(.white)
                                         .font(.custom("Inter-Medium", size: 16))
                                         .padding(.trailing,10)
-                                    
+
                                     Spacer()
-                                    
+
                                     Image(systemName: "chevron.right")
                                         .foregroundColor(.white)
                                         .font(.system(size: 15, weight: .medium))
-                                    
+
                                 }
                             }
+                            .disabled(doorManager.isProcessing || isCheckingDevice)
                             
                             Divider().background(Color.gray.opacity(0.3))
                             
@@ -341,12 +326,18 @@ struct DeviceInformationView: View {
                 
                 if isCheckingDevice || doorManager.isProcessing{
                     ZStack {
-                        Color.black.opacity(0.8)
+                        Color.black.opacity(0.85)
                             .ignoresSafeArea()
 
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(1.8)
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(1.8)
+
+                            Text(loadingText)
+                                .font(.custom("Inter-Medium", size: 16))
+                                .foregroundColor(.white)
+                        }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ignoresSafeArea()
@@ -389,23 +380,54 @@ struct DeviceInformationView: View {
     }
     
     private func fetchDeviceInfo() {
-        
+
         if isBluetoothOff {
             icon = "bluetooth-red"
             alertMessage = "Bluetooth is turned off.\nPlease enable Bluetooth to proceed."
             showDeviceOfflineAlert = true
             return
         }
-        
-        startDeviceScan(serial: selectedDevice.serial)
-        
-        
-        
+
+        loadingText = "Checking Device.."
+        startDeviceScan(serial: selectedDevice.serial) {
+            loadingText = "Getting Info.."
+            doorManager.getDeviceInfo(
+                for: DoorModelUser(
+                    name: selectedDevice.modelName,
+                    devSn: selectedDevice.serial,
+                    devMac: selectedDevice.mac,
+                    devType: Int32(selectedDevice.devType ?? 14),
+                    doorID: 0,
+                    eKey: selectedDevice.key,
+                    cardno: "",
+                    deviceType: "",
+                    deviceModel: selectedDevice.modelName
+                )
+            )
+        }
+
+
+
     }
 
-    
-    
-    private func startDeviceScan(serial: String) {
+    private func checkDeviceThenConfigureWifi() {
+
+        if isBluetoothOff {
+            icon = "bluetooth-red"
+            alertMessage = "Bluetooth is turned off.\nPlease enable Bluetooth to proceed."
+            showDeviceOfflineAlert = true
+            return
+        }
+
+        loadingText = "Checking Device.."
+        startDeviceScan(serial: selectedDevice.serial) {
+            navigateToWiFiListView = true
+        }
+    }
+
+
+
+    private func startDeviceScan(serial: String, onFound: @escaping () -> Void) {
         isCheckingDevice = true
         tcDeviceFound = false
 
@@ -428,21 +450,7 @@ struct DeviceInformationView: View {
                         tcDeviceFound = true
                         stopTCScan()
 
-                        doorManager.getDeviceInfo(
-                            for: DoorModelUser(
-                                name: selectedDevice.modelName,
-                                devSn: selectedDevice.serial,
-                                devMac: selectedDevice.mac,
-                                devType: Int32(selectedDevice.devType ?? 14),
-                                doorID: 0,
-                                eKey: selectedDevice.key,
-                                cardno: "",
-                                deviceType: "",
-                                deviceModel: selectedDevice.modelName
-                            )
-                        )
-                        
-                        
+                        onFound()
 
                         // Observe result and navigate once data arrives
 //                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
