@@ -87,8 +87,8 @@ struct HomeView: View {
                             HStack {
                                 TabBarItemUser(
                                     title: "Open Doors",
-                                    activeIcon: "home-active",
-                                    inactiveIcon: "home-inactive",
+                                    activeIcon: "key-active",
+                                    inactiveIcon: "key-inactive",
                                     isSelected: selectedTab == 0
                                 )
                                 .onTapGesture { selectTab(0) }
