@@ -73,7 +73,7 @@ struct SetWiFiPassword: View {
                         }
                     }
                     .overlay(
-                        Text("Configure Device")
+                        Text("Enter WiFi Password")
                             .foregroundColor(.white)
                             .font(.custom("Inter-Bold", size: 16))
                     )

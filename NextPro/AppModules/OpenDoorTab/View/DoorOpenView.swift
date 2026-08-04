@@ -611,8 +611,20 @@ struct DoorOpenView: View {
                 print("🌙 didEnterBackground — force stop BLE")
                 stopBLE(reason: "Preparing Scan..")
             }
-        
-        
+            .onReceive(NotificationCenter.default.publisher(
+                for: UIApplication.didBecomeActiveNotification
+            )) { _ in
+                // Backup resume path: scenePhase's .active case can silently fail to fire
+                // for a view nested this deep (TabView/NavigationStack), which is what left
+                // scanning stuck on "Preparing Scan..." until a manual pull-to-refresh/tab
+                // switch. This notification fires independently of scenePhase, so force a
+                // full restart here regardless of whatever state the scenePhase path left us in.
+                print("☀️ didBecomeActive — force restart BLE")
+                guard isViewVisible, selectedTab == 0 else { return }
+                restartBLE()
+            }
+
+
             .onReceive(bleManager.$bleState) { state in
                 switch state {
                 case .poweredOff:

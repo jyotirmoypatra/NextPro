@@ -80,7 +80,7 @@ struct SelectWiFiView: View {
                         }
                     }
                     .overlay(
-                        Text("Configure Device")
+                        Text("Choose Your WiFi Network")
                             .foregroundColor(.white)
                             .font(.custom("Inter-Bold", size: 16))
                     )
