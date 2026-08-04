@@ -20,6 +20,7 @@ struct AddUserView: View {
     @State private var showAddUserSuccess = false
     @State private var navigateToUserManagement = false
     @State private var navigateToDoorAddView = false
+    @State private var showInfo = false
     
     @State private var fullName = ""
     @State private var email = ""
@@ -116,9 +117,14 @@ struct AddUserView: View {
                         Spacer()
                         
                         // RIGHT: Info Icon
-                        Image(systemName: "info.circle")
-                            .resizable()
-                            .frame(width: 20, height: 20)
+                        Button(action: {
+                            showInfo = true
+                        }) {
+                            Image(systemName: "info.circle")
+                                .resizable()
+                                .frame(width: 20, height: 20)
+                                .foregroundColor(.white)
+                        }
                     }
                     .overlay(
                         Text(editUser != nil ? "Edit User" : "Add User")
@@ -939,7 +945,9 @@ struct AddUserView: View {
             
            
         }
-        
+        .fullScreenCover(isPresented: $showInfo) {
+            InfoScreenView(infoType: "user_add_info")
+        }
         .onChange(of: phone) { newValue in
             // keep only digits
             let filtered = newValue.filter { $0.isNumber }
