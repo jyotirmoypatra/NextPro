@@ -43,17 +43,20 @@ struct DeviceAdminTabView: View {
                                 .font(.custom("Inter-SemiBold", size: 16))
                                 .foregroundColor(.white)
                         }
-                        
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.black.opacity(0.3))
+                        .cornerRadius(14)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(
+                                    Color.white.opacity(0.2),
+                                    lineWidth: 1
+                                )
+                        )
+                        .contentShape(Rectangle())
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(
-                                Color.white.opacity(0.2),
-                                lineWidth: 1
-                            )
-                    )
+                    .buttonStyle(.plain)
                 }
                 
                 if !assignDeviceVM.alredayConfiguredDeviceList.isEmpty {
