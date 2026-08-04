@@ -39,7 +39,7 @@ struct SuccessConnctionView: View {
                             .frame(width: 24, height: 24)
                     }
                     .overlay(
-                        Text("Configure Device")
+                        Text("Successfully Configured")
                             .foregroundColor(.white)
                             .font(.custom("Inter-Bold", size: 16))
                     )
