@@ -17,7 +17,7 @@ struct InfoScreenView: View {
         case "device_config_info":
             return "How to Configure Device"
         case "user_add_info":
-            return "How to User"
+            return "How to Add User"
         default:
             return "Info"
         }
