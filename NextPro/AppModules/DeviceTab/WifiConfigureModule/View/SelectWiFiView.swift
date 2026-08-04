@@ -153,15 +153,16 @@ struct SelectWiFiView: View {
                                                 .resizable()
                                                 .frame(width: 24, height: 24)
                                                 .foregroundColor(selectedWiFiIndex == index ? .white : .white.opacity(0.6))
-                                                .onTapGesture {
-                                                    selectedWiFiIndex = index
-                                                }
                                         }
                                         .padding()
                                         .background(
                                             RoundedRectangle(cornerRadius: 10)
                                                 .fill(Color.white.opacity(0.1))
                                         )
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            selectedWiFiIndex = index
+                                        }
                                     }
                                 }
                                 .padding(.vertical, 10)
