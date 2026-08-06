@@ -803,7 +803,26 @@ struct DoorOpenView: View {
                     }
                     else {
                         print("Ignored door event type:", type ?? -1)
-                        return
+                        if isRemoteUnlock {
+                            guard let sn = sn, let doorId = doorId else { return }
+                            let key = "\(sn)_\(doorId)"
+                            remoteMqttResult = RemoteMQTTResult(
+                                doorKey: key,
+                                isSuccess: false,
+                                message: deniedBase
+                            )
+                            speakText(accessDeniedMessage)
+                            UINotificationFeedbackGenerator().notificationOccurred(.error)
+                        } else {
+                            UINotificationFeedbackGenerator().notificationOccurred(.error)
+                            AceesMessage = accessDeniedMessage
+                            overlayMessage = accessDeniedMessage
+                            animateFailure()
+                            speakAndReset(accessDeniedMessage) {
+                                guard !self.isScanningActive else { return }
+                                self.startBLE()
+                            }
+                        }
                     }
                     doorManager.closeMQTTWindow()
                     doorManager.clearDoorEvent()
@@ -1374,10 +1393,19 @@ struct DoorOpenView: View {
                 progress = 1.0
             }
             
-            // Reset after 2 seconds
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+//            // Reset after 2 seconds
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+//                resetOverlayState()
+//            }
+
+            // Reset after 3 seconds — tracked via animationResetTask so a new
+            // attempt starting in this window cancels THIS cleanup instead of
+            // this cleanup later cancelling the new attempt's own timeout.
+            let cleanupTask = DispatchWorkItem {
                 resetOverlayState()
             }
+            animationResetTask = cleanupTask
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: cleanupTask)
         }
         
         animationResetTask = task
