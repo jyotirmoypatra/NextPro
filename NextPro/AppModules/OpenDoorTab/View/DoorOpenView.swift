@@ -717,6 +717,10 @@ struct DoorOpenView: View {
                             guard let sn = sn, let doorId = doorId else { return }
                             
                             let key = "\(sn)_\(doorId)"
+                            guard key == activeDoorKey else {
+                                print("🚫 Ignoring MQTT event for a different door:", key)
+                                return
+                            }
                             remoteMqttResult = RemoteMQTTResult(
                                 doorKey: key,
                                 isSuccess: true,
@@ -740,6 +744,10 @@ struct DoorOpenView: View {
                         if isRemoteUnlock{
                             guard let sn = sn, let doorId = doorId else { return }
                             let key = "\(sn)_\(doorId)"
+                            guard key == activeDoorKey else {
+                                print("🚫 Ignoring MQTT event for a different door:", key)
+                                return
+                            }
                             remoteMqttResult = RemoteMQTTResult(
                                 doorKey: key,
                                 isSuccess: true,
@@ -761,6 +769,10 @@ struct DoorOpenView: View {
                     else if type == 8 { //wifi unlock
                         guard let sn = sn, let doorId = doorId else { return }
                         let key = "\(sn)_\(doorId)"
+                        guard key == activeDoorKey else {
+                            print("🚫 Ignoring MQTT event for a different door:", key)
+                            return
+                        }
                         remoteMqttResult = RemoteMQTTResult(
                             doorKey: key,
                             isSuccess: true,
@@ -773,6 +785,10 @@ struct DoorOpenView: View {
                         if isRemoteUnlock{
                             guard let sn = sn, let doorId = doorId else { return }
                             let key = "\(sn)_\(doorId)"
+                            guard key == activeDoorKey else {
+                                print("🚫 Ignoring MQTT event for a different door:", key)
+                                return
+                            }
                             remoteMqttResult = RemoteMQTTResult(
                                 doorKey: key,
                                 isSuccess: false,
@@ -806,6 +822,10 @@ struct DoorOpenView: View {
                         if isRemoteUnlock {
                             guard let sn = sn, let doorId = doorId else { return }
                             let key = "\(sn)_\(doorId)"
+                            guard key == activeDoorKey else {
+                                print("🚫 Ignoring MQTT event for a different door:", key)
+                                return
+                            }
                             remoteMqttResult = RemoteMQTTResult(
                                 doorKey: key,
                                 isSuccess: false,

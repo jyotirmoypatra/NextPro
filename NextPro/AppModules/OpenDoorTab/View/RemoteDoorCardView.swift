@@ -558,7 +558,7 @@ struct RemoteDoorCardView: View {
             stopDeviceScan()
 
             deviceOfflineIcon = "power-off"
-            deviceOfflineMessage = "Door sensor is offline.Please turn it on or move closer to continue."
+            deviceOfflineMessage = "Door sensor is offline. Please make sure it’s powered on and you’re within range, then try again."
             showDeviceOfflineAlert = true
             resetDeviceCheckState()
         }
