@@ -410,7 +410,7 @@ struct DeviceOfflineAlertView: View {
     var body: some View {
         ZStack {
             // Background dim
-            Color.black.opacity(0.9)
+            Color.black.opacity(0.85)
                 .ignoresSafeArea()
 
             VStack(spacing: 20) {

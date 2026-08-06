@@ -1,6 +1,8 @@
 
 
 import SwiftUI
+import CoreBluetooth
+import Combine
 
 
 struct RemoteMQTTResult: Equatable {
@@ -22,6 +24,16 @@ struct RemoteDoorCardView: View {
     
     let canOpenDoor: () -> Bool
     @State private var deniedBase = ""
+
+    // MARK: - Device power check (BLE proximity scan for door.serial)
+    @StateObject private var deviceCheckBleManager = BLEManager()
+    @State private var isCheckingDevice = false
+    @State private var showDeviceOfflineAlert = false
+    @State private var deviceOfflineMessage = ""
+    @State private var deviceOfflineIcon = ""
+    @State private var deviceScanTask: Task<Void, Never>?
+    @State private var deviceScanTimeoutTask: Task<Void, Never>?
+    @State private var deviceFound = false
 
     @State private var isResultSuccess: Bool = false
     @State private var statusMessage: String = ""
@@ -64,7 +76,7 @@ struct RemoteDoorCardView: View {
     }
 
     private var isBleActive: Bool {
-        bleWaiting || bleSuccess
+        bleWaiting || bleSuccess || isCheckingDevice
     }
 
     private var wifiOpacity: Double {
@@ -123,6 +135,21 @@ struct RemoteDoorCardView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
                 
+                if isCheckingDevice {
+                    HStack {
+                        RingSpinner(
+                            ringColor: .yellow,
+                            lineWidth: 1.5,
+                            size: 13
+                        )
+                        Text("Checking device...")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .font(.custom("Inter-SemiBold", size: 13))
+                            .foregroundColor(.yellow)
+                            .padding(.top, 3)
+                    }
+                }
+
                 if wifiWaiting || bleWaiting {
                     HStack {
                         RingSpinner(
@@ -234,33 +261,29 @@ struct RemoteDoorCardView: View {
                             ZStack {
                                // if !bleWaiting {
                                     Button {
-                                        
+
                                         guard isBluetoothOn else {
                                                 showBluetoothAlert = true
                                                 return
                                             }
                                         activeDoorKey = door.key
-                                       
-                                        // check only m230 and bc220 standalone
-                                     //   if isStandAloneControllerBC220 || isStandAloneAllInOneM230 {
-                                            guard canOpenDoor() else {
-                                                showTimeRestrictedAndReset(isWifi: false)
-                                                return
-                                            }
-                                      //  }
-                                        resetWifiState()
-                                        startBleWaiting()
-                                        onBleOpen()
+
+                                        guard canOpenDoor() else {
+                                            showTimeRestrictedAndReset(isWifi: false)
+                                            return
+                                        }
+
+                                        checkDeviceSignalAndProceed()
                                     } label: {
                                         VStack(spacing: 6) {
-                                            Image(bleWaiting ? "bluetooth-yellow" : bleSuccess && isResultSuccess ? "bluetooth-green" :  bleSuccess && !isResultSuccess ? "bluetooth-red" : "bluetooth-white")
+                                            Image((bleWaiting || isCheckingDevice) ? "bluetooth-yellow" : bleSuccess && isResultSuccess ? "bluetooth-green" :  bleSuccess && !isResultSuccess ? "bluetooth-red" : "bluetooth-white")
                                              .resizable()
                                              .frame(width: 22, height: 22)
-                                               
-                                            
+
+
                                             Text("Open Door")
                                                 .font(.custom("Inter-Regular", size: 10))
-                                                .foregroundColor(bleWaiting ? .yellow : bleSuccess && isResultSuccess ? .green : bleSuccess && !isResultSuccess ? .red : .white)
+                                                .foregroundColor((bleWaiting || isCheckingDevice) ? .yellow : bleSuccess && isResultSuccess ? .green : bleSuccess && !isResultSuccess ? .red : .white)
                                         }
                                     }
                                // }
@@ -321,6 +344,14 @@ struct RemoteDoorCardView: View {
             UserDefaults.standard.string(forKey: "voice_denied")
             ?? VoiceMessageDefaults.denied.first?.text
             ?? "Access denied"
+        }
+        .fullScreenCover(isPresented: $showDeviceOfflineAlert) {
+            DeviceOfflineAlertView(
+                message: deviceOfflineMessage,
+                icon: deviceOfflineIcon
+            ) {
+                showDeviceOfflineAlert = false
+            }
         }
 
         
@@ -480,7 +511,86 @@ struct RemoteDoorCardView: View {
         }
     }
 
-    
+    // MARK: - Device power check (same pattern as SelectDeviceView)
+
+    private func checkDeviceSignalAndProceed() {
+        if deviceCheckBleManager.bleState == .poweredOff {
+            deviceOfflineIcon = "bluetooth-red"
+            deviceOfflineMessage = "Bluetooth is turned off.\nPlease enable Bluetooth to proceed."
+            showDeviceOfflineAlert = true
+            resetDeviceCheckState()
+            return
+        }
+
+        startDeviceScan(serial: door.serial)
+    }
+
+    private func startDeviceScan(serial: String) {
+        isCheckingDevice = true
+        deviceFound = false
+
+        deviceScanTask?.cancel()
+        deviceScanTimeoutTask?.cancel()
+
+        deviceCheckBleManager.startScanning()
+
+        deviceScanTask = Task { @MainActor in
+            for await devices in deviceCheckBleManager.$devices.values {
+                for peripheral in devices {
+                    let name = (peripheral.name ?? "")
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                    if name.contains(serial) {
+                        deviceFound = true
+                        stopDeviceScan()
+                        openBleDoor()
+                        return
+                    }
+                }
+            }
+        }
+
+        deviceScanTimeoutTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 6_000_000_000)
+
+            guard !deviceFound else { return }
+
+            stopDeviceScan()
+
+            deviceOfflineIcon = "power-off"
+            deviceOfflineMessage = "Door sensor is offline.Please turn it on or move closer to continue."
+            showDeviceOfflineAlert = true
+            resetDeviceCheckState()
+        }
+    }
+
+    private func stopDeviceScan() {
+        deviceScanTask?.cancel()
+        deviceScanTimeoutTask?.cancel()
+        deviceScanTask = nil
+        deviceScanTimeoutTask = nil
+
+        deviceCheckBleManager.stopScanning()
+        isCheckingDevice = false
+    }
+
+    /// Clears this card's transient checking/waiting state and releases the
+    /// list-wide `activeDoorKey` lock so other cards become tappable again
+    /// as soon as the device-offline alert is shown.
+    private func resetDeviceCheckState() {
+        isCheckingDevice = false
+        deviceFound = false
+        resetWifiState()
+        resetBleState()
+        activeDoorKey = nil
+    }
+
+    private func openBleDoor() {
+        resetWifiState()
+        startBleWaiting()
+        onBleOpen()
+    }
+
 }
 
 
