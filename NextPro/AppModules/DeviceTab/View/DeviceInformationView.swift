@@ -17,6 +17,7 @@ struct DeviceInformationView: View {
     @State private var navigateToDeviceConfig = false
     @StateObject private var bleManager = BLEManager()
     @State private var showDeviceOfflineAlert = false
+    @State private var showBluetoothPermissionAlert = false
     @Environment(\.dismiss) private var dismiss
     @State private var tcScanTask: Task<Void, Never>?
     @State private var tcScanTimeoutTask: Task<Void, Never>?
@@ -370,17 +371,46 @@ struct DeviceInformationView: View {
         }
         .navigationDestination(isPresented: $navigateToDeviceConfig) {
                 SetupDeviceRelayConfig(selectedDevice: selectedDevice)
-          
+
+        }
+        .modernAlert(isPresented: $showBluetoothPermissionAlert) {
+            ModernAlertView(
+                title: "Bluetooth Permission Required",
+                message: "Bluetooth permission is disabled. \nPlease enable it in iPhone Settings → Apps → ZYLX → Bluetooth.",
+                isSuccess: false,
+                buttonTitle: "Cancel",
+                action: {
+                    showBluetoothPermissionAlert = false
+                },
+                secondaryButtonTitle: "Open Settings",
+                secondaryAction: {
+                    showBluetoothPermissionAlert = false
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+            )
         }
 
     }
     
+    private var isBluetoothPermissionDenied: Bool {
+        bleManager.bleState == .unauthorized
+    }
+
     private var isBluetoothOff: Bool {
         bleManager.bleState == .poweredOff
     }
-    
+
     private func fetchDeviceInfo() {
 
+        // STEP 1: Bluetooth permission check FIRST
+        if isBluetoothPermissionDenied {
+            showBluetoothPermissionAlert = true
+            return
+        }
+
+        // STEP 2: Bluetooth power check
         if isBluetoothOff {
             icon = "bluetooth-red"
             alertMessage = "Bluetooth is turned off.\nPlease enable Bluetooth to proceed."
@@ -388,6 +418,7 @@ struct DeviceInformationView: View {
             return
         }
 
+        // STEP 3: Continue with device power check
         loadingText = "Checking Device.."
         startDeviceScan(serial: selectedDevice.serial) {
             loadingText = "Getting Info.."
@@ -412,6 +443,13 @@ struct DeviceInformationView: View {
 
     private func checkDeviceThenConfigureWifi() {
 
+        // STEP 1: Bluetooth permission check FIRST
+        if isBluetoothPermissionDenied {
+            showBluetoothPermissionAlert = true
+            return
+        }
+
+        // STEP 2: Bluetooth power check
         if isBluetoothOff {
             icon = "bluetooth-red"
             alertMessage = "Bluetooth is turned off.\nPlease enable Bluetooth to proceed."
@@ -419,6 +457,7 @@ struct DeviceInformationView: View {
             return
         }
 
+        // STEP 3: Continue with device power check
         loadingText = "Checking Device.."
         startDeviceScan(serial: selectedDevice.serial) {
             navigateToWiFiListView = true
