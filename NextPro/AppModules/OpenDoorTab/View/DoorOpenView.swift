@@ -894,15 +894,17 @@ struct DoorOpenView: View {
         
             .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
 
-                BluetoothAlertView(
-                    onCancel: { showBluetoothAlert = false },
-                    openSettings: {
-                        if let url = URL(string: "App-Prefs:root=Bluetooth"),
-                           UIApplication.shared.canOpenURL(url) {
-                            UIApplication.shared.open(url)
-                        }
-                    }
-                )
+//                BluetoothAlertView(
+//                    onCancel: { showBluetoothAlert = false },
+//                    openSettings: {
+//                        if let url = URL(string: "App-Prefs:root=Bluetooth"),
+//                           UIApplication.shared.canOpenURL(url) {
+//                            UIApplication.shared.open(url)
+//                        }
+//                    }
+//                )
+                
+                BluetoothAlertView(onDismiss: {showBluetoothAlert = false})
             }
             .modernAlert(isPresented: $showBluetoothPermissionAlert) {
                 ModernAlertView(

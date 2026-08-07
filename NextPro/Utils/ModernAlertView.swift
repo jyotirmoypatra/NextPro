@@ -208,65 +208,102 @@ extension View {
 
 
 struct BluetoothAlertView: View {
-    let onCancel: () -> Void
-    let openSettings: () -> Void
+    let onDismiss: () -> Void
     
-    var body: some View {
-        VStack(alignment: .center, spacing:15){
-            
-            
-            Image("bluetooth-blue")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 40, height: 40)
-                .padding(.top,5)
-
-            
-            
-            
-            Text("Bluetooth is Off")
-                .font(.custom("Inter-Bold", size: 16))
-                .foregroundColor(.white)
-            
-            
-            Text("To unlock the door, Bluetooth needs to be enabled. Tap ‘Open Settings’ and turn on Bluetooth on your device.")
-                .font(.custom("Inter-Medium", size: 14))
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.center)
-            
-            
-            
-            Divider().background(Color.white.opacity(0.15))
-            
-            // Button
-            Button(action: openSettings) {
-                Text("Open Settings")
-                    .font(.custom("Inter-Bold", size: 16))
-                    .frame(maxWidth: .infinity)
-                    .padding(10)
-                    .foregroundColor(.black)
-                    .background(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-            
-            // Button
-            Button(action: onCancel) {
-                Text("Cancel")
-                    .font(.custom("Inter-Bold", size: 16))
-                    .frame(maxWidth: .infinity)
-                    .padding(10)
-                    .foregroundColor(.gray)
+//    var body: some View {
+//        VStack(alignment: .center, spacing:15){
+//            
+//            
+//            Image("bluetooth-blue")
+//                .resizable()
+//                .scaledToFit()
+//                .frame(width: 40, height: 40)
+//                .padding(.top,5)
+//
+//            
+//            
+//            
+//            Text("Bluetooth is Off")
+//                .font(.custom("Inter-Bold", size: 16))
+//                .foregroundColor(.white)
+//            
+//            
+//            Text("To unlock the door, Bluetooth needs to be enabled. Tap ‘Open Settings’ and turn on Bluetooth on your device.")
+//                .font(.custom("Inter-Medium", size: 14))
+//                .foregroundColor(.gray)
+//                .multilineTextAlignment(.center)
+//            
+//            
+//            
+//            Divider().background(Color.white.opacity(0.15))
+//            
+//            // Button
+//            Button(action: openSettings) {
+//                Text("Open Settings")
+//                    .font(.custom("Inter-Bold", size: 16))
+//                    .frame(maxWidth: .infinity)
+//                    .padding(10)
+//                    .foregroundColor(.black)
 //                    .background(.white)
 //                    .clipShape(RoundedRectangle(cornerRadius: 12))
+//            }
+//            
+//            // Button
+//            Button(action: onCancel) {
+//                Text("Cancel")
+//                    .font(.custom("Inter-Bold", size: 16))
+//                    .frame(maxWidth: .infinity)
+//                    .padding(10)
+//                    .foregroundColor(.gray)
+////                    .background(.white)
+////                    .clipShape(RoundedRectangle(cornerRadius: 12))
+//            }
+//            
+//        }
+//        .padding(15)
+//        .background(Color(hex: "#292929"))
+//        .clipShape(RoundedRectangle(cornerRadius: 20))
+//        .shadow(radius: 20)
+//        .padding(.horizontal, 30)
+//        
+//    }
+    
+    var body: some View {
+        ZStack {
+            // Background dim
+            Color.black.opacity(0.7)
+                .ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                // Icon
+                Image("bluetooth-red")
+                    .resizable()
+                    .frame(width: 48,height: 48)
+
+                // Message
+                Text("Bluetooth is turned off.\nPlease enable Bluetooth to proceed")
+                    .font(.custom("Inter-Regular", size: 14))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+
+                // OK Button
+                Button(action: onDismiss) {
+                    Text("OK")
+                        .font(.custom("Inter-SemiBold", size: 16))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.white)
+                        .cornerRadius(10)
+                }
             }
-            
+            .padding(25)
+            .background(Color(hex: "#292929"))
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .shadow(radius: 20)
+            .padding(.horizontal, 30)
         }
-        .padding(15)
-        .background(Color(hex: "#292929"))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(radius: 20)
-        .padding(.horizontal, 30)
-        
+        .transition(.opacity)
     }
 }
 
@@ -289,7 +326,7 @@ struct BluetoothAlertModifier: ViewModifier {
                     .transition(.scale.combined(with: .opacity))
             }
         }
-        .animation(.spring(), value: isPresented)
+       // .animation(.spring(), value: isPresented)
     }
 }
 
