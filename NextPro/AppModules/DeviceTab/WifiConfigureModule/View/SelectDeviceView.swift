@@ -17,6 +17,7 @@ struct SelectDeviceView: View {
     @StateObject private var bleManager = BLEManager()
     @State private var isCheckingDevice = false
     @State private var showDeviceOfflineAlert = false
+    @State private var showBluetoothPermissionAlert = false
     @State private var alertMessage = ""
     @State private var icon = ""
     @State private var tcScanTask: Task<Void, Never>?
@@ -222,16 +223,44 @@ struct SelectDeviceView: View {
                 alertMessage = "Bluetooth is turned off.\nPlease enable Bluetooth to proceed."
             }
         }
+        .modernAlert(isPresented: $showBluetoothPermissionAlert) {
+            ModernAlertView(
+                title: "Bluetooth Permission Required",
+                message: "Bluetooth permission is disabled. \nPlease enable it in iPhone Settings → Apps → ZYLX → Bluetooth.",
+                isSuccess: false,
+                buttonTitle: "Cancel",
+                action: {
+                    showBluetoothPermissionAlert = false
+                },
+                secondaryButtonTitle: "Open Settings",
+                secondaryAction: {
+                    showBluetoothPermissionAlert = false
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+            )
+        }
     }
-    
+
+    private var isBluetoothPermissionDenied: Bool {
+        bleManager.bleState == .unauthorized
+    }
+
     private var isBluetoothOff: Bool {
         bleManager.bleState == .poweredOff
     }
-    
+
     private func checkDeviceSignalAndProceed() {
         guard let device = selectedDevice else { return }
 
-        // STEP 1: Bluetooth check FIRST
+        // STEP 1: Bluetooth permission check FIRST
+        if isBluetoothPermissionDenied {
+            showBluetoothPermissionAlert = true
+            return
+        }
+
+        // STEP 2: Bluetooth power check
         if isBluetoothOff {
             icon = "bluetooth-red"   // your bluetooth icon asset
             alertMessage = "Bluetooth is turned off.\nPlease enable Bluetooth to proceed."
@@ -239,7 +268,7 @@ struct SelectDeviceView: View {
             return
         }
 
-        // STEP 2: Continue with device check
+        // STEP 3: Continue with device power check
         startDeviceScan(serial: device.serial)
 
 //        let isTCDevice = device.modelName.uppercased().hasPrefix("TC")
