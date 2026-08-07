@@ -504,7 +504,7 @@ struct DeviceInformationView: View {
 
         // ⏱ Timeout task (ONLY if not found)
         tcScanTimeoutTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 15_000_000_000)
+            try? await Task.sleep(nanoseconds: 10_000_000_000)
 
             guard !tcDeviceFound else {
                 return   // device already found → do nothing

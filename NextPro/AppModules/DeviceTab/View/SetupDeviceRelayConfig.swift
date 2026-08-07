@@ -19,6 +19,7 @@ struct SetupDeviceRelayConfig: View {
     // BLE — same pattern as DeviceInformationView
     @StateObject private var bleManager = BLEManager()
     @State private var showOfflineAlert = false
+    @State private var showBluetoothPermissionAlert = false
     @State private var isCheckingDevice = false
     @State private var alertMessage = ""
     @State private var alertIcon = ""
@@ -36,6 +37,10 @@ struct SetupDeviceRelayConfig: View {
     private var isValidInput: Bool {
         guard let value = Int(durationText), value >= 1, value <= 254 else { return false }
         return true
+    }
+
+    private var isBluetoothPermissionDenied: Bool {
+        bleManager.bleState == .unauthorized
     }
 
     private var isBluetoothOff: Bool {
@@ -124,6 +129,24 @@ struct SetupDeviceRelayConfig: View {
                 durationText = ""
                 dismiss()
             }
+        }
+        .modernAlert(isPresented: $showBluetoothPermissionAlert) {
+            ModernAlertView(
+                title: "Bluetooth Permission Required",
+                message: "Bluetooth permission is disabled. \nPlease enable it in iPhone Settings → Apps → ZYLX → Bluetooth.",
+                isSuccess: false,
+                buttonTitle: "Cancel",
+                action: {
+                    showBluetoothPermissionAlert = false
+                },
+                secondaryButtonTitle: "Open Settings",
+                secondaryAction: {
+                    showBluetoothPermissionAlert = false
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+            )
         }
     }
 
@@ -269,6 +292,13 @@ struct SetupDeviceRelayConfig: View {
     private func handleSave() {
         guard let openTime = Int(durationText), openTime >= 1, openTime <= 254 else { return }
 
+        // STEP 1: Bluetooth permission check FIRST
+        if isBluetoothPermissionDenied {
+            showBluetoothPermissionAlert = true
+            return
+        }
+
+        // STEP 2: Bluetooth power check
         if isBluetoothOff {
             alertIcon = "bluetooth-red"
             alertMessage = "Bluetooth is turned off.\nPlease enable Bluetooth to proceed."
@@ -276,6 +306,7 @@ struct SetupDeviceRelayConfig: View {
             return
         }
 
+        // STEP 3: Continue with device power check
         startDeviceScan(openTime: openTime)
     }
 
@@ -311,7 +342,7 @@ struct SetupDeviceRelayConfig: View {
         }
 
         tcScanTimeoutTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 15_000_000_000)
+            try? await Task.sleep(nanoseconds: 10_000_000_000)
 
             guard !tcDeviceFound else { return }
 
