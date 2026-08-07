@@ -103,10 +103,10 @@ struct DeviceInfoDetailView: View {
 
             Spacer()
 
-            Image(systemName: "info.circle")
-                .resizable()
-                .frame(width: 22, height: 22)
-                .foregroundColor(.white)
+//            Image(systemName: "info.circle")
+//                .resizable()
+//                .frame(width: 22, height: 22)
+//                .foregroundColor(.white)
         }
         .overlay(
             Text("Device Information")
