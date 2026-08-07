@@ -1456,14 +1456,14 @@ struct DoorOpenView: View {
         didReceiveResponse = false
         isProcessingDoor = true   // lock new scans
         
-        withAnimation(.easeInOut(duration: 0.3)) {
+        withAnimation(.easeInOut(duration: 0.15)) {
             ringColor = .yellow
             lockIcon = "lock.fill"
             isOpening = true
             overlayMessage = "Verifying Please Wait..."
             progress = 0.0
         }
-        withAnimation(.linear(duration: 1.5)) {
+        withAnimation(.linear(duration: 0.2)) {
             progress = 1.0
         }
         //scheduleReset()
@@ -1476,7 +1476,7 @@ struct DoorOpenView: View {
             // ❌ No response received in 5 sec
             guard !didReceiveResponse else { return }
             
-            withAnimation(.easeInOut(duration: 0.3)) {
+            withAnimation(.easeInOut(duration: 0.15)) {
                 ringColor = .red
                 lockIcon = "xmark"
                 overlayMessage = "No response received from the door"
@@ -1507,7 +1507,7 @@ struct DoorOpenView: View {
         didReceiveResponse = true
         animationResetTask?.cancel()
         isRemoteUnlock = false
-        withAnimation(.easeInOut(duration: 0.3)) {
+        withAnimation(.easeInOut(duration: 0.15)) {
             ringColor = .green
             lockIcon = "checkmark"
             isOpening = true
@@ -1520,7 +1520,7 @@ struct DoorOpenView: View {
     func animateFailure() {
         animationResetTask?.cancel()
         isRemoteUnlock = false
-        withAnimation(.easeInOut(duration: 0.3)) {
+        withAnimation(.easeInOut(duration: 0.15)) {
             ringColor = .red
             lockIcon = "xmark"
             isOpening = false
@@ -1533,7 +1533,7 @@ struct DoorOpenView: View {
     func animateFailureOutSideTime() {
         animationResetTask?.cancel()
         isRemoteUnlock = false
-        withAnimation(.easeInOut(duration: 0.3)) {
+        withAnimation(.easeInOut(duration: 0.15)) {
             ringColor = .red
             lockIcon = "clock.badge.exclamationmark"
             isOpening = false
@@ -1546,7 +1546,7 @@ struct DoorOpenView: View {
     func unauthorised() {
         animationResetTask?.cancel()
         isUnauthorise = true
-        withAnimation(.easeInOut(duration: 0.3)) {
+        withAnimation(.easeInOut(duration: 0.15)) {
             ringColor = .orange
             lockIcon = "lock.fill"
             isOpening = false
@@ -1574,7 +1574,7 @@ struct DoorOpenView: View {
         animationResetTask?.cancel()
         
         let task = DispatchWorkItem {
-            withAnimation(.easeInOut(duration: 0.3)) {
+            withAnimation(.easeInOut(duration: 0.15)) {
                 ringColor = .white
                 lockIcon = "lock.fill"
                 isOpening = false
@@ -1608,7 +1608,7 @@ struct DoorOpenView: View {
         let doorStorage = self.doorStorage
         
         
-        rssiTimer = Timer.scheduledTimer(withTimeInterval: 0.7, repeats: true) { [weak bleManager, weak doorStorage] timer in
+        rssiTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { [weak bleManager, weak doorStorage] timer in
             
             guard
                 isViewVisible,
