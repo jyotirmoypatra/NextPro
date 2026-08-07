@@ -23,6 +23,7 @@ struct DoorOpenView: View {
     @State private var pollingTask: Task<Void, Never>?
     @State private var animateWave = false
     @State private var showBluetoothAlert = false
+    @State private var showBluetoothPermissionAlert = false
     @State private var isAutoOpenEnabled = false
     @State private var progress: CGFloat = 0.0
     @State private var isOpening = false
@@ -375,7 +376,9 @@ struct DoorOpenView: View {
                                                         activeDoorKey: $activeDoorKey,
                                                         mqttResult: $remoteMqttResult,
                                                         isBluetoothOn: .constant(bleManager.isBluetoothOn),
+                                                        isBluetoothPermissionDenied: .constant(bleManager.bleState == .unauthorized),
                                                         showBluetoothAlert: $showBluetoothAlert,
+                                                        showBluetoothPermissionAlert: $showBluetoothPermissionAlert,
                                                         onRemoteOpen: {
                                                             activeDoorKey = door.key
                                                             handleRemoteOpen(for: door)
@@ -596,7 +599,7 @@ struct DoorOpenView: View {
                         return
                     }
                     guard bleManager.isBluetoothOn else {
-                        AceesMessage = "Bluetooth is Off. Please turn it on."
+                        handleBluetoothUnavailable()
                         return
                     }
 
@@ -621,6 +624,7 @@ struct DoorOpenView: View {
                 // switch. This notification fires independently of scenePhase, so force a
                 // full restart here regardless of whatever state the scenePhase path left us in.
                 print("☀️ didBecomeActive — force restart BLE")
+                bleManager.refreshAuthorizationStatus()
                 guard isViewVisible, selectedTab == 0 else { return }
                 restartBLE()
             }
@@ -632,7 +636,12 @@ struct DoorOpenView: View {
                     print("🔴 Bluetooth OFF")
                     AceesMessage = "Bluetooth is Off. Please turn it on."
                     isScanningActive = false
-                    
+
+                case .unauthorized:
+                    print("🚫 Bluetooth permission denied")
+                    stopBLE()
+                    showBluetoothPermissionAlert = true
+
                 case .poweredOn:
                     print("🟢 Bluetooth ON")
 
@@ -884,12 +893,31 @@ struct DoorOpenView: View {
             }
         
             .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
-                
+
                 BluetoothAlertView(
                     onCancel: { showBluetoothAlert = false },
                     openSettings: {
                         if let url = URL(string: "App-Prefs:root=Bluetooth"),
                            UIApplication.shared.canOpenURL(url) {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                )
+            }
+            .modernAlert(isPresented: $showBluetoothPermissionAlert) {
+                ModernAlertView(
+                    title: "Bluetooth Permission Required",
+                    message: "Bluetooth permission is disabled. \nPlease enable it in iPhone Settings → Apps → ZYLX → Bluetooth.",
+                    isSuccess: false,
+                    buttonTitle: "Cancel",
+                    action: {
+                        showBluetoothPermissionAlert = false
+                        AceesMessage = "Bluetooth permission is disabled. \nPlease enable it in iPhone Settings → Apps → ZYLX → Bluetooth."
+                    },
+                    secondaryButtonTitle: "Open Settings",
+                    secondaryAction: {
+                        showBluetoothPermissionAlert = false
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
                             UIApplication.shared.open(url)
                         }
                     }
@@ -1106,7 +1134,7 @@ struct DoorOpenView: View {
                         return
                     }
                     guard bleManager.isBluetoothOn else {
-                        AceesMessage = "Bluetooth is Off. Please turn it on."
+                        handleBluetoothUnavailable()
                         return
                     }
                     AceesMessage = "Preparing Scan..."
@@ -1188,6 +1216,16 @@ struct DoorOpenView: View {
         monitorAndAutoOpenNearbyDoor()
     }
 
+    /// Case 1 (permission denied/restricted) vs Case 2 (permission granted, hardware off) —
+    /// routes to the correct feedback so callers never have to branch on this themselves.
+    private func handleBluetoothUnavailable() {
+        if bleManager.bleState == .unauthorized {
+            showBluetoothPermissionAlert = true
+        } else {
+            AceesMessage = "Bluetooth is Off. Please turn it on."
+        }
+    }
+
     /// THE single entry point for stopping BLE scanning, monitoring, and the RSSI timer.
     /// Pass `reason` to show a specific status message; omit it to fall back to the same
     /// Bluetooth-state-based message every caller used to compute for itself.
@@ -1201,9 +1239,12 @@ struct DoorOpenView: View {
 
         isScanningActive = false
 
-        AceesMessage = reason ?? (bleManager.isBluetoothOn
-            ? "Scanning paused"
-            : "Bluetooth is Off. Please turn it on.")
+        AceesMessage = reason ?? {
+            if bleManager.bleState == .unauthorized {
+                return "Bluetooth permission is disabled. \nPlease enable it in iPhone Settings → Apps → ZYLX → Bluetooth."
+            }
+            return bleManager.isBluetoothOn ? "Scanning paused" : "Bluetooth is Off. Please turn it on."
+        }()
     }
 
     /// Re-evaluates whether BLE scanning should currently be running and reconciles state:
@@ -1244,7 +1285,7 @@ struct DoorOpenView: View {
             }
             guard bleManager.isBluetoothOn else {
                 print("⛔ BLE restart skipped — Bluetooth is off")
-                AceesMessage = "Bluetooth is Off. Please turn it on."
+                handleBluetoothUnavailable()
                 return
             }
             print("🔄 Restarting BLE after foreground")
@@ -1257,9 +1298,11 @@ struct DoorOpenView: View {
 
         guard retryIndex < delays.count else {
             print("❌ BLE restart failed after all retries")
-            AceesMessage = bleManager.isBluetoothOn
-                ? "Preparing Scan..."
-                : "Bluetooth is Off. Please turn it on."
+            if bleManager.isBluetoothOn {
+                AceesMessage = "Preparing Scan..."
+            } else {
+                handleBluetoothUnavailable()
+            }
             isBLERestarting = false
             return
         }
@@ -1318,10 +1361,14 @@ struct DoorOpenView: View {
         
         // Ensure BLE is on
         guard bleManager.isBluetoothOn else {
-            showBluetoothAlert = true
+            if bleManager.bleState == .unauthorized {
+                showBluetoothPermissionAlert = true
+            } else {
+                showBluetoothAlert = true
+            }
             return
         }
-        
+
         DoorManager.shared.activateMQTTWindow()
         isRemoteUnlock = true
         // Open via BLE

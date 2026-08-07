@@ -17,7 +17,9 @@ struct RemoteDoorCardView: View {
     @Binding var activeDoorKey: String?
     @Binding var mqttResult: RemoteMQTTResult?
     @Binding var isBluetoothOn: Bool
+    @Binding var isBluetoothPermissionDenied: Bool
     @Binding var showBluetoothAlert: Bool
+    @Binding var showBluetoothPermissionAlert: Bool
     let onRemoteOpen: () -> Void
     let onBleOpen: () -> Void
     let onNoInternet: () -> Void
@@ -262,6 +264,11 @@ struct RemoteDoorCardView: View {
                                // if !bleWaiting {
                                     Button {
 
+                                        // Priority: permission → power state → BLE operation.
+                                        if isBluetoothPermissionDenied {
+                                            showBluetoothPermissionAlert = true
+                                            return
+                                        }
                                         guard isBluetoothOn else {
                                                 showBluetoothAlert = true
                                                 return
@@ -514,6 +521,13 @@ struct RemoteDoorCardView: View {
     // MARK: - Device power check (same pattern as SelectDeviceView)
 
     private func checkDeviceSignalAndProceed() {
+        // Defense in depth: this manager's own state could still lag the outer
+        // permission gate — never misreport a permission denial as a powered-off device.
+        if deviceCheckBleManager.bleState == .unauthorized {
+            showBluetoothPermissionAlert = true
+            resetDeviceCheckState()
+            return
+        }
         if deviceCheckBleManager.bleState == .poweredOff {
             deviceOfflineIcon = "bluetooth-red"
             deviceOfflineMessage = "Bluetooth is turned off.\nPlease enable Bluetooth to proceed."

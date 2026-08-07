@@ -375,6 +375,24 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         }
     }
 
+    /// Re-evaluates Bluetooth authorization/power state. Call when the app returns to the
+    /// foreground (e.g. after visiting Settings) to force a fresh read instead of waiting on
+    /// centralManagerDidUpdateState, which isn't guaranteed to re-fire immediately on resume.
+    func refreshAuthorizationStatus() {
+        switch CBCentralManager.authorization {
+        case .denied, .restricted:
+            bleState = .unauthorized
+            isBluetoothOn = false
+        case .allowedAlways:
+            bleState = centralManager.state
+            isBluetoothOn = (centralManager.state == .poweredOn)
+        case .notDetermined:
+            break
+        @unknown default:
+            break
+        }
+    }
+
      func stopContinuousScanning() {
         continuousScanTimer?.invalidate()
         continuousScanTimer = nil
