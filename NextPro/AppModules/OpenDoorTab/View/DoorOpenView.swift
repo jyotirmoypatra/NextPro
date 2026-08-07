@@ -30,6 +30,7 @@ struct DoorOpenView: View {
     @State private var lockIcon: String = "lock.fill"
     @State private var rssiTimer: Timer?
     @State private var isScanningActive = false
+    @State private var isBLERestarting = false
     @State private var isViewVisible = false
     @ObservedObject var network = NetworkManager.shared
     
@@ -634,11 +635,13 @@ struct DoorOpenView: View {
                     
                 case .poweredOn:
                     print("🟢 Bluetooth ON")
-                    AceesMessage = "Preparing Scan..."
-                    
-                    // Small delay ensures CoreBluetooth is fully ready
+
+                    // Small delay ensures CoreBluetooth is fully ready.
+                    // Routed through restartBLE() (guarded by isBLERestarting) so this
+                    // doesn't race with the didBecomeActive/updateBLEState restart paths
+                    // and double-trigger "Preparing Scan..." / a duplicate scan start.
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        startBLE()
+                        restartBLE()
                     }
                     
                 default:
@@ -1228,12 +1231,24 @@ struct DoorOpenView: View {
         }
     }
 
-    /// Stops, then restarts BLE scanning with progressively longer delays while CoreBluetooth
-    /// recovers (e.g. after returning from the background). `retryIndex` drives the recursive
-    /// retry ladder — always call with the default (0) from the outside.
+    /// Stops, then retries `startBLE()` with progressively longer delays while CoreBluetooth
+    /// recovers (e.g. after returning from the background, or a Bluetooth power-on event).
+    /// `retryIndex` drives the recursive retry ladder — always call with the default (0) from
+    /// the outside. Guarded by `isBLERestarting` so overlapping triggers (foreground
+    /// notification + `bleState` publisher + scenePhase) never race into a duplicate ladder.
     private func restartBLE(retryIndex: Int = 0) {
         if retryIndex == 0 {
+            guard !isBLERestarting else {
+                print("⏭️ BLE restart already in progress — skipping duplicate trigger")
+                return
+            }
+            guard bleManager.isBluetoothOn else {
+                print("⛔ BLE restart skipped — Bluetooth is off")
+                AceesMessage = "Bluetooth is Off. Please turn it on."
+                return
+            }
             print("🔄 Restarting BLE after foreground")
+            isBLERestarting = true
             stopBLE(reason: "Preparing Scan...")
         }
 
@@ -1242,16 +1257,29 @@ struct DoorOpenView: View {
 
         guard retryIndex < delays.count else {
             print("❌ BLE restart failed after all retries")
-            AceesMessage = "Preparing Scan..."
+            AceesMessage = bleManager.isBluetoothOn
+                ? "Preparing Scan..."
+                : "Bluetooth is Off. Please turn it on."
+            isBLERestarting = false
             return
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + delays[retryIndex]) {
-            guard isViewVisible else { return }
-            guard selectedTab == 0 else { return }
-            guard hasDigitalKeyAccess else { return }
+            guard isViewVisible else {
+                isBLERestarting = false
+                return
+            }
+            guard selectedTab == 0 else {
+                isBLERestarting = false
+                return
+            }
+            guard hasDigitalKeyAccess else {
+                isBLERestarting = false
+                return
+            }
             guard hasAvailableDoor else {
                 stopBLE()
+                isBLERestarting = false
                 return
             }
 
@@ -1263,18 +1291,12 @@ struct DoorOpenView: View {
 
             print("✅ Restarting BLE scan (attempt \(retryIndex + 1))")
 
-            bleManager.startContinuousScanning()
+            // Bluetooth is confirmed ready — hand off to the single "how to start
+            // scanning" implementation instead of duplicating it here.
+            startBLE()
+            isBLERestarting = false
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-
-                isScanningActive = true
-
-                monitorAndAutoOpenNearbyDoor()
-
-                AceesMessage = "Walk closer to the door"
-
-                print("✅ BLE fully restarted")
-            }
+            print("✅ BLE fully restarted")
         }
     }
 
