@@ -22,7 +22,13 @@ struct DoorModelUser: Identifiable, Codable {
     let deviceType: String?
     let deviceModel: String?
     let accessGroups: [AccessGroups]?
-    
+    /// The serial of the CONTROLLER this sensor/door is wired to — this is what the
+    /// server actually reports as `sn` in MQTT door events, which can differ from
+    /// `devSn` (the sensor's own serial, used only for BLE proximity matching) when
+    /// one controller has multiple sensors attached. Falls back to `devSn` when the
+    /// device itself IS the controller (e.g. standalone all-in-one units).
+    let controllerSn: String?
+
     init(
         id: UUID = UUID(),
         name: String,
@@ -34,7 +40,8 @@ struct DoorModelUser: Identifiable, Codable {
         cardno: String,
         deviceType : String?,
         deviceModel : String?,
-        accessGroups: [AccessGroups]? = nil
+        accessGroups: [AccessGroups]? = nil,
+        controllerSn: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -47,6 +54,7 @@ struct DoorModelUser: Identifiable, Codable {
         self.deviceType = deviceType
         self.deviceModel = deviceModel
         self.accessGroups = accessGroups
+        self.controllerSn = controllerSn
     }
 }
 

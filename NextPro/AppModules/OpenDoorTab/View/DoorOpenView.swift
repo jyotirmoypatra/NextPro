@@ -37,6 +37,7 @@ struct DoorOpenView: View {
     
     @State private var doorId : Int?
     @State private var doorName : String?
+    @State private var pendingDigitalDoorKey : String?
     @State private var AceesMessage : String?
     
     @State private var isUnauthorise = false
@@ -748,6 +749,12 @@ struct DoorOpenView: View {
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
                             speakText(accessGrantedMessage + " - " + accessGreetingMessage)
                         }else{
+                            guard let sn = sn, let doorId = doorId else { return }
+                            let key = "\(sn)_\(doorId)"
+                            guard key == pendingDigitalDoorKey else {
+                                print("🚫 Ignoring MQTT event for a different door:", key)
+                                return
+                            }
                             animateSuccess()
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
                             AceesMessage = accessGrantedMessage
@@ -775,6 +782,12 @@ struct DoorOpenView: View {
                             speakText(accessGrantedMessage + " - " + accessGreetingMessage)
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
                         }else{
+                            guard let sn = sn, let doorId = doorId else { return }
+                            let key = "\(sn)_\(doorId)"
+                            guard key == pendingDigitalDoorKey else {
+                                print("🚫 Ignoring MQTT event for a different door:", key)
+                                return
+                            }
                             animateSuccess()
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
                             AceesMessage = accessGrantedMessage
@@ -822,6 +835,12 @@ struct DoorOpenView: View {
                             
                             UINotificationFeedbackGenerator().notificationOccurred(.error)
                         }else{
+                            guard let sn = sn, let doorId = doorId else { return }
+                            let key = "\(sn)_\(doorId)"
+                            guard key == pendingDigitalDoorKey else {
+                                print("🚫 Ignoring MQTT event for a different door:", key)
+                                return
+                            }
                             UINotificationFeedbackGenerator().notificationOccurred(.error)
                             AceesMessage = accessDeniedMessage
                             overlayMessage = accessDeniedMessage
@@ -853,6 +872,12 @@ struct DoorOpenView: View {
                             speakText(accessDeniedMessage)
                             UINotificationFeedbackGenerator().notificationOccurred(.error)
                         } else {
+                            guard let sn = sn, let doorId = doorId else { return }
+                            let key = "\(sn)_\(doorId)"
+                            guard key == pendingDigitalDoorKey else {
+                                print("🚫 Ignoring MQTT event for a different door:", key)
+                                return
+                            }
                             UINotificationFeedbackGenerator().notificationOccurred(.error)
                             AceesMessage = accessDeniedMessage
                             overlayMessage = accessDeniedMessage
@@ -1175,7 +1200,8 @@ struct DoorOpenView: View {
         isUnauthorise = false
         isRemoteUnlock = false
         AceesMessage = "Walk closer to the door."
-        
+        pendingDigitalDoorKey = nil
+
         // release processing lock
         isProcessingDoor = false
     }
@@ -1596,6 +1622,7 @@ struct DoorOpenView: View {
                 AceesMessage = "Walk closer to the door."
                 doorId = nil
                 doorName = ""
+                pendingDigitalDoorKey = nil
                 isUnauthorise = false
                 isRemoteUnlock = false
                 overlayMessage = "Processing.."
@@ -1687,6 +1714,11 @@ struct DoorOpenView: View {
                     return
                 }
                 
+                // MQTT events report the CONTROLLER's serial, not the sensor's own devSn
+                // (used only for BLE proximity matching) — use controllerSn so this
+                // correctly matches the server's door-event "sn" for the same tap.
+                pendingDigitalDoorKey = "\(door.controllerSn ?? door.devSn)_\(door.doorID)"
+                print("pendingDigitalDoorKey-\(pendingDigitalDoorKey)")
                 doorManager.openSelectedDoor(door)
                 DoorManager.shared.activateMQTTWindow()
 

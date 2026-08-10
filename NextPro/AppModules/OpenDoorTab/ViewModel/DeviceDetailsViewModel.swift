@@ -186,7 +186,8 @@ class DeviceDetailsViewModel: ObservableObject {
                         cardno: cardNo,
                         deviceType: "standard",
                         deviceModel: controller.controllerModel,
-                        accessGroups: door.accessGroups
+                        accessGroups: door.accessGroups,
+                        controllerSn: controller.controllerSerial
                     )
                 )
             }
@@ -211,7 +212,8 @@ class DeviceDetailsViewModel: ObservableObject {
                     cardno: cardNo,
                     deviceType: "all_in_one",
                     deviceModel: door.doorModel,
-                    accessGroups: door.accessGroups
+                    accessGroups: door.accessGroups,
+                    controllerSn: sn
                 )
             )
         }
