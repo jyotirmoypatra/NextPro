@@ -245,7 +245,7 @@ struct BluetoothAlertView: View {
             .shadow(radius: 20)
             .padding(.horizontal, 30)
         }
-        .transition(.opacity)
+        //.transition(.opacity)
     }
 }
 
@@ -261,13 +261,13 @@ struct BluetoothAlertModifier<AlertContent: View>: ViewModifier {
             if isPresented {
                 Color.black.opacity(0.6)
                     .ignoresSafeArea()
-                    .transition(.opacity)
+                   // .transition(.opacity)
                 
                 alertView()
-                    .transition(.scale.combined(with: .opacity))
+                    .transition(.scale)
             }
         }
-      .animation(.spring(), value: isPresented)
+     // .animation(.spring(), value: isPresented)
     }
 }
 
