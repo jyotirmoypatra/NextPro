@@ -1661,10 +1661,12 @@ struct DoorOpenView: View {
                 let doorStorage = doorStorage
             else {
                 timer.invalidate()
+                rssiTimer = nil
                 return
             }
             guard doorStorage.hasResolvedDoors && doorStorage.hasDoor else {
                 timer.invalidate()
+                rssiTimer = nil
                 stopBLE()
                 return
             }

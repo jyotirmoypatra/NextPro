@@ -361,7 +361,13 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
 
             self.centralManager.stopScan()
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            // CBCentralManagerScanOptionAllowDuplicatesKey already keeps RSSI
+            // continuously fresh without needing this restart — this brief
+            // stop/start is only a defensive nudge against occasional scan
+            // staleness, so the gap is kept as short as possible instead of
+            // leaving BLE dark for 0.3s every second (which directly delayed
+            // how fast a strong-RSSI match could be detected).
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
 
                 guard self.isScanning else { return }
 
