@@ -24,6 +24,7 @@ struct DoorOpenView: View {
     @State private var animateWave = false
     @State private var showBluetoothAlert = false
     @State private var showBluetoothPermissionAlert = false
+    @State private var showDeviceOfflineAlert = false
     @State private var isAutoOpenEnabled = false
     @State private var progress: CGFloat = 0.0
     @State private var isOpening = false
@@ -380,6 +381,7 @@ struct DoorOpenView: View {
                                                         isBluetoothPermissionDenied: .constant(bleManager.bleState == .unauthorized),
                                                         showBluetoothAlert: $showBluetoothAlert,
                                                         showBluetoothPermissionAlert: $showBluetoothPermissionAlert,
+                                                        showDeviceOfflineAlert: $showDeviceOfflineAlert,
                                                         onRemoteOpen: {
                                                             activeDoorKey = door.key
                                                             handleRemoteOpen(for: door)
@@ -709,18 +711,14 @@ struct DoorOpenView: View {
             }
         
             .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
-
-//                BluetoothAlertView(
-//                    onCancel: { showBluetoothAlert = false },
-//                    openSettings: {
-//                        if let url = URL(string: "App-Prefs:root=Bluetooth"),
-//                           UIApplication.shared.canOpenURL(url) {
-//                            UIApplication.shared.open(url)
-//                        }
-//                    }
-//                )
-                
                 BluetoothAlertView(onDismiss: {showBluetoothAlert = false})
+            }
+            .bluetoothModernAlert(isPresented: $showDeviceOfflineAlert) {
+                DeviceOfflineAlertView(
+                    message: "Door sensor is offline. Please make sure it’s powered on and you’re within range, then try again.",
+                    icon: "power-off",
+                    onDismiss: { showDeviceOfflineAlert = false }
+                )
             }
             .modernAlert(isPresented: $showBluetoothPermissionAlert) {
                 ModernAlertView(

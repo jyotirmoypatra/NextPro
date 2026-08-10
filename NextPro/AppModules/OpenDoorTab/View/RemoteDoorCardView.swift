@@ -20,6 +20,7 @@ struct RemoteDoorCardView: View {
     @Binding var isBluetoothPermissionDenied: Bool
     @Binding var showBluetoothAlert: Bool
     @Binding var showBluetoothPermissionAlert: Bool
+    @Binding var showDeviceOfflineAlert: Bool
     let onRemoteOpen: () -> Void
     let onBleOpen: () -> Void
     let onNoInternet: () -> Void
@@ -30,9 +31,6 @@ struct RemoteDoorCardView: View {
     // MARK: - Device power check (BLE proximity scan for door.serial)
     @StateObject private var deviceCheckBleManager = BLEManager()
     @State private var isCheckingDevice = false
-    @State private var showDeviceOfflineAlert = false
-    @State private var deviceOfflineMessage = ""
-    @State private var deviceOfflineIcon = ""
     @State private var deviceScanTask: Task<Void, Never>?
     @State private var deviceScanTimeoutTask: Task<Void, Never>?
     @State private var deviceFound = false
@@ -352,18 +350,6 @@ struct RemoteDoorCardView: View {
             ?? VoiceMessageDefaults.denied.first?.text
             ?? "Access denied"
         }
-        .fullScreenCover(isPresented: $showDeviceOfflineAlert) {
-            DeviceOfflineAlertView(
-                message: deviceOfflineMessage,
-                icon: deviceOfflineIcon
-            ) {
-                showDeviceOfflineAlert = false
-            }
-        }
-
-        
-        
-        
     }
     private var isDisabled: Bool {
         guard let active = activeDoorKey else { return false }
@@ -529,9 +515,7 @@ struct RemoteDoorCardView: View {
             return
         }
         if deviceCheckBleManager.bleState == .poweredOff {
-            deviceOfflineIcon = "bluetooth-red"
-            deviceOfflineMessage = "Bluetooth is turned off.\nPlease enable Bluetooth to proceed."
-            showDeviceOfflineAlert = true
+            showBluetoothAlert = true
             resetDeviceCheckState()
             return
         }
@@ -570,9 +554,6 @@ struct RemoteDoorCardView: View {
             guard !deviceFound else { return }
 
             stopDeviceScan()
-
-            deviceOfflineIcon = "power-off"
-            deviceOfflineMessage = "Door sensor is offline. Please make sure it’s powered on and you’re within range, then try again."
             showDeviceOfflineAlert = true
             resetDeviceCheckState()
         }
