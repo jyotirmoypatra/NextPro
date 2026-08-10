@@ -7,13 +7,20 @@
 
 import Foundation
 import Combine
+import UserNotifications
+import UIKit
 
 @MainActor
 final class NotificationCountViewModel: ObservableObject {
 
     static let shared = NotificationCountViewModel()
 
-    @Published var unreadCount: Int = 0
+    @Published var unreadCount: Int = 0 {
+        didSet {
+            guard unreadCount != oldValue else { return }
+            updateAppIconBadge()
+        }
+    }
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
 
@@ -76,6 +83,21 @@ final class NotificationCountViewModel: ObservableObject {
             return
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Keeps the app icon badge in sync with `unreadCount`. Called automatically
+    /// whenever `unreadCount` changes, whether from a manual refresh, a push
+    /// notification arriving, or the user reading notifications elsewhere.
+    private func updateAppIconBadge() {
+        if #available(iOS 16.0, *) {
+            UNUserNotificationCenter.current().setBadgeCount(unreadCount) { error in
+                if let error {
+                    print("❌ Failed to set app icon badge count: \(error.localizedDescription)")
+                }
+            }
+        } else {
+            UIApplication.shared.applicationIconBadgeNumber = unreadCount
         }
     }
 }
