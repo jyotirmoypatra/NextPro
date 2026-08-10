@@ -593,7 +593,7 @@ struct DoorOpenView: View {
                     resetOverlayState()
                     doorManager.clearDoorEvent()
                 }
-                if newTab != 1  {
+                if newTab != 1 && !isRemoteUnlock {
                     //switch tab to reset remote tab view ui
                     activeDoorKey = nil
                     successDoorKey = nil
@@ -1640,6 +1640,13 @@ struct DoorOpenView: View {
             
             //  wait until current process finishes
             guard !isProcessingDoor else { return }
+            // DoorManager is a shared singleton that can't safely run two
+            // openSelectedDoor() calls at once (it tracks a single in-flight
+            // request, not per-call state). If a remote/BLE action from the
+            // Remote tab is still awaiting its response, don't start a
+            // colliding digital-key open here — just keep scanning and retry
+            // once the remote action finishes and clears isRemoteUnlock.
+            guard !isRemoteUnlock else { return }
             let nearbyDevices = bleManager.devices.compactMap { peripheral -> (peripheral: CBPeripheral, rssi: Int)? in
                 let rssi = bleManager.monitoredDeviceRSSI ?? bleManager.deviceLastRSSI[peripheral.identifier] ?? -100
                 
