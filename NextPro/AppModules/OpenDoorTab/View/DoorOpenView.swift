@@ -672,232 +672,9 @@ struct DoorOpenView: View {
                 syncBLEWithDoorAvailability()
             }
         
-        
+             //MQTT Response Handle here
             .onReceive(NotificationCenter.default.publisher(for: .doorEventReceived)) { notification in
-                
-                DispatchQueue.main.async {
-                    guard
-                        let info = notification.userInfo,
-                        let rawUserID = info["userID"],
-                        let rawcardNumber = info["cardnumber"],
-                        
-                            let cardNumber = (rawcardNumber as? NSNumber)?.intValue
-                            ?? (rawcardNumber as? Int)
-                            ?? Int(rawcardNumber as? String ?? ""),
-                        
-                            let userid = (rawUserID as? NSNumber)?.intValue
-                            ?? (rawUserID as? Int)
-                            ?? Int(rawUserID as? String ?? ""),
-                        
-                            let deviceUserId = deviceVM.deviceDetails?.deviceUserId,
-                        let digitalCardString = deviceVM.deviceDetails?.digitalCardNumber,
-                        let digitalCardNumber = Int(digitalCardString),
-                        
-                            (
-                                (userid == 0 && cardNumber == 999_999_999) ||
-                                (userid == 0 && cardNumber == 0) ||
-                                (userid == deviceUserId) ||
-                                (userid != 0 && cardNumber == digitalCardNumber) ||
-                                
-                                (userid == 0 && (info["sn"] as? String).map { deviceVM.allControllerSerials.contains($0)} == true)
-                            )
-                    else {
-                        return
-                    }
-                    
-                    guard DoorManager.shared.shouldProcessMQTTEvent() else {
-                        print("🚫 MQTT ignored — outside 20s active window")
-                        return
-                    }
-                    
-                    didReceiveResponse = true
-                    let type = info["type"] as? Int
-                    doorId = info["doorID"] as? Int
-                    let sn = info["sn"] as? String
-                    
-                    let resolvedDoorName = deviceVM.getDoorName(sn: sn, doorId: doorId)
-                    doorName = resolvedDoorName
-                    updateVoiceMessages(for: resolvedDoorName)
-                    let deniedTypes: Set<Int> = [
-                        41, // Non-effective time period
-                        42, // Illegal time period
-                        43, // Illegal access permission
-                        47, // Card not registered
-                        49, // Card expired
-                        53, // Card reported lost
-                        54, // Blacklist user
-                        55, // Verification mode error
-                        62  // User permission disabled
-                    ]
-                    
-                    
-                    if type == 0 {
-                        
-                        if isRemoteUnlock{
-                            guard let sn = sn, let doorId = doorId else { return }
-                            
-                            let key = "\(sn)_\(doorId)"
-                            guard key == activeDoorKey else {
-                                print("🚫 Ignoring MQTT event for a different door:", key)
-                                return
-                            }
-                            remoteMqttResult = RemoteMQTTResult(
-                                doorKey: key,
-                                isSuccess: true,
-                                message: grantedBase
-                            )
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
-                            speakText(accessGrantedMessage + " - " + accessGreetingMessage)
-                        }else{
-                            guard let sn = sn, let doorId = doorId else { return }
-                            let key = "\(sn)_\(doorId)"
-                            guard key == pendingDigitalDoorKey else {
-                                print("🚫 Ignoring MQTT event for a different door:", key)
-                                return
-                            }
-                            animateSuccess()
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
-                            AceesMessage = accessGrantedMessage
-                            overlayMessage = accessGrantedMessage
-                            speakAndReset(accessGrantedMessage + " - " + accessGreetingMessage) {
-                                guard !self.isScanningActive else { return }
-                                self.startBLE()
-                            }
-                        }
-                        
-                    }
-                    else if type == 19 { //ble unlock
-                        if isRemoteUnlock{
-                            guard let sn = sn, let doorId = doorId else { return }
-                            let key = "\(sn)_\(doorId)"
-                            guard key == activeDoorKey else {
-                                print("🚫 Ignoring MQTT event for a different door:", key)
-                                return
-                            }
-                            remoteMqttResult = RemoteMQTTResult(
-                                doorKey: key,
-                                isSuccess: true,
-                                message: grantedBase
-                            )
-                            speakText(accessGrantedMessage + " - " + accessGreetingMessage)
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
-                        }else{
-                            guard let sn = sn, let doorId = doorId else { return }
-                            let key = "\(sn)_\(doorId)"
-                            guard key == pendingDigitalDoorKey else {
-                                print("🚫 Ignoring MQTT event for a different door:", key)
-                                return
-                            }
-                            animateSuccess()
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
-                            AceesMessage = accessGrantedMessage
-                            overlayMessage = accessGrantedMessage
-                            speakAndReset(accessGrantedMessage + " - " + accessGreetingMessage) {
-                                guard !self.isScanningActive else { return }
-                                self.startBLE()
-                            }
-                        }
-                    }
-                    else if type == 8 { //wifi unlock
-                        guard let sn = sn, let doorId = doorId else { return }
-                        let key = "\(sn)_\(doorId)"
-                        guard key == activeDoorKey else {
-                            print("🚫 Ignoring MQTT event for a different door:", key)
-                            return
-                        }
-                        remoteMqttResult = RemoteMQTTResult(
-                            doorKey: key,
-                            isSuccess: true,
-                            message: grantedBase
-                        )
-                        UINotificationFeedbackGenerator().notificationOccurred(.success)
-                        speakText(accessGrantedMessage + " - " + accessGreetingMessage)
-                    }
-                    else if let type = type, deniedTypes.contains(type) {
-                        if isRemoteUnlock{
-                            guard let sn = sn, let doorId = doorId else { return }
-                            let key = "\(sn)_\(doorId)"
-                            guard key == activeDoorKey else {
-                                print("🚫 Ignoring MQTT event for a different door:", key)
-                                return
-                            }
-                            remoteMqttResult = RemoteMQTTResult(
-                                doorKey: key,
-                                isSuccess: false,
-                                message: deniedBase
-                            )
-                            
-                            if type == 42 || type == 43 {
-                                speakText(accessDeniedMessage + ". " + "Time Restricted")
-                            }else{
-                                speakText(accessDeniedMessage)
-                            }
-                            
-                            UINotificationFeedbackGenerator().notificationOccurred(.error)
-                        }else{
-                            guard let sn = sn, let doorId = doorId else { return }
-                            let key = "\(sn)_\(doorId)"
-                            guard key == pendingDigitalDoorKey else {
-                                print("🚫 Ignoring MQTT event for a different door:", key)
-                                return
-                            }
-                            UINotificationFeedbackGenerator().notificationOccurred(.error)
-                            AceesMessage = accessDeniedMessage
-                            overlayMessage = accessDeniedMessage
-                            animateFailure()
-                            let deniedSpeech = (type == 42 || type == 43)
-                                ? accessDeniedMessage + ". " + "Time Restricted"
-                                : accessDeniedMessage
-                            speakAndReset(deniedSpeech) {
-                                guard !self.isScanningActive else { return }
-                                self.startBLE()
-                            }
-                        }
-                        
-                    }
-                    else {
-                        print("Ignored door event type:", type ?? -1)
-                        if isRemoteUnlock {
-                            guard let sn = sn, let doorId = doorId else { return }
-                            let key = "\(sn)_\(doorId)"
-                            guard key == activeDoorKey else {
-                                print("🚫 Ignoring MQTT event for a different door:", key)
-                                return
-                            }
-                            remoteMqttResult = RemoteMQTTResult(
-                                doorKey: key,
-                                isSuccess: false,
-                                message: deniedBase
-                            )
-                            speakText(accessDeniedMessage)
-                            UINotificationFeedbackGenerator().notificationOccurred(.error)
-                        } else {
-                            guard let sn = sn, let doorId = doorId else { return }
-                            let key = "\(sn)_\(doorId)"
-                            guard key == pendingDigitalDoorKey else {
-                                print("🚫 Ignoring MQTT event for a different door:", key)
-                                return
-                            }
-                            UINotificationFeedbackGenerator().notificationOccurred(.error)
-                            AceesMessage = accessDeniedMessage
-                            overlayMessage = accessDeniedMessage
-                            animateFailure()
-                            speakAndReset(accessDeniedMessage) {
-                                guard !self.isScanningActive else { return }
-                                self.startBLE()
-                            }
-                        }
-                    }
-                    // A remote/BLE-initiated action's response has now actually been
-                    // processed — self-clear the flag here instead of relying on a later
-                    // tab switch to do it (that's what let a still-pending remote action
-                    // get misclassified as a digital-key event if the tab changed first).
-                    if isRemoteUnlock {
-                        isRemoteUnlock = false
-                    }
-                    doorManager.closeMQTTWindow()
-                    doorManager.clearDoorEvent()
-                }
+                handleMQTTEvent(notification)
             }
         
         
@@ -1131,6 +908,233 @@ struct DoorOpenView: View {
             .compactMap { Int($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
     }
     
+    
+    
+    private func handleMQTTEvent(_ notification: Notification) {
+        DispatchQueue.main.async {
+            guard
+                let info = notification.userInfo,
+                let rawUserID = info["userID"],
+                let rawcardNumber = info["cardnumber"],
+                
+                    let cardNumber = (rawcardNumber as? NSNumber)?.intValue
+                    ?? (rawcardNumber as? Int)
+                    ?? Int(rawcardNumber as? String ?? ""),
+                
+                    let userid = (rawUserID as? NSNumber)?.intValue
+                    ?? (rawUserID as? Int)
+                    ?? Int(rawUserID as? String ?? ""),
+                
+                    let deviceUserId = deviceVM.deviceDetails?.deviceUserId,
+                let digitalCardString = deviceVM.deviceDetails?.digitalCardNumber,
+                let digitalCardNumber = Int(digitalCardString),
+                
+                    (
+                        (userid == 0 && cardNumber == 999_999_999) ||
+                        (userid == 0 && cardNumber == 0) ||
+                        (userid == deviceUserId) ||
+                        (userid != 0 && cardNumber == digitalCardNumber) ||
+                        
+                        (userid == 0 && (info["sn"] as? String).map { deviceVM.allControllerSerials.contains($0)} == true)
+                    )
+            else {
+                return
+            }
+            
+            guard DoorManager.shared.shouldProcessMQTTEvent() else {
+                print("🚫 MQTT ignored — outside 20s active window")
+                return
+            }
+            
+            didReceiveResponse = true
+            let type = info["type"] as? Int
+            doorId = info["doorID"] as? Int
+            let sn = info["sn"] as? String
+            
+            let resolvedDoorName = deviceVM.getDoorName(sn: sn, doorId: doorId)
+            doorName = resolvedDoorName
+            updateVoiceMessages(for: resolvedDoorName)
+            let deniedTypes: Set<Int> = [
+                41, // Non-effective time period
+                42, // Illegal time period
+                43, // Illegal access permission
+                47, // Card not registered
+                49, // Card expired
+                53, // Card reported lost
+                54, // Blacklist user
+                55, // Verification mode error
+                62  // User permission disabled
+            ]
+            
+            
+            if type == 0 || type == 1 {
+                
+                if isRemoteUnlock{
+                    guard let sn = sn, let doorId = doorId else { return }
+                    
+                    let key = "\(sn)_\(doorId)"
+                    guard key == activeDoorKey else {
+                        print("🚫 Ignoring MQTT event for a different door:", key)
+                        return
+                    }
+                    remoteMqttResult = RemoteMQTTResult(
+                        doorKey: key,
+                        isSuccess: true,
+                        message: grantedBase
+                    )
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                }else{
+                    guard let sn = sn, let doorId = doorId else { return }
+                    let key = "\(sn)_\(doorId)"
+                    guard key == pendingDigitalDoorKey else {
+                        print("🚫 Ignoring MQTT event for a different door:", key)
+                        return
+                    }
+                    animateSuccess()
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    AceesMessage = accessGrantedMessage
+                    overlayMessage = accessGrantedMessage
+                    speakAndReset(accessGrantedMessage + " - " + accessGreetingMessage) {
+                        guard !self.isScanningActive else { return }
+                        self.startBLE()
+                    }
+                }
+                
+            }
+            else if type == 19 { //ble unlock
+                if isRemoteUnlock{
+                    guard let sn = sn, let doorId = doorId else { return }
+                    let key = "\(sn)_\(doorId)"
+                    guard key == activeDoorKey else {
+                        print("🚫 Ignoring MQTT event for a different door:", key)
+                        return
+                    }
+                    remoteMqttResult = RemoteMQTTResult(
+                        doorKey: key,
+                        isSuccess: true,
+                        message: grantedBase
+                    )
+                    speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                }else{
+                    guard let sn = sn, let doorId = doorId else { return }
+                    let key = "\(sn)_\(doorId)"
+                    guard key == pendingDigitalDoorKey else {
+                        print("🚫 Ignoring MQTT event for a different door:", key)
+                        return
+                    }
+                    animateSuccess()
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    AceesMessage = accessGrantedMessage
+                    overlayMessage = accessGrantedMessage
+                    speakAndReset(accessGrantedMessage + " - " + accessGreetingMessage) {
+                        guard !self.isScanningActive else { return }
+                        self.startBLE()
+                    }
+                }
+            }
+            else if type == 8 { //wifi unlock
+                guard let sn = sn, let doorId = doorId else { return }
+                let key = "\(sn)_\(doorId)"
+                guard key == activeDoorKey else {
+                    print("🚫 Ignoring MQTT event for a different door:", key)
+                    return
+                }
+                remoteMqttResult = RemoteMQTTResult(
+                    doorKey: key,
+                    isSuccess: true,
+                    message: grantedBase
+                )
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+            }
+            else if let type = type, deniedTypes.contains(type) {
+                if isRemoteUnlock{
+                    guard let sn = sn, let doorId = doorId else { return }
+                    let key = "\(sn)_\(doorId)"
+                    guard key == activeDoorKey else {
+                        print("🚫 Ignoring MQTT event for a different door:", key)
+                        return
+                    }
+                    remoteMqttResult = RemoteMQTTResult(
+                        doorKey: key,
+                        isSuccess: false,
+                        message: deniedBase
+                    )
+                    
+                    if type == 42 || type == 43 {
+                        speakText(accessDeniedMessage + ". " + "Time Restricted")
+                    }else{
+                        speakText(accessDeniedMessage)
+                    }
+                    
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                }else{
+                    guard let sn = sn, let doorId = doorId else { return }
+                    let key = "\(sn)_\(doorId)"
+                    guard key == pendingDigitalDoorKey else {
+                        print("🚫 Ignoring MQTT event for a different door:", key)
+                        return
+                    }
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                    AceesMessage = accessDeniedMessage
+                    overlayMessage = accessDeniedMessage
+                    animateFailure()
+                    let deniedSpeech = (type == 42 || type == 43)
+                        ? accessDeniedMessage + ". " + "Time Restricted"
+                        : accessDeniedMessage
+                    speakAndReset(deniedSpeech) {
+                        guard !self.isScanningActive else { return }
+                        self.startBLE()
+                    }
+                }
+                
+            }
+            else {
+                print("Ignored door event type:", type ?? -1)
+                if isRemoteUnlock {
+                    guard let sn = sn, let doorId = doorId else { return }
+                    let key = "\(sn)_\(doorId)"
+                    guard key == activeDoorKey else {
+                        print("🚫 Ignoring MQTT event for a different door:", key)
+                        return
+                    }
+                    remoteMqttResult = RemoteMQTTResult(
+                        doorKey: key,
+                        isSuccess: false,
+                        message: deniedBase
+                    )
+                    speakText(accessDeniedMessage)
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                } else {
+                    guard let sn = sn, let doorId = doorId else { return }
+                    let key = "\(sn)_\(doorId)"
+                    guard key == pendingDigitalDoorKey else {
+                        print("🚫 Ignoring MQTT event for a different door:", key)
+                        return
+                    }
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                    AceesMessage = accessDeniedMessage
+                    overlayMessage = accessDeniedMessage
+                    animateFailure()
+                    speakAndReset(accessDeniedMessage) {
+                        guard !self.isScanningActive else { return }
+                        self.startBLE()
+                    }
+                }
+            }
+            // A remote/BLE-initiated action's response has now actually been
+            // processed — self-clear the flag here instead of relying on a later
+            // tab switch to do it (that's what let a still-pending remote action
+            // get misclassified as a digital-key event if the tab changed first).
+            if isRemoteUnlock {
+                isRemoteUnlock = false
+            }
+            doorManager.closeMQTTWindow()
+            doorManager.clearDoorEvent()
+        }
+    }
 
     
     func startOfflineTimeObserver() {
