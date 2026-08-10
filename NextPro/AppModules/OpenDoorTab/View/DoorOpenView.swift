@@ -584,9 +584,16 @@ struct DoorOpenView: View {
         
         
             .onChange(of: selectedTab) { newTab in
-                resetOverlayState()
-                doorManager.clearDoorEvent()
-                if newTab != 1 {
+                // Don't tear down isRemoteUnlock/activeDoorKey while a remote/BLE action
+                // is still awaiting its response — otherwise a quick tab switch clears the
+                // "this is a remote action" flag before the response arrives, and the
+                // .doorEventReceived handler misclassifies it as a digital-key event and
+                // shows/plays it in whichever tab happens to be active.
+                if !isRemoteUnlock {
+                    resetOverlayState()
+                    doorManager.clearDoorEvent()
+                }
+                if newTab != 1  {
                     //switch tab to reset remote tab view ui
                     activeDoorKey = nil
                     successDoorKey = nil
@@ -855,6 +862,13 @@ struct DoorOpenView: View {
                                 self.startBLE()
                             }
                         }
+                    }
+                    // A remote/BLE-initiated action's response has now actually been
+                    // processed — self-clear the flag here instead of relying on a later
+                    // tab switch to do it (that's what let a still-pending remote action
+                    // get misclassified as a digital-key event if the tab changed first).
+                    if isRemoteUnlock {
+                        isRemoteUnlock = false
                     }
                     doorManager.closeMQTTWindow()
                     doorManager.clearDoorEvent()
