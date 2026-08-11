@@ -201,6 +201,10 @@ final class FCMTokenManager {
         KeychainManager.shared.clearUserDefaultsAndKeychainData()
         UserDefaults.standard.set(false, forKey: "is_logged_in")
 
+        // Clear the unread count (and, via its didSet, the app icon badge) now that
+        // the session is actually gone — a stale badge shouldn't survive logout.
+        NotificationCountViewModel.shared.unreadCount = 0
+
         // Restore what the shared clear just wiped.
         if let savedToken, !savedToken.isEmpty {
             UserDefaults.standard.set(savedToken, forKey: Keys.fcmToken)
