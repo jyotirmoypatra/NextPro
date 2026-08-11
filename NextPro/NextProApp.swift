@@ -103,6 +103,21 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             let didFetch = await NotificationCountViewModel.shared.refreshUnreadCountAwaiting()
             NotificationNavigationManager.shared.notifyNotificationsDidArrive()
             completionHandler(didFetch ? .newData : .noData)
+            
+            
+//            async let notifyCountFetch = NotificationCountViewModel.shared.refreshUnreadCountAwaiting()
+//            async let profileFetch: Void = UserProfileDetailsViewModel().fetchUserProfile()
+//            async let deviceAccessFetch: Void = DeviceDetailsViewModel().fetchDeviceDetailsIfNeeded(force: true)
+//
+//            let didFetch = await notifyCountFetch
+//            _ = await profileFetch
+//            _ = await deviceAccessFetch
+//
+//            NotificationNavigationManager.shared.notifyNotificationsDidArrive()
+//            completionHandler(didFetch ? .newData : .noData)
+            
+            
+            
         }
     }
 

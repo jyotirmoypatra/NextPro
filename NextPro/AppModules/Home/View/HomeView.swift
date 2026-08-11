@@ -218,8 +218,12 @@ struct HomeView: View {
     }
     
     private func selectTab(_ tab: Int) {
-          silentlyRefreshProfile()
-        
+          // Tab 0 (Open Doors) already refreshes the profile itself in
+          // DoorOpenView's onAppear — skip it here to avoid firing it twice.
+          if tab != 0 {
+              silentlyRefreshProfile()
+          }
+
           if selectedTab == tab {
               refreshCurrentTab(tab)
               return

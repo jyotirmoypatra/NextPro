@@ -52,11 +52,11 @@ struct ResetPassword: View {
                                 VStack(spacing: 5) {
                                     Image("zylx")
                                         .resizable()
-                                        .frame(width: 315, height: 120)
+                                        .frame(width: 300, height: 105)
                                         .padding(.bottom,40)
                                     
                                     Text("RESET YOUR PASSWORD")
-                                        .font(.custom("Inter-SemiBold", size: 16))
+                                        .font(.custom("Inter-SemiBold", size: 18))
                                         .foregroundColor(.white)
                                     Text("Enter the email associated with your account, and we'll send you a code to reset your password securely.")
                                         .font(.custom("Inter-Regular", size: 16))

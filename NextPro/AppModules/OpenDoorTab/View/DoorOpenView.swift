@@ -504,6 +504,7 @@ struct DoorOpenView: View {
                 hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
 
                 notificationCountVM.refreshUnreadCount()
+                Task { await UserProfileDetailsViewModel().fetchUserProfile() }
 
                 
                 // Automatically select first available tab
