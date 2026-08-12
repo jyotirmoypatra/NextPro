@@ -409,13 +409,7 @@ struct DoorOpenView: View {
                                         }
                                     }
                                     .id("remote-tab-\(selectedTab)")
-                                    .transition(.opacity)
-                                    //                            .refreshable{
-                                    //                                pullToRefresh = true
-                                    //                                await deviceVM.refreshDeviceDetails()
-                                    //                                pullToRefresh = false
-                                    //
-                                    //                            }
+                                  //  .transition(.opacity)
                                     
                                     .refreshable{
                                         pullToRefresh = true
@@ -431,7 +425,8 @@ struct DoorOpenView: View {
                                     
                                 }
                                 
-                            }.animation(.easeInOut(duration: 0.6), value: selectedTab)
+                            }
+                            //.animation(.easeInOut(duration: 0.6), value: selectedTab)
                         }
                     }
                 }
@@ -615,9 +610,10 @@ struct DoorOpenView: View {
                     }
 
                     AceesMessage = "Preparing Scan..."
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                        startBLE()
-                    }
+                    startBLE()
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+//                        startBLE()
+//                    }
                 }
             }
             .onReceive(NotificationCenter.default.publisher(
@@ -629,11 +625,6 @@ struct DoorOpenView: View {
             .onReceive(NotificationCenter.default.publisher(
                 for: UIApplication.didBecomeActiveNotification
             )) { _ in
-                // Backup resume path: scenePhase's .active case can silently fail to fire
-                // for a view nested this deep (TabView/NavigationStack), which is what left
-                // scanning stuck on "Preparing Scan..." until a manual pull-to-refresh/tab
-                // switch. This notification fires independently of scenePhase, so force a
-                // full restart here regardless of whatever state the scenePhase path left us in.
                 print("☀️ didBecomeActive — force restart BLE")
                 bleManager.refreshAuthorizationStatus()
                 guard isViewVisible, selectedTab == 0 else { return }
@@ -655,11 +646,6 @@ struct DoorOpenView: View {
 
                 case .poweredOn:
                     print("🟢 Bluetooth ON")
-
-                    // Small delay ensures CoreBluetooth is fully ready.
-                    // Routed through restartBLE() (guarded by isBLERestarting) so this
-                    // doesn't race with the didBecomeActive/updateBLEState restart paths
-                    // and double-trigger "Preparing Scan..." / a duplicate scan start.
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         restartBLE()
                     }
@@ -1431,13 +1417,15 @@ struct DoorOpenView: View {
         VStack(spacing: 0) {
             HStack {
                 if hasDigitalKeyAccess && hasRemoteAccess {
-                    Button(action: { withAnimation { selectedTab = 0 } }) {
+                   // Button(action: { withAnimation { selectedTab = 0 } }) {
+                    Button(action: { selectedTab = 0}) {
                         Text("Phone Tap")
                             .font(.custom("Inter-Bold", size: 15))
                             .foregroundColor(selectedTab == 0 ? .white : .gray)
                             .frame(maxWidth: .infinity)
                     }
-                    Button(action: { withAnimation { selectedTab = 1 } }) {
+                  //  Button(action: { withAnimation { selectedTab = 1 } }) {
+                    Button(action: { selectedTab = 1}) {
                         Text("Remote")
                             .font(.custom("Inter-Bold", size: 15))
                             .foregroundColor(selectedTab == 1 ? .white : .gray)
@@ -1672,12 +1660,7 @@ struct DoorOpenView: View {
             
             //  wait until current process finishes
             guard !isProcessingDoor else { return }
-            // DoorManager is a shared singleton that can't safely run two
-            // openSelectedDoor() calls at once (it tracks a single in-flight
-            // request, not per-call state). If a remote/BLE action from the
-            // Remote tab is still awaiting its response, don't start a
-            // colliding digital-key open here — just keep scanning and retry
-            // once the remote action finishes and clears isRemoteUnlock.
+
             guard !isRemoteUnlock else { return }
             let nearbyDevices = bleManager.devices.compactMap { peripheral -> (peripheral: CBPeripheral, rssi: Int)? in
                 let rssi = bleManager.monitoredDeviceRSSI ?? bleManager.deviceLastRSSI[peripheral.identifier] ?? -100
@@ -1719,9 +1702,7 @@ struct DoorOpenView: View {
                     return
                 }
                 
-                // MQTT events report the CONTROLLER's serial, not the sensor's own devSn
-                // (used only for BLE proximity matching) — use controllerSn so this
-                // correctly matches the server's door-event "sn" for the same tap.
+               
                 pendingDigitalDoorKey = "\(door.controllerSn ?? door.devSn)_\(door.doorID)"
                 print("pendingDigitalDoorKey-\(pendingDigitalDoorKey)")
                 doorManager.openSelectedDoor(door)
