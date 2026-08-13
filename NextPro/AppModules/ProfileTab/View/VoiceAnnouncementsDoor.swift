@@ -356,12 +356,16 @@ struct VoiceAnnouncementsDoor: View {
         UserDefaults.standard.set(greeting, forKey: "voice_greeting")
         
         UserDefaults.standard.set(isVoiceAnnouncementEnabled,forKey: "voice_announcement_enabled")
-        
+
         toastManager.show(
             message: "Saved successfully",
             type: .success,
             duration: 1.5
         )
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            dismiss()
+        }
     }
     
     func ResetMessages() {
@@ -393,6 +397,10 @@ struct VoiceAnnouncementsDoor: View {
             type: .success,
             duration: 1.5
         )
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            dismiss()
+        }
     }
     
     
