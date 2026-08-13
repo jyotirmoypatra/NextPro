@@ -62,7 +62,7 @@ struct VoiceAnnouncementsDoor: View {
     @State private var deniedOptions = VoiceMessageDefaults.denied
     @State private var unauthorizedOptions = VoiceMessageDefaults.unauthorized
     @State private var greetingOptions = VoiceMessageDefaults.greetings
-    
+    @State private var isVoiceAnnouncementEnabled = true
     
     var body: some View {
         GeometryReader { geometry in
@@ -110,6 +110,30 @@ struct VoiceAnnouncementsDoor: View {
                         .padding(.bottom,5)
                         .padding(.top,2)
                         .multilineTextAlignment(.center)
+                    
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Enable Voice Announcements")
+                                .font(.custom("Inter-SemiBold", size: 15))
+                                .foregroundColor(.white)
+
+                            Text("Play voice messages during door access events.")
+                                .font(.custom("Inter-Regular", size: 12))
+                                .foregroundColor(.white.opacity(0.55))
+                        }
+
+                        Spacer()
+
+                        Toggle("", isOn: $isVoiceAnnouncementEnabled)
+                            .labelsHidden()
+                            .tint(.green)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(Color.white.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .padding(.horizontal, 10)
+                    .padding(.bottom, 8)
                     
                     VStack {
                         
@@ -316,6 +340,8 @@ struct VoiceAnnouncementsDoor: View {
                 unauthorizedOptions[i].isSelected = (unauthorizedOptions[i].text == savedUnauthorized)
             }
         }
+        
+        isVoiceAnnouncementEnabled = UserDefaults.standard.object(forKey: "voice_announcement_enabled" ) as? Bool ?? true
     }
     
     func saveMessages() {
@@ -329,6 +355,7 @@ struct VoiceAnnouncementsDoor: View {
         UserDefaults.standard.set(unauthorized, forKey: "voice_unauthorized")
         UserDefaults.standard.set(greeting, forKey: "voice_greeting")
         
+        UserDefaults.standard.set(isVoiceAnnouncementEnabled,forKey: "voice_announcement_enabled")
         
         toastManager.show(
             message: "Saved successfully",
@@ -355,6 +382,10 @@ struct VoiceAnnouncementsDoor: View {
         UserDefaults.standard.set(defaultDenied, forKey: "voice_denied")
         UserDefaults.standard.set(defaultUnauthorized, forKey: "voice_unauthorized")
         UserDefaults.standard.set(defaultGreeting, forKey: "voice_greeting")
+        
+        isVoiceAnnouncementEnabled = true
+
+        UserDefaults.standard.set(true,forKey: "voice_announcement_enabled")
         
         // Show toast
         toastManager.show(
