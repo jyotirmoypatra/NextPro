@@ -314,6 +314,15 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
         }
     }
 
+    func disconnect() {
+        mqtt?.autoReconnect = false
+        mqtt?.disconnect()
+        mqtt = nil
+        subscribedTopics.removeAll()
+        lastMessage = ""
+        print("🔌 MQTT disconnected and local state cleared (logout)")
+    }
+
 }
 
 

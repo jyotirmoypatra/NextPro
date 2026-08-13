@@ -30,6 +30,7 @@ struct CreateNewPasswordView: View {
     @State private var isAdmin = false
     @State private var showSuccessUpdateAlert = false
     @State private var showLoginError = false
+    @State private var isLoggingOut = false
     
     enum NewPassField: Hashable {
         case newpass
@@ -235,8 +236,8 @@ struct CreateNewPasswordView: View {
                                 if comingFrom == "user_profile"{
                                     showSuccessUpdateAlert = true
                                 }
-                               // else if comingFrom == "validate_email"  && !(isAggremntAccepted ?? false){ //open this and hide bellow to check agrement accepted or not - Step 1
-                                else if comingFrom == "validate_email" { //come from setup user
+                                else if comingFrom == "validate_email"  && !(isAggremntAccepted ?? false){ //open this and hide bellow to check agrement accepted or not - Step 1
+                              //  else if comingFrom == "validate_email" {     //come from setup user
                                     
                                     toastManager.show(
                                         message: "Password updated successfully!",
@@ -252,12 +253,12 @@ struct CreateNewPasswordView: View {
                                 }
                                 
                                 //comment out this to check agrement if accepted then go to login api call - Step-2
-//                                else if comingFrom == "validate_email"  && (isAggremntAccepted ?? false){
-//                                    LoginApiCall()
-//                                }
-                                else {
+                                else if comingFrom == "validate_email"  && (isAggremntAccepted ?? false){
+                                    LoginApiCall()
+                                }
+                                else { // after enter otp then new password
                                     toastManager.show(
-                                        message: "Password updated successfully!",
+                                        message: "Password updated successfully! Please use your new credentials to log in.",
                                         type: .success,
                                         duration: 1.0
                                     )
@@ -297,14 +298,23 @@ struct CreateNewPasswordView: View {
                 // .background(.black)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 
-                if viewModel.isLoading {
+                
+                if viewModel.isLoading || isLoggingOut {
                     ZStack {
-                        Color.black.opacity(0.4)
+                        Color.black.opacity(0.7)
                             .ignoresSafeArea()
-                        
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(1.8)
+
+                        VStack(spacing: 16) {
+                            if isLoggingOut {
+                                Text("Logging out...")
+                                    .font(.custom("Inter-Medium", size: 16))
+                                    .foregroundColor(.white)
+                            }
+
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(1.8)
+                        }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ignoresSafeArea()
@@ -353,9 +363,20 @@ struct CreateNewPasswordView: View {
                     buttonTitle: "OK"
                 ) {
                     showSuccessUpdateAlert = false
-                    KeychainManager.shared.clearUserDefaultsAndKeychainData()
-                    UserDefaults.standard.set(false, forKey: "is_logged_in")
-                    KeychainManager.shared.resetToLogin()
+                    // Same logout function used by Profile's Logout button.
+                    guard !isLoggingOut else { return }
+                    isLoggingOut = true
+                    Task {
+                        let result = await FCMTokenManager.shared.logoutStrict()
+                        isLoggingOut = false
+
+                        switch result {
+                        case .success:
+                            KeychainManager.shared.resetToLogin()
+                        case .failed(let message):
+                            toastManager.show(message: message, type: .error)
+                        }
+                    }
                 }
             }
             
@@ -397,61 +418,6 @@ struct CreateNewPasswordView: View {
         }
     }
 }
-
-
-//struct PasswordField: View {
-//    var title: String
-//    var placeholder: String
-//    @Binding var text: String
-//    @Binding var showText: Bool     // for eye button
-//    
-//    var body: some View {
-//        VStack(alignment: .leading, spacing: 6) {
-//            HStack(spacing: 0) {
-//                Text(title)
-//                    .font(.custom("Inter-Medium", size: 16))
-//                    .foregroundColor(.white)
-//                Text(" *")
-//                    .foregroundColor(.red)
-//            }
-//            
-//            ZStack(alignment: .leading) {
-//                
-//                if text.isEmpty {
-//                    Text(placeholder)
-//                        .font(.custom("Inter-Regular", size: 16))
-//                        .foregroundColor(.white.opacity(0.5))
-//                        .padding(.leading, 14)
-//                }
-//                
-//                HStack {
-//                    if showText {
-//                        TextField("", text: $text)
-//                            .foregroundColor(.white)
-//                            .autocapitalization(.none)
-//                            .disableAutocorrection(true)
-//                    } else {
-//                        SecureField("", text: $text)
-//                            .foregroundColor(.white)
-//                            .autocapitalization(.none)
-//                            .disableAutocorrection(true)
-//                    }
-//                    
-//                    Button(action: { showText.toggle() }) {
-//                        Image(systemName: showText ? "eye.slash.fill" : "eye.fill")
-//                            .foregroundColor(.white.opacity(0.8))
-//                    }
-//                }
-//                .padding(.horizontal, 14)
-//                .frame(height: 50)
-//            }
-//            .background(Color.white.opacity(0.15))
-//            .cornerRadius(10)
-//        }
-//    }
-//}
-
-
 
 
 
