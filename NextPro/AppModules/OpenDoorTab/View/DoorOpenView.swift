@@ -498,6 +498,11 @@ struct DoorOpenView: View {
         
             .onAppear {
                 isViewVisible = true
+
+                if scenePhase == .active {
+                    PassPresentationSuppressionManager.shared.start()
+                }
+
                 // Load access flags from UserDefaults
                 hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
                 hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
@@ -551,6 +556,8 @@ struct DoorOpenView: View {
                 // Mark view as not visible
                 isViewVisible = false
 
+                PassPresentationSuppressionManager.shared.stop()
+
                 stopBLE()
 
                 doorManager.clearDoorEvent()
@@ -589,13 +596,18 @@ struct DoorOpenView: View {
                 case .background:
                     print("🌙 App went to background — stopping BLE scanning and monitoring")
                     stopBLE(reason: "Preparing Scan..")
+                    PassPresentationSuppressionManager.shared.stop()
 
                 case .active:
                     updateBLEState()
+                    if isViewVisible {
+                        PassPresentationSuppressionManager.shared.start()
+                    }
 
                 case .inactive:
                     print("⏸️ App became inactive")
-                    
+                    PassPresentationSuppressionManager.shared.stop()
+
                 @unknown default:
                     break
                 }
