@@ -23,6 +23,16 @@ final class SpeechManager: NSObject, AVSpeechSynthesizerDelegate {
         setupNotifications()
     }
 
+    /// Immediately halts any in-progress or pending speech without invoking its `onFinish`
+    /// callback. Used when the app backgrounds so a queued completion can't fire late and
+    /// replay stale UI once the app returns to the foreground.
+    func stop() {
+        onFinishCallback = nil
+        if synthesizer.isSpeaking {
+            synthesizer.stopSpeaking(at: .immediate)
+        }
+    }
+
     func speak(_ text: String, onFinish: (() -> Void)? = nil) {
         guard !text.isEmpty else {
             onFinish?()
