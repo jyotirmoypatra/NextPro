@@ -127,6 +127,9 @@ struct VoiceAnnouncementsDoor: View {
                         Toggle("", isOn: $isVoiceAnnouncementEnabled)
                             .labelsHidden()
                             .tint(.green)
+                            .onChange(of: isVoiceAnnouncementEnabled) { newValue in
+                                UserDefaults.standard.set(newValue, forKey: "voice_announcement_enabled")
+                            }
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
