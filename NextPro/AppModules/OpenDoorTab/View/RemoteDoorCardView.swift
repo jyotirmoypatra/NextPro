@@ -13,6 +13,7 @@ struct RemoteMQTTResult: Equatable {
 
 
 struct RemoteDoorCardView: View {
+    @Environment(\.scenePhase) private var scenePhase
     let door: RemoteDoorItem
     @Binding var activeDoorKey: String?
     @Binding var mqttResult: RemoteMQTTResult?
@@ -354,6 +355,10 @@ struct RemoteDoorCardView: View {
             isVoiceAnnouncementEnabled =
             UserDefaults.standard.object(forKey: "voice_announcement_enabled") as? Bool ?? true
         }
+        .onChange(of: scenePhase) { newPhase in
+            guard newPhase == .background else { return }
+            forceFinishOnBackground()
+        }
     }
     private var isDisabled: Bool {
         guard let active = activeDoorKey else { return false }
@@ -602,6 +607,23 @@ struct RemoteDoorCardView: View {
         resetWifiState()
         startBleWaiting()
         onBleOpen()
+    }
+
+    /// Don't let a pending speech-completion or reset timer fire late once the app
+    /// returns to foreground — that replayed this card's previous waiting/success UI
+    /// and voice line. Finish everything immediately instead.
+    private func forceFinishOnBackground() {
+        guard wifiWaiting || bleWaiting || wifiSuccess || bleSuccess || isCheckingDevice else { return }
+
+        SpeechManager.shared.stop()
+
+        stopDeviceScan()
+        resetWifiState()
+        resetBleState()
+
+        if activeDoorKey == door.key {
+            activeDoorKey = nil
+        }
     }
 
 }
