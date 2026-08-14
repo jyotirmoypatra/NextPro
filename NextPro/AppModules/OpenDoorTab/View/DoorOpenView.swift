@@ -525,6 +525,21 @@ struct DoorOpenView: View {
                     notificationNav.shouldOpenNotifications = false
                 }
             }
+            .onReceive(
+                NotificationCenter.default.publisher(for: .accessFlagsChanged)
+            ) { _ in
+                hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
+                hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
+
+                // Make sure selected tab is still valid
+                if hasDigitalKeyAccess {
+                    selectedTab = 0
+                } else if hasRemoteAccess {
+                    selectedTab = 1
+                } else {
+                    selectedTab = 0
+                }
+            }
             .onChange(of: notificationNav.shouldOpenNotifications) { shouldOpen in
                 guard shouldOpen else { return }
                 navigateToNotifications = true

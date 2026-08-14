@@ -353,6 +353,23 @@ class NetworkManager: ObservableObject {
         )
     }
 
+    // MARK: - Device Details API
+    func setControllerDoorUnlockTime(controllerSerial: String, duration:Int) async throws -> ControllerDoorUnlcokTimeResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.setControllerDoorUnlockTime))!
+         print("Set Controller Door Unlock Time Api called----------------")
+         return try await performRequest(
+             url: url,
+             method: "POST",
+             body: [
+                 "controller_serial": controllerSerial,
+                 "controller_door_open_time": duration
+             ],
+             requiresAuth: true,
+             responseType: ControllerDoorUnlcokTimeResponse.self,
+             retry: true
+         )
+     }
 
 
     // MARK: - Forget password  API
@@ -436,16 +453,14 @@ class NetworkManager: ObservableObject {
     func EditUserProfileDetails(
         fullName: String,
         phone: String,
-        userId: String
     ) async throws -> UserEditProfileResponse {
 
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.editUserProfile))!
         print("Edit profile Api called----")
         return try await performRequest(
             url: url,
-            method: "PUT",
+            method: "POST",
             body: [
-                "user_id": userId,
                 "full_name": fullName,
                 "phone_number": phone
             ],

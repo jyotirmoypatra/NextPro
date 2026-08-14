@@ -78,11 +78,11 @@ class UserProfileDetailsViewModel: ObservableObject {
                // UserDefaults.standard.set(is_admin, forKey: "is_admin")
                 
                 // Digital access Tab
-                let hasDigitalAccess = response.data.device_access_details?.is_digital
+                let hasDigitalAccess = response.data.device_access_details?.is_digital ?? false
                 UserDefaults.standard.set(hasDigitalAccess, forKey: "digital_access")
 
                 // Remote access tab
-                let hasRemoteAccess = response.data.device_access_details?.is_remote
+                let hasRemoteAccess = response.data.device_access_details?.is_remote ?? false
                 UserDefaults.standard.set(hasRemoteAccess, forKey: "remote_access")
                 
                 // Remote  wifi access
@@ -112,6 +112,13 @@ class UserProfileDetailsViewModel: ObservableObject {
                 let deviceWrite = deviceManagement?.write ?? false
                 UserDefaults.standard.set(deviceRead, forKey: "device_management_read")
                 UserDefaults.standard.set(deviceWrite, forKey: "device_management_write")
+                
+                
+                // Notify all interested screens that access flags have changed
+                NotificationCenter.default.post(
+                    name: .accessFlagsChanged,
+                    object: nil
+                )
                 
             }else{
                 errorMessage = response.message ?? "Something Went Wrong"

@@ -300,3 +300,7 @@ extension Encodable {
 extension Notification.Name {
     static let roleChanged = Notification.Name("roleChanged")
 }
+
+extension Notification.Name {
+    static let accessFlagsChanged = Notification.Name("accessFlagsChanged")
+}

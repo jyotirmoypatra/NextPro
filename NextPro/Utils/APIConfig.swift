@@ -17,7 +17,7 @@ struct APIConfig {
     }
 
   // Change only this line when switching environments
-   static let environment: Environment = .staging
+   static let environment: Environment = .development
     
     static var baseURL: String {
         switch environment {
@@ -39,9 +39,11 @@ struct APIConfig {
         static let deviceDetails = "/api/facility/user/device-access/"
         static let forgetPasswordRequest = "/api/facility-user/forgot-password/request/"
         static let forgetPasswordOtpVerify = "/api/facility-user/forgot-password/verify/"
-        static let getUserProfileData = "/api/facility-user/user-detail/"
+        //static let getUserProfileData = "/api/facility-user/user-detail/"
+        static let getUserProfileData = "/api/authentication/details/"
         static let uploadProfilePic = "/api/facility-user/upload-image/"
-        static let editUserProfile = "/api/facility-user/user/update/"
+        //static let editUserProfile = "/api/facility-user/user/update/"
+        static let editUserProfile = "/api/authentication/update/"
         static let validateEmail = "/api/facility-user/validate-email/"
         static let aggremntAccept = "/api/facility-user/update-agreement/"
         static let adminAssignDeviceList = "/api/facility/user/configure-device-list/"
@@ -66,6 +68,8 @@ struct APIConfig {
         static let readAllNotification = "/api/notifications/mine/read-all/"
         static let unreadNotificationCount = "/api/notifications/mine/unread-count/"
         static let readNotification = "/api/notifications/mine/{notification_id}/read/"
+        
+        static let setControllerDoorUnlockTime = "/api/"
     }
     
     static func url(_ endpoint: String) -> String {

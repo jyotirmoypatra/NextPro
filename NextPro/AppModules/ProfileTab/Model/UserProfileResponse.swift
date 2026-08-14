@@ -14,7 +14,6 @@ struct UserProfileResponse: Decodable {
 
 struct UserProfileData: Decodable {
     let user_id: String?
-    let facility_user_id: String?
 
     let full_name: String?
     let username: String?
@@ -51,6 +50,8 @@ struct UserProfileData: Decodable {
     let week_days: String?
     let creation_method: String?
     let source: String?
+    
+    let is_shared_link: Bool?
 }
 
 
