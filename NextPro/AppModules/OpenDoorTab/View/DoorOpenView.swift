@@ -598,6 +598,13 @@ struct DoorOpenView: View {
                     stopBLE(reason: "Preparing Scan..")
                     PassPresentationSuppressionManager.shared.stop()
 
+                    // Don't let a pending speech-completion or reset timer fire late once
+                    // the app returns to foreground — that replayed the previous door's
+                    // voice/UI. Finish everything immediately instead.
+                    SpeechManager.shared.stop()
+                    animationResetTask?.cancel()
+                    resetOverlayState()
+
                 case .active:
                     updateBLEState()
                     if isViewVisible {
