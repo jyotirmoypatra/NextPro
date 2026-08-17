@@ -12,41 +12,71 @@ enum TopHeaderType {
 
 struct TopHeaderView: View {
     @EnvironmentObject private var notificationCountVM: NotificationCountViewModel
-
+    
     let type: TopHeaderType
     var onBellTap: (() -> Void)? = nil
-
+    
     private var badgeText: String? {
         guard notificationCountVM.unreadCount > 0 else { return nil }
         return notificationCountVM.unreadCount > 99 ? "99+" : "\(notificationCountVM.unreadCount)"
     }
-
+    
     var body: some View {
-        HStack {
+        HStack(alignment: .top) {
             switch type {
             case .welcome(let userName, let isLoading):
                 VStack(alignment: .leading, spacing: 5) {
                     Text("Welcome!")
-                        .font(.custom("Inter-SemiBold", size: 18))
-                        .foregroundColor(.white)
-
+                        .font(.custom("Inter-SemiBold", size: 15))
+                        .foregroundColor(.gray)
+                    
                     if isLoading {
-                        ShimmerTextView(width: 100, height: 16)
+                        ShimmerTextView(width: 100, height: 46)
                     } else {
                         Text(userName)
-                            .font(.custom("Inter-Regular", size: 16))
-                            .foregroundColor(.gray)
+                            .font(.custom("Inter-Regular", size: 18))
+                            .foregroundColor(.white)
                     }
+                    
+                    
+                    // MARK: - Role Capsule
+                    HStack(spacing: 6) {
+                        
+                        Image(systemName: UserRole.icon)
+                            .font(.system(size: 11, weight: .semibold))
+                        
+                        Text(UserRole.title)
+                            .font(
+                                .custom(
+                                    "Inter-SemiBold",
+                                    size: 11
+                                )
+                            )
+                    }
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(
+                        Color.blue.opacity(0.12)
+                    )
+                    .overlay(
+                        Capsule()
+                            .stroke(
+                                Color.blue.opacity(0.25),
+                                lineWidth: 0.8
+                            ) )
+                    .clipShape(Capsule())
+                    
                 }
-
+                
             case .title(let title):
                 Text(title)
                     .font(.custom("Inter-SemiBold", size: 18))
                     .foregroundColor(.white)
             }
-
+            
             Spacer()
-
+            
             Button(action: {
                 onBellTap?()
             }) {

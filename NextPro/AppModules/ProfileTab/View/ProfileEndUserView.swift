@@ -76,14 +76,49 @@ struct ProfileEndUserView: View {
                                     .font(.custom("Inter-Medium", size: 16))
                                     .foregroundColor(.white)
                             }
+                            
+                            // MARK: - Role Capsule
+                                HStack(spacing: 6) {
+
+                                    Image(systemName: UserRole.icon)
+                                        .font(.system(size: 11, weight: .semibold))
+
+                                    Text(UserRole.title)
+                                        .font(
+                                            .custom(
+                                                "Inter-SemiBold",
+                                                size: 11
+                                            )
+                                        )
+                                }
+                                .foregroundColor(.blue)
+                                .padding(.horizontal, 9)
+                                .padding(.vertical, 5)
+                                .background(
+                                    Color.blue.opacity(0.12)
+                                )
+                                .overlay(
+                                    Capsule()
+                                        .stroke(
+                                            Color.blue.opacity(0.25),
+                                            lineWidth: 0.8
+                                        ) )
+                                .clipShape(Capsule())
 
                             // Phone Number
                             if viewModel.isLoading {
                                 ShimmerTextView(width: 90, height: 13)
                             } else {
-                                Text(viewModel.phoneNumber.formattedUSPhone())
-                                    .font(.custom("Inter-Regular", size: 13))
-                                    .foregroundColor(.gray)
+
+                                HStack(spacing: 6) {
+                                    Image(systemName: "phone.fill")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.gray)
+
+                                    Text(viewModel.phoneNumber.formattedUSPhone())
+                                        .font(.custom("Inter-Regular", size: 13))
+                                        .foregroundColor(.gray)
+                                }
                             }
 
                             
