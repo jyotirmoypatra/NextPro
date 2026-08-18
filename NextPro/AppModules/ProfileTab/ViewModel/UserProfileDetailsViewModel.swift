@@ -77,6 +77,8 @@ class UserProfileDetailsViewModel: ObservableObject {
                 
                // UserDefaults.standard.set(is_admin, forKey: "is_admin")
                 
+                UserDefaults.standard.set(response.data.user_type ?? "", forKey: "user_type")
+                
                 // Digital access Tab
                 let hasDigitalAccess = response.data.device_access_details?.is_digital ?? false
                 UserDefaults.standard.set(hasDigitalAccess, forKey: "digital_access")

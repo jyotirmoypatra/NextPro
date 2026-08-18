@@ -70,7 +70,7 @@ struct ProfileEndUserView: View {
                             
                             // Full Name
                             if viewModel.isLoading {
-                                ShimmerTextView(width: 120, height: 16)
+                                ShimmerTextView(width: 120, height: 20)
                             } else {
                                 Text(viewModel.fullName)
                                     .font(.custom("Inter-Medium", size: 16))
@@ -107,7 +107,7 @@ struct ProfileEndUserView: View {
 
                             // Phone Number
                             if viewModel.isLoading {
-                                ShimmerTextView(width: 90, height: 13)
+                                ShimmerTextView(width: 90, height: 15)
                             } else {
 
                                 HStack(spacing: 6) {

@@ -31,7 +31,7 @@ struct TopHeaderView: View {
                         .foregroundColor(.gray)
                     
                     if isLoading {
-                        ShimmerTextView(width: 100, height: 46)
+                        ShimmerTextView(width: 100, height: 22)
                     } else {
                         Text(userName)
                             .font(.custom("Inter-Regular", size: 18))
