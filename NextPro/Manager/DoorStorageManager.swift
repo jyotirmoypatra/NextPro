@@ -67,6 +67,7 @@ struct RemoteDoorItem: Identifiable {
     let doorControllerType: String?
     let sensorDetails: DoorModelUser?
     let accessGroups: [AccessGroups]?
+    let doorOpeningTime: Int?
     var key: String {
             "\(serial)_\(doorNumber)"
         }

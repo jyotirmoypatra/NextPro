@@ -1430,7 +1430,7 @@ struct DoorOpenView: View {
         MQTTManager.shared.sendOpenDoorCommand(
             to: door.serial,
             doorID: Int32(door.doorNumber),
-            duration: 5
+            duration: door.doorOpeningTime ?? 5
         )
         
     }

@@ -255,8 +255,9 @@ class DeviceDetailsViewModel: ObservableObject {
                         doorType: "standard",
                         doorControllerType: controller.controllerModel,
                         sensorDetails: sensorDetails,
-                        accessGroups: door.accessGroups
-                        
+                        accessGroups: door.accessGroups,
+                        doorOpeningTime: controller.doorOpeningTime
+
                     )
                 )
             }
@@ -287,7 +288,8 @@ class DeviceDetailsViewModel: ObservableObject {
                     doorType: "all_in_one",
                     doorControllerType: door.doorModel,
                     sensorDetails: sensorDetails,
-                    accessGroups: door.accessGroups
+                    accessGroups: door.accessGroups,
+                    doorOpeningTime: door.doorOpeningTime
                 )
             )
         }
@@ -319,7 +321,8 @@ class DeviceDetailsViewModel: ObservableObject {
                         doorType: "standalone_controller",
                         doorControllerType: controller.controllerModel,
                         sensorDetails: sensorDetails,
-                        accessGroups: door.accessGroups
+                        accessGroups: door.accessGroups,
+                        doorOpeningTime: controller.doorOpeningTime
                     )
                 )
             }
