@@ -636,6 +636,8 @@ struct DeleteConfirmationSheet: View {
                     Text(deleteAccountViewModel.errorMessage)
                         .foregroundColor(.red)
                         .font(.system(size: 14))
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.horizontal)
                 }
 
