@@ -814,6 +814,30 @@ class NetworkManager: ObservableObject {
             retry: true
         )
     }
+    
+    
+    
+    // MARK: - Wifi Remote open Log
+    
+    func wifiRemoteOpenLog(controllerSerial: String,relayDoorNo:Int,userId:Int,cardNo:String,time:String) async throws -> WifiRemoteOpenLogResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.wifiUnlcokLog))!
+        print("wifiRemoteOpenLog Api called----")
+        return try await performRequest(
+            url: url,
+            method: "POST",
+            body: [
+                "controller_serial": controllerSerial,
+                "relay_number" : relayDoorNo,
+                "device_user_id" : userId,
+                "card_number" : cardNo,
+                "device_current_time": time
+            ],
+            requiresAuth: true,
+            responseType: WifiRemoteOpenLogResponse.self,
+            retry: true
+        )
+    }
 
 }
 

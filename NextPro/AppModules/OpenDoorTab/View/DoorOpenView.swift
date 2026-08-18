@@ -974,6 +974,7 @@ struct DoorOpenView: View {
             let type = info["type"] as? Int
             doorId = info["doorID"] as? Int
             let sn = info["sn"] as? String
+            let eventTime = info["time"] as? String ?? ""
             
             let resolvedDoorName = deviceVM.getDoorName(sn: sn, doorId: doorId)
             doorName = resolvedDoorName
@@ -1074,6 +1075,15 @@ struct DoorOpenView: View {
                     isSuccess: true,
                     message: grantedBase
                 )
+                Task {
+                    await WifiRemoteOpenLogViewModel().setWifiLog(
+                        controllerSerial: sn,
+                        relayDoorNo: doorId,
+                        userId: deviceUserId,
+                        cardNo: digitalCardString,
+                        time: eventTime
+                    )
+                }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 if isVoiceAnnouncementEnabled {
                     speakText(accessGrantedMessage + " - " + accessGreetingMessage)

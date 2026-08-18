@@ -225,13 +225,15 @@ struct ProfileEndUserView: View {
                             Divider().background(Color.white.opacity(0.15))
                                 .padding(.horizontal,20)
                             
-                            UserProfileRow(title: "Delete Account" , textColor: .red) {
-                                showDeleteAccountAlert = true
+                            if UserRole.title != "Organization Admin" {
+                                UserProfileRow(title: "Delete Account" , textColor: .red) {
+                                    showDeleteAccountAlert = true
+                                }
+
+                                Divider().background(Color.white.opacity(0.15))
+                                    .padding(.horizontal,20)
                             }
 
-                            Divider().background(Color.white.opacity(0.15))
-                                .padding(.horizontal,20)
-                            
                             UserProfileRow(title: "Logout" , textColor: .orange) {
                                 showLogoutAlert = true
                             }
