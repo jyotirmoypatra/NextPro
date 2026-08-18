@@ -59,6 +59,7 @@ struct Controller: Codable {
     let latitude: Double?
     let longitude: Double?
     let currentAddress: String?
+    let doorOpeningTime: Int?
     let doors: [Door]?
 
     enum CodingKeys: String, CodingKey {
@@ -73,6 +74,7 @@ struct Controller: Codable {
         case latitude
         case longitude
         case currentAddress = "current_address"
+        case doorOpeningTime = "door_opening_time"
         case doors
     }
 }
@@ -126,6 +128,7 @@ struct Standalone_All_In_One_Door: Codable {
     let latitude: Double?
     let longitude: Double?
     let currentAddress: String?
+    let doorOpeningTime: Int?
     let accessGroups: [AccessGroups]?
 
     enum CodingKeys: String, CodingKey {
@@ -143,6 +146,7 @@ struct Standalone_All_In_One_Door: Codable {
         case latitude
         case longitude
         case currentAddress = "current_address"
+        case doorOpeningTime = "door_opening_time"
         case accessGroups = "access_groups"
     }
 }
@@ -162,6 +166,7 @@ struct StandaloneController: Codable {
     let latitude: Double?
     let longitude: Double?
     let currentAddress: String?
+    let doorOpeningTime: Int?
     let doors: [SensorlessDoor]?
 
     enum CodingKeys: String, CodingKey {
@@ -177,6 +182,7 @@ struct StandaloneController: Codable {
         case latitude
         case longitude
         case currentAddress = "current_address"
+        case doorOpeningTime = "door_opening_time"
         case doors
     }
 }

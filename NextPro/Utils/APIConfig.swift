@@ -69,7 +69,7 @@ struct APIConfig {
         static let unreadNotificationCount = "/api/notifications/mine/unread-count/"
         static let readNotification = "/api/notifications/mine/{notification_id}/read/"
         
-        static let setControllerDoorUnlockTime = "/api/"
+        static let setControllerDoorUnlockTime = "/api/deviceinventory/configure-door-opening-time/"
     }
     
     static func url(_ endpoint: String) -> String {

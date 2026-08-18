@@ -11,6 +11,7 @@ import Combine
 
 struct SetupDeviceRelayConfig: View {
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var setControllerDurationVM = SetControllerDoorUnlockTimeViewModel()
     var selectedDevice: AssignDevice
 
     @State private var durationText: String = ""
@@ -21,6 +22,7 @@ struct SetupDeviceRelayConfig: View {
     @State private var showOfflineAlert = false
     @State private var showBluetoothPermissionAlert = false
     @State private var isCheckingDevice = false
+    @State private var isSuccess = false
     @State private var alertMessage = ""
     @State private var alertIcon = ""
     @State private var tcScanTask: Task<Void, Never>?
@@ -122,7 +124,7 @@ struct SetupDeviceRelayConfig: View {
             ModernAlertView(
                 title: "Success!",
                 message: successMessage,
-                isSuccess: true,
+                isSuccess: isSuccess,
                 buttonTitle: "OK"
             ) {
                 showSuccessAlert = false
@@ -134,7 +136,7 @@ struct SetupDeviceRelayConfig: View {
             ModernAlertView(
                 title: "Bluetooth Permission Required",
                 message: "Bluetooth permission is disabled. \nPlease enable it in iPhone Settings → Apps → ZYLX → Bluetooth.",
-                isSuccess: false,
+                isSuccess: isSuccess,
                 buttonTitle: "Cancel",
                 action: {
                     showBluetoothPermissionAlert = false
@@ -389,10 +391,30 @@ struct SetupDeviceRelayConfig: View {
 
         LibDevModel.onControlOver { retCode, _ in
             DispatchQueue.main.async {
-                isCheckingDevice = false
                 if retCode == 0 {
-                    successMessage = "Unlock duration set to \(openTime)s successfully."
-                    showSuccessAlert = true
+//                    successMessage = "Unlock duration set to \(openTime)s successfully."
+//                    showSuccessAlert = true
+
+                    Task {
+                        loaderText = "Saving duration to cloud..."
+                        await setControllerDurationVM.setDuration(
+                            controllerSerial: selectedDevice.serial,
+                            duration: openTime
+                        )
+
+                        if setControllerDurationVM.success {
+                            isCheckingDevice = false
+                            isSuccess = true
+                            successMessage = setControllerDurationVM.successMessage
+                            showSuccessAlert = true
+                        } else {
+                            isCheckingDevice = false
+                            isSuccess = false
+                            successMessage = setControllerDurationVM.errorMessage
+                            showSuccessAlert = true
+                        }
+                    }
+                    
                 } else {
                     alertIcon = "power-off"
                     alertMessage = "Device configuration failed.\nSDK error code: \(retCode)"

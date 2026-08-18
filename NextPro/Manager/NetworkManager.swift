@@ -360,10 +360,10 @@ class NetworkManager: ObservableObject {
          print("Set Controller Door Unlock Time Api called----------------")
          return try await performRequest(
              url: url,
-             method: "POST",
+             method: "PATCH",
              body: [
-                 "controller_serial": controllerSerial,
-                 "controller_door_open_time": duration
+                 "serial_number": controllerSerial,
+                 "door_opening_time": duration
              ],
              requiresAuth: true,
              responseType: ControllerDoorUnlcokTimeResponse.self,
