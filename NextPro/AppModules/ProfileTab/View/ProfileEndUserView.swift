@@ -108,7 +108,7 @@ struct ProfileEndUserView: View {
                             // Phone Number
                             if viewModel.isLoading {
                                 ShimmerTextView(width: 90, height: 15)
-                            } else {
+                            } else if !viewModel.phoneNumber.isEmpty {
 
                                 HStack(spacing: 6) {
                                     Image(systemName: "phone.fill")
