@@ -72,7 +72,7 @@ class WiFiConfigureManager {
 
                 // ❌ STOP if server IP failed
                 guard serverRet == 0 else {
-                    completion(false, "❌ Server IP set failed (code \(serverRet))")
+                    completion(false, "❌ Server IP set failed: \(SDKErrorCode.reason(for: Int(serverRet)))")
                     return
                 }
 
@@ -97,12 +97,12 @@ class WiFiConfigureManager {
                         if wifiRet == 0 {
                             completion(true, "Wi-Fi credentials sent to device")
                         } else {
-                            completion(false, "WiFi config failed (code \(wifiRet))")
+                            completion(false, "WiFi config failed: \(SDKErrorCode.reason(for: Int(wifiRet)))")
                         }
                     }
 
                     if wifiStartRet != 0 {
-                        completion(false, "Failed to start WiFi config (code \(wifiStartRet))")
+                        completion(false, "Failed to start WiFi config: \(SDKErrorCode.reason(for: Int(wifiStartRet)))")
                     }
                 }
 
@@ -113,7 +113,7 @@ class WiFiConfigureManager {
             }
 
             if startRet != 0 {
-                completion(false, "Failed to start server IP config (code \(startRet))")
+                completion(false, "Failed to start server IP config: \(SDKErrorCode.reason(for: Int(startRet)))")
             }
 
             return
@@ -140,24 +140,12 @@ class WiFiConfigureManager {
             if retCode == 0 {
                 completion(true, "Wi-Fi credentials sent to device")
             } else {
-
-                let errorMsg: String
-                switch retCode {
-                case 1: errorMsg = "Timeout"
-                case 2: errorMsg = "Device not nearby"
-                case 3: errorMsg = "Connection failed"
-                case 4: errorMsg = "Authentication failed"
-                case 5: errorMsg = "Invalid parameters"
-                case 11: errorMsg = "MAC / eKey mismatch"
-                default: errorMsg = "Error code \(retCode)"
-                }
-
-                completion(false, "Wi-Fi config failed: \(errorMsg)")
+                completion(false, "Wi-Fi config failed: \(SDKErrorCode.reason(for: Int(retCode)))")
             }
         }
 
         if ret != 0 {
-            completion(false, "Failed to start Wi-Fi config (code \(ret))")
+            completion(false, "Failed to start Wi-Fi config: \(SDKErrorCode.reason(for: Int(ret)))")
         }
     }
 }

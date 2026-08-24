@@ -17,7 +17,7 @@ struct APIConfig {
     }
 
   // Change only this line when switching environments
-   static let environment: Environment = .staging
+   static let environment: Environment = .development
     
     static var baseURL: String {
         switch environment {
