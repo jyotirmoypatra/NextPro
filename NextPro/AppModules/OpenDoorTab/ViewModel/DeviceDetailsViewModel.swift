@@ -181,7 +181,8 @@ class DeviceDetailsViewModel: ObservableObject {
                         devSn: sn,
                         devMac: mac,
                         devType: Int32(door.devType ?? 14),
-                        doorID: Int32(door.doorNumber ?? 1),
+                     // doorID: Int32(door.doorNumber ?? 1),
+                        doorID: Int32(controller.controllerModel == "TC430" ? 0 : (door.doorNumber ?? 1)),
                         eKey: key,
                         cardno: cardNo,
                         deviceType: "standard",
@@ -239,7 +240,8 @@ class DeviceDetailsViewModel: ObservableObject {
                             devSn: door.doorSerial ?? "",
                             devMac: door.doorMac ?? "",
                             devType:Int32(door.devType ?? 14),
-                            doorID: Int32(door.doorNumber ?? 1),
+                          //doorID: Int32(door.doorNumber ?? 1),
+                            doorID: Int32(controller.controllerModel == "TC430" ? 0 : (door.doorNumber ?? 1)),
                             eKey: door.doorKey ?? "",
                             cardno: deviceDetails?.digitalCardNumber ?? deviceDetails?.physicalCardNumber ?? "",
                             deviceType: "standard",
@@ -250,7 +252,8 @@ class DeviceDetailsViewModel: ObservableObject {
                 result.append(
                     RemoteDoorItem(
                         doorName: door.doorName ?? "",
-                        doorNumber: door.doorNumber ?? 1,
+                      // doorNumber: door.doorNumber ?? 1,
+                        doorNumber: controller.controllerModel == "TC430" ? 0 : (door.doorNumber ?? 1),
                         serial: controllerSerial,
                         doorType: "standard",
                         doorControllerType: controller.controllerModel,
@@ -305,7 +308,8 @@ class DeviceDetailsViewModel: ObservableObject {
                             devSn: controller.controllerSerial ?? "",
                             devMac: controller.controllerMac ?? "",
                             devType:Int32(14),
-                            doorID: Int32(door.doorNumber ?? 1),
+                         // doorID: Int32(door.doorNumber ?? 1),
+                            doorID: Int32(controller.controllerModel == "TC430" ? 0 : (door.doorNumber ?? 1)),
                             eKey: controller.controllerKey ?? "",
                             cardno: deviceDetails?.digitalCardNumber ?? deviceDetails?.physicalCardNumber ?? "",
                             deviceType: "standalone_controller",
@@ -316,7 +320,8 @@ class DeviceDetailsViewModel: ObservableObject {
                 result.append(
                     RemoteDoorItem(
                         doorName: door.doorName ?? "",
-                        doorNumber: door.doorNumber ?? 1,
+                      //  doorNumber: door.doorNumber ?? 1,
+                        doorNumber: controller.controllerModel == "TC430" ? 0 : (door.doorNumber ?? 1),
                         serial: controllerSerial,
                         doorType: "standalone_controller",
                         doorControllerType: controller.controllerModel,
@@ -372,8 +377,17 @@ class DeviceDetailsViewModel: ObservableObject {
         if let controller = details.controllers?
             .first(where: { $0.controllerSerial == sn }) {
 
+//            if let door = controller.doors?
+//                .first(where: { $0.doorNumber == doorId }) {
+//                return door.doorName
+//            }
+            
             if let door = controller.doors?
-                .first(where: { $0.doorNumber == doorId }) {
+                .first(where: {
+                    controller.controllerModel == "TC430"
+                        ? doorId == 0
+                        : $0.doorNumber == doorId
+                }) {
                 return door.doorName
             }
         }
@@ -390,10 +404,19 @@ class DeviceDetailsViewModel: ObservableObject {
         if let controller = details.standaloneController?
             .first(where: { $0.controllerSerial == sn }) {
 
+//            if let door = controller.doors?
+//                .first(where: { $0.doorNumber == doorId }) {
+//                return door.doorName
+//            }
+            
             if let door = controller.doors?
-                .first(where: { $0.doorNumber == doorId }) {
-                return door.doorName
-            }
+                   .first(where: {
+                       controller.controllerModel == "TC430"
+                           ? doorId == 0
+                           : $0.doorNumber == doorId
+                   }) {
+                   return door.doorName
+               }
         }
 
         return nil

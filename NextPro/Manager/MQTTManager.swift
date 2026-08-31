@@ -52,21 +52,6 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
         return UIDevice.current.identifierForVendor?.uuidString ?? "unknown-device"
     }
     
-//    func connect() {
-//
-//        let clientID = getUDID()
-//        let mqttClient = CocoaMQTT(clientID: clientID, host: "13.223.139.54", port: 1883)
-//        mqttClient.username = "nexpromqtt"
-//        mqttClient.password = "neXpr02o25MqtT"
-//        mqttClient.keepAlive = 120
-//        mqttClient.cleanSession = true
-//        mqttClient.willMessage = nil
-//        mqttClient.autoReconnect = true
-//        mqttClient.enableSSL = false
-//        mqttClient.delegate = self
-//        mqtt = mqttClient
-//        _ = mqttClient.connect()
-//    }
 
     func connect() {
         let host     = KeychainManager.shared.get("mqtt_host")     ?? ""
@@ -96,24 +81,12 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
         _ = mqttClient.connect()
     }
 
-
-    // Subscribe to device response topic (example: up/{SN}/rtdata)
-//    func subscribeToDevice(_ sn: String, model:String) {
-//        var topic = ""
-//        if model == "TC434"{
-//             topic = "up/\(sn)/data"
-//        }else{
-//            topic = "up/\(sn)/rtdata"
-//        }
-//        
-//        mqtt?.subscribe(topic, qos: .qos1)
-//        print("📡 Subscribed to topic: \(topic)")
-//    }
     
     func subscribeToDevice(_ sn: String, model: String) {
 
         let topic: String
-        if model.uppercased() == "TC434" {
+       // if model.uppercased() == "TC434" || model.uppercased() == "TC430" {
+        if model.uppercased().hasPrefix("TC") {
             topic = "up/\(sn)/data"
         } else {
             topic = "up/\(sn)/rtdata"

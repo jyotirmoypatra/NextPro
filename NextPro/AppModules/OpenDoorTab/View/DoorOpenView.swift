@@ -1437,12 +1437,16 @@ struct DoorOpenView: View {
     private func handleRemoteOpen(for door: RemoteDoorItem) {
         DoorManager.shared.activateMQTTWindow()
         isRemoteUnlock = true
+
+        let isTC430 = door.doorControllerType?.uppercased() == "TC430"
+        let doorID: Int32 = isTC430 ? 1 : Int32(door.doorNumber)
+
         MQTTManager.shared.sendOpenDoorCommand(
             to: door.serial,
-            doorID: Int32(door.doorNumber),
+            doorID: doorID,
             duration: door.doorOpeningTime ?? 5
         )
-        
+
     }
     
     
