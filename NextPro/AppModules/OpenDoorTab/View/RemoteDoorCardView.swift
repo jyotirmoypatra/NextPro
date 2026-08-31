@@ -25,6 +25,7 @@ struct RemoteDoorCardView: View {
     let onRemoteOpen: () -> Void
     let onBleOpen: () -> Void
     let onNoInternet: () -> Void
+    var onRemoteTimeout: () -> Void = {}
     
     let canOpenDoor: () -> Bool
     @State private var deniedBase = ""
@@ -387,6 +388,7 @@ struct RemoteDoorCardView: View {
                 wifiSuccess = true          // show result UI
                 isResultSuccess = false     //failure
                 statusMessage = "No response received from the door"
+                onRemoteTimeout()
 
                 // reset after 3 sec
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
@@ -439,6 +441,7 @@ struct RemoteDoorCardView: View {
                 bleSuccess = true           // show result UI
                 isResultSuccess = false     // failure
                 statusMessage = "No response received from the door"
+                onRemoteTimeout()
 
                 // reset after 3 sec
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
@@ -615,6 +618,8 @@ struct RemoteDoorCardView: View {
     private func forceFinishOnBackground() {
         guard wifiWaiting || bleWaiting || wifiSuccess || bleSuccess || isCheckingDevice else { return }
 
+        let wasAwaitingResponse = wifiWaiting || bleWaiting
+
         SpeechManager.shared.stop()
 
         stopDeviceScan()
@@ -623,6 +628,10 @@ struct RemoteDoorCardView: View {
 
         if activeDoorKey == door.key {
             activeDoorKey = nil
+        }
+
+        if wasAwaitingResponse {
+            onRemoteTimeout()
         }
     }
 

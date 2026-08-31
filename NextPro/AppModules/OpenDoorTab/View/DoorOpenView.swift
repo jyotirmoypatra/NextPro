@@ -398,6 +398,11 @@ struct DoorOpenView: View {
                                                                 duration: 1.5
                                                             )
                                                         },
+                                                        onRemoteTimeout: {
+                                                            if isRemoteUnlock {
+                                                                isRemoteUnlock = false
+                                                            }
+                                                        },
                                                         canOpenDoor: {
                                                             isWithinAccessWindow(accessGroups: door.accessGroups)
                                                         }
@@ -622,11 +627,7 @@ struct DoorOpenView: View {
         
         
             .onChange(of: selectedTab) { newTab in
-                // Don't tear down isRemoteUnlock/activeDoorKey while a remote/BLE action
-                // is still awaiting its response — otherwise a quick tab switch clears the
-                // "this is a remote action" flag before the response arrives, and the
-                // .doorEventReceived handler misclassifies it as a digital-key event and
-                // shows/plays it in whichever tab happens to be active.
+               
                 if !isRemoteUnlock {
                     resetOverlayState()
                     doorManager.clearDoorEvent()
