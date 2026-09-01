@@ -137,7 +137,7 @@ class LoginViewModel: ObservableObject {
                 UserDefaults.standard.set(userWrite, forKey: "user_management_write")
                 
                 //permissions device management
-                let deviceManagement = response.permission?.device_mapping
+                let deviceManagement = response.permission?.wifi_configuration
                 let deviceRead = deviceManagement?.read ?? false
                 let deviceWrite = deviceManagement?.write ?? false
                 UserDefaults.standard.set(deviceRead, forKey: "device_management_read")

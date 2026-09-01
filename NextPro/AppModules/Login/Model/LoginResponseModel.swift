@@ -56,6 +56,7 @@ struct Permissions: Decodable {
     let device_management: PermissionAction?
     let building_management: PermissionAction?
     let facility_management: PermissionAction?
+    let wifi_configuration: PermissionAction?
 }
 
 

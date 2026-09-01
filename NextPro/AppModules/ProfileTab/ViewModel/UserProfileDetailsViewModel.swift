@@ -109,7 +109,7 @@ class UserProfileDetailsViewModel: ObservableObject {
                 
                 
                 //permissions device management
-                let deviceManagement = response.data.permissions?.device_mapping
+                let deviceManagement = response.data.permissions?.wifi_configuration
                 let deviceRead = deviceManagement?.read ?? false
                 let deviceWrite = deviceManagement?.write ?? false
                 UserDefaults.standard.set(deviceRead, forKey: "device_management_read")
