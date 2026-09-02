@@ -9,12 +9,40 @@ import Foundation
 
 class WiFiConfigureManager {
 
+    /// Guards against a completion handler firing more than once — the SDK's synchronous
+    /// "start" return code and its async callback can both report failure for the same call,
+    /// and a double-fire would crash any caller awaiting this via a checked continuation.
+    private final class SingleFireCompletion {
+        private let lock = NSLock()
+        private var hasFired = false
+        private let completion: (Bool, String) -> Void
+
+        init(_ completion: @escaping (Bool, String) -> Void) {
+            self.completion = completion
+        }
+
+        func callAsFunction(_ success: Bool, _ message: String) {
+            lock.lock()
+            let alreadyFired = hasFired
+            hasFired = true
+            lock.unlock()
+
+            guard !alreadyFired else {
+                print("⚠️ WiFiConfigureManager completion fired again after first result — ignoring. (\(success), \(message))")
+                return
+            }
+            completion(success, message)
+        }
+    }
+
     static func configureDeviceWiFi(
         device: AssignDevice,
         wifiName: String,
         wifiPassword: String,
-        completion: @escaping (Bool, String) -> Void
+        completion rawCompletion: @escaping (Bool, String) -> Void
     ) {
+
+        let completion = SingleFireCompletion(rawCompletion)
 
         print("🔧 WiFi Configuration Started")
         print("🔧 ==========================================================")

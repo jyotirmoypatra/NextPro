@@ -257,66 +257,13 @@ struct SetWiFiPassword: View {
         // FLOW CONTROLLER
         locationManager.onLocationReady = {
             Task { @MainActor in
-                
+
                 // STEP 1: set location
                 successVM.lat = locationManager.latitude
                 successVM.long = locationManager.longitude
                 successVM.address = locationManager.address
-                
-                // STEP 2: update loader
-                loadingMessage = "Configuring device..."
-                
-                
-                WiFiConfigureManager.configureDeviceWiFi(
-                    device: selectedDevice,
-                    wifiName: selectedWiFiNetwork,
-                    wifiPassword: password,
-                ) { success, message in
-                    
-                    Task { @MainActor in
-                        
-                        statusMessage = message
-                        loadingMessage = message
-                        // ⏱ 1 second delay HERE
-                        try? await Task.sleep(nanoseconds: 1_000_000_000)
-                        
-                        if success {
-                            // navigateToSuccessView = true
-                            //WiFi configured → now call API
-                            loadingMessage = "Saving Device Configuration to Cloud..."
-                            
-                            await successVM.successConfig(
-                                isSuccess: true,
-                                deviceSerial: selectedDevice.serial,
-                                wifiSSid: selectedWiFiNetwork,
-                                wifiPass: password
-                            )
-                            
-                            if successVM.success && successVM.errorMessage == nil {
-                                isConfiguring = false
-                                loadingMessage = ""
-                                navigateToSuccessView = true
-                                
-                            } else {
-                                isConfiguring = false
-                                loadingMessage = ""
-                                statusMessage = successVM.errorMessage ?? "Something went wrong"
-                                showError = true
-                            }
-                            //  }
-                        }else{
-                            // WiFi failed
-                            
-                            isConfiguring = false
-                            loadingMessage = ""
-                            statusMessage = message
-                            showError = true
-                            
-                            
-                            
-                        }
-                    }
-                }
+
+                await performConfigureAttempt(retriesLeft: 2)
             }
         }
 
@@ -332,6 +279,61 @@ struct SetWiFiPassword: View {
         
         // 🚀 START LOCATION ONLY AFTER CLICK
         locationManager.startLocation()
+    }
+
+    @MainActor
+    private func performConfigureAttempt(retriesLeft: Int) async {
+        loadingMessage = "Configuring device..."
+
+        let (wifiSuccess, wifiMessage): (Bool, String) = await withCheckedContinuation { continuation in
+            WiFiConfigureManager.configureDeviceWiFi(
+                device: selectedDevice,
+                wifiName: selectedWiFiNetwork,
+                wifiPassword: password
+            ) { success, message in
+                continuation.resume(returning: (success, message))
+            }
+        }
+
+        statusMessage = wifiMessage
+        loadingMessage = wifiMessage
+        // ⏱ 1 second delay HERE
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+
+        guard wifiSuccess else {
+            if retriesLeft > 0 {
+                await performConfigureAttempt(retriesLeft: retriesLeft - 1)
+            } else {
+                isConfiguring = false
+                loadingMessage = ""
+                statusMessage = wifiMessage
+                showError = true
+            }
+            return
+        }
+
+        // WiFi configured → now call API
+        loadingMessage = "Saving Device Configuration to Cloud..."
+
+        await successVM.successConfig(
+            isSuccess: true,
+            deviceSerial: selectedDevice.serial,
+            wifiSSid: selectedWiFiNetwork,
+            wifiPass: password
+        )
+
+        if successVM.success && successVM.errorMessage == nil {
+            isConfiguring = false
+            loadingMessage = ""
+            navigateToSuccessView = true
+        } else if retriesLeft > 0 {
+            await performConfigureAttempt(retriesLeft: retriesLeft - 1)
+        } else {
+            isConfiguring = false
+            loadingMessage = ""
+            statusMessage = successVM.errorMessage ?? "Something went wrong"
+            showError = true
+        }
     }
 
     private func validateLocationRequirements() -> Bool {

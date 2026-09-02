@@ -16,7 +16,7 @@ struct DoorOpenView: View {
     @StateObject private var toastManager = ToastManager.shared
     @StateObject private var mqttManager = MQTTManager.shared
     @StateObject private var doorStorage = DoorStorageManager.shared
-    @StateObject private var deviceVM = DeviceDetailsViewModel()
+    @StateObject private var deviceVM = DeviceDetailsViewModel.shared
     @StateObject private var doorManager = DoorManager.shared
     @StateObject private var bleManager = BLEManager()
     @StateObject private var serverTimeVM = ServerTimeService.shared

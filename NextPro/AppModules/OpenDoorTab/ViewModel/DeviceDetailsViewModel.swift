@@ -12,7 +12,9 @@ import Combine
 
 @MainActor
 class DeviceDetailsViewModel: ObservableObject {
-    
+
+    static let shared = DeviceDetailsViewModel()
+
     @Published var isLoading = false
     @Published var issuccess = false
     @Published var deviceDetails: DeviceDetailsResponse?
