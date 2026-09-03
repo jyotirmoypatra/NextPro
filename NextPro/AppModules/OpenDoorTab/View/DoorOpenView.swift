@@ -998,13 +998,39 @@ struct DoorOpenView: View {
                 if isRemoteUnlock{
                     guard let sn = sn, let doorId = doorId else { return }
                     
-                    let key = "\(sn)_\(doorId)"
-                    guard key == activeDoorKey else {
-                        print("🚫 Ignoring MQTT event for a different door:", key)
-                        return
+//                    let key = "\(sn)_\(doorId)"
+//                    guard key == activeDoorKey else {
+//                        print("🚫 Ignoring MQTT event for a different door:", key)
+//                        return
+//                    }
+                    
+                    let tc430 = isTC430(sn: sn)
+
+                    if tc430 {
+                        // TC430 has only one physical door.
+                        // MQTT may return doorID 0 or 1.
+                        guard activeDoorKey?.hasPrefix("\(sn)_") == true else {
+                            print("🚫 Ignoring MQTT event for different TC430 device:", sn)
+                            return
+                        }
+
+                        print("✅ TC430 MQTT response accepted - SN: \(sn), MQTT doorID: \(doorId)")
+                    } else {
+                        // TC434 / other controllers
+                        let key = "\(sn)_\(doorId)"
+
+                        guard key == activeDoorKey else {
+                            print("🚫 Ignoring MQTT event for different door:", key)
+                            return
+                        }
                     }
+
+                    // IMPORTANT: For TC430 use the currently selected app door key.
+                    let resultDoorKey = tc430 ? (activeDoorKey ?? "\(sn)_\(doorId)") : "\(sn)_\(doorId)"
+                    
+                    
                     remoteMqttResult = RemoteMQTTResult(
-                        doorKey: key,
+                        doorKey: resultDoorKey,
                         isSuccess: true,
                         message: grantedBase
                     )
@@ -1014,11 +1040,31 @@ struct DoorOpenView: View {
                     }
                 }else{
                     guard let sn = sn, let doorId = doorId else { return }
-                    let key = "\(sn)_\(doorId)"
-                    guard key == pendingDigitalDoorKey else {
-                        print("🚫 Ignoring MQTT event for a different door:", key)
-                        return
-                    }
+//                    let key = "\(sn)_\(doorId)"
+//                    guard key == pendingDigitalDoorKey else {
+//                        print("🚫 Ignoring MQTT event for a different door:", key)
+//                        return
+//                    }
+                    let tc430 = isTC430(sn: sn)
+
+                        if tc430 {
+                            // TC430 has only one physical door.
+                            // MQTT may return doorID 0 or 1.
+                            guard pendingDigitalDoorKey?.hasPrefix("\(sn)_") == true else {
+                                print("🚫 Ignoring MQTT event for different TC430 device:", sn)
+                                return
+                            }
+
+                            print("✅ TC430 digital/BLE MQTT response accepted - SN: \(sn), MQTT doorID: \(doorId)")
+                        } else {
+                            // TC434 / other controllers
+                            let key = "\(sn)_\(doorId)"
+
+                            guard key == pendingDigitalDoorKey else {
+                                print("🚫 Ignoring MQTT event for different door:", key)
+                                return
+                            }
+                        }
                     animateSuccess()
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                     AceesMessage = accessGrantedMessage
@@ -1033,13 +1079,36 @@ struct DoorOpenView: View {
             else if type == 19 { //ble unlock
                 if isRemoteUnlock{
                     guard let sn = sn, let doorId = doorId else { return }
-                    let key = "\(sn)_\(doorId)"
-                    guard key == activeDoorKey else {
-                        print("🚫 Ignoring MQTT event for a different door:", key)
-                        return
+//                    let key = "\(sn)_\(doorId)"
+//                    guard key == activeDoorKey else {
+//                        print("🚫 Ignoring MQTT event for a different door:", key)
+//                        return
+//                    }
+                    let tc430 = isTC430(sn: sn)
+
+                    if tc430 {
+                        // TC430 has only one physical door.
+                        // MQTT may return doorID 0 or 1.
+                        guard activeDoorKey?.hasPrefix("\(sn)_") == true else {
+                            print("🚫 Ignoring MQTT event for different TC430 device:", sn)
+                            return
+                        }
+
+                        print("✅ TC430 MQTT response accepted - SN: \(sn), MQTT doorID: \(doorId)")
+                    } else {
+                        // TC434 / other controllers
+                        let key = "\(sn)_\(doorId)"
+
+                        guard key == activeDoorKey else {
+                            print("🚫 Ignoring MQTT event for different door:", key)
+                            return
+                        }
                     }
+
+                    // IMPORTANT: For TC430 use the currently selected app door key.
+                    let resultDoorKey = tc430 ? (activeDoorKey ?? "\(sn)_\(doorId)") : "\(sn)_\(doorId)"
                     remoteMqttResult = RemoteMQTTResult(
-                        doorKey: key,
+                        doorKey: resultDoorKey,
                         isSuccess: true,
                         message: grantedBase
                     )
@@ -1049,11 +1118,31 @@ struct DoorOpenView: View {
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                 }else{
                     guard let sn = sn, let doorId = doorId else { return }
-                    let key = "\(sn)_\(doorId)"
-                    guard key == pendingDigitalDoorKey else {
-                        print("🚫 Ignoring MQTT event for a different door:", key)
-                        return
-                    }
+//                    let key = "\(sn)_\(doorId)"
+//                    guard key == pendingDigitalDoorKey else {
+//                        print("🚫 Ignoring MQTT event for a different door:", key)
+//                        return
+//                    }
+                    let tc430 = isTC430(sn: sn)
+
+                        if tc430 {
+                            // TC430 has only one physical door.
+                            // MQTT may return doorID 0 or 1.
+                            guard pendingDigitalDoorKey?.hasPrefix("\(sn)_") == true else {
+                                print("🚫 Ignoring MQTT event for different TC430 device:", sn)
+                                return
+                            }
+
+                            print("✅ TC430 digital/BLE MQTT response accepted - SN: \(sn), MQTT doorID: \(doorId)")
+                        } else {
+                            // TC434 / other controllers
+                            let key = "\(sn)_\(doorId)"
+
+                            guard key == pendingDigitalDoorKey else {
+                                print("🚫 Ignoring MQTT event for different door:", key)
+                                return
+                            }
+                        }
                     animateSuccess()
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                     AceesMessage = accessGrantedMessage
@@ -1066,13 +1155,36 @@ struct DoorOpenView: View {
             }
             else if type == 8 { //wifi unlock
                 guard let sn = sn, let doorId = doorId else { return }
-                let key = "\(sn)_\(doorId)"
-                guard key == activeDoorKey else {
-                    print("🚫 Ignoring MQTT event for a different door:", key)
-                    return
+//                let key = "\(sn)_\(doorId)"
+//                guard key == activeDoorKey else {
+//                    print("🚫 Ignoring MQTT event for a different door:", key)
+//                    return
+//                }
+                let tc430 = isTC430(sn: sn)
+
+                if tc430 {
+                    // TC430 has only one physical door.
+                    // MQTT may return doorID 0 or 1.
+                    guard activeDoorKey?.hasPrefix("\(sn)_") == true else {
+                        print("🚫 Ignoring MQTT event for different TC430 device:", sn)
+                        return
+                    }
+
+                    print("✅ TC430 MQTT response accepted - SN: \(sn), MQTT doorID: \(doorId)")
+                } else {
+                    // TC434 / other controllers
+                    let key = "\(sn)_\(doorId)"
+
+                    guard key == activeDoorKey else {
+                        print("🚫 Ignoring MQTT event for different door:", key)
+                        return
+                    }
                 }
+
+                // IMPORTANT: For TC430 use the currently selected app door key.
+                let resultDoorKey = tc430 ? (activeDoorKey ?? "\(sn)_\(doorId)") : "\(sn)_\(doorId)"
                 remoteMqttResult = RemoteMQTTResult(
-                    doorKey: key,
+                    doorKey: resultDoorKey,
                     isSuccess: true,
                     message: grantedBase
                 )
@@ -1093,13 +1205,36 @@ struct DoorOpenView: View {
             else if let type = type, deniedTypes.contains(type) {
                 if isRemoteUnlock{
                     guard let sn = sn, let doorId = doorId else { return }
-                    let key = "\(sn)_\(doorId)"
-                    guard key == activeDoorKey else {
-                        print("🚫 Ignoring MQTT event for a different door:", key)
-                        return
+//                    let key = "\(sn)_\(doorId)"
+//                    guard key == activeDoorKey else {
+//                        print("🚫 Ignoring MQTT event for a different door:", key)
+//                        return
+//                    }
+                    let tc430 = isTC430(sn: sn)
+
+                    if tc430 {
+                        // TC430 has only one physical door.
+                        // MQTT may return doorID 0 or 1.
+                        guard activeDoorKey?.hasPrefix("\(sn)_") == true else {
+                            print("🚫 Ignoring MQTT event for different TC430 device:", sn)
+                            return
+                        }
+
+                        print("✅ TC430 MQTT response accepted - SN: \(sn), MQTT doorID: \(doorId)")
+                    } else {
+                        // TC434 / other controllers
+                        let key = "\(sn)_\(doorId)"
+
+                        guard key == activeDoorKey else {
+                            print("🚫 Ignoring MQTT event for different door:", key)
+                            return
+                        }
                     }
+
+                    // IMPORTANT: For TC430 use the currently selected app door key.
+                    let resultDoorKey = tc430 ? (activeDoorKey ?? "\(sn)_\(doorId)") : "\(sn)_\(doorId)"
                     remoteMqttResult = RemoteMQTTResult(
-                        doorKey: key,
+                        doorKey: resultDoorKey,
                         isSuccess: false,
                         message: deniedBase
                     )
@@ -1115,11 +1250,31 @@ struct DoorOpenView: View {
                     UINotificationFeedbackGenerator().notificationOccurred(.error)
                 }else{
                     guard let sn = sn, let doorId = doorId else { return }
-                    let key = "\(sn)_\(doorId)"
-                    guard key == pendingDigitalDoorKey else {
-                        print("🚫 Ignoring MQTT event for a different door:", key)
-                        return
-                    }
+//                    let key = "\(sn)_\(doorId)"
+//                    guard key == pendingDigitalDoorKey else {
+//                        print("🚫 Ignoring MQTT event for a different door:", key)
+//                        return
+//                    }
+                    let tc430 = isTC430(sn: sn)
+
+                        if tc430 {
+                            // TC430 has only one physical door.
+                            // MQTT may return doorID 0 or 1.
+                            guard pendingDigitalDoorKey?.hasPrefix("\(sn)_") == true else {
+                                print("🚫 Ignoring MQTT event for different TC430 device:", sn)
+                                return
+                            }
+
+                            print("✅ TC430 digital/BLE MQTT response accepted - SN: \(sn), MQTT doorID: \(doorId)")
+                        } else {
+                            // TC434 / other controllers
+                            let key = "\(sn)_\(doorId)"
+
+                            guard key == pendingDigitalDoorKey else {
+                                print("🚫 Ignoring MQTT event for different door:", key)
+                                return
+                            }
+                        }
                     UINotificationFeedbackGenerator().notificationOccurred(.error)
                     AceesMessage = accessDeniedMessage
                     overlayMessage = accessDeniedMessage
@@ -1138,13 +1293,36 @@ struct DoorOpenView: View {
                 print("Ignored door event type:", type ?? -1)
                 if isRemoteUnlock {
                     guard let sn = sn, let doorId = doorId else { return }
-                    let key = "\(sn)_\(doorId)"
-                    guard key == activeDoorKey else {
-                        print("🚫 Ignoring MQTT event for a different door:", key)
-                        return
+//                    let key = "\(sn)_\(doorId)"
+//                    guard key == activeDoorKey else {
+//                        print("🚫 Ignoring MQTT event for a different door:", key)
+//                        return
+//                    }
+                    let tc430 = isTC430(sn: sn)
+
+                    if tc430 {
+                        // TC430 has only one physical door.
+                        // MQTT may return doorID 0 or 1.
+                        guard activeDoorKey?.hasPrefix("\(sn)_") == true else {
+                            print("🚫 Ignoring MQTT event for different TC430 device:", sn)
+                            return
+                        }
+
+                        print("✅ TC430 MQTT response accepted - SN: \(sn), MQTT doorID: \(doorId)")
+                    } else {
+                        // TC434 / other controllers
+                        let key = "\(sn)_\(doorId)"
+
+                        guard key == activeDoorKey else {
+                            print("🚫 Ignoring MQTT event for different door:", key)
+                            return
+                        }
                     }
+
+                    // IMPORTANT: For TC430 use the currently selected app door key.
+                    let resultDoorKey = tc430 ? (activeDoorKey ?? "\(sn)_\(doorId)") : "\(sn)_\(doorId)"
                     remoteMqttResult = RemoteMQTTResult(
-                        doorKey: key,
+                        doorKey: resultDoorKey,
                         isSuccess: false,
                         message: deniedBase
                     )
@@ -1154,11 +1332,31 @@ struct DoorOpenView: View {
                     UINotificationFeedbackGenerator().notificationOccurred(.error)
                 } else {
                     guard let sn = sn, let doorId = doorId else { return }
-                    let key = "\(sn)_\(doorId)"
-                    guard key == pendingDigitalDoorKey else {
-                        print("🚫 Ignoring MQTT event for a different door:", key)
-                        return
-                    }
+//                    let key = "\(sn)_\(doorId)"
+//                    guard key == pendingDigitalDoorKey else {
+//                        print("🚫 Ignoring MQTT event for a different door:", key)
+//                        return
+//                    }
+                    let tc430 = isTC430(sn: sn)
+
+                        if tc430 {
+                            // TC430 has only one physical door.
+                            // MQTT may return doorID 0 or 1.
+                            guard pendingDigitalDoorKey?.hasPrefix("\(sn)_") == true else {
+                                print("🚫 Ignoring MQTT event for different TC430 device:", sn)
+                                return
+                            }
+
+                            print("✅ TC430 digital/BLE MQTT response accepted - SN: \(sn), MQTT doorID: \(doorId)")
+                        } else {
+                            // TC434 / other controllers
+                            let key = "\(sn)_\(doorId)"
+
+                            guard key == pendingDigitalDoorKey else {
+                                print("🚫 Ignoring MQTT event for different door:", key)
+                                return
+                            }
+                        }
                     UINotificationFeedbackGenerator().notificationOccurred(.error)
                     AceesMessage = accessDeniedMessage
                     overlayMessage = accessDeniedMessage
@@ -1181,7 +1379,19 @@ struct DoorOpenView: View {
         }
     }
 
-    
+    private func isTC430(sn: String) -> Bool {
+        if let controller = deviceVM.deviceDetails?.controllers?
+            .first(where: { $0.controllerSerial == sn }) {
+            return controller.controllerModel?.uppercased() == "TC430"
+        }
+
+        if let controller = deviceVM.deviceDetails?.standaloneController?
+            .first(where: { $0.controllerSerial == sn }) {
+            return controller.controllerModel?.uppercased() == "TC430"
+        }
+
+        return false
+    }
     func startOfflineTimeObserver() {
         
         guard offlineTimeCheckTimer == nil else { return }
