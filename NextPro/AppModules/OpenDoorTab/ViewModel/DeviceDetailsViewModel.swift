@@ -59,6 +59,11 @@ class DeviceDetailsViewModel: ObservableObject {
                 issuccess=true
                 saveDetailsLocally(response)
                 updateAndSubscribeAllDevices()
+            } catch is CancellationError {
+                // A newer fetch superseded this one — not a real error, don't surface it.
+            } catch let urlError as URLError where urlError.code == .cancelled {
+                // Same as above: the underlying URLSessionDataTask was cancelled because
+                // fetchTask?.cancel() fired a newer overlapping call, not a genuine failure.
             } catch {
                 self.errorMessage = error.localizedDescription
             }
