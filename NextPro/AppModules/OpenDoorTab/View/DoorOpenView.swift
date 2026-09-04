@@ -932,8 +932,24 @@ struct DoorOpenView: View {
     
     private func handleMQTTEvent(_ notification: Notification) {
         DispatchQueue.main.async {
+            guard let info = notification.userInfo else { return }
+
+            let type = info["type"] as? Int
+
+            // Device/status events — never access decisions, must not be treated as
+            // denied and must not disturb an unlock action currently in progress.
+            let ignoredEventTypes: Set<Int> = [
+                126, // Equipment startup
+                130, // Super user shutdown
+                173  // Network disconnection
+            ]
+
+            if let type = type, ignoredEventTypes.contains(type) {
+                print("ℹ️ MQTT event ignored — device/status event: \(type)")
+                return
+            }
+
             guard
-                let info = notification.userInfo,
                 let rawUserID = info["userID"],
                 let rawcardNumber = info["cardnumber"],
                 
@@ -967,7 +983,6 @@ struct DoorOpenView: View {
             }
             
             didReceiveResponse = true
-            let type = info["type"] as? Int
             let doorId = info["doorID"] as? Int
             let sn = info["sn"] as? String
             let eventTime = info["time"] as? String ?? ""
