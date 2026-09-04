@@ -11,11 +11,28 @@ struct RemoteMQTTResult: Equatable {
     let message: String
 }
 
+/// Identifies the door action currently in flight (remote Wi-Fi, remote BLE, or
+/// digital/BLE tap-to-open) so MQTT responses can be matched back to it without
+/// juggling several separate "which door is active" state variables.
+struct PendingDoorAction: Equatable {
+    enum Source {
+        case remoteWiFi
+        case remoteBLE
+        case digitalBLE
+    }
+
+    let source: Source
+    let doorKey: String
+    let serial: String
+    let doorId: Int
+    let doorName: String
+}
+
 
 struct RemoteDoorCardView: View {
     @Environment(\.scenePhase) private var scenePhase
     let door: RemoteDoorItem
-    @Binding var activeDoorKey: String?
+    @Binding var pendingDoorAction: PendingDoorAction?
     @Binding var mqttResult: RemoteMQTTResult?
     @Binding var isBluetoothOn: Bool
     @Binding var isBluetoothPermissionDenied: Bool
@@ -215,11 +232,17 @@ struct RemoteDoorCardView: View {
                                         onNoInternet()
                                         return
                                     }
-                                    
-                                    activeDoorKey = door.key
-                                
-                                   
-                                    
+
+                                    pendingDoorAction = PendingDoorAction(
+                                        source: .remoteWiFi,
+                                        doorKey: door.key,
+                                        serial: door.serial,
+                                        doorId: door.doorNumber,
+                                        doorName: door.doorName
+                                    )
+
+
+
                                     guard canOpenDoor() else {
                                             showTimeRestrictedAndReset(isWifi: true)
                                             return
@@ -274,7 +297,13 @@ struct RemoteDoorCardView: View {
                                                 showBluetoothAlert = true
                                                 return
                                             }
-                                        activeDoorKey = door.key
+                                        pendingDoorAction = PendingDoorAction(
+                                            source: .remoteBLE,
+                                            doorKey: door.key,
+                                            serial: door.serial,
+                                            doorId: door.doorNumber,
+                                            doorName: door.doorName
+                                        )
 
                                         guard canOpenDoor() else {
                                             showTimeRestrictedAndReset(isWifi: false)
@@ -362,7 +391,7 @@ struct RemoteDoorCardView: View {
         }
     }
     private var isDisabled: Bool {
-        guard let active = activeDoorKey else { return false }
+        guard let active = pendingDoorAction?.doorKey else { return false }
         return active != door.key
     }
     
@@ -377,7 +406,7 @@ struct RemoteDoorCardView: View {
         
 //        let task = DispatchWorkItem {
 //            wifiWaiting = false
-//            activeDoorKey = nil
+//            pendingDoorAction = nil
 //        }
 //
 //        wifiWaitTask = task
@@ -393,7 +422,7 @@ struct RemoteDoorCardView: View {
                 // reset after 3 sec
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                     resetWifiState()
-                    activeDoorKey = nil
+                    pendingDoorAction = nil
                 }
             }
 
@@ -412,7 +441,7 @@ struct RemoteDoorCardView: View {
         let task = DispatchWorkItem {
             wifiSuccess = false
             DispatchQueue.main.async {
-                activeDoorKey = nil   // unlock other cards
+                pendingDoorAction = nil   // unlock other cards
             }
         }
         
@@ -430,7 +459,7 @@ struct RemoteDoorCardView: View {
         
 //        let task = DispatchWorkItem {
 //            bleWaiting = false
-//            activeDoorKey = nil
+//            pendingDoorAction = nil
 //        }
 //
 //        bleWaitTask = task
@@ -446,7 +475,7 @@ struct RemoteDoorCardView: View {
                 // reset after 3 sec
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                     resetBleState()
-                    activeDoorKey = nil
+                    pendingDoorAction = nil
                 }
             }
 
@@ -465,7 +494,7 @@ struct RemoteDoorCardView: View {
         let task = DispatchWorkItem {
             bleSuccess = false
             DispatchQueue.main.async {
-                activeDoorKey = nil   // unlock other cards
+                pendingDoorAction = nil   // unlock other cards
             }
         }
         
@@ -515,7 +544,7 @@ struct RemoteDoorCardView: View {
                 } else {
                     resetBleState()
                 }
-                activeDoorKey = nil
+                pendingDoorAction = nil
             }
             return
         }
@@ -526,7 +555,7 @@ struct RemoteDoorCardView: View {
             } else {
                 resetBleState()
             }
-            activeDoorKey = nil
+            pendingDoorAction = nil
         }
     }
 
@@ -596,14 +625,14 @@ struct RemoteDoorCardView: View {
     }
 
     /// Clears this card's transient checking/waiting state and releases the
-    /// list-wide `activeDoorKey` lock so other cards become tappable again
+    /// list-wide `pendingDoorAction` lock so other cards become tappable again
     /// as soon as the device-offline alert is shown.
     private func resetDeviceCheckState() {
         isCheckingDevice = false
         deviceFound = false
         resetWifiState()
         resetBleState()
-        activeDoorKey = nil
+        pendingDoorAction = nil
     }
 
     private func openBleDoor() {
@@ -626,8 +655,8 @@ struct RemoteDoorCardView: View {
         resetWifiState()
         resetBleState()
 
-        if activeDoorKey == door.key {
-            activeDoorKey = nil
+        if pendingDoorAction?.doorKey == door.key {
+            pendingDoorAction = nil
         }
 
         if wasAwaitingResponse {

@@ -378,7 +378,7 @@ struct NotificationRowView: View {
                 Text(notification.description ?? "")
                     .font(.custom("Inter-Regular", size: 13))
                     .foregroundColor(.gray)
-                    .lineLimit(2)
+                   
             }
 
             if isProcessing {
