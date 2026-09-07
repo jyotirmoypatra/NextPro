@@ -9,7 +9,7 @@ import SwiftUI
 
 struct DeviceAdminTabView: View {
     @EnvironmentObject private var notificationCountVM: NotificationCountViewModel
-    @StateObject private var assignDeviceVM = AssignedDeviceViewModel()
+    @StateObject private var assignDeviceVM = AssignedDeviceViewModel.shared
     @State private var showAssignDeviceVMErrorAlert = false
     @State private var navigateToDeviceScanView = false
     @State private var navigateToDeviceInfoView = false

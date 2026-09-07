@@ -11,6 +11,8 @@ import Combine
 @MainActor
 final class AssignedDeviceViewModel: ObservableObject {
 
+    static let shared = AssignedDeviceViewModel()
+
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var issuccess = false
