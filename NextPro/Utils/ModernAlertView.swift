@@ -284,7 +284,7 @@ struct SessionExpiredAlertView: View {
     let isSuccess: Bool
     let buttonTitle: String
     let action: () -> Void
-    
+
     var body: some View {
         VStack(spacing: 18) {
             
@@ -358,24 +358,67 @@ struct SessionExpiredAlertView: View {
 }
 
 
+/// Hosts the session-expired alert in its own top-level `UIWindow` instead of a same-hierarchy
+/// `ZStack` overlay. A `.sheet()`/`.fullScreenCover()` presents its content as a genuinely
+/// separate, higher UIKit layer above the presenting view's own view hierarchy, so a ZStack
+/// overlay drawn inside that hierarchy (the old approach) renders BEHIND any open sheet no
+/// matter its z-index. A window with a higher `windowLevel` than the app's key window sits
+/// above the key window entirely — including anything modally presented on it.
+private final class SessionExpiredOverlayWindow {
+    private var window: UIWindow?
+
+    func show<Content: View>(@ViewBuilder content: @escaping () -> Content) {
+        guard window == nil else { return }
+        guard let scene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive })
+            ?? UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first
+        else { return }
+
+        let hosting = UIHostingController(rootView: content())
+        hosting.view.backgroundColor = .clear
+
+        let newWindow = UIWindow(windowScene: scene)
+        newWindow.windowLevel = .alert + 1
+        newWindow.backgroundColor = .clear
+        newWindow.rootViewController = hosting
+        newWindow.isHidden = false
+        newWindow.makeKeyAndVisible()
+
+        window = newWindow
+    }
+
+    func hide() {
+        window?.isHidden = true
+        window = nil
+    }
+}
+
 struct SessionExpiredAlertModifier: ViewModifier {
     @Binding var isPresented: Bool
     let alertView: () -> SessionExpiredAlertView
-    
+
+    @State private var overlay = SessionExpiredOverlayWindow()
+
     func body(content: Content) -> some View {
-        ZStack {
-            content
-            
-            if isPresented {
-                Color.black.opacity(0.8)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-                
-                alertView()
-                    .transition(.scale.combined(with: .opacity))
+        content
+            .onChange(of: isPresented) { presented in
+                if presented {
+                    overlay.show {
+                        ZStack {
+                            Color.black.opacity(0.8)
+                                .ignoresSafeArea()
+                                .transition(.opacity)
+
+                            alertView()
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                        .animation(.spring(), value: presented)
+                    }
+                } else {
+                    overlay.hide()
+                }
             }
-        }
-        .animation(.spring(), value: isPresented)
     }
 }
 
