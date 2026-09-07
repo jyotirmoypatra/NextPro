@@ -13,6 +13,16 @@ import UserNotifications
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
 
+    var needsAccountRefreshOnForeground = false
+    
+    @MainActor
+    func performProfileAndDeviceRefresh() async {
+        async let profileFetch: Void = UserProfileDetailsViewModel().fetchUserProfile()
+        async let deviceAccessFetch: Void = DeviceDetailsViewModel.shared.fetchDeviceDetailsIfNeeded(force: true)
+        _ = await profileFetch
+        _ = await deviceAccessFetch
+    }
+
     // MARK: - Debug logging helper
 
     private func appStateDescription(_ state: UIApplication.State) -> String {
@@ -100,32 +110,25 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         print("📩 userInfo:\n\(prettyJSON(userInfo))")
 
         Task { @MainActor in
-            
+
+            // Always refresh the unread notification count / badge for ANY notification,
+            let didFetchCount = await NotificationCountViewModel.shared.refreshUnreadCountAwaiting()
+            NotificationNavigationManager.shared.notifyNotificationsDidArrive()
+
             let notificationType = userInfo["type"] as? String
             if notificationType == "own_account_updated" {
-                async let notifyCountFetch = NotificationCountViewModel.shared.refreshUnreadCountAwaiting()
-                async let profileFetch: Void = UserProfileDetailsViewModel().fetchUserProfile()
-                async let deviceAccessFetch: Void = DeviceDetailsViewModel.shared.fetchDeviceDetailsIfNeeded(force: true)
-
-                let didFetch = await notifyCountFetch
-                _ = await profileFetch
-                _ = await deviceAccessFetch
-
-                NotificationNavigationManager.shared.notifyNotificationsDidArrive()
-                completionHandler(didFetch ? .newData : .noData)
-            }else{
-                let didFetch = await NotificationCountViewModel.shared.refreshUnreadCountAwaiting()
-                NotificationNavigationManager.shared.notifyNotificationsDidArrive()
-                completionHandler(didFetch ? .newData : .noData)
+                if application.applicationState == .active {
+                    await self.performProfileAndDeviceRefresh()
+                } else {
+                    self.needsAccountRefreshOnForeground = true
+                }
             }
-            
+
+            completionHandler(didFetchCount ? .newData : .noData)
         }
     }
 
-    // Called whenever the FCM token is created or refreshed.
-    // Only stores the token + marks it pending — never registers it directly here.
-    // Registration only ever happens after a successful login (see FCMTokenManager.registerIfNeeded()),
-    // so a token refreshed mid-session is registered on the *next* login, not immediately.
+
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         print("🔥 [MessagingDelegate] didReceiveRegistrationToken called — app state: \(appStateDescription(UIApplication.shared.applicationState))")
 
@@ -194,6 +197,12 @@ struct NextProApp: App {
                     switch phase {
                     case .active:
                         if isLoggedIn {
+                            if delegate.needsAccountRefreshOnForeground {
+                                delegate.needsAccountRefreshOnForeground = false
+                                print("☀️ App active — running profile/device refresh deferred from a background push")
+                                Task { await delegate.performProfileAndDeviceRefresh() }
+                            }
+
                             print("☀️ App active — start server time")
                             ServerTimeService.shared.start(forceImmediate: true)
                         } else {
