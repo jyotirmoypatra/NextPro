@@ -230,6 +230,9 @@ struct EditProfileView: View {
                                     Text("Email ID")
                                         .font(.custom("Inter-Medium", size: 16))
                                         .foregroundColor(.white)
+                                    Text(" *")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.red)
                                 }
                                 
                                 ZStack(alignment: .leading) {

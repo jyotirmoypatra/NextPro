@@ -43,6 +43,11 @@ class UserProfileEditViewModel: ObservableObject {
             return
         }
         
+        guard !email.isEmpty else {
+            errorMessage = "Email Should not empty!"
+            return
+        }
+        
         do {
             isLoading = true
             errorMessage = ""
