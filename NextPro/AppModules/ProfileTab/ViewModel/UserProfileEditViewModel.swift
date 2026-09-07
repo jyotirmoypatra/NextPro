@@ -19,7 +19,7 @@ class UserProfileEditViewModel: ObservableObject {
     private let networkManager = NetworkManager.shared
     @Published var editSuccess = false
     
-    func editProfile(fullName:String, phoneNo:String) async {
+    func editProfile(fullName:String, phoneNo:String, email:String) async {
        
 
         guard networkManager.hasInternet else {
@@ -47,7 +47,7 @@ class UserProfileEditViewModel: ObservableObject {
             isLoading = true
             errorMessage = ""
 
-            let response = try await networkManager.EditUserProfileDetails(fullName: fullName, phone: phoneNo)
+            let response = try await networkManager.EditUserProfileDetails(fullName: fullName, phone: phoneNo, email: email)
             if response.status {
                 // Assign response to UI (no UserDefaults save)
                 editSuccess = true

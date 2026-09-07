@@ -453,6 +453,7 @@ class NetworkManager: ObservableObject {
     func EditUserProfileDetails(
         fullName: String,
         phone: String,
+        email: String
     ) async throws -> UserEditProfileResponse {
 
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.editUserProfile))!
@@ -462,7 +463,8 @@ class NetworkManager: ObservableObject {
             method: "POST",
             body: [
                 "full_name": fullName,
-                "phone_number": phone
+                "phone_number": phone,
+                "email" : email
             ],
             requiresAuth: true,
             responseType: UserEditProfileResponse.self,

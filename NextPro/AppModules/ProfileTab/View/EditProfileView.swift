@@ -24,7 +24,9 @@ struct EditProfileView: View {
     @State private var showSourcePicker = false
     @State private var pickerSource: ImagePicker.SourceType? = nil
     @State private var showErrorAlert = false
-    
+    @State private var emailWasChanged = false
+    @State private var isLoggingOut = false
+
     @StateObject private var viewModel = UploadProfileImgViewModel()
     @StateObject private var editVm = UserProfileEditViewModel()
     
@@ -239,17 +241,18 @@ struct EditProfileView: View {
                                     }
                                     
                                     TextField("", text: $email)
-                                        .foregroundColor(.gray)
+                                        .foregroundColor(.white)
                                         .font(.custom("Inter-Regular", size: 16))
                                         .padding(.horizontal, 14)
                                         .frame(height: 50)
-                                        .disabled(true)
                                         .background(Color.white.opacity(0.15))
                                         .cornerRadius(10)
-                                        .autocapitalization(.none)
-                                        .keyboardType(.emailAddress)
-                                        .disableAutocorrection(true)
+                                        .autocapitalization(.words)
+                                        .disableAutocorrection(false)
                                 }
+                                Text("Note : Changing your email address will log you out of the app. You will need to log in again using your new email address.")
+                                    .font(.custom("Inter-Medium", size: 12))
+                                    .foregroundColor(.gray)
                             }
                             
                             
@@ -289,7 +292,7 @@ struct EditProfileView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 
                 // LOADING OVERLAY
-                if editVm.isLoading  || viewModel.isLoading{
+                if editVm.isLoading  || viewModel.isLoading || isLoggingOut{
                     ZStack {
                         Color.black.opacity(0.4)
                             .ignoresSafeArea()
@@ -316,11 +319,33 @@ struct EditProfileView: View {
         .modernAlert(isPresented: $showSuccessAlert) {
               ModernAlertView(
                   title: "Success",
-                  message: "Your profile has been updated successfully!",
+                  message: emailWasChanged
+                      ? "Your profile and email address have been updated successfully.You will be logged out and need to sign in again using your new email."
+                      : "Your profile has been updated successfully!",
                   isSuccess: true,
                   buttonTitle: "OK"
-              ) { showSuccessAlert = false
-                  dismiss()
+              ) {
+                  showSuccessAlert = false
+
+                  guard emailWasChanged else {
+                      dismiss()
+                      return
+                  }
+
+                  // Same logout function used by Profile's Logout button / Create New Password.
+                  guard !isLoggingOut else { return }
+                  isLoggingOut = true
+                  Task {
+                      let result = await FCMTokenManager.shared.logoutStrict()
+                      isLoggingOut = false
+
+                      switch result {
+                      case .success:
+                          KeychainManager.shared.resetToLogin()
+                      case .failed(let message):
+                          toastManager.show(message: message, type: .error)
+                      }
+                  }
               }
         }
     
@@ -492,10 +517,13 @@ struct EditProfileView: View {
     
     func saveProfile() {
         let cleanNumber = phoneNumber.filter { $0.isNumber }
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let trimmedInitialEmail = initialemail.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 
         Task {
-            await editVm.editProfile(fullName: fullName, phoneNo: cleanNumber)
+            await editVm.editProfile(fullName: fullName, phoneNo: cleanNumber, email: email)
             if editVm.editSuccess {
+                emailWasChanged = trimmedEmail != trimmedInitialEmail
                 showSuccessAlert = true
             } else {
                 showErrorAlert = true
