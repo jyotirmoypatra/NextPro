@@ -212,7 +212,7 @@ struct SetWiFiPassword: View {
         }
         .navigationBarBackButtonHidden(true)
         .ignoresSafeArea(.keyboard, edges: .bottom) // The key to stop resize
-        
+        .internetOverlay()
         .modernAlert(isPresented: $showError) {
             ModernAlertView(
                 title: "Error!",

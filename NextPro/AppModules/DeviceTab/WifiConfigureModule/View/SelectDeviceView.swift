@@ -223,6 +223,7 @@ struct SelectDeviceView: View {
                 alertMessage = "Bluetooth is turned off.\nPlease enable Bluetooth to proceed."
             }
         }
+        .internetOverlay()
         .modernAlert(isPresented: $showBluetoothPermissionAlert) {
             ModernAlertView(
                 title: "Bluetooth Permission Required",

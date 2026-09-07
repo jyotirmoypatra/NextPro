@@ -217,7 +217,7 @@ struct SelectWiFiView: View {
 //        } message: {
 //            Text(locationAlertMessage)
 //        }
-
+        .internetOverlay()
         
         .modernAlert(isPresented: $showLocationAlert) {
             ModernAlertView(
