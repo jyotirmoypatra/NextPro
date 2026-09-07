@@ -161,7 +161,7 @@ struct SetWiFiPassword: View {
                     if isConfiguring {
                         VStack{
                             RingSpinner(
-                                ringColor: .yellow,
+                                ringColor: loaderColor,
                                 lineWidth: 3,
                                 size: 50
                             )
@@ -240,6 +240,11 @@ struct SetWiFiPassword: View {
             InfoScreenView(infoType: "device_config_info")
         }
     }
+    /// Green while confirming the device is online, yellow for every other in-progress step.
+    private var loaderColor: Color {
+        loadingMessage == "Device is online." ? .green : .yellow
+    }
+
     // MARK: - WiFi Configuration
     private func configureWiFi() {
         guard !password.isEmpty else {
