@@ -235,6 +235,10 @@ class NetworkManager: ObservableObject {
                 throw APIError.unAuthorized
         }
         
+        if http.statusCode == 502 {
+            throw APIError.serverError(code: 502, message: "502 Bad Gateway. Please try again later.")
+        }
+
         guard (200...299).contains(http.statusCode) else {
             let message = extractErrorMessage(from: data) ?? "Something went wrong."
             throw APIError.serverError(code: http.statusCode, message: message)
