@@ -301,7 +301,7 @@ struct DoorOpenView: View {
                                                             )
                                                             .frame(width: 80, height: 80)
                                                             .rotationEffect(.degrees(-90))
-                                                            .animation(.easeInOut(duration: 1.0), value: progress)
+                                                            .animation(.easeInOut(duration: 0.6), value: progress)
                                                         
                                                         Image(systemName: lockIcon)
                                                             .foregroundColor(ringColor)

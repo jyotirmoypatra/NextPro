@@ -234,7 +234,7 @@ struct ProfileEndUserView: View {
                                     .padding(.horizontal,20)
                             }
 
-                            UserProfileRow(title: "Logout" , textColor: .orange) {
+                            UserProfileRow(title: "Logout" , textColor: .red) {
                                 showLogoutAlert = true
                             }
                             
@@ -245,6 +245,22 @@ struct ProfileEndUserView: View {
 //                                // Handle support action
 //                                navigate_Debug = true
 //                            }
+                            
+                            
+                            Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
+                            
+                            HStack {
+                                Text("App Version")
+                                    .font(.custom("Inter-Medium", size: 16))
+                                    .foregroundColor(.white)
+                                Spacer()
+                                Text(APIConfig.appVersionText)
+                                    .font(.custom("Inter-Regular", size: 14))
+                                    .foregroundColor(.gray)
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 25)
 
                            
                         }

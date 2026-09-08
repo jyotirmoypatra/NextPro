@@ -304,3 +304,26 @@ extension Notification.Name {
 extension Notification.Name {
     static let accessFlagsChanged = Notification.Name("accessFlagsChanged")
 }
+
+
+// MARK: - App Version
+// Single source of truth for the displayed app version string, so SplashScreen and the
+// Profile "App Version" row can never drift out of sync with each other.
+extension APIConfig {
+    static var appVersionText: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+
+        guard !version.isEmpty else { return "" }
+
+        switch environment {
+        case .development, .staging:
+            return build.isEmpty
+                ? "Version \(version)"
+                : "Version \(version) (\(build))"
+
+        case .production:
+            return "Version \(version)"
+        }
+    }
+}

@@ -8,25 +8,6 @@
 import SwiftUI
 
 struct SplashScreen: View {
-        private var appVersionText: String {
-            let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
-            let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
-
-            guard !version.isEmpty else { return "" }
-
-            
-            switch APIConfig.environment {
-               case .development:
-                   return build.isEmpty
-                       ? "Version \(version)"
-                       : "Version \(version) (\(build))"
-
-               case .staging, .production:
-                   return "Version \(version)"
-               }
-        }
-    
-    
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top){
@@ -44,8 +25,8 @@ struct SplashScreen: View {
                 
                 
                 VStack(spacing: 16) {
-                    if !appVersionText.isEmpty {
-                        Text(appVersionText)
+                    if !APIConfig.appVersionText.isEmpty {
+                        Text(APIConfig.appVersionText)
                             .font(.custom("Inter-Regular", size: 13))
                             .foregroundColor(Color.gray.opacity(0.8))
                     }
