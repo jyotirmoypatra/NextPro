@@ -143,7 +143,28 @@ class NetworkManager: ObservableObject {
         guard let token = KeychainManager.shared.get("access_token"), !token.isEmpty else { return false }
         return true
     }
-    
+
+    // MARK: - Single-flight token refresh
+    //
+    // Multiple authenticated calls can hit a 401 at nearly the same moment (e.g. DoorOpenView's
+    // device-details fetch and profile fetch both firing on appear). Without this, each one
+    // would independently call refressToken(). If the backend rotates refresh tokens
+    // (single-use), the second concurrent call sends a token the first call already consumed,
+    // gets rejected, and shows a spurious "session expired" alert even though the session is
+    // fine. This makes every caller share one in-flight refresh instead.
+    private var refreshTask: Task<RefreshTokenResponse, Error>?
+
+    private func refreshTokenSingleFlight() async throws -> RefreshTokenResponse {
+        if let existing = refreshTask {
+            return try await existing.value
+        }
+
+        let task = Task { try await refressToken() }
+        refreshTask = task
+        defer { refreshTask = nil }
+        return try await task.value
+    }
+
     // MARK: - Generic Authorized Request Executor
     private func performRequest<T: Decodable>(
         url: URL,
@@ -197,7 +218,7 @@ class NetworkManager: ObservableObject {
 
                let refreshResponse: RefreshTokenResponse
                do {
-                   refreshResponse = try await refressToken()
+                   refreshResponse = try await refreshTokenSingleFlight()
                } catch APIError.unAuthorized {
                    requestSessionExpiredAlert()
                    throw APIError.unAuthorized

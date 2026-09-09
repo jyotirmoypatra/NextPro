@@ -1797,7 +1797,7 @@ struct DoorOpenView: View {
             print("🎯 Closest device: \(name) with RSSI: \(rssi)")
             
             // Only act if RSSI is strong
-            guard rssi > -37 && rssi < 0 else { return }
+            guard rssi > -36 && rssi < 0 else { return }
             
             if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
                 // Authorized door
