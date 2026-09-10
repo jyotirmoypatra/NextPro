@@ -104,6 +104,7 @@ struct UserManagementView: View {
 //                            .padding(.top, 20)
                         
                     
+                        if !fetchUserVM.usersList.isEmpty {
                         HStack(spacing: 10) {
                             
                             Image(systemName: "magnifyingglass")
@@ -127,9 +128,7 @@ struct UserManagementView: View {
                         .background(Color.white.opacity(0.1))
                         .cornerRadius(12)
                         .padding(.top,20)
-                   
-                        
-                    //}
+                        }
                     
                    
                     ScrollViewReader { proxy in
