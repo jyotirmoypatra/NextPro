@@ -1284,7 +1284,7 @@ struct DoorOpenView: View {
         debugMatchedServicesText = ""   // DEBUG ONLY — remove with the rest of the block
         isUnauthorise = false
         isRemoteUnlock = false
-        AceesMessage = "Walk closer to the door."
+        AceesMessage = defaultAccessMessage
         if pendingDoorAction?.source == .digitalBLE {
             pendingDoorAction = nil
         }
@@ -1343,6 +1343,13 @@ struct DoorOpenView: View {
         bleManager.startContinuousScanning()
         isScanningActive = true
         monitorAndAutoOpenNearbyDoor()
+    }
+
+    private var defaultAccessMessage: String {
+        if bleManager.bleState == .unauthorized {
+            return "Bluetooth permission is disabled. \nPlease enable it in iPhone Settings → Apps → ZYLX → Bluetooth."
+        }
+        return bleManager.isBluetoothOn ? "Walk closer to the door." : "Bluetooth is Off. Please turn it on."
     }
 
     /// Case 1 (permission denied/restricted) vs Case 2 (permission granted, hardware off) —
@@ -1745,7 +1752,7 @@ struct DoorOpenView: View {
                 lockIcon = "lock.fill"
                 isOpening = false
                 progress = 0.0
-                AceesMessage = "Walk closer to the door."
+                AceesMessage = defaultAccessMessage
                 if pendingDoorAction?.source == .digitalBLE {
                     pendingDoorAction = nil
                 }
