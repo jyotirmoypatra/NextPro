@@ -51,7 +51,11 @@ struct DoorOpenView: View {
     @State private var accessGreetingMessage = ""
     @State private var remoteAccessMessage = ""
     @State private var overlayMessage = ""
-    
+
+    // DEBUG ONLY: shows the matched device's advertised service UUIDs on the
+    // overlay. Remove this var, its Text below, and the one write site in
+    @State private var debugMatchedServicesText = ""
+
     @State private var animationResetTask: DispatchWorkItem?
     
     @State private var isProcessingDoor = false
@@ -327,7 +331,17 @@ struct DoorOpenView: View {
                                                         .id(overlayMessage)
                                                         .transition(.opacity)
                                                         .animation(.easeInOut(duration: 0.25), value: overlayMessage)
-                                                    
+
+                                                    // DEBUG ONLY — remove this Text once done debugging.
+//                                                    if !debugMatchedServicesText.isEmpty {
+//                                                        Text(debugMatchedServicesText)
+//                                                            .font(.system(size: 12, design: .monospaced))
+//                                                            .foregroundColor(.white.opacity(0.7))
+//                                                            .padding(.horizontal, 10)
+//                                                            .padding(.top, 4)
+//                                                            .multilineTextAlignment(.center)
+//                                                    }
+
                                                 }
                                             }
                                             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -1267,6 +1281,7 @@ struct DoorOpenView: View {
         ringColor = .white
         lockIcon = "lock.fill"
         overlayMessage = ""
+        debugMatchedServicesText = ""   // DEBUG ONLY — remove with the rest of the block
         isUnauthorise = false
         isRemoteUnlock = false
         AceesMessage = "Walk closer to the door."
@@ -1802,7 +1817,14 @@ struct DoorOpenView: View {
             if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
                 // Authorized door
                 print("🚪 Door nearby! Opening \(door.name)...")
-                
+
+                // DEBUG ONLY: surface the matched device's advertised services on
+                // the overlay. Remove this block once done debugging.
+                let matchedServices = bleManager.deviceServiceUUIDs[closest.peripheral.identifier] ?? []
+                DispatchQueue.main.async {
+                    debugMatchedServicesText = "services: \(matchedServices.joined(separator: ", "))"
+                }
+
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 isScanningActive = false
                 stopBLE()

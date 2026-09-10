@@ -104,7 +104,7 @@ struct UserManagementView: View {
 //                            .padding(.top, 20)
                         
                     
-                        if !fetchUserVM.usersList.isEmpty {
+                        if !fetchUserVM.usersList.isEmpty || !fetchUserVM.searchText.isEmpty {
                         HStack(spacing: 10) {
                             
                             Image(systemName: "magnifyingglass")

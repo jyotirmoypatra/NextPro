@@ -5,6 +5,9 @@ import CoreBluetooth
 import Combine
 
 class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
+   
+    static let doorMasterServiceUUID = CBUUID(string: "5CB8")
+
     // Published properties for UI binding
     @Published var devices: [CBPeripheral] = []
     @Published var isScanning = false
@@ -40,10 +43,10 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         devices.removeAll()
         isScanning = true
         bluetoothStateMessage = "Scanning for nearby devices..."
-        centralManager.scanForPeripherals(withServices: nil, options: nil)
 
-        // Stop scanning after 6 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 6) {
+        centralManager.scanForPeripherals(withServices: [Self.doorMasterServiceUUID], options: nil)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
             self.stopScanning()
         }
     }
@@ -86,25 +89,6 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
 
     // MARK: - CBCentralManagerDelegate
-//    func centralManagerDidUpdateState(_ central: CBCentralManager) {
-//        switch central.state {
-//        case .poweredOn:
-//            isBluetoothOn = true
-//            bluetoothStateMessage = "Bluetooth is ON."
-//        case .poweredOff:
-//            isBluetoothOn = false
-//            bluetoothStateMessage = "Bluetooth is OFF. Please turn it ON."
-//        case .unauthorized:
-//            bluetoothStateMessage = "App not authorized to use Bluetooth."
-//        case .unsupported:
-//            bluetoothStateMessage = "This device does not support Bluetooth."
-//        case .resetting:
-//            bluetoothStateMessage = "Bluetooth is resetting..."
-//        default:
-//            bluetoothStateMessage = "Bluetooth state unknown."
-//        }
-//        print("📡 State: \(bluetoothStateMessage)")
-//    }
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         bleState = central.state  
@@ -155,54 +139,21 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
-        // Filter: Only process Thimmo devices (same as DoorMasterSDK does)
-        let validPrefixes = ["M2", "TC", "BC", "AC", "DM", "M23", "M22", "XM"]
-        let deviceName = peripheral.name ?? ""
-        let isThimmoDevice = validPrefixes.contains { prefix in 
-            deviceName.uppercased().hasPrefix(prefix) 
-        }
-        
-        // Skip non-Thimmo devices
-        guard isThimmoDevice else { 
-            return 
-        }
-        
-        // Store RSSI for this device
+    
+        let allServiceUUIDs = (advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID])?
+            .map { $0.uuidString } ?? []
+        print("📡 Nearby (service-UUID matched): \(peripheral.name ?? "Unknown")  rssi=\(RSSI)  id=\(peripheral.identifier)  services=\(allServiceUUIDs)")
+
+        // DEBUG ONLY: remembers each device's advertised services so the UI can
+        // surface them for the matched door. Safe to delete this dictionary and
+        // its one write site once the UI debug overlay is removed.
+        deviceServiceUUIDs[peripheral.identifier] = allServiceUUIDs
+
         deviceLastRSSI[peripheral.identifier] = RSSI.intValue
 
         if !devices.contains(where: { $0.identifier == peripheral.identifier }) {
             devices.append(peripheral)
-
-            // Enhanced logging for debugging DoorMaster SDK compatibility
-            print("📱 Found Thimmo device: \(peripheral.name ?? "Unknown")")
-            print("   UUID: \(peripheral.identifier.uuidString.prefix(8))...")
-            print("   RSSI: \(RSSI)")
-            print("   Services: \(advertisementData[CBAdvertisementDataServiceUUIDsKey] ?? "None")")
-            print("   Manufacturer: \(advertisementData[CBAdvertisementDataManufacturerDataKey] != nil ? "Present" : "None")")
-            print("   Local Name: \(advertisementData[CBAdvertisementDataLocalNameKey] ?? "None")")
-            print("   TX Power: \(advertisementData[CBAdvertisementDataTxPowerLevelKey] ?? "None")")
-            print("   Is Connectable: \(advertisementData[CBAdvertisementDataIsConnectable] ?? "Unknown")")
-
-            // Check for patterns that DoorMaster SDK might look for
-            if let services = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] {
-                let serviceStrings = services.map { $0.uuidString }
-                print("   Service UUIDs: \(serviceStrings)")
-
-                // Check for common BLE door lock service patterns
-                let hasLockServices = serviceStrings.contains { uuid in
-                    uuid.lowercased().contains("180f") || // Battery service
-                    uuid.lowercased().contains("180a") || // Device info
-                    uuid.lowercased().contains("ffe0") || // Common for door locks
-                    uuid.lowercased().starts(with: "0000") // Standard services
-                }
-                if hasLockServices {
-                    print("   🎯 Potentially DoorMaster-compatible services detected")
-                }
-            }
-        } else {
-            // Device already in list, just update RSSI
-            deviceLastRSSI[peripheral.identifier] = RSSI.intValue
-            // print("📊 Updated RSSI for \(peripheral.name ?? "Unknown"): \(RSSI) dBm")
+            print("📱 Found device: \(peripheral.name ?? "Unknown") rssi=\(RSSI)")
         }
     }
 
@@ -294,38 +245,6 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         stopContinuousScanning()
     }
 
-//     func startContinuousScanning() {
-//        guard centralManager.state == .poweredOn else {
-//            print("⚠️ Cannot start continuous scanning - Bluetooth not powered on")
-//            return
-//        }
-//
-//        print("🔄 Starting continuous BLE scanning...")
-//        isScanning = true
-//        bluetoothStateMessage = "Monitoring for device..."
-//
-//        // Continuous scanning with shorter intervals
-//        continuousScanTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-//            guard let self = self, self.isScanning else { return }
-//            self.centralManager.scanForPeripherals(withServices: nil, options: nil)
-//
-//            // Stop scan after 0.8 seconds, then restart
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-//                if self.isScanning {
-//                    self.centralManager.stopScan()
-//                }
-//            }
-//        }
-//
-//        // Start first scan immediately
-//        centralManager.scanForPeripherals(withServices: nil, options: nil)
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-//            if self.isScanning {
-//                self.centralManager.stopScan()
-//            }
-//        }
-//    }
-    
     func startContinuousScanning() {
 
         guard centralManager.state == .poweredOn else {
@@ -346,7 +265,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
 
         // Start first scan immediately
         centralManager.scanForPeripherals(
-            withServices: nil,
+            withServices: [Self.doorMasterServiceUUID],
             options: [
                 CBCentralManagerScanOptionAllowDuplicatesKey: true
             ]
@@ -361,18 +280,12 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
 
             self.centralManager.stopScan()
 
-            // CBCentralManagerScanOptionAllowDuplicatesKey already keeps RSSI
-            // continuously fresh without needing this restart — this brief
-            // stop/start is only a defensive nudge against occasional scan
-            // staleness, so the gap is kept as short as possible instead of
-            // leaving BLE dark for 0.3s every second (which directly delayed
-            // how fast a strong-RSSI match could be detected).
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
 
                 guard self.isScanning else { return }
 
                 self.centralManager.scanForPeripherals(
-                    withServices: nil,
+                    withServices: [Self.doorMasterServiceUUID],
                     options: [
                         CBCentralManagerScanOptionAllowDuplicatesKey: true
                     ]
@@ -448,4 +361,9 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
 
     // Dictionary to store last known RSSI for each device
      var deviceLastRSSI: [UUID: Int] = [:]
+
+    // DEBUG ONLY: last known advertised service UUIDs for each device, keyed by
+    // peripheral identifier. Feeds the UI debug overlay only — safe to delete
+    // once that overlay is removed.
+    var deviceServiceUUIDs: [UUID: [String]] = [:]
 }
