@@ -26,6 +26,7 @@ struct DeviceInformationView: View {
     @State private var alertMessage = ""
     @State private var icon = ""
     @State private var loadingText = ""
+    @State private var navigateToEthernetSetupView = false
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
@@ -242,6 +243,29 @@ struct DeviceInformationView: View {
                             }
                             .disabled(doorManager.isProcessing || isCheckingDevice)
                             
+                            if selectedDevice.modelName.uppercased().hasPrefix("TC") {
+                                Divider().background(Color.gray.opacity(0.3))
+                                
+                                Button {
+                                    navigateToEthernetSetupView = true
+                                }label: {
+                                    
+                                    HStack(){
+                                        Text("Configure Ethernet")
+                                            .foregroundColor(.white)
+                                            .font(.custom("Inter-Medium", size: 16))
+                                            .padding(.trailing,10)
+                                        
+                                        Spacer()
+                                        
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(.white)
+                                            .font(.system(size: 15, weight: .medium))
+                                        
+                                    }
+                                }
+                            }
+                            
                             Divider().background(Color.gray.opacity(0.3))
                             
                             Button {
@@ -372,6 +396,9 @@ struct DeviceInformationView: View {
         .navigationDestination(isPresented: $navigateToDeviceConfig) {
                 SetupDeviceRelayConfig(selectedDevice: selectedDevice)
 
+        }
+        .navigationDestination(isPresented: $navigateToEthernetSetupView) {
+            EthernetSetupView(selectedDevice: selectedDevice)
         }
         .modernAlert(isPresented: $showBluetoothPermissionAlert) {
             ModernAlertView(
