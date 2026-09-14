@@ -343,7 +343,7 @@ struct SetWiFiPassword: View {
         // online. This step is NOT part of the SDK/API retry loop above — it runs once.
         loadingMessage = "Device is trying to connect to Wi-Fi..."
 
-        let heartbeatReceived = await waitForDeviceHeartbeat(serial: selectedDevice.serial, timeout: 30)
+        let heartbeatReceived = await MQTTManager.shared.waitForHeartbeat(serial: selectedDevice.serial, timeout: 30)
 
         guard heartbeatReceived else {
             isConfiguring = false
@@ -359,59 +359,6 @@ struct SetWiFiPassword: View {
         isConfiguring = false
         loadingMessage = ""
         navigateToSuccessView = true
-    }
-
-    /// Waits (up to `timeout` seconds) for a `.deviceHeartbeatReceived` notification for `serial`,
-    /// re-sending the heartbeat request every 7 seconds — the same polling frequency
-    /// `AssignedDeviceViewModel.startHeartbeatLoop()` uses on the Device tab. Returns `true` if a
-    /// heartbeat for this device arrived in time, `false` on timeout.
-    private func waitForDeviceHeartbeat(serial: String, timeout: TimeInterval) async -> Bool {
-        let pollInterval: TimeInterval = 7
-
-        MQTTManager.shared.subscribeIfNeeded(sn: serial)
-
-        return await withCheckedContinuation { continuation in
-            let lock = NSLock()
-            var hasResumed = false
-            var observer: NSObjectProtocol?
-            var pollTimer: Timer?
-            var timeoutTimer: Timer?
-
-            func finish(_ result: Bool) {
-                lock.lock()
-                let alreadyResumed = hasResumed
-                hasResumed = true
-                lock.unlock()
-
-                guard !alreadyResumed else { return }
-                if let observer {
-                    NotificationCenter.default.removeObserver(observer)
-                }
-                pollTimer?.invalidate()
-                timeoutTimer?.invalidate()
-                continuation.resume(returning: result)
-            }
-
-            observer = NotificationCenter.default.addObserver(
-                forName: .deviceHeartbeatReceived,
-                object: nil,
-                queue: .main
-            ) { notification in
-                guard let sn = notification.userInfo?["sn"] as? String, sn == serial else { return }
-                finish(true)
-            }
-
-            // Initial send, then re-send every 7s until we get a heartbeat or hit the timeout.
-            MQTTManager.shared.sendHeartbeatCheck(to: serial)
-
-            pollTimer = Timer.scheduledTimer(withTimeInterval: pollInterval, repeats: true) { _ in
-                MQTTManager.shared.sendHeartbeatCheck(to: serial)
-            }
-
-            timeoutTimer = Timer.scheduledTimer(withTimeInterval: timeout, repeats: false) { _ in
-                finish(false)
-            }
-        }
     }
 
     private func validateLocationRequirements() -> Bool {

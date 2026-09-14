@@ -193,8 +193,60 @@ class MQTTManager: NSObject, ObservableObject, CocoaMQTTDelegate {
         print("💓 Heartbeat check sent to \(deviceSN)")
     }
 
+    /// Waits (up to `timeout` seconds) for a `.deviceHeartbeatReceived` notification for `serial`,
+    /// re-sending the heartbeat request every 7 seconds. Returns `true` if a heartbeat for this
+    /// device arrived in time, `false` on timeout. Shared by every setup flow (Wi-Fi, Ethernet)
+    /// that needs to confirm a device came online after configuration.
+    func waitForHeartbeat(serial: String, timeout: TimeInterval) async -> Bool {
+        let pollInterval: TimeInterval = 7
 
-    
+        subscribeIfNeeded(sn: serial)
+
+        return await withCheckedContinuation { continuation in
+            let lock = NSLock()
+            var hasResumed = false
+            var observer: NSObjectProtocol?
+            var pollTimer: Timer?
+            var timeoutTimer: Timer?
+
+            func finish(_ result: Bool) {
+                lock.lock()
+                let alreadyResumed = hasResumed
+                hasResumed = true
+                lock.unlock()
+
+                guard !alreadyResumed else { return }
+                if let observer {
+                    NotificationCenter.default.removeObserver(observer)
+                }
+                pollTimer?.invalidate()
+                timeoutTimer?.invalidate()
+                continuation.resume(returning: result)
+            }
+
+            observer = NotificationCenter.default.addObserver(
+                forName: .deviceHeartbeatReceived,
+                object: nil,
+                queue: .main
+            ) { notification in
+                guard let sn = notification.userInfo?["sn"] as? String, sn == serial else { return }
+                finish(true)
+            }
+
+            // Initial send, then re-send every 7s until we get a heartbeat or hit the timeout.
+            self.sendHeartbeatCheck(to: serial)
+
+            pollTimer = Timer.scheduledTimer(withTimeInterval: pollInterval, repeats: true) { _ in
+                self.sendHeartbeatCheck(to: serial)
+            }
+
+            timeoutTimer = Timer.scheduledTimer(withTimeInterval: timeout, repeats: false) { _ in
+                finish(false)
+            }
+        }
+    }
+
+
     func mqtt(_ mqtt: CocoaMQTT, didReceiveMessage message: CocoaMQTTMessage, id: UInt16) {
         guard let msg = message.string else { return }
         print("📨 MQTT Message Received on \(message.topic): \(msg)")
