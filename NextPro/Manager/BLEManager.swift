@@ -6,7 +6,7 @@ import Combine
 
 class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
    
-    static let doorMasterServiceUUID = CBUUID(string: "5CB8")
+    static let doorMasterServiceUUID = CBUUID(string: "5CB8") // 00005cb8-0000-1000-8000-00805f9b34fb
 
     // Published properties for UI binding
     @Published var devices: [CBPeripheral] = []

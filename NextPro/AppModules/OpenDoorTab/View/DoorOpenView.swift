@@ -67,6 +67,10 @@ struct DoorOpenView: View {
     @State private var selectedTab = 0
     @State private var isRemoteUnlock = false
     @State private var showDoorErrorAlert = false
+    // Frozen snapshot of the error text at the moment the alert was triggered — deviceVM's
+    // own errorMessage is live and gets reset to "" as soon as a retry/overlapping fetch
+    // starts, which would otherwise blank out the alert's text while it's still on screen.
+    @State private var doorErrorMessageText = ""
     
     @State private var hasDigitalKeyAccess: Bool = false
     @State private var hasRemoteAccess: Bool = false
@@ -581,9 +585,10 @@ struct DoorOpenView: View {
             }
             .onChange(of: deviceVM.errorMessage) { message in
                 guard !message.isEmpty else { return }
-                
+
                 doorStorage.clearDoors()
                 doorStorage.hasResolvedDoors = true
+                doorErrorMessageText = message
                 showDoorErrorAlert = true
             }
             .onChange(of: network.hasInternet) { hasInternet in
@@ -738,11 +743,11 @@ struct DoorOpenView: View {
             .modernAlert(isPresented: $showDoorErrorAlert) {
                 ModernAlertView(
                     title: "Error!",
-                    message: deviceVM.errorMessage,
+                    message: doorErrorMessageText,
                     isSuccess: false,
                     buttonTitle: "OK"
                 ) { showDoorErrorAlert = false
-                    
+
                 }
             }
         
