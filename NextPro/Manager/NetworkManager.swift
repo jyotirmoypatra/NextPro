@@ -172,7 +172,8 @@ class NetworkManager: ObservableObject {
         body: [String: Any]? = nil,
         requiresAuth: Bool = false,
         responseType: T.Type,
-        retry: Bool = false
+        retry: Bool = false,
+        isPostRefreshRetry: Bool = false
     ) async throws -> T {
 
         print("🌐 URL:", url.absoluteString)
@@ -235,18 +236,39 @@ class NetworkManager: ObservableObject {
                    KeychainManager.shared.save(newRefresh, forKey: "refresh_token")
                }
 
-               // 🔁 Retry original request once
+               // 🔁 Retry original request once, now with the freshly-refreshed token
                return try await performRequest(
                    url: url,
                    method: method,
                    body: body,
                    requiresAuth: requiresAuth,
                    responseType: responseType,
-                   retry: false
+                   retry: false,
+                   isPostRefreshRetry: true
                )
            }
-        
-        // authentication failed after one rety and logout
+
+        // The token was JUST refreshed successfully, yet this retry still got a 401. That's
+        // much more likely to be a transient blip — e.g. the app resumed from a long
+        // background period and networking hasn't fully re-established yet — than a
+        // genuinely dead session we just proved was alive by refreshing it. Give it one
+        // silent extra try with that same fresh token before treating this as a real,
+        // user-visible auth failure.
+        if http.statusCode == 401, requiresAuth, isPostRefreshRetry {
+            print("⏳ Retry with freshly-refreshed token still got 401 — treating as transient, retrying once more")
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            return try await performRequest(
+                url: url,
+                method: method,
+                body: body,
+                requiresAuth: requiresAuth,
+                responseType: responseType,
+                retry: false,
+                isPostRefreshRetry: false
+            )
+        }
+
+        // authentication failed after refresh (and the one extra transient retry) — genuine logout
         if http.statusCode == 401, !retry , requiresAuth{
 
                 print("🚪 Session expired after retry. Showing alert...")
