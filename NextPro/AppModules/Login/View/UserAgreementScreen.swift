@@ -29,33 +29,35 @@ struct UserAgreementScreen: View {
     
     @Environment(\.dismiss) private var dismiss
     @State private var selectedTab = 0
-    
-    // check & unlock states
-    @State private var termsUnlocked = false
-    @State private var privacyUnlocked = false
 
     @State private var termsLoaded = false
     @State private var privacyLoaded = false
 
+    // Unlocked once that tab's webview has been scrolled all the way to its own bottom —
+    // gates the checkbox row (dim + not tappable until then). Sticky: only ever flips true,
+    // never back to false from scrolling back up. No JS involved: driven purely by the
+    // native UIScrollViewDelegate in WebContentView.
+    @State private var termsUnlocked = false
+    @State private var privacyUnlocked = false
+
+    // Live, two-way position tracker (unlike *Unlocked above) — reflects whether the webview
+    // is at its bottom RIGHT NOW, used only to show/hide the down-arrow hint.
+    @State private var termsAtBottom = false
+    @State private var privacyAtBottom = false
+
     @State private var termsAccepted = false
     @State private var privacyAccepted = false
 
-    @State private var termsContentHeight: CGFloat = 300
-    @State private var privacyContentHeight: CGFloat = 300
     @State private var showWebContent = false
 
-     private let termsURL = APIConfig.Web.terms
-    // private let termsURL = "https://844c-103-75-162-119.ngrok-free.app/privacy/terms.html"
-     private let privacyURL = APIConfig.Web.privacy
-   // private let privacyURL = "https://844c-103-75-162-119.ngrok-free.app/privacy/privacy.html"
+    // Live WKWebView references, captured once each is created, so the down-arrow button
+    // can command the currently active tab's webview to scroll to its own bottom.
+    @State private var termsWebView: WKWebView?
+    @State private var privacyWebView: WKWebView?
 
-    @State private var showScrollDownButton = true
-    @State private var animateArrow = false
-    @State private var arrowAnimationID = 0
-    @State private var isAutoScrollingToBottom = false
-    
-    private let scrollSpaceName = "AgreementScroll"
-    
+     private let termsURL = APIConfig.Web.terms
+     private let privacyURL = APIConfig.Web.privacy
+
     var body: some View {
 
         GeometryReader { geometry in
@@ -86,221 +88,132 @@ struct UserAgreementScreen: View {
                     // Tabs
                     tabsSection
 
-                    // WebView card — fills all remaining space between tabs and button
-                    // Single ScrollView owns all scrolling; WKWebView internal scroll is disabled.
-                    ZStack(alignment: .top) {
-                        ScrollViewReader { proxy in
-                            ScrollView {
-                                VStack(spacing: 0) {
-                                    Color.clear.frame(height: 1).id("TOP_ANCHOR")
-
-                                    if showWebContent {
-                                        // Terms WebView (always in hierarchy, hidden when not active)
-                                        WebContentView(
-                                            urlString: termsURL,
-                                            isActive: selectedTab == 0,
-                                            onContentHeightChange: { height in
-                                                let clamped = max(200, height)
-                                                if abs(clamped - termsContentHeight) > 1 {
-                                                    termsContentHeight = clamped
-                                                }
-                                            },
-                                            onLoadingStateChange: { isLoading in
-                                                termsLoaded = !isLoading
-                                                if isLoading {
-                                                    termsUnlocked = false
-                                                }
-                                            },
-                                            onLoadFinished: {
-                                                termsLoaded = true
-                                            }
-                                        )
-                                        .frame(height: termsContentHeight)
-                                        .opacity(selectedTab == 0 && termsLoaded ? 1 : 0)
-                                        .frame(height: selectedTab == 0 ? termsContentHeight : 1)
-                                        .clipped()
-
-                                        // Privacy WebView (always in hierarchy, hidden when not active)
-                                        WebContentView(
-                                            urlString: privacyURL,
-                                            isActive: selectedTab == 1,
-                                            onContentHeightChange: { height in
-                                                let clamped = max(200, height)
-                                                if abs(clamped - privacyContentHeight) > 1 {
-                                                    privacyContentHeight = clamped
-                                                }
-                                            },
-                                            onLoadingStateChange: { isLoading in
-                                                privacyLoaded = !isLoading
-                                                if isLoading {
-                                                    privacyUnlocked = false
-                                                }
-                                            },
-                                            onLoadFinished: {
-                                                privacyLoaded = true
-                                            }
-                                        )
-                                        .frame(height: privacyContentHeight)
-                                        .opacity(selectedTab == 1 && privacyLoaded ? 1 : 0)
-                                        .frame(height: selectedTab == 1 ? privacyContentHeight : 1)
-                                        .clipped()
-                                    }
-
-                                    // Bottom sentinel — only counts when page is fully loaded
-                                    let currentLoaded = selectedTab == 0 ? termsLoaded : privacyLoaded
-                                    GeometryReader { geo -> Color in
-                                        let frame = geo.frame(in: .named(scrollSpaceName))
-                                        DispatchQueue.main.async {
-                                            if currentLoaded {
-                                                let reachedBottom = frame.minY < UIScreen.main.bounds.height + 20
-                                                updateScrollDownButton(isAtBottom: reachedBottom)
-                                                if selectedTab == 0 {
-                                                    if reachedBottom && !termsUnlocked { termsUnlocked = true }
-                                                } else {
-                                                    if reachedBottom && !privacyUnlocked { privacyUnlocked = true }
-                                                }
-                                            }
-                                        }
-                                        return Color.clear
-                                    }
-                                    .frame(height: 1)
-                                   
-
-                                    // Checkbox — only visible after page loaded AND scrolled to bottom
-                                    let showCheckbox = selectedTab == 0
-                                        ? (termsLoaded && termsUnlocked)
-                                        : (privacyLoaded && privacyUnlocked)
-
-                                    if showCheckbox {
-                                        let isCurrentAccepted = selectedTab == 0 ? termsAccepted : privacyAccepted
-                                        let checkboxColor = isCurrentAccepted ? Color.black : Color.init(hex: "#383838")
-
-                                        Divider().background(Color.black.opacity(0.2))
-                                        HStack {
-                                            Button(action: {
-                                                if selectedTab == 0 { termsAccepted.toggle() } else { privacyAccepted.toggle() }
-                                            }) {
-                                                Image(systemName: isCurrentAccepted ? "checkmark.square.fill" : "square")
-                                                    .font(.system(size: 30))
-                                                    .foregroundColor(checkboxColor)
-                                            }
-                                            Text(selectedTab == 0 ?
-                                                 "I have read and agree to the ZYLX Terms & Conditions" :
-                                                 "I have read and agree to the ZYLX Privacy Policy")
-                                                .foregroundColor(checkboxColor)
-                                                .font(.custom("Inter-Bold", size: 15))
-                                            Spacer()
-                                        }
-                                        .padding(.horizontal,18)
-                                        .padding(.vertical,15)
-                                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                                    }
-
-                                    Color.clear
-                                        .frame(height: 1)
-                                        .id("BOTTOM_ANCHOR")
-
-                                    Spacer(minLength: 10)
-                                   
-                                }
-                                .padding(10)
-                            }
-                            .scrollIndicators(.hidden)
-                            .coordinateSpace(name: scrollSpaceName)
-                            .onChange(of: selectedTab) { _ in
-                                resetAgreementScroll(proxy)
-                                if selectedTab == 0 ? termsLoaded : privacyLoaded {
-                                    restartScrollDownAnimation()
-                                } else {
-                                    showScrollDownButton = false
-                                    animateArrow = false
-                                }
-                            }
-                            
-                            .overlay(alignment: .bottomTrailing) {
-
-                                let currentLoaded = selectedTab == 0 ? termsLoaded : privacyLoaded
-                                if showScrollDownButton && currentLoaded {
-
-                                    Circle()
-                                        .fill(Color.black)
-                                        .frame(width: 30, height: 30)
-                                        .overlay {
-                                            Image(systemName: "chevron.down")
-                                                .font(.system(size: 16, weight: .bold))
-                                                .foregroundColor(.white)
-                                        }
-                                        .shadow(color: .black.opacity(0.5), radius: 8)
-                                        .offset(y: animateArrow ? 5 : -5)
-                                        .padding(.trailing, 18)
-                                        .padding(.bottom, 20)
-                                        .contentShape(Rectangle())
-                                        .allowsHitTesting(true)
-                                        .highPriorityGesture(
-                                            TapGesture().onEnded {
-                                                isAutoScrollingToBottom = true
-                                                showScrollDownButton = false
-                                                animateArrow = false
-                                                withAnimation(.easeInOut(duration: 0.8)) {
-                                                    proxy.scrollTo("BOTTOM_ANCHOR", anchor: .bottom)
-                                                }
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.85) {
-                                                    withAnimation(.easeInOut(duration: 0.25)) {
-                                                        proxy.scrollTo("BOTTOM_ANCHOR", anchor: .bottom)
-                                                    }
-                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                        isAutoScrollingToBottom = false
-                                                    }
-                                                }
-                                            }
-                                        )
-                                        .onAppear {
-                                            animateArrow = true
-                                        }
-                                        .animation(
-                                            .easeInOut(duration: 0.9)
-                                                .repeatForever(autoreverses: true),
-                                            value: animateArrow
-                                        )
-                                        .transition(.scale.combined(with: .opacity))
-                                        .id(arrowAnimationID)
-                                        .zIndex(9999)
-                                }
-                            }
-                        }
-
-                        // Spinner — shown while active tab's page is still loading
-                        let isCurrentTabLoading = selectedTab == 0 ? !termsLoaded : !privacyLoaded
-                        if isCurrentTabLoading && showWebContent {
-//                            VStack {
-//                                Spacer()
-//                                ProgressView()
-//                                    .progressViewStyle(CircularProgressViewStyle(tint: .black))
-//                                    .scaleEffect(1.4)
-//                                Spacer()
-//                            }
-//                            .frame(maxWidth: .infinity)
-                            
+                    // WebView card — simple structure, no outer ScrollView, no JS: the webview
+                    // fills the available space and scrolls itself; the acceptance checkbox is
+                    // a plain, always-visible row below it (not overlapping).
+                    ZStack {
+                        VStack(spacing: 0) {
+                            // Webview area — fills all remaining space above the checkbox
                             ZStack {
+                                if showWebContent {
+                                    // Terms WebView (always in hierarchy, hidden when not active)
+                                    WebContentView(
+                                        urlString: termsURL,
+                                        isActive: selectedTab == 0,
+                                        onLoadingStateChange: { isLoading in
+                                            termsLoaded = !isLoading
+                                            if isLoading {
+                                                termsUnlocked = false
+                                                termsAtBottom = false
+                                            }
+                                        },
+                                        onScrolledToBottom: { atBottom in
+                                            // Sticky unlock: once reached the bottom once, stay
+                                            // unlocked — scrolling back up afterward should
+                                            // never re-dim the checkbox again.
+                                            if atBottom {
+                                                termsUnlocked = true
+                                            }
+                                            // Live position, for the down-arrow hint only.
+                                            termsAtBottom = atBottom
+                                        },
+                                        onWebViewReady: { webView in
+                                            termsWebView = webView
+                                        }
+                                    )
+                                    .opacity(selectedTab == 0 ? 1 : 0)
+                                    .allowsHitTesting(selectedTab == 0)
 
-                                VStack(spacing: 16) {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .black))
-                                        .scaleEffect(1.8)
-                                   
-                                    Text(selectedTab == 0
-                                         ? "Loading Terms & Conditions..."
-                                         : "Loading Privacy Policy...")
-                                        .font(.custom("Inter-Medium", size: 16))
-                                        .foregroundColor(.black.opacity(0.7))
-                                    
+                                    // Privacy WebView (always in hierarchy, hidden when not active)
+                                    WebContentView(
+                                        urlString: privacyURL,
+                                        isActive: selectedTab == 1,
+                                        onLoadingStateChange: { isLoading in
+                                            privacyLoaded = !isLoading
+                                            if isLoading {
+                                                privacyUnlocked = false
+                                                privacyAtBottom = false
+                                            }
+                                        },
+                                        onScrolledToBottom: { atBottom in
+                                            // Sticky unlock: once reached the bottom once, stay
+                                            // unlocked — scrolling back up afterward should
+                                            // never re-dim the checkbox again.
+                                            if atBottom {
+                                                privacyUnlocked = true
+                                            }
+                                            // Live position, for the down-arrow hint only.
+                                            privacyAtBottom = atBottom
+                                        },
+                                        onWebViewReady: { webView in
+                                            privacyWebView = webView
+                                        }
+                                    )
+                                    .opacity(selectedTab == 1 ? 1 : 0)
+                                    .allowsHitTesting(selectedTab == 1)
+
+                                    // Spinner — shown while the active tab's page is still loading
+                                    let isCurrentTabLoading = selectedTab == 0 ? !termsLoaded : !privacyLoaded
+                                    if isCurrentTabLoading {
+                                        VStack(spacing: 16) {
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                                                .scaleEffect(1.8)
+
+                                            Text(selectedTab == 0
+                                                 ? "Loading Terms & Conditions..."
+                                                 : "Loading Privacy Policy...")
+                                                .font(.custom("Inter-Medium", size: 16))
+                                                .foregroundColor(.black.opacity(0.7))
+                                        }
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                        .background(Color.white)
+                                    }
                                 }
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .ignoresSafeArea()
+                            .overlay(alignment: .bottomTrailing) {
+                                // Down-arrow — scrolls the active tab's webview toward its own
+                                // bottom. Always shown whenever that tab isn't currently at its
+                                // bottom, independent of whether it's already been unlocked.
+                                let currentLoaded = selectedTab == 0 ? termsLoaded : privacyLoaded
+                                let currentAtBottom = selectedTab == 0 ? termsAtBottom : privacyAtBottom
+                                if currentLoaded && !currentAtBottom {
+                                    ScrollDownArrowButton(action: scrollActiveWebViewDown)
+                                        .padding(.trailing, 24)
+                                        .padding(.bottom, 40)
+                                }
+                            }
+
+                            // Checkbox — below the webview. Dimmed and not tappable until that
+                            // tab's webview has been scrolled all the way to its own bottom.
+                            let isCurrentAccepted = selectedTab == 0 ? termsAccepted : privacyAccepted
+                            let checkboxColor = isCurrentAccepted ? Color.black : Color.init(hex: "#383838")
+                            let isCurrentUnlocked = selectedTab == 0 ? termsUnlocked : privacyUnlocked
+
+                            Divider().background(Color.black.opacity(0.2))
+                            HStack {
+                                Button(action: {
+                                    if selectedTab == 0 { termsAccepted.toggle() } else { privacyAccepted.toggle() }
+                                }) {
+                                    Image(systemName: isCurrentAccepted ? "checkmark.square.fill" : "square")
+                                        .font(.system(size: 30))
+                                        .foregroundColor(checkboxColor)
+                                }
+                                Text(selectedTab == 0 ?
+                                     "I have read and agree to the ZYLX Terms & Conditions" :
+                                     "I have read and agree to the ZYLX Privacy Policy")
+                                    .foregroundColor(checkboxColor)
+                                    .font(.custom("Inter-Bold", size: 15))
+                                Spacer()
+                            }
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 15)
+                            .opacity(isCurrentUnlocked ? 1.0 : 0.4)
+                            .allowsHitTesting(isCurrentUnlocked)
+                            .animation(.easeInOut(duration: 0.2), value: isCurrentUnlocked)
                         }
                     }
-                   // .background(Color(hex: "#242424"))
                     .background(Color.white)
                     .cornerRadius(20)
                     .padding(.horizontal)
@@ -476,68 +389,16 @@ struct UserAgreementScreen: View {
         }
     }
 
-    private func updateScrollDownButton(isAtBottom: Bool) {
-        guard selectedTab == 0 ? termsLoaded : privacyLoaded else {
-            showScrollDownButton = false
-            animateArrow = false
-            return
-        }
-
-        if isAutoScrollingToBottom && !isAtBottom {
-            showScrollDownButton = false
-            animateArrow = false
-            return
-        }
-
-        if isAtBottom {
-            isAutoScrollingToBottom = false
-        }
-
-        let shouldShowButton = !isAtBottom
-
-        if showScrollDownButton != shouldShowButton {
-            showScrollDownButton = shouldShowButton
-
-            if shouldShowButton {
-                restartScrollDownAnimation()
-            } else {
-                animateArrow = false
-            }
-        } else if shouldShowButton && !animateArrow {
-            restartScrollDownAnimation()
-        }
+    /// Scrolls the currently active tab's webview toward its own bottom. Reaching it fires
+    /// the same onScrolledToBottom signal a manual scroll gesture would, so the checkbox
+    /// unlocks through the normal reactive path — no separate handling needed here.
+    private func scrollActiveWebViewDown() {
+        guard let webView = selectedTab == 0 ? termsWebView : privacyWebView else { return }
+        let scrollView = webView.scrollView
+        let targetY = max(0, scrollView.contentSize.height - scrollView.bounds.height)
+        scrollView.setContentOffset(CGPoint(x: 0, y: targetY), animated: true)
     }
 
-    private func restartScrollDownAnimation() {
-        guard selectedTab == 0 ? termsLoaded : privacyLoaded else {
-            showScrollDownButton = false
-            animateArrow = false
-            return
-        }
-
-        showScrollDownButton = true
-        animateArrow = false
-        arrowAnimationID += 1
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            animateArrow = true
-        }
-    }
-
-    private func resetAgreementScroll(_ proxy: ScrollViewProxy) {
-        let delays: [Double] = [0, 0.05, 0.2]
-
-        for delay in delays {
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                var transaction = Transaction()
-                transaction.disablesAnimations = true
-                withTransaction(transaction) {
-                    proxy.scrollTo("TOP_ANCHOR", anchor: .top)
-                }
-            }
-        }
-    }
-    
     // MARK: Tabs UI
     private var tabsSection: some View {
         HStack {
@@ -601,33 +462,62 @@ struct UserAgreementScreen: View {
 
 
 
-// MARK: - WebContentView (URL-loading, non-scrolling WKWebView that reports contentHeight)
+// MARK: - Down-arrow scroll hint (bounces up/down while visible)
+private struct ScrollDownArrowButton: View {
+    let action: () -> Void
+    @State private var animate = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "chevron.down")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.white)
+                .frame(width: 34, height: 34)
+                .background(Color.black)
+                .clipShape(Circle())
+                .shadow(color: .black.opacity(0.4), radius: 6)
+        }
+        .offset(y: animate ? 5 : -5)
+        .onAppear {
+            animate = true
+        }
+        .animation(
+            .easeInOut(duration: 0.9).repeatForever(autoreverses: true),
+            value: animate
+        )
+        .transition(.scale.combined(with: .opacity))
+    }
+}
+
+// MARK: - WebContentView (plain URL-loading WKWebView, scrolls itself, no JS at all)
 struct WebContentView: UIViewRepresentable {
     let urlString: String
     var isActive: Bool = true
-    var onContentHeightChange: ((CGFloat) -> Void)? = nil
     var onLoadingStateChange: ((Bool) -> Void)? = nil
-    var onLoadFinished: (() -> Void)? = nil
+    var onScrolledToBottom: ((Bool) -> Void)? = nil
+    var onWebViewReady: ((WKWebView) -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(
-            onContentHeightChange: onContentHeightChange,
-            onLoadingStateChange: onLoadingStateChange,
-            onLoadFinished: onLoadFinished
-        )
+        Coordinator(onLoadingStateChange: onLoadingStateChange, onScrolledToBottom: onScrolledToBottom)
     }
 
     func makeUIView(context: Context) -> WKWebView {
         let webview = WKWebView(frame: .zero)
         webview.navigationDelegate = context.coordinator
-        // Disable internal scroll — outer SwiftUI ScrollView handles all scrolling
-        webview.scrollView.isScrollEnabled = false
+        webview.scrollView.delegate = context.coordinator
         webview.isOpaque = false
         webview.backgroundColor = .clear
         webview.scrollView.backgroundColor = .clear
+        webview.scrollView.showsVerticalScrollIndicator = false
+        webview.scrollView.showsHorizontalScrollIndicator = false
         if let url = URL(string: urlString) {
             context.coordinator.loadedURL = urlString
             webview.load(URLRequest(url: url))
+        }
+        // Deferred: setting @State synchronously from inside makeUIView (mid SwiftUI view
+        // update) can silently fail to stick — dispatch it to the next runloop turn instead.
+        DispatchQueue.main.async {
+            onWebViewReady?(webview)
         }
         return webview
     }
@@ -638,186 +528,77 @@ struct WebContentView: UIViewRepresentable {
             context.coordinator.loadedURL = urlString
             uiView.load(URLRequest(url: url))
         }
-
-        if context.coordinator.isActive != isActive {
-            context.coordinator.isActive = isActive
-            if isActive {
-                uiView.scrollView.setContentOffset(.zero, animated: false)
-                uiView.setNeedsLayout()
-                uiView.layoutIfNeeded()
-                uiView.setNeedsDisplay()
-                uiView.evaluateJavaScript("window.scrollTo(0, 0);", completionHandler: nil)
-            }
-        }
     }
 
-    class Coordinator: NSObject, WKNavigationDelegate {
-        var onContentHeightChange: ((CGFloat) -> Void)?
+    class Coordinator: NSObject, WKNavigationDelegate, UIScrollViewDelegate {
         var onLoadingStateChange: ((Bool) -> Void)?
-        var onLoadFinished: (() -> Void)?
+        var onScrolledToBottom: ((Bool) -> Void)?
         var loadedURL: String?
-        var isActive = true
-        private var didReportLoadFinished = false
-        private var lastMeasuredHeight: CGFloat = 0
-        private var stableMeasurementCount = 0
-        private var lastNavigation: WKNavigation?
 
-        init(
-            onContentHeightChange: ((CGFloat) -> Void)?,
-            onLoadingStateChange: ((Bool) -> Void)?,
-            onLoadFinished: (() -> Void)?
-        ) {
-            self.onContentHeightChange = onContentHeightChange
+        init(onLoadingStateChange: ((Bool) -> Void)?, onScrolledToBottom: ((Bool) -> Void)?) {
             self.onLoadingStateChange = onLoadingStateChange
-            self.onLoadFinished = onLoadFinished
+            self.onScrolledToBottom = onScrolledToBottom
         }
 
         func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-            resetLoadingState(navigation: navigation)
-        }
-
-        func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
-            resetLoadingState(navigation: navigation)
-        }
-
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            resetLoadingState(navigation: navigation)
-            applyMobileDocumentFixes(to: webView)
-            measureContentHeight(in: webView, attempt: 0)
-        }
-
-        private func resetLoadingState(navigation: WKNavigation?) {
-            if lastNavigation !== navigation {
-                lastNavigation = navigation
-                didReportLoadFinished = false
-                lastMeasuredHeight = 0
-                stableMeasurementCount = 0
-            }
             onLoadingStateChange?(true)
         }
 
-        private func measureContentHeight(in webView: WKWebView, attempt: Int) {
-            let script = """
-            (function() {
-                var body = document.body || {};
-                var doc = document.documentElement || {};
-                var height = Math.max(
-                    body.scrollHeight || 0,
-                    body.offsetHeight || 0,
-                    doc.clientHeight || 0,
-                    doc.scrollHeight || 0,
-                    doc.offsetHeight || 0
-                );
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            onLoadingStateChange?(false)
 
-                return {
-                    height: height,
-                    textLength: (body.innerText || '').trim().length,
-                    readyState: document.readyState
-                };
-            })();
-            """
+            // `didFinish` only means the page's own navigation completed — the actual
+            // agreement text can still be rendering asynchronously after that (e.g. fetched
+            // and inserted by the page's own script after load). Checking contentSize once,
+            // right away, would see that not-yet-rendered content as "nothing to scroll" and
+            // unlock prematurely. Instead, only conclude "short content, nothing to scroll"
+            // once the content size has held steady across several checks a couple of
+            // seconds apart — genuinely short content stays put; content still rendering
+            // keeps changing and never satisfies this.
+            checkForShortContent(in: webView, previousHeight: -1, stableCount: 0, attempt: 0)
+        }
 
-            webView.evaluateJavaScript(script) { result, _ in
-                let height: CGFloat
-                let textLength: Int
-                let isDocumentComplete: Bool
-                if let result = result as? [String: Any] {
-                    if let h = result["height"] as? CGFloat { height = h }
-                    else if let h = result["height"] as? Double { height = CGFloat(h) }
-                    else { return }
+        private func checkForShortContent(in webView: WKWebView, previousHeight: CGFloat, stableCount: Int, attempt: Int) {
+            guard attempt < 8 else { return } // ~5s of polling, then give up — real scrollable content, let the user's own scroll drive unlock
 
-                    if let length = result["textLength"] as? Int { textLength = length }
-                    else if let length = result["textLength"] as? Double { textLength = Int(length) }
-                    else { textLength = 0 }
+            let sv = webView.scrollView
+            let currentHeight = sv.contentSize.height
+            let fits = currentHeight <= sv.bounds.height + 24
+            let unchanged = abs(currentHeight - previousHeight) < 1
 
-                    isDocumentComplete = (result["readyState"] as? String) == "complete"
-                } else {
-                    return
-                }
-                DispatchQueue.main.async {
-                    let heightDelta = abs(height - self.lastMeasuredHeight)
-                    if heightDelta < 1 {
-                        self.stableMeasurementCount += 1
-                    } else {
-                        self.stableMeasurementCount = 0
-                        if heightDelta > 20 {
-                            self.didReportLoadFinished = false
-                            self.onLoadingStateChange?(true)
-                        }
-                    }
-                    self.lastMeasuredHeight = height
+            if fits && unchanged && stableCount >= 3 {
+                onScrolledToBottom?(true)
+                return
+            }
 
-                    self.onContentHeightChange?(height)
-                    let hasStableHeight = attempt >= 12 && self.stableMeasurementCount >= 4
-                    let hasRenderedContent = textLength > 100
-                    let isFinalAttempt = attempt >= 25
-                    if !self.didReportLoadFinished && ((hasStableHeight && hasRenderedContent && isDocumentComplete) || isFinalAttempt) {
-                        self.didReportLoadFinished = true
-                        self.onLoadingStateChange?(false)
-                        self.onLoadFinished?()
-                    }
+            // Once content is clearly taller than the viewport by a solid margin, it's real,
+            // scrollable content — stop polling early instead of continuing pointlessly.
+            if !fits && currentHeight > sv.bounds.height * 1.5 {
+                return
+            }
 
-                    guard attempt < 25 else { return }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                        self.applyMobileDocumentFixes(to: webView)
-                        self.measureContentHeight(in: webView, attempt: attempt + 1)
-                    }
-                }
+            let nextStableCount = (fits && unchanged) ? stableCount + 1 : 0
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+                self?.checkForShortContent(in: webView, previousHeight: currentHeight, stableCount: nextStableCount, attempt: attempt + 1)
             }
         }
 
-        private func applyMobileDocumentFixes(to webView: WKWebView) {
-            let script = """
-            (function() {
-                if (document.getElementById('nextpro-agreement-webview-fixes')) { return; }
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            onLoadingStateChange?(false)
+        }
 
-                var style = document.createElement('style');
-                style.id = 'nextpro-agreement-webview-fixes';
-                style.textContent = `
-                    html, body {
-                        width: 100% !important;
-                        min-width: 0 !important;
-                        overflow-x: hidden !important;
-                    }
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            onLoadingStateChange?(false)
+        }
 
-                    body {
-                        margin: 0 !important;
-                    }
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            let contentHeight = scrollView.contentSize.height
+            let visibleHeight = scrollView.bounds.height
+            guard contentHeight > 0, visibleHeight > 0 else { return }
 
-                    app-root,
-                    main,
-                    section,
-                    article,
-                    div,
-                    h1,
-                    h2,
-                    h3,
-                    p,
-                    ul,
-                    ol {
-                        max-width: 100% !important;
-                    }
-
-                    table {
-                        width: 100% !important;
-                        max-width: 100% !important;
-                        table-layout: fixed !important;
-                    }
-
-                    td,
-                    th,
-                    span,
-                    p,
-                    li {
-                        overflow-wrap: anywhere !important;
-                        word-break: normal !important;
-                    }
-                `;
-                document.head.appendChild(style);
-            })();
-            """
-
-            webView.evaluateJavaScript(script, completionHandler: nil)
+            let distanceFromBottom = contentHeight - (scrollView.contentOffset.y + visibleHeight)
+            onScrolledToBottom?(distanceFromBottom < 6)
         }
     }
 }
