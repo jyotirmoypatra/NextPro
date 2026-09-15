@@ -178,9 +178,9 @@ struct EditProfileView: View {
                                     Text("Phone Number")
                                         .font(.custom("Inter-Medium", size: 16))
                                         .foregroundColor(.white)
-                                    Text(" *")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.red)
+//                                    Text(" *")
+//                                        .font(.system(size: 14))
+//                                        .foregroundColor(.red)
                                 }
                                 
                                 ZStack(alignment: .leading) {

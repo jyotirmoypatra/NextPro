@@ -467,7 +467,7 @@ struct DoorOpenView: View {
             
             if deviceVM.isLoading && !pullToRefresh{
                 ZStack {
-                    Color.black.opacity(0.4)
+                    Color.black.opacity(0.6)
                         .ignoresSafeArea()
                     
                     ProgressView()
@@ -1824,7 +1824,7 @@ struct DoorOpenView: View {
             print("🎯 Closest device: \(name) with RSSI: \(rssi)")
             
             // Only act if RSSI is strong
-            guard rssi > -36 && rssi < 0 else { return }
+            guard rssi > -35 && rssi < 0 else { return }
             
             if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
                 // Authorized door

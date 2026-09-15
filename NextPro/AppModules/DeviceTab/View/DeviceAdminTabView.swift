@@ -105,7 +105,7 @@ struct DeviceAdminTabView: View {
             
             if assignDeviceVM.isLoading && !pullToRefresh{
                 ZStack {
-                    Color.black.opacity(0.4)
+                    Color.black.opacity(0.6)
                         .ignoresSafeArea()
                     
                     ProgressView()
