@@ -113,6 +113,24 @@ private let configurationSteps: [ConfigurationStep] = [
     ),
     ConfigurationStep(
         id: 2,
+        title: "Choose Configuration Method",
+        description: "If your device is a TC-series device, you'll be asked to choose how to configure it — Wi-Fi or Ethernet — before continuing.",
+        badge: "TC Devices Only",
+        imageName: "config_6",
+        isSuccess: false,
+        notes: [
+            StepNote(
+                title: "Not a TC device?",
+                text: "This step is skipped automatically, and setup continues straight to Wi-Fi configuration."
+            ),
+            StepNote(
+                title: "Choosing Ethernet:",
+                text: "The device connects to the server over its wired connection instead — no Wi-Fi network or password is needed."
+            )
+        ]
+    ),
+    ConfigurationStep(
+        id: 3,
         title: "Choose Wi-Fi",
         description: "The app detects the Wi-Fi network your phone is currently connected to. Confirm it's the correct 2.4 GHz network, then tap Next.",
         badge: "2.4 GHz Wi-Fi",
@@ -130,7 +148,7 @@ private let configurationSteps: [ConfigurationStep] = [
         ]
     ),
     ConfigurationStep(
-        id: 3,
+        id: 4,
         title: "Enter Password",
         description: "Enter the password for the selected Wi-Fi network and tap Next.",
         badge: "Secure Connection",
@@ -148,7 +166,7 @@ private let configurationSteps: [ConfigurationStep] = [
         ]
     ),
     ConfigurationStep(
-        id: 4,
+        id: 5,
         title: "Configure Device",
         description: "Keep your device powered on while the Wi-Fi credentials are sent.",
         badge: "Keep App Open",
@@ -162,7 +180,7 @@ private let configurationSteps: [ConfigurationStep] = [
         ]
     ),
     ConfigurationStep(
-        id: 5,
+        id: 6,
         title: "Setup Complete",
         description: "Once configuration succeeds, your device is ready to use. Tap Continue to return to your devices.",
         badge: "Configured",
@@ -200,7 +218,7 @@ private struct HowToConfigureDeviceContent: View {
                 .font(.custom("Inter-Regular", size: 13))
                 .foregroundColor(.gray)
 
-            Text("5 SIMPLE STEPS")
+            Text("\(configurationSteps.count) SIMPLE STEPS")
                 .font(.custom("Inter-SemiBold", size: 10))
                 .foregroundColor(.blue)
                 .padding(.top, 4)
