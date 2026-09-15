@@ -34,9 +34,9 @@ struct SuccessConnctionView: View {
                         
                         Spacer()
                         
-                        Image(systemName: "info.circle")
-                            .resizable()
-                            .frame(width: 24, height: 24)
+//                        Image(systemName: "info.circle")
+//                            .resizable()
+//                            .frame(width: 24, height: 24)
                     }
                     .overlay(
                         Text("Successfully Configured")

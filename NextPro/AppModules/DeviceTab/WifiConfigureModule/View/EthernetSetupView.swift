@@ -92,7 +92,7 @@ struct EthernetSetupView: View {
                             .font(.custom("Inter-SemiBold", size: 16))
                             .foregroundColor(.white)
 
-                        Text("Your device will connect to the server automatically over Ethernet.")
+                        Text("The device will be configured automatically and connected to the server over Ethernet.")
                             .font(.custom("Inter-Regular", size: 14))
                             .foregroundColor(Color(hex: "#6D717F"))
                             .multilineTextAlignment(.center)
@@ -143,7 +143,7 @@ struct EthernetSetupView: View {
                 // RingSpinner + dynamic text style from SetWiFiPassword.
                 if isConfiguring {
                     ZStack {
-                        Color.black.opacity(0.7)
+                        Color.black.opacity(0.3)
                             .ignoresSafeArea()
 
                         VStack {
