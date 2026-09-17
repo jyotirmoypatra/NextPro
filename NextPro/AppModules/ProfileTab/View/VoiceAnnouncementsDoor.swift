@@ -91,7 +91,7 @@ struct VoiceAnnouncementsDoor: View {
                         Spacer()
                         
                         Text("Voice Messages")
-                            .font(.custom("Inter-SemiBold", size: 20))
+                            .font(.custom("Inter-SemiBold", size: 16))
                             .foregroundColor(.white)
                         
                         Spacer()

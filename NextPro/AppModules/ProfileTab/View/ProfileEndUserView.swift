@@ -32,6 +32,7 @@ struct ProfileEndUserView: View {
     @State private var showLogoutAlert = false
     @State private var showDeleteAccountAlert = false
     @State private var navigateToSupport = false
+    @State private var navigateToTheme = false
     @State private var navigate_Webview_PrivacyTerms = false
     @State private var navigate_voice_message = false
     @State private var navigate_Debug = false
@@ -174,7 +175,14 @@ struct ProfileEndUserView: View {
                                 navigate_voice_message = true
                             }
 
-                           
+                            Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
+
+                            UserProfileRow(title: "Theme" , textColor: .white) {
+                                navigateToTheme = true
+                            }
+
+
 
 //                            Divider().background(Color.white.opacity(0.15))
 //                                .padding(.horizontal,20)
@@ -420,6 +428,11 @@ struct ProfileEndUserView: View {
         
         .navigationDestination(isPresented: $navigateToSupport) {
             SupportView()
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
+        }
+        .navigationDestination(isPresented: $navigateToTheme) {
+            ThemeSettingsView()
                 .navigationBarBackButtonHidden(true)
                 .navigationBarHidden(true)
         }
