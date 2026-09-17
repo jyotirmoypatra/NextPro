@@ -10,10 +10,10 @@ import SwiftUI
 struct ThemeSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var systemColorScheme
-    @AppStorage("theme_preference") private var themePreferenceRaw: String = ThemePreference.system.rawValue
+    @AppStorage("theme_preference") private var themePreferenceRaw: String = ThemePreference.dark.rawValue
 
     private var selectedTheme: ThemePreference {
-        ThemePreference(rawValue: themePreferenceRaw) ?? .system
+        ThemePreference(rawValue: themePreferenceRaw) ?? .dark
     }
     private var isEffectivelyDark: Bool {
         switch selectedTheme {
@@ -39,7 +39,12 @@ struct ThemeSettingsView: View {
                     Color.black.opacity(0.9)
                         .ignoresSafeArea()
                 } else {
-                    Color.white
+                    Image("backgroundlight")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .ignoresSafeArea()
+                    Color.white.opacity(0.7)
                         .ignoresSafeArea()
                 }
 
