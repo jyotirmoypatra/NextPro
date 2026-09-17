@@ -174,11 +174,11 @@ struct UserAgreementScreen: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .overlay(alignment: .bottomTrailing) {
                                 // Down-arrow — scrolls the active tab's webview toward its own
-                                // bottom. Always shown whenever that tab isn't currently at its
-                                // bottom, independent of whether it's already been unlocked.
-                                let currentLoaded = selectedTab == 0 ? termsLoaded : privacyLoaded
+                                // bottom. Always shown in either tab whenever that tab isn't
+                                // currently at its bottom, independent of whether it's already
+                                // been unlocked or whether the page is still loading.
                                 let currentAtBottom = selectedTab == 0 ? termsAtBottom : privacyAtBottom
-                                if currentLoaded && !currentAtBottom {
+                                if !currentAtBottom {
                                     ScrollDownArrowButton(action: scrollActiveWebViewDown)
                                         .padding(.trailing, 24)
                                         .padding(.bottom, 40)
@@ -192,25 +192,33 @@ struct UserAgreementScreen: View {
                             let isCurrentUnlocked = selectedTab == 0 ? termsUnlocked : privacyUnlocked
 
                             Divider().background(Color.black.opacity(0.2))
-                            HStack {
-                                Button(action: {
+                            Button(action: {
+                                if isCurrentUnlocked {
                                     if selectedTab == 0 { termsAccepted.toggle() } else { privacyAccepted.toggle() }
-                                }) {
+                                } else {
+                                    toastManager.show(
+                                        message: "Scroll to the bottom to enable acceptance",
+                                        type: .warning,
+                                        duration: 1.5
+                                    )
+                                }
+                            }) {
+                                HStack {
                                     Image(systemName: isCurrentAccepted ? "checkmark.square.fill" : "square")
                                         .font(.system(size: 30))
                                         .foregroundColor(checkboxColor)
+                                    Text(selectedTab == 0 ?
+                                         "I have read and agree to the ZYLX Terms & Conditions" :
+                                         "I have read and agree to the ZYLX Privacy Policy")
+                                        .foregroundColor(checkboxColor)
+                                        .font(.custom("Inter-Bold", size: 15))
+                                    Spacer()
                                 }
-                                Text(selectedTab == 0 ?
-                                     "I have read and agree to the ZYLX Terms & Conditions" :
-                                     "I have read and agree to the ZYLX Privacy Policy")
-                                    .foregroundColor(checkboxColor)
-                                    .font(.custom("Inter-Bold", size: 15))
-                                Spacer()
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 15)
                             }
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 15)
+                            .buttonStyle(.plain)
                             .opacity(isCurrentUnlocked ? 1.0 : 0.4)
-                            .allowsHitTesting(isCurrentUnlocked)
                             .animation(.easeInOut(duration: 0.2), value: isCurrentUnlocked)
                         }
                     }
@@ -389,15 +397,60 @@ struct UserAgreementScreen: View {
         }
     }
 
-    /// Scrolls the currently active tab's webview toward its own bottom. Reaching it fires
-    /// the same onScrolledToBottom signal a manual scroll gesture would, so the checkbox
-    /// unlocks through the normal reactive path — no separate handling needed here.
+    /// Scrolls the currently active tab's webview toward its own bottom, whatever the page's
+    /// own layout looks like. A plain static page scrolls its top-level document, which is
+    /// what `webView.scrollView` mirrors. But some pages (e.g. https://dev.nextprotechnologies.com/terms-and-conditions
+    /// and /privacy-policy) use the common `html, body { height: 100%; overflow-y: auto }`
+    /// pattern — `document.scrollingElement` (the `<html>` element) never actually overflows,
+    /// while `<body>` is the one with real scrollable content. WKWebView's native scrollView
+    /// only ever mirrors the top-level *document* scroll, so for a page like this it never
+    /// moves at all no matter what we set it to. Ask the page itself, via JS, which element is
+    /// actually scrollable right now and move that one directly.
     private func scrollActiveWebViewDown() {
         guard let webView = selectedTab == 0 ? termsWebView : privacyWebView else { return }
-        let scrollView = webView.scrollView
-        let targetY = max(0, scrollView.contentSize.height - scrollView.bounds.height)
-        scrollView.setContentOffset(CGPoint(x: 0, y: targetY), animated: true)
+        webView.evaluateJavaScript(Self.scrollToBottomScript) { _, error in
+            if let error {
+                print("⚠️ scrollActiveWebViewDown JS error: \(error)")
+            }
+
+            // Reflect "reached the bottom" immediately instead of waiting for the native
+            // scroll-event bridge (see WebContentView.Coordinator) to report back.
+            DispatchQueue.main.async {
+                if self.selectedTab == 0 {
+                    self.termsUnlocked = true
+                    self.termsAtBottom = true
+                } else {
+                    self.privacyUnlocked = true
+                    self.privacyAtBottom = true
+                }
+            }
+        }
     }
+
+    private static let scrollToBottomScript = """
+    (function() {
+        function isScrollable(el) {
+            if (!el || el.scrollHeight - el.clientHeight <= 5) return false;
+            if (el === document.scrollingElement) return true;
+            var overflowY = window.getComputedStyle(el).overflowY;
+            return overflowY === 'auto' || overflowY === 'scroll';
+        }
+        var best = document.scrollingElement || document.documentElement;
+        var bestDelta = best.scrollHeight - best.clientHeight;
+        var all = document.querySelectorAll('*');
+        for (var i = 0; i < all.length; i++) {
+            var el = all[i];
+            if (!isScrollable(el)) continue;
+            var delta = el.scrollHeight - el.clientHeight;
+            if (delta > bestDelta) {
+                bestDelta = delta;
+                best = el;
+            }
+        }
+        best.scrollTop = best.scrollHeight;
+        return true;
+    })();
+    """
 
     // MARK: Tabs UI
     private var tabsSection: some View {
@@ -489,7 +542,7 @@ private struct ScrollDownArrowButton: View {
     }
 }
 
-// MARK: - WebContentView (plain URL-loading WKWebView, scrolls itself, no JS at all)
+// MARK: - WebContentView (URL-loading WKWebView, scrolls itself)
 struct WebContentView: UIViewRepresentable {
     let urlString: String
     var isActive: Bool = true
@@ -497,12 +550,20 @@ struct WebContentView: UIViewRepresentable {
     var onScrolledToBottom: ((Bool) -> Void)? = nil
     var onWebViewReady: ((WKWebView) -> Void)? = nil
 
+    /// Name the page's injected listener posts to — matched by the message handler below.
+    private static let scrollMessageHandlerName = "uaScroll"
+
     func makeCoordinator() -> Coordinator {
         Coordinator(onLoadingStateChange: onLoadingStateChange, onScrolledToBottom: onScrolledToBottom)
     }
 
     func makeUIView(context: Context) -> WKWebView {
-        let webview = WKWebView(frame: .zero)
+        let config = WKWebViewConfiguration()
+        let contentController = WKUserContentController()
+        contentController.add(context.coordinator, name: Self.scrollMessageHandlerName)
+        config.userContentController = contentController
+
+        let webview = WKWebView(frame: .zero, configuration: config)
         webview.navigationDelegate = context.coordinator
         webview.scrollView.delegate = context.coordinator
         webview.isOpaque = false
@@ -530,7 +591,13 @@ struct WebContentView: UIViewRepresentable {
         }
     }
 
-    class Coordinator: NSObject, WKNavigationDelegate, UIScrollViewDelegate {
+    static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
+        // WKUserContentController.add(_:name:) retains the handler strongly — break that
+        // reference explicitly instead of leaking the coordinator for the process's lifetime.
+        uiView.configuration.userContentController.removeScriptMessageHandler(forName: scrollMessageHandlerName)
+    }
+
+    class Coordinator: NSObject, WKNavigationDelegate, UIScrollViewDelegate, WKScriptMessageHandler {
         var onLoadingStateChange: ((Bool) -> Void)?
         var onScrolledToBottom: ((Bool) -> Void)?
         var loadedURL: String?
@@ -540,12 +607,22 @@ struct WebContentView: UIViewRepresentable {
             self.onScrolledToBottom = onScrolledToBottom
         }
 
+        /// Fires for every native `scroll` event the injected listener (installed in
+        /// `didFinish` below) reports. Unlike polling this view via `evaluateJavaScript` —
+        /// which WebKit can defer/batch until an active scroll gesture settles — a page's own
+        /// `scroll` events aren't throttled that way, so this reacts immediately, mid-gesture.
+        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            guard let percent = (message.body as? NSNumber)?.doubleValue else { return }
+            onScrolledToBottom?(percent >= 0.98)
+        }
+
         func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
             onLoadingStateChange?(true)
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             onLoadingStateChange?(false)
+            installScrollListener(in: webView)
 
             // `didFinish` only means the page's own navigation completed — the actual
             // agreement text can still be rendering asynchronously after that (e.g. fetched
@@ -584,6 +661,89 @@ struct WebContentView: UIViewRepresentable {
             }
         }
 
+        /// Installs a native `scroll` event listener that pushes the current scroll
+        /// fraction back to Swift via the "uaScroll" message handler every time it fires.
+        ///
+        /// Deliberately does NOT pick one scrollable element once and cache it: some pages
+        /// (e.g. https://dev.nextprotechnologies.com/terms-and-conditions and /privacy-policy)
+        /// still show no overflow anywhere at `didFinish` time — their real content renders
+        /// in asynchronously afterward (same reason `checkForShortContent` above has to poll
+        /// instead of checking once). Picking a target too early would lock onto the wrong
+        /// element permanently. Instead this listens on every plausible scroll source AND
+        /// re-resolves which element is actually scrollable fresh, inside the handler, every
+        /// time it fires — since a scroll event only exists once something really is
+        /// scrolling, that's always correct regardless of load timing.
+        ///
+        /// This also covers the specific reason those two pages don't respond to the native
+        /// `UIScrollViewDelegate` at all: they use the common
+        /// `html, body { height: 100%; overflow-y: auto }` pattern, where `<html>` (i.e.
+        /// `document.scrollingElement`) never actually overflows and `<body>` is the one
+        /// that does — WKWebView's own scrollView only ever mirrors the top-level document's
+        /// scroll, so for a page shaped like this it never fires at all.
+        private func installScrollListener(in webView: WKWebView) {
+            let script = """
+            (function() {
+                if (window.__uaScrollHandlerInstalled) return;
+                window.__uaScrollHandlerInstalled = true;
+
+                function isScrollable(el) {
+                    if (!el || el.scrollHeight - el.clientHeight <= 5) return false;
+                    if (el === document.scrollingElement) return true;
+                    var overflowY = window.getComputedStyle(el).overflowY;
+                    return overflowY === 'auto' || overflowY === 'scroll';
+                }
+
+                function findScrollable() {
+                    var best = document.scrollingElement || document.documentElement;
+                    var bestDelta = best.scrollHeight - best.clientHeight;
+                    var all = document.querySelectorAll('*');
+                    for (var i = 0; i < all.length; i++) {
+                        var el = all[i];
+                        if (!isScrollable(el)) continue;
+                        var delta = el.scrollHeight - el.clientHeight;
+                        if (delta > bestDelta) {
+                            bestDelta = delta;
+                            best = el;
+                        }
+                    }
+                    return best;
+                }
+
+                function report() {
+                    var target = findScrollable();
+                    var scrollHeight = target.scrollHeight;
+                    var clientHeight = target.clientHeight;
+                    if (scrollHeight <= clientHeight) {
+                        // Nothing is scrollable right now — either the content hasn't
+                        // finished rendering in yet, or the page genuinely has nothing to
+                        // scroll. Treating that as "fully scrolled" would instantly unlock
+                        // the checkbox with no actual scrolling. Native's
+                        // checkForShortContent is the one that safely concludes "genuinely
+                        // short content" (only after the size has held stable across
+                        // several checks) — leave that case to it and don't report here.
+                        return;
+                    }
+                    var percent = Math.max(0, Math.min(1, (target.scrollTop + clientHeight) / scrollHeight));
+                    try {
+                        window.webkit.messageHandlers.uaScroll.postMessage(percent);
+                    } catch (e) {}
+                }
+
+                // Cover every shape a page's real scroll container can take: a normal
+                // top-level document (window/document), or the html/body-both-overflow
+                // pattern where body itself is the one that truly scrolls.
+                window.addEventListener('scroll', report, { passive: true });
+                document.addEventListener('scroll', report, { passive: true });
+                document.documentElement.addEventListener('scroll', report, { passive: true });
+                document.body.addEventListener('scroll', report, { passive: true });
+
+                report();
+            })();
+            """
+
+            webView.evaluateJavaScript(script)
+        }
+
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
             onLoadingStateChange?(false)
         }
@@ -597,8 +757,17 @@ struct WebContentView: UIViewRepresentable {
             let visibleHeight = scrollView.bounds.height
             guard contentHeight > 0, visibleHeight > 0 else { return }
 
-            let distanceFromBottom = contentHeight - (scrollView.contentOffset.y + visibleHeight)
-            onScrolledToBottom?(distanceFromBottom < 6)
+            // A fixed "within 6pt of the exact bottom" threshold is too strict for pages
+            // whose contentSize keeps adjusting slightly (dynamic/Angular-rendered pages,
+            // bounce/inertia rounding) — the user can be scrolled all the way down and still
+            // never land within 6pt. Use a percentage of how far through the page they've
+            // scrolled instead: once they've reached 95% of the way down, treat that as
+            // "reached the bottom".
+            let scrolledDistance = scrollView.contentOffset.y + visibleHeight
+            let percentScrolled = min(1.0, max(0.0, scrolledDistance / contentHeight))
+            onScrolledToBottom?(percentScrolled >= 0.98)
         }
     }
 }
+
+

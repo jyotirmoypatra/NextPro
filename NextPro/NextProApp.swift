@@ -116,7 +116,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             NotificationNavigationManager.shared.notifyNotificationsDidArrive()
 
             let notificationType = userInfo["type"] as? String
-            if notificationType == "own_account_updated" {
+            if notificationType == "own_account_updated" || notificationType == "org_admin_door_access_updated" {
                 if application.applicationState == .active {
                     await self.performProfileAndDeviceRefresh()
                 } else {
