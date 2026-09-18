@@ -343,7 +343,7 @@ struct ProfileEndUserView: View {
         }
         
         .navigationDestination(isPresented: $navigate_voice_message) {
-            VoiceAnnouncementsDoor()
+            VoiceAnnouncementsDoor(profileViewModel: viewModel)
                 .navigationBarBackButtonHidden(true)
                 .navigationBarHidden(true)
                 .interactiveDismissDisabled(true)

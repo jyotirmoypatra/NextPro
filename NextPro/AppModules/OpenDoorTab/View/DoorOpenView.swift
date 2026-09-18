@@ -491,23 +491,19 @@ struct DoorOpenView: View {
 
                 accessGreetingMessage =
                 UserDefaults.standard.string(forKey: "voice_greeting")
-                ?? VoiceMessageDefaults.greetings.first?.text
-                ?? ""
-                
+                ?? "Welcome! Have a great day"
+
                 grantedBase =
                 UserDefaults.standard.string(forKey: "voice_granted")
-                ?? VoiceMessageDefaults.granted.first?.text
-                ?? ""
-                
+                ?? "Access Granted"
+
                 deniedBase =
                 UserDefaults.standard.string(forKey: "voice_denied")
-                ?? VoiceMessageDefaults.denied.first?.text
-                ?? ""
-                
+                ?? "Access Denied"
+
                 unauthorizedBase =
                 UserDefaults.standard.string(forKey: "voice_unauthorized")
-                ?? VoiceMessageDefaults.unauthorized.first?.text
-                ?? ""
+                ?? "You do not have access to this door"
                 
                 
                 mqttManager.connect()

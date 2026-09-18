@@ -13,7 +13,9 @@ struct MessageOption: Identifiable {
     let id = UUID()
     let text: String
     var isSelected: Bool
+
     var isCustom: Bool = false
+    var serverId: String? = nil
 }
 private enum VoiceMessageCustomKeys {
     static let granted = "voice_granted_custom"
@@ -22,36 +24,31 @@ private enum VoiceMessageCustomKeys {
     static let greeting = "voice_greeting_custom"
 }
 
-struct VoiceMessageDefaults {
-    
-    static let granted: [MessageOption] = [
-        MessageOption(text: "Access Granted", isSelected: true),
-        MessageOption(text: "Entry Approved", isSelected: false),
-        MessageOption(text: "Door Unlocked", isSelected: false),
-    ]
-    
-    static let denied: [MessageOption] = [
-        MessageOption(text: "Access Denied", isSelected: true),
-        MessageOption(text: "Entry Rejected", isSelected: false),
-        MessageOption(text: "Access Not Permitted", isSelected: false),
-    ]
-    
-    static let unauthorized: [MessageOption] = [
-        MessageOption(text: "You do not have access to this door", isSelected: true),
-        MessageOption(text: "Unauthorized door", isSelected: false),
-        MessageOption(text: "This entry is restricted", isSelected: false),
-    ]
-    
-    static let greetings: [MessageOption] = [
-        MessageOption(text: "Welcome! Have a great day", isSelected: true),
-        MessageOption(text: "Glad to have you here", isSelected: false),
-        MessageOption(text: "Welcome! Enjoy your time", isSelected: false),
-    ]
+private enum VoiceMessageCategory: String {
+    case accessGranted = "access_granted"
+    case accessDenied = "access_denied"
+    case accessUnauthorized = "access_unauthorized"
+    case welcome = "welcome"
+
+    var sectionId: Int {
+        switch self {
+        case .accessGranted: return 0
+        case .accessDenied: return 1
+        case .accessUnauthorized: return 4
+        case .welcome: return 2
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .accessGranted: return "Access Granted"
+        case .accessDenied: return "Access Denied"
+        case .accessUnauthorized: return "Unauthorized Door"
+        case .welcome: return "Friendly Welcome"
+        }
+    }
 }
 
-/// Which spoken pattern plays after a successful door open — either the access-granted
-/// message alone, or followed by the friendly greeting. Shared with `DoorOpenView`,
-/// which reads `storageKey` to decide what to speak.
 enum VoicePlaybackPattern: String {
     case withGreeting
     case grantedOnly
@@ -60,6 +57,16 @@ enum VoicePlaybackPattern: String {
 
     static var saved: VoicePlaybackPattern {
         VoicePlaybackPattern(rawValue: UserDefaults.standard.string(forKey: storageKey) ?? "") ?? .withGreeting
+    }
+
+    init?(apiType: String?) {
+        guard let apiType, !apiType.isEmpty else { return nil }
+        let lower = apiType.lowercased()
+        if lower.contains("greet") || lower.contains("welcome") {
+            self = .withGreeting
+        } else {
+            self = .grantedOnly
+        }
     }
 
     var steps: [String] {
@@ -78,18 +85,28 @@ private struct PendingDelete: Identifiable {
 }
 
 struct VoiceAnnouncementsDoor: View {
+  
+    @ObservedObject var profileViewModel: UserProfileDetailsViewModel
+    private var voiceMessage: VoiceMessage? { profileViewModel.voiceMessage }
     @Environment(\.dismiss) private var dismiss
     @StateObject private var toastManager = ToastManager.shared
+    @StateObject private var addMessageVM = AddNewVoiceMessageViewModel()
+    @StateObject private var deleteMessageVM = DeleteCustomVoiceViewModel()
+    @StateObject private var saveVoicePreferenceVM = SaveVoicePreferenceViewModel()
     @State private var showSaved = false
     @State private var openSection: Int? = nil
 
 
-    @State private var grantedOptions = VoiceMessageDefaults.granted
-    @State private var deniedOptions = VoiceMessageDefaults.denied
-    @State private var unauthorizedOptions = VoiceMessageDefaults.unauthorized
-    @State private var greetingOptions = VoiceMessageDefaults.greetings
+    @State private var grantedOptions: [MessageOption] = []
+    @State private var deniedOptions: [MessageOption] = []
+    @State private var unauthorizedOptions: [MessageOption] = []
+    @State private var greetingOptions: [MessageOption] = []
     @State private var isVoiceAnnouncementEnabled = true
     @State private var pendingDelete: PendingDelete?
+
+    @State private var deletingOptionId: UUID?
+
+    @State private var isResetting = false
     @State private var selectedPlaybackPattern: VoicePlaybackPattern = .withGreeting
     
     var body: some View {
@@ -183,7 +200,9 @@ struct VoiceAnnouncementsDoor: View {
                                     description: "This message played when door opens successfully.",
                                     options: $grantedOptions,
                                     openSection: $openSection,
-                                    onAddCustom: { addCustomMessage($0, options: $grantedOptions, customKey: VoiceMessageCustomKeys.granted) },
+                                    isAdding: addMessageVM.isLoading,
+                                    deletingOptionId: deletingOptionId,
+                                    onAddCustom: { addCustomMessage($0, options: $grantedOptions, customKey: VoiceMessageCustomKeys.granted, category: .accessGranted) },
                                     onRequestDelete: { pendingDelete = PendingDelete(option: $0, sectionId: 0, categoryTitle: "Access Granted") }
                                 )
                                 .id(0)
@@ -197,7 +216,9 @@ struct VoiceAnnouncementsDoor: View {
                                     description: "This message played when door access failed.",
                                     options: $deniedOptions,
                                     openSection: $openSection,
-                                    onAddCustom: { addCustomMessage($0, options: $deniedOptions, customKey: VoiceMessageCustomKeys.denied) },
+                                    isAdding: addMessageVM.isLoading,
+                                    deletingOptionId: deletingOptionId,
+                                    onAddCustom: { addCustomMessage($0, options: $deniedOptions, customKey: VoiceMessageCustomKeys.denied, category: .accessDenied) },
                                     onRequestDelete: { pendingDelete = PendingDelete(option: $0, sectionId: 1, categoryTitle: "Access Denied") }
 
                                 )
@@ -213,7 +234,9 @@ struct VoiceAnnouncementsDoor: View {
                                     description: "This message played when approaching an unauthorized door.",
                                     options: $unauthorizedOptions,
                                     openSection: $openSection,
-                                    onAddCustom: { addCustomMessage($0, options: $unauthorizedOptions, customKey: VoiceMessageCustomKeys.unauthorized) },
+                                    isAdding: addMessageVM.isLoading,
+                                    deletingOptionId: deletingOptionId,
+                                    onAddCustom: { addCustomMessage($0, options: $unauthorizedOptions, customKey: VoiceMessageCustomKeys.unauthorized, category: .accessUnauthorized) },
                                     onRequestDelete: { pendingDelete = PendingDelete(option: $0, sectionId: 4, categoryTitle: "Unauthorized Door") }
 
                                 )
@@ -229,13 +252,14 @@ struct VoiceAnnouncementsDoor: View {
                                     description: "Greeting played after successfull access",
                                     options: $greetingOptions,
                                     openSection: $openSection,
-                                    onAddCustom: { addCustomMessage($0, options: $greetingOptions, customKey: VoiceMessageCustomKeys.greeting) },
+                                    isAdding: addMessageVM.isLoading,
+                                    deletingOptionId: deletingOptionId,
+                                    onAddCustom: { addCustomMessage($0, options: $greetingOptions, customKey: VoiceMessageCustomKeys.greeting, category: .welcome) },
                                     onRequestDelete: { pendingDelete = PendingDelete(option: $0, sectionId: 2, categoryTitle: "Friendly Welcome") }
 
                                 )
                                 .id(2)
                             }
-                            .padding(.horizontal, 16)
                             .padding(.vertical, 15)
 
                             Divider()
@@ -248,19 +272,21 @@ struct VoiceAnnouncementsDoor: View {
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 2)
 
-                                PlaybackPatternCard(
-                                    title: "Access message + Greeting",
-                                    steps: VoicePlaybackPattern.withGreeting.steps,
-                                    isSelected: selectedPlaybackPattern == .withGreeting,
-                                    onSelect: { selectedPlaybackPattern = .withGreeting }
-                                )
-
-                                PlaybackPatternCard(
-                                    title: "Access message only",
-                                    steps: VoicePlaybackPattern.grantedOnly.steps,
-                                    isSelected: selectedPlaybackPattern == .grantedOnly,
-                                    onSelect: { selectedPlaybackPattern = .grantedOnly }
-                                )
+                                if let apiPatterns = voiceMessage?.pattern, !apiPatterns.isEmpty {
+                                    ForEach(Array(apiPatterns.enumerated()), id: \.offset) { _, pattern in
+                                        let resolved = VoicePlaybackPattern(apiType: pattern.type) ?? .withGreeting
+                                        PlaybackPatternCard(
+                                            title: pattern.name ?? pattern.type ?? "Pattern",
+                                            steps: resolved.steps,
+                                            isSelected: selectedPlaybackPattern == resolved,
+                                            onSelect: { selectedPlaybackPattern = resolved }
+                                        )
+                                    }
+                                } else {
+                                    Text("No playback patterns available.")
+                                        .font(.custom("Inter-Regular", size: 12))
+                                        .foregroundColor(.white.opacity(0.5))
+                                }
                             }
                             .padding(.vertical, 10)
 
@@ -270,18 +296,26 @@ struct VoiceAnnouncementsDoor: View {
                                 Button(action: {
                                     ResetMessages()
                                 }) {
-                                    Text("RESET TO DEFAULTS")
-                                        .font(.custom("Inter-SemiBold", size: 16))
-                                        .foregroundColor(.gray)
-                                        .frame(maxWidth: .infinity, minHeight: 50)
-                                        .padding(.horizontal, 10)
-                                        .background(Color.white.opacity(0.03))
-                                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 16)
-                                                .stroke(Color.white.opacity(0.5), lineWidth: 1)
-                                        )
+                                    Group {
+                                        if isResetting {
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle(tint: .gray))
+                                        } else {
+                                            Text("RESET TO DEFAULTS")
+                                                .font(.custom("Inter-SemiBold", size: 16))
+                                                .foregroundColor(.gray)
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity, minHeight: 50)
+                                    .padding(.horizontal, 10)
+                                    .background(Color.white.opacity(0.03))
+                                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                                    )
                                 }
+                                .disabled(saveVoicePreferenceVM.isLoading)
                                 .layoutPriority(1)   // ⭐ Gives RESET more width
 
 
@@ -289,23 +323,29 @@ struct VoiceAnnouncementsDoor: View {
                                 Button(action: {
                                     saveMessages()
                                 }) {
-                                    Text("SAVE")
-                                        .font(.custom("Inter-SemiBold", size: 16))
-                                        .foregroundColor(.black)
-                                        .frame(minWidth: 80, minHeight: 50) // smaller fixed width
-                                        .padding(.horizontal, 10)
-                                        .background(Color.white)
-                                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                                    Group {
+                                        if saveVoicePreferenceVM.isLoading && !isResetting {
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                                        } else {
+                                            Text("SAVE")
+                                                .font(.custom("Inter-SemiBold", size: 16))
+                                                .foregroundColor(.black)
+                                        }
+                                    }
+                                    .frame(minWidth: 80, minHeight: 50) // smaller fixed width
+                                    .padding(.horizontal, 10)
+                                    .background(Color.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 14))
                                 }
+                                .disabled(saveVoicePreferenceVM.isLoading)
                             }
 
                             Spacer().frame(height: 20)
                         }
                         .padding(.horizontal, 10)
                         .scrollIndicators(.hidden)
-                        // `simultaneousGesture` so this fires alongside row/button taps
-                        // instead of stealing them — lets tapping empty space in the
-                        // scroll content dismiss the keyboard too.
+                        
                         .simultaneousGesture(
                             TapGesture().onEnded {
                                 UIApplication.shared.hideKeyboard()
@@ -351,38 +391,104 @@ struct VoiceAnnouncementsDoor: View {
     }
 
     private func confirmDelete(_ pending: PendingDelete) {
-        switch pending.sectionId {
-        case 0:
-            deleteCustomMessage(pending.option, options: $grantedOptions, customKey: VoiceMessageCustomKeys.granted)
-        case 1:
-            deleteCustomMessage(pending.option, options: $deniedOptions, customKey: VoiceMessageCustomKeys.denied)
-        case 4:
-            deleteCustomMessage(pending.option, options: $unauthorizedOptions, customKey: VoiceMessageCustomKeys.unauthorized)
-        case 2:
-            deleteCustomMessage(pending.option, options: $greetingOptions, customKey: VoiceMessageCustomKeys.greeting)
-        default:
-            break
+        deletingOptionId = pending.option.id
+
+        print("🗑️ Deleting voice message — text: \"\(pending.option.text)\", serverId: \(pending.option.serverId ?? "nil")")
+
+        func removeLocally() {
+            switch pending.sectionId {
+            case 0:
+                deleteCustomMessage(pending.option, options: $grantedOptions, customKey: VoiceMessageCustomKeys.granted)
+            case 1:
+                deleteCustomMessage(pending.option, options: $deniedOptions, customKey: VoiceMessageCustomKeys.denied)
+            case 4:
+                deleteCustomMessage(pending.option, options: $unauthorizedOptions, customKey: VoiceMessageCustomKeys.unauthorized)
+            case 2:
+                deleteCustomMessage(pending.option, options: $greetingOptions, customKey: VoiceMessageCustomKeys.greeting)
+            default:
+                break
+            }
+        }
+
+        // No serverId means this entry only ever existed locally (e.g. cached before
+        // the add flow started syncing back a real id) — there's nothing for the
+        // delete API to remove, so just drop it from this device.
+        guard let serverId = pending.option.serverId else {
+            removeLocally()
+            toastManager.show(message: "Message removed", type: .success, duration: 1.2)
+            deletingOptionId = nil
+            return
+        }
+
+        Task {
+            await deleteMessageVM.deleteMessage(messageID: serverId)
+
+            if deleteMessageVM.addSuccess {
+                removeLocally()
+                toastManager.show(message: "Message deleted", type: .success, duration: 1.2)
+            } else {
+                let failureMessage = deleteMessageVM.errorMessage.isEmpty
+                    ? "Failed to delete message"
+                    : deleteMessageVM.errorMessage
+                toastManager.show(message: failureMessage, type: .error, duration: 1.5)
+            }
+
+            deletingOptionId = nil
         }
     }
     
     func loadSavedSelections() {
-        grantedOptions = optionsList(defaults: VoiceMessageDefaults.granted, customKey: VoiceMessageCustomKeys.granted)
-        deniedOptions = optionsList(defaults: VoiceMessageDefaults.denied, customKey: VoiceMessageCustomKeys.denied)
-        unauthorizedOptions = optionsList(defaults: VoiceMessageDefaults.unauthorized, customKey: VoiceMessageCustomKeys.unauthorized)
-        greetingOptions = optionsList(defaults: VoiceMessageDefaults.greetings, customKey: VoiceMessageCustomKeys.greeting)
+        grantedOptions = optionsList(serverOptions: voiceMessage?.access_granted, customKey: VoiceMessageCustomKeys.granted)
+        deniedOptions = optionsList(serverOptions: voiceMessage?.access_denied, customKey: VoiceMessageCustomKeys.denied)
+        unauthorizedOptions = optionsList(serverOptions: voiceMessage?.access_unauthorized, customKey: VoiceMessageCustomKeys.unauthorized)
+        greetingOptions = optionsList(serverOptions: voiceMessage?.welcome, customKey: VoiceMessageCustomKeys.greeting)
 
         applySavedSelection(&grantedOptions, savedText: UserDefaults.standard.string(forKey: "voice_granted"))
         applySavedSelection(&deniedOptions, savedText: UserDefaults.standard.string(forKey: "voice_denied"))
         applySavedSelection(&unauthorizedOptions, savedText: UserDefaults.standard.string(forKey: "voice_unauthorized"))
         applySavedSelection(&greetingOptions, savedText: UserDefaults.standard.string(forKey: "voice_greeting"))
 
-        isVoiceAnnouncementEnabled = UserDefaults.standard.object(forKey: "voice_announcement_enabled" ) as? Bool ?? true
-        selectedPlaybackPattern = VoicePlaybackPattern.saved
+        ensureAtLeastOneSelected(&grantedOptions)
+        ensureAtLeastOneSelected(&deniedOptions)
+        ensureAtLeastOneSelected(&unauthorizedOptions)
+        ensureAtLeastOneSelected(&greetingOptions)
+
+        
+        isVoiceAnnouncementEnabled = voiceMessage?.is_active_voice ?? true
+
+    
+        if let savedRaw = UserDefaults.standard.string(forKey: VoicePlaybackPattern.storageKey),
+           let saved = VoicePlaybackPattern(rawValue: savedRaw) {
+            selectedPlaybackPattern = saved
+        } else if let activeType = voiceMessage?.pattern?.first(where: { $0.isActive == true })?.type,
+                  let mapped = VoicePlaybackPattern(apiType: activeType) {
+            selectedPlaybackPattern = mapped
+        } else {
+            selectedPlaybackPattern = .withGreeting
+        }
     }
 
-    private func optionsList(defaults: [MessageOption], customKey: String) -> [MessageOption] {
+    private func optionsList(serverOptions: [VoiceMessageOption]?, customKey: String) -> [MessageOption] {
+        let serverDerived = (serverOptions ?? []).map { option in
+            MessageOption(
+                text: option.message ?? "",
+                isSelected: option.isActive ?? false,
+                isCustom: !(option.isPreset ?? true),
+                serverId: option.id
+            )
+        }
+
         let customTexts = UserDefaults.standard.stringArray(forKey: customKey) ?? []
-        return defaults + customTexts.map { MessageOption(text: $0, isSelected: false, isCustom: true) }
+        let localCustom = customTexts
+            .filter { text in !serverDerived.contains { $0.text.caseInsensitiveCompare(text) == .orderedSame } }
+            .map { MessageOption(text: $0, isSelected: false, isCustom: true) }
+
+        return serverDerived + localCustom
+    }
+
+    private func ensureAtLeastOneSelected(_ options: inout [MessageOption]) {
+        guard !options.isEmpty, !options.contains(where: { $0.isSelected }) else { return }
+        options[0].isSelected = true
     }
 
     private func applySavedSelection(_ options: inout [MessageOption], savedText: String?) {
@@ -392,7 +498,8 @@ struct VoiceAnnouncementsDoor: View {
         }
     }
 
-    private func addCustomMessage(_ text: String, options: Binding<[MessageOption]>, customKey: String) {
+  
+    private func addCustomMessage(_ text: String, options: Binding<[MessageOption]>, customKey: String, category: VoiceMessageCategory) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
@@ -401,9 +508,47 @@ struct VoiceAnnouncementsDoor: View {
             return
         }
 
-        options.wrappedValue.append(MessageOption(text: trimmed, isSelected: false, isCustom: true))
-        persistCustomMessages(options.wrappedValue, key: customKey)
-        toastManager.show(message: "Message added", type: .success, duration: 1.2)
+        guard !addMessageVM.isLoading else { return }
+
+        Task {
+            await addMessageVM.addMessage(category: category.rawValue, message: trimmed)
+
+            if addMessageVM.addSuccess {
+             
+                await profileViewModel.fetchUserProfile()
+
+                let previouslySelectedText = options.wrappedValue.first(where: { $0.isSelected })?.text
+                var rebuilt = optionsList(serverOptions: serverOptions(for: category), customKey: customKey)
+                if let previouslySelectedText {
+                    for i in rebuilt.indices {
+                        rebuilt[i].isSelected = (rebuilt[i].text == previouslySelectedText)
+                    }
+                }
+                ensureAtLeastOneSelected(&rebuilt)
+
+                options.wrappedValue = rebuilt
+                persistCustomMessages(rebuilt, key: customKey)
+                toastManager.show(message: "Message added", type: .success, duration: 1.2)
+            } else {
+                let failureMessage = addMessageVM.errorMessage.isEmpty
+                    ? "Failed to add message to \(category.title)"
+                    : addMessageVM.errorMessage
+                toastManager.show(message: failureMessage, type: .error, duration: 1.5)
+            }
+        }
+    }
+
+    private func serverOptions(for category: VoiceMessageCategory) -> [VoiceMessageOption]? {
+        switch category {
+        case .accessGranted: return voiceMessage?.access_granted
+        case .accessDenied: return voiceMessage?.access_denied
+        case .accessUnauthorized: return voiceMessage?.access_unauthorized
+        case .welcome: return voiceMessage?.welcome
+        }
+    }
+
+    private var selectedPatternId: String? {
+        voiceMessage?.pattern?.first { VoicePlaybackPattern(apiType: $0.type) == selectedPlaybackPattern }?.id
     }
 
     private func deleteCustomMessage(_ option: MessageOption, options: Binding<[MessageOption]>, customKey: String) {
@@ -426,64 +571,123 @@ struct VoiceAnnouncementsDoor: View {
         UserDefaults.standard.set(customTexts, forKey: key)
     }
     
+
     func saveMessages() {
-        let granted = grantedOptions.first(where: { $0.isSelected })?.text
-        let denied = deniedOptions.first(where: { $0.isSelected })?.text
-        let unauthorized = unauthorizedOptions.first(where: { $0.isSelected })?.text
-        let greeting = greetingOptions.first(where: { $0.isSelected })?.text
-        
-        UserDefaults.standard.set(granted, forKey: "voice_granted")
-        UserDefaults.standard.set(denied, forKey: "voice_denied")
-        UserDefaults.standard.set(unauthorized, forKey: "voice_unauthorized")
-        UserDefaults.standard.set(greeting, forKey: "voice_greeting")
-        
-        UserDefaults.standard.set(isVoiceAnnouncementEnabled,forKey: "voice_announcement_enabled")
-        UserDefaults.standard.set(selectedPlaybackPattern.rawValue, forKey: VoicePlaybackPattern.storageKey)
+        guard !saveVoicePreferenceVM.isLoading else { return }
 
-        toastManager.show(
-            message: "Saved successfully",
-            type: .success,
-            duration: 1.5
-        )
+        let granted = grantedOptions.first(where: { $0.isSelected })
+        let denied = deniedOptions.first(where: { $0.isSelected })
+        let unauthorized = unauthorizedOptions.first(where: { $0.isSelected })
+        let greeting = greetingOptions.first(where: { $0.isSelected })
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            dismiss()
+        guard let grantedId = granted?.serverId,
+              let deniedId = denied?.serverId,
+              let unauthorizedId = unauthorized?.serverId,
+              let greetingId = greeting?.serverId,
+              let patternId = selectedPatternId
+        else {
+            toastManager.show(message: "Can't save yet — one of the selected messages isn't synced with the server.", type: .error, duration: 2)
+            return
+        }
+
+        Task {
+            await saveVoicePreferenceVM.saveFullVoiceSetting(
+                isActiveVoice: isVoiceAnnouncementEnabled,
+                accessGrantedId: grantedId,
+                accessDeniedDId: deniedId,
+                accessUnauthorizedId: unauthorizedId,
+                welcomeId: greetingId,
+                patternId: patternId
+            )
+
+            if saveVoicePreferenceVM.addSuccess {
+                UserDefaults.standard.set(granted?.text, forKey: "voice_granted")
+                UserDefaults.standard.set(denied?.text, forKey: "voice_denied")
+                UserDefaults.standard.set(unauthorized?.text, forKey: "voice_unauthorized")
+                UserDefaults.standard.set(greeting?.text, forKey: "voice_greeting")
+
+                UserDefaults.standard.set(isVoiceAnnouncementEnabled, forKey: "voice_announcement_enabled")
+                UserDefaults.standard.set(selectedPlaybackPattern.rawValue, forKey: VoicePlaybackPattern.storageKey)
+
+                toastManager.show(message: "Saved successfully", type: .success, duration: 1.5)
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    dismiss()
+                }
+            } else {
+                let failureMessage = saveVoicePreferenceVM.errorMessage.isEmpty
+                    ? "Failed to save"
+                    : saveVoicePreferenceVM.errorMessage
+                toastManager.show(message: failureMessage, type: .error, duration: 1.5)
+            }
         }
     }
-    
+ 
     func ResetMessages() {
-        // Get default first items
-        let defaultGranted = VoiceMessageDefaults.granted.first!.text
-        let defaultDenied = VoiceMessageDefaults.denied.first!.text
-        let defaultUnauthorized = VoiceMessageDefaults.unauthorized.first!.text
-        let defaultGreeting = VoiceMessageDefaults.greetings.first!.text
+        guard !saveVoicePreferenceVM.isLoading else { return }
 
-        grantedOptions = grantedOptions.map { MessageOption(text: $0.text, isSelected: $0.text == defaultGranted, isCustom: $0.isCustom) }
-        deniedOptions = deniedOptions.map { MessageOption(text: $0.text, isSelected: $0.text == defaultDenied, isCustom: $0.isCustom) }
-        unauthorizedOptions = unauthorizedOptions.map { MessageOption(text: $0.text, isSelected: $0.text == defaultUnauthorized, isCustom: $0.isCustom) }
-        greetingOptions = greetingOptions.map { MessageOption(text: $0.text, isSelected: $0.text == defaultGreeting, isCustom: $0.isCustom) }
-        
-        // Update UserDefaults
-        UserDefaults.standard.set(defaultGranted, forKey: "voice_granted")
-        UserDefaults.standard.set(defaultDenied, forKey: "voice_denied")
-        UserDefaults.standard.set(defaultUnauthorized, forKey: "voice_unauthorized")
-        UserDefaults.standard.set(defaultGreeting, forKey: "voice_greeting")
-        
-        isVoiceAnnouncementEnabled = true
-        selectedPlaybackPattern = .withGreeting
+        func defaultOption(in options: [MessageOption]) -> MessageOption? {
+            options.first(where: { !$0.isCustom }) ?? options.first
+        }
 
-        UserDefaults.standard.set(true,forKey: "voice_announcement_enabled")
-        UserDefaults.standard.set(VoicePlaybackPattern.withGreeting.rawValue, forKey: VoicePlaybackPattern.storageKey)
+        let defaultGranted = defaultOption(in: grantedOptions)
+        let defaultDenied = defaultOption(in: deniedOptions)
+        let defaultUnauthorized = defaultOption(in: unauthorizedOptions)
+        let defaultGreeting = defaultOption(in: greetingOptions)
+        let resetToggle = voiceMessage?.is_active_voice ?? true
+        let resetPattern = VoicePlaybackPattern.withGreeting
 
-        // Show toast
-        toastManager.show(
-            message: "Successfully reset to defaults",
-            type: .success,
-            duration: 1.5
-        )
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            dismiss()
+        guard let grantedId = defaultGranted?.serverId,
+              let deniedId = defaultDenied?.serverId,
+              let unauthorizedId = defaultUnauthorized?.serverId,
+              let greetingId = defaultGreeting?.serverId,
+              let patternId = voiceMessage?.pattern?.first(where: { VoicePlaybackPattern(apiType: $0.type) == resetPattern })?.id
+        else {
+            toastManager.show(message: "Can't reset yet — default messages aren't synced with the server.", type: .error, duration: 2)
+            return
+        }
+
+        isResetting = true
+
+        Task {
+            await saveVoicePreferenceVM.saveFullVoiceSetting(
+                isActiveVoice: resetToggle,
+                accessGrantedId: grantedId,
+                accessDeniedDId: deniedId,
+                accessUnauthorizedId: unauthorizedId,
+                welcomeId: greetingId,
+                patternId: patternId
+            )
+
+            if saveVoicePreferenceVM.addSuccess {
+                grantedOptions = grantedOptions.map { MessageOption(text: $0.text, isSelected: $0.serverId == grantedId, isCustom: $0.isCustom, serverId: $0.serverId) }
+                deniedOptions = deniedOptions.map { MessageOption(text: $0.text, isSelected: $0.serverId == deniedId, isCustom: $0.isCustom, serverId: $0.serverId) }
+                unauthorizedOptions = unauthorizedOptions.map { MessageOption(text: $0.text, isSelected: $0.serverId == unauthorizedId, isCustom: $0.isCustom, serverId: $0.serverId) }
+                greetingOptions = greetingOptions.map { MessageOption(text: $0.text, isSelected: $0.serverId == greetingId, isCustom: $0.isCustom, serverId: $0.serverId) }
+
+                isVoiceAnnouncementEnabled = resetToggle
+                selectedPlaybackPattern = resetPattern
+
+                UserDefaults.standard.set(defaultGranted?.text, forKey: "voice_granted")
+                UserDefaults.standard.set(defaultDenied?.text, forKey: "voice_denied")
+                UserDefaults.standard.set(defaultUnauthorized?.text, forKey: "voice_unauthorized")
+                UserDefaults.standard.set(defaultGreeting?.text, forKey: "voice_greeting")
+                UserDefaults.standard.set(resetToggle, forKey: "voice_announcement_enabled")
+                UserDefaults.standard.set(resetPattern.rawValue, forKey: VoicePlaybackPattern.storageKey)
+
+                toastManager.show(message: "Successfully reset to defaults", type: .success, duration: 1.5)
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    dismiss()
+                }
+            } else {
+                let failureMessage = saveVoicePreferenceVM.errorMessage.isEmpty
+                    ? "Failed to reset"
+                    : saveVoicePreferenceVM.errorMessage
+                toastManager.show(message: failureMessage, type: .error, duration: 1.5)
+            }
+
+            isResetting = false
         }
     }
     
@@ -541,6 +745,8 @@ struct MessageSection: View {
     let description: String
     @Binding var options: [MessageOption]
     @Binding var openSection: Int?
+    var isAdding: Bool = false
+    var deletingOptionId: UUID? = nil
     var onAddCustom: (String) -> Void
     var onRequestDelete: (MessageOption) -> Void
 
@@ -634,14 +840,22 @@ struct MessageSection: View {
                             // Only ever shown for a user-added message — presets can
                             // never be deleted.
                             if options[idx].isCustom {
-                                Button {
-                                    onRequestDelete(options[idx])
-                                } label: {
-                                    Image(systemName: "trash")
-                                        .font(.system(size: 13))
-                                        .foregroundColor(.red.opacity(0.85))
+                                if deletingOptionId == options[idx].id {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .red.opacity(0.85)))
+                                        .frame(width: 13, height: 13)
+                                } else {
+                                    Button {
+                                        print("🗑️ Trash tapped — text: \"\(options[idx].text)\", serverId: \(options[idx].serverId ?? "nil")")
+                                        onRequestDelete(options[idx])
+                                    } label: {
+                                        Image(systemName: "trash")
+                                            .font(.system(size: 13))
+                                            .foregroundColor(.red.opacity(0.85))
+                                    }
+                                    .buttonStyle(.plain)
+                                    .disabled(deletingOptionId != nil)
                                 }
-                                .buttonStyle(.plain)
                             }
                         }
                         .padding(.vertical, 10)
@@ -663,20 +877,27 @@ struct MessageSection: View {
                                 .foregroundColor(.white)
                                 .font(.custom("Inter-Regular", size: 14))
                                 .submitLabel(.done)
+                                .disabled(isAdding)
                                 .onSubmit(addCustomMessage)
                                 .onChange(of: newMessageText) { newValue in
-                        
+
                                     if newValue.count > maxMessageLength {
                                         newMessageText = String(newValue.prefix(maxMessageLength))
                                     }
                                 }
 
-                            Button(action: addCustomMessage) {
-                                Image(systemName: "arrow.up.circle.fill")
-                                    .font(.system(size: 22))
-                                    .foregroundColor(trimmedNewMessage.isEmpty ? .white.opacity(0.25) : .green)
+                            if isAdding {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .frame(width: 22, height: 22)
+                            } else {
+                                Button(action: addCustomMessage) {
+                                    Image(systemName: "arrow.up.circle.fill")
+                                        .font(.system(size: 22))
+                                        .foregroundColor(trimmedNewMessage.isEmpty ? .white.opacity(0.25) : .green)
+                                }
+                                .disabled(trimmedNewMessage.isEmpty)
                             }
-                            .disabled(trimmedNewMessage.isEmpty)
                         }
 
                         Text("\(remainingCharacters) characters left")
@@ -707,7 +928,7 @@ struct MessageSection: View {
     }
 
     private func addCustomMessage() {
-        guard !trimmedNewMessage.isEmpty else { return }
+        guard !isAdding, !trimmedNewMessage.isEmpty else { return }
         onAddCustom(trimmedNewMessage)
         newMessageText = ""
         UIApplication.shared.hideKeyboard()

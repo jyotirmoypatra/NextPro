@@ -887,6 +887,71 @@ class NetworkManager: ObservableObject {
             retry: true
         )
     }
+    
+    
+    // MARK: -Add New Voice Message
+    
+    func AddNewVoiceMessage(category: String,message:String) async throws -> CustomVoiceMessageResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.addNewVoiceMessage))!
+        print("Add voice Message Response Api called----")
+        return try await performRequest(
+            url: url,
+            method: "POST",
+            body: [
+                "message": message,
+                "category" : category,
+            ],
+            requiresAuth: true,
+            responseType: CustomVoiceMessageResponse.self,
+            retry: true
+        )
+    }
+    
+    func DeleteVoiceMessage(id:String) async throws -> CustomVoiceMessageResponse {
+
+        var components = URLComponents(
+            string: APIConfig.url(APIConfig.Endpoints.deleteCustomVoiceMessage)
+        )!
+
+        components.queryItems = [
+            URLQueryItem(name: "id", value: "\(id)"),
+        ]
+
+        guard let url = components.url else {
+            throw APIError.invalidURL
+        }
+
+        print("Get Notification List Api called----")
+        return try await performRequest(
+            url: url,
+            method: "DELETE",
+            requiresAuth: true,
+            responseType: CustomVoiceMessageResponse.self,
+            retry: true
+        )
+    }
+    
+    func saveVoiceMessageSetting(isActiveVoice: Bool,accessGrantedId:String ,accessDeniedDId:String,accessUnauthorizedId:String,welcomeId:String,patternId:String) async throws -> CustomVoiceMessageResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.saveVoiceSetting))!
+        print("Add voice Message Response Api called----")
+        return try await performRequest(
+            url: url,
+            method: "PUT",
+            body: [
+                "is_active_voice": isActiveVoice,
+                "access_granted_id" : accessGrantedId,
+                "access_denied_id" : accessDeniedDId,
+                "access_unauthorized_id" : accessUnauthorizedId,
+                "welcome_id" : welcomeId,
+                "pattern_id" : patternId,
+            ],
+            requiresAuth: true,
+            responseType: CustomVoiceMessageResponse.self,
+            retry: true
+        )
+    }
 
 }
 

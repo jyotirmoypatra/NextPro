@@ -72,6 +72,10 @@ struct APIConfig {
         static let setControllerDoorUnlockTime = "/api/deviceinventory/configure-door-opening-time/"
         
         static let wifiUnlcokLog = "/api/deviceinventory/door-access-log/wifi-unlock/"
+        
+        static let addNewVoiceMessage = "/api/voice-message/templates/"
+        static let deleteCustomVoiceMessage = "/api/voice-message/templates/"
+        static let saveVoiceSetting = "/api/voice-message/settings/"
     }
     
     static func url(_ endpoint: String) -> String {

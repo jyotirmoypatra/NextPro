@@ -29,6 +29,7 @@ class UserProfileDetailsViewModel: ObservableObject {
     private let networkManager = NetworkManager.shared
     @Published var isFailedDueToNoInternet = false
     @Published var userProfileData : UserProfileData?
+    @Published var voiceMessage: VoiceMessage?
 
     
     func fetchUserProfile() async {
@@ -58,6 +59,30 @@ class UserProfileDetailsViewModel: ObservableObject {
             if response.status{
                 userProfileData = response.data
                 
+                // Voice message configuration from profile API
+                voiceMessage = response.data.voice_message
+                UserDefaults.standard.set(
+                    response.data.voice_message?.is_active_voice ?? true,
+                    forKey: "voice_announcement_enabled"
+                )
+                
+                if let activeGranted = response.data.voice_message?.access_granted?.first(where: { $0.isActive == true })?.message {
+                    UserDefaults.standard.set(activeGranted, forKey: "voice_granted")
+                }
+                if let activeDenied = response.data.voice_message?.access_denied?.first(where: { $0.isActive == true })?.message {
+                    UserDefaults.standard.set(activeDenied, forKey: "voice_denied")
+                }
+                if let activeUnauthorized = response.data.voice_message?.access_unauthorized?.first(where: { $0.isActive == true })?.message {
+                    UserDefaults.standard.set(activeUnauthorized, forKey: "voice_unauthorized")
+                }
+                if let activeWelcome = response.data.voice_message?.welcome?.first(where: { $0.isActive == true })?.message {
+                    UserDefaults.standard.set(activeWelcome, forKey: "voice_greeting")
+                }
+                if let activePattern = response.data.voice_message?.pattern?.first(where: { $0.isActive == true }),
+                   let mappedPattern = VoicePlaybackPattern(apiType: activePattern.type) {
+                    UserDefaults.standard.set(mappedPattern.rawValue, forKey: VoicePlaybackPattern.storageKey)
+                }
+
                 isSuccess = true
                 // Assign response to UI (no UserDefaults save)
                 fullName = response.data.full_name ?? ""

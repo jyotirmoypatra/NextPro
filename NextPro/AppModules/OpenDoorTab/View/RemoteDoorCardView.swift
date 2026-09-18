@@ -380,7 +380,6 @@ struct RemoteDoorCardView: View {
         .onAppear{
             deniedBase =
             UserDefaults.standard.string(forKey: "voice_denied")
-            ?? VoiceMessageDefaults.denied.first?.text
             ?? "Access denied"
 
             isVoiceAnnouncementEnabled =
