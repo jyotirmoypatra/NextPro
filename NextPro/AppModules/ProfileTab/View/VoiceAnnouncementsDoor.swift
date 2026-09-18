@@ -243,7 +243,7 @@ struct VoiceAnnouncementsDoor: View {
                                 .id(4)
 
                                 Divider()
-                                    .overlay(Color.white.opacity(0.8))
+                                    .overlay(Color.white.opacity(0.08))
 
                                 // MARK: 3 -  Friendly Welcome
                                 MessageSection(
@@ -267,10 +267,16 @@ struct VoiceAnnouncementsDoor: View {
                                 .padding(.vertical, 6)
 
                             VStack(alignment: .leading, spacing: 10) {
-                                Text("Choose Playback Pattern")
-                                    .font(.custom("Inter-SemiBold", size: 14))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 2)
+                                HStack(spacing: 6) {
+                                    Image(systemName: "speaker.wave.2.fill")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.white)
+
+                                    Text("Choose Access Granted Playback Pattern")
+                                        .font(.custom("Inter-SemiBold", size: 16))
+                                        .foregroundColor(.white)
+                                }
+                                .padding(.horizontal, 2)
 
                                 if let apiPatterns = voiceMessage?.pattern, !apiPatterns.isEmpty {
                                     ForEach(Array(apiPatterns.enumerated()), id: \.offset) { _, pattern in

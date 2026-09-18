@@ -175,12 +175,12 @@ struct ProfileEndUserView: View {
                                 navigate_voice_message = true
                             }
 
-                            Divider().background(Color.white.opacity(0.15))
-                                .padding(.horizontal,20)
-
-                            UserProfileRow(title: "Theme" , textColor: .white) {
-                                navigateToTheme = true
-                            }
+//                            Divider().background(Color.white.opacity(0.15))
+//                                .padding(.horizontal,20)
+//
+//                            UserProfileRow(title: "Theme" , textColor: .white) {
+//                                navigateToTheme = true
+//                            }
 
 
 
