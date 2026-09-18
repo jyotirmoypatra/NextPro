@@ -54,12 +54,13 @@ struct SetWiFiPassword: View {
                         Button(action: {
                             dismiss()
                         }) {
-                            HStack {
-                                Image(systemName: "arrow.left")
-                                    .font(.system(size: 20, weight: .semibold))
-                                    .foregroundColor(.white)
-                            }
+                            Image(systemName: "arrow.left")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(width: 44, height: 44, alignment: .leading)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
                         
                         Spacer()
                         

@@ -40,12 +40,16 @@ struct DebugMqtt: View {
             
             // Header
             HStack {
-                Button {
+                Button(action: {
                     dismiss()
-                } label: {
+                }) {
                     Image(systemName: "arrow.left")
+                        .font(.system(size: 20, weight: .semibold))
                         .foregroundColor(.white)
+                        .frame(width: 44, height: 44, alignment: .leading)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
 
                 Spacer()
 

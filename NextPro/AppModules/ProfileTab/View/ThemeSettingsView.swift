@@ -51,13 +51,16 @@ struct ThemeSettingsView: View {
                 VStack(spacing: 0) {
                     // Nav bar
                     HStack {
-                        Button(action: { dismiss() }) {
-                            HStack {
-                                Image(systemName: "arrow.left")
-                                    .font(.system(size: 20, weight: .semibold))
-                                    .foregroundColor(primaryText)
-                            }
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            Image(systemName: "arrow.left")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(width: 44, height: 44, alignment: .leading)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
                         Spacer()
                     }
                     .overlay(

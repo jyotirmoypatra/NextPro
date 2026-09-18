@@ -155,14 +155,16 @@ struct SetupDeviceRelayConfig: View {
     // MARK: - Header
     private var HeaderView: some View {
         HStack {
-            Button { dismiss() } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.left")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(.white)
-                }
-                .foregroundColor(.white)
+            Button(action: {
+                dismiss()
+            }) {
+                Image(systemName: "arrow.left")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 44, height: 44, alignment: .leading)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
             Spacer()
         }
         .overlay(

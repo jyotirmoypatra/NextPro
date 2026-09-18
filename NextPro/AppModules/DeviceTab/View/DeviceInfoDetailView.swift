@@ -90,16 +90,16 @@ struct DeviceInfoDetailView: View {
     // MARK: - Header View
     private var headerView: some View {
         HStack {
-            Button {
+            Button(action: {
                 dismiss()
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.left")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(.white)
-                }
-                .foregroundColor(.white)
+            }) {
+                Image(systemName: "arrow.left")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 44, height: 44, alignment: .leading)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
 
             Spacer()
 
@@ -113,7 +113,6 @@ struct DeviceInfoDetailView: View {
                 .foregroundColor(.white)
                 .font(.custom("Inter-Bold", size: 16))
         )
-        .padding(.top, 10)
         .padding(.bottom, 10)
     }
 

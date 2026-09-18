@@ -66,8 +66,10 @@ struct EditProfileView: View {
                             Image(systemName: "arrow.left")
                                 .font(.system(size: 20, weight: .semibold))
                                 .foregroundColor(.white)
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                .frame(width: 44, height: 44, alignment: .leading)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
                         
                         Spacer()
                         
