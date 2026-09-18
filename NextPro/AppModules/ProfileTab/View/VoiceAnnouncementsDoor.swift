@@ -13,6 +13,13 @@ struct MessageOption: Identifiable {
     let id = UUID()
     let text: String
     var isSelected: Bool
+    var isCustom: Bool = false
+}
+private enum VoiceMessageCustomKeys {
+    static let granted = "voice_granted_custom"
+    static let denied = "voice_denied_custom"
+    static let unauthorized = "voice_unauthorized_custom"
+    static let greeting = "voice_greeting_custom"
 }
 
 struct VoiceMessageDefaults {
@@ -20,49 +27,48 @@ struct VoiceMessageDefaults {
     static let granted: [MessageOption] = [
         MessageOption(text: "Access Granted", isSelected: true),
         MessageOption(text: "Entry Approved", isSelected: false),
-        MessageOption(text: "Access successfully verified", isSelected: false),
         MessageOption(text: "Door Unlocked", isSelected: false),
-        MessageOption(text: "Access Confirmed", isSelected: false)
     ]
     
     static let denied: [MessageOption] = [
         MessageOption(text: "Access Denied", isSelected: true),
         MessageOption(text: "Entry Rejected", isSelected: false),
         MessageOption(text: "Access Not Permitted", isSelected: false),
-        MessageOption(text: "Door Locked", isSelected: false),
-        MessageOption(text: "Authorization Failed", isSelected: false)
     ]
     
     static let unauthorized: [MessageOption] = [
         MessageOption(text: "You do not have access to this door", isSelected: true),
         MessageOption(text: "Unauthorized door", isSelected: false),
         MessageOption(text: "This entry is restricted", isSelected: false),
-        MessageOption(text: "Access not allowed at this location", isSelected: false),
-        MessageOption(text: "Invalid door access attempt", isSelected: false)
     ]
     
     static let greetings: [MessageOption] = [
         MessageOption(text: "Welcome! Have a great day", isSelected: true),
         MessageOption(text: "Glad to have you here", isSelected: false),
         MessageOption(text: "Welcome! Enjoy your time", isSelected: false),
-        MessageOption(text: "Welcome, wishing you a wonderful day ahead.", isSelected: false),
-        MessageOption(text: "Welcome! Your presence is appreciated", isSelected: false)
     ]
 }
 
+private struct PendingDelete: Identifiable {
+    let option: MessageOption
+    let sectionId: Int
+    let categoryTitle: String
+    var id: UUID { option.id }
+}
 
 struct VoiceAnnouncementsDoor: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var toastManager = ToastManager.shared
     @State private var showSaved = false
     @State private var openSection: Int? = nil
-    
-    
+
+
     @State private var grantedOptions = VoiceMessageDefaults.granted
     @State private var deniedOptions = VoiceMessageDefaults.denied
     @State private var unauthorizedOptions = VoiceMessageDefaults.unauthorized
     @State private var greetingOptions = VoiceMessageDefaults.greetings
     @State private var isVoiceAnnouncementEnabled = true
+    @State private var pendingDelete: PendingDelete?
     
     var body: some View {
         GeometryReader { geometry in
@@ -76,7 +82,11 @@ struct VoiceAnnouncementsDoor: View {
                 
                 Color.black.opacity(0.95)
                     .ignoresSafeArea()
-                
+            
+                    .onTapGesture {
+                        UIApplication.shared.hideKeyboard()
+                    }
+
                 VStack{
                     HStack {
                         Button(action: {
@@ -138,213 +148,285 @@ struct VoiceAnnouncementsDoor: View {
                     .padding(.horizontal, 10)
                     .padding(.bottom, 8)
                     
-                    VStack {
-                        
-                        ScrollViewReader { proxy in
-                            
-                            ScrollView {
-                                VStack(spacing: 22) {
-                                    
-                                    
-                                    // MARK: 1 - Access Granted
-                                    MessageSection(
-                                        id: 0,
-                                        title: "Access Granted",
-                                        description: "This message played when door opens successfully.",
-                                        options: $grantedOptions,
-                                        openSection: $openSection
-                                    )
-                                    .id(0)
-                                    Divider()
-                                        .overlay(Color.white.opacity(0.08))
-                                    
-                                    // MARK: 2 - Access Denied
-                                    MessageSection(
-                                        id: 1,
-                                        title: "Access Denied",
-                                        description: "This message played when door access failed.",
-                                        options: $deniedOptions,
-                                        openSection: $openSection
-                                        
-                                    )
-                                    .id(1)
-                                    
-                                    Divider()
-                                        .overlay(Color.white.opacity(0.08))
-                                    
-                                    // MARK: 3 - Unauthorized
-                                    MessageSection(
-                                        id: 4,
-                                        title: "Unauthorized Door",
-                                        description: "This message played when approaching an unauthorized door.",
-                                        options: $unauthorizedOptions,
-                                        openSection: $openSection
-                                        
-                                    )
-                                    .id(4)
-                                    
-                                    Divider()
-                                        .overlay(Color.white.opacity(0.8))
-                                    
-                                    // MARK: 3 -  Friendly Welcome
-                                    MessageSection(
-                                        id: 2,
-                                        title: "Friendly Welcome",
-                                        description: "Greeting played after successfull access",
-                                        options: $greetingOptions,
-                                        openSection: $openSection
-                                        
-                                    )
-                                    .id(2)
-                                    
-                                    Spacer().frame(height: 20)
-                                }
-                                .padding(.horizontal, 16)
-                                
-                                
+                   
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            VStack(spacing: 22) {
+
+
+                                // MARK: 1 - Access Granted
+                                MessageSection(
+                                    id: 0,
+                                    title: "Access Granted",
+                                    description: "This message played when door opens successfully.",
+                                    options: $grantedOptions,
+                                    openSection: $openSection,
+                                    onAddCustom: { addCustomMessage($0, options: $grantedOptions, customKey: VoiceMessageCustomKeys.granted) },
+                                    onRequestDelete: { pendingDelete = PendingDelete(option: $0, sectionId: 0, categoryTitle: "Access Granted") }
+                                )
+                                .id(0)
+                                Divider()
+                                    .overlay(Color.white.opacity(0.08))
+
+                                // MARK: 2 - Access Denied
+                                MessageSection(
+                                    id: 1,
+                                    title: "Access Denied",
+                                    description: "This message played when door access failed.",
+                                    options: $deniedOptions,
+                                    openSection: $openSection,
+                                    onAddCustom: { addCustomMessage($0, options: $deniedOptions, customKey: VoiceMessageCustomKeys.denied) },
+                                    onRequestDelete: { pendingDelete = PendingDelete(option: $0, sectionId: 1, categoryTitle: "Access Denied") }
+
+                                )
+                                .id(1)
+
+                                Divider()
+                                    .overlay(Color.white.opacity(0.08))
+
+                                // MARK: 3 - Unauthorized
+                                MessageSection(
+                                    id: 4,
+                                    title: "Unauthorized Door",
+                                    description: "This message played when approaching an unauthorized door.",
+                                    options: $unauthorizedOptions,
+                                    openSection: $openSection,
+                                    onAddCustom: { addCustomMessage($0, options: $unauthorizedOptions, customKey: VoiceMessageCustomKeys.unauthorized) },
+                                    onRequestDelete: { pendingDelete = PendingDelete(option: $0, sectionId: 4, categoryTitle: "Unauthorized Door") }
+
+                                )
+                                .id(4)
+
+                                Divider()
+                                    .overlay(Color.white.opacity(0.8))
+
+                                // MARK: 3 -  Friendly Welcome
+                                MessageSection(
+                                    id: 2,
+                                    title: "Friendly Welcome",
+                                    description: "Greeting played after successfull access",
+                                    options: $greetingOptions,
+                                    openSection: $openSection,
+                                    onAddCustom: { addCustomMessage($0, options: $greetingOptions, customKey: VoiceMessageCustomKeys.greeting) },
+                                    onRequestDelete: { pendingDelete = PendingDelete(option: $0, sectionId: 2, categoryTitle: "Friendly Welcome") }
+
+                                )
+                                .id(2)
                             }
-                            .padding(.top, 15)
-                            
-                            .scrollIndicators(.hidden)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 15)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16)
                                     .stroke(Color.white.opacity(0.8), lineWidth: 2)
                             )
                             .clipShape(RoundedRectangle(cornerRadius: 16))
-                            
-                            //  THIS IS THE MAGIC LINE
-                               .onChange(of: openSection) { id in
-                                   guard let id else { return }
 
-                                   DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                                       withAnimation(.easeInOut) {
-                                           proxy.scrollTo(id, anchor: .top)
-                                       }
-                                   }
-                               }
-                        }
-                        
-                        VStack(alignment: .leading){
-                            HStack{
-                                Image(systemName: "bell")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.white)
-                                    .padding(5)
-                                    
-                                Text("Playback Pattern")
-                                    .font(.custom("Inter-SemiBold", size: 14))
-                                    .foregroundColor(.white)
-                                Spacer()
-                            } .padding(.horizontal,10)
-                                .padding(.top,5)
-                            
-                            HStack{
-                                Text("Door Name")
-                                    .font(.custom("Inter-Regular", size: 12))
-                                    .foregroundColor(.white.opacity(0.55))
-                                
-                                Text("->")
-                                    .font(.custom("Inter-Regular", size: 12))
-                                    .foregroundColor(.white.opacity(0.55))
-                                
-                                Text("Access granted message")
-                                    .font(.custom("Inter-Regular", size: 12))
-                                    .foregroundColor(.white.opacity(0.55))
-                                
-                                Text("->")
-                                    .font(.custom("Inter-Regular", size: 12))
-                                    .foregroundColor(.white.opacity(0.55))
-                                
-                                Text("Friendly greeting message ")
-                                    .font(.custom("Inter-Regular", size: 12))
-                                    .foregroundColor(.white.opacity(0.55))
-                               
+                            VStack(alignment: .leading){
+                                HStack{
+                                    Image(systemName: "bell")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.white)
+                                        .padding(5)
+
+                                    Text("Playback Pattern")
+                                        .font(.custom("Inter-SemiBold", size: 14))
+                                        .foregroundColor(.white)
+                                    Spacer()
+                                } .padding(.horizontal,10)
+                                    .padding(.top,5)
+
+                                HStack{
+                                    Text("Door Name")
+                                        .font(.custom("Inter-Regular", size: 12))
+                                        .foregroundColor(.white.opacity(0.55))
+
+                                    Text("->")
+                                        .font(.custom("Inter-Regular", size: 12))
+                                        .foregroundColor(.white.opacity(0.55))
+
+                                    Text("Access granted message")
+                                        .font(.custom("Inter-Regular", size: 12))
+                                        .foregroundColor(.white.opacity(0.55))
+
+                                    Text("->")
+                                        .font(.custom("Inter-Regular", size: 12))
+                                        .foregroundColor(.white.opacity(0.55))
+
+                                    Text("Friendly greeting message ")
+                                        .font(.custom("Inter-Regular", size: 12))
+                                        .foregroundColor(.white.opacity(0.55))
+
+                                }
+                                .padding(.horizontal,10)
+                                .padding(.bottom,5)
+
+
+                            }.overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.white.opacity(0.8), lineWidth: 2)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .padding(.vertical,10)
+
+                            HStack(spacing: 12) {
+
+                                // RESET (Wider)
+                                Button(action: {
+                                    ResetMessages()
+                                }) {
+                                    Text("RESET TO DEFAULTS")
+                                        .font(.custom("Inter-SemiBold", size: 16))
+                                        .foregroundColor(.gray)
+                                        .frame(maxWidth: .infinity, minHeight: 50)
+                                        .padding(.horizontal, 10)
+                                        .background(Color.white.opacity(0.03))
+                                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                                        )
+                                }
+                                .layoutPriority(1)   // ⭐ Gives RESET more width
+
+
+                                // SAVE (Smaller)
+                                Button(action: {
+                                    saveMessages()
+                                }) {
+                                    Text("SAVE")
+                                        .font(.custom("Inter-SemiBold", size: 16))
+                                        .foregroundColor(.black)
+                                        .frame(minWidth: 80, minHeight: 50) // smaller fixed width
+                                        .padding(.horizontal, 10)
+                                        .background(Color.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                                }
                             }
-                            .padding(.horizontal,10)
-                            .padding(.bottom,5)
-                            
-                            
-                        }.overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.white.opacity(0.8), lineWidth: 2)
+
+                            Spacer().frame(height: 20)
+                        }
+                        .padding(.horizontal, 10)
+                        .scrollIndicators(.hidden)
+                        // `simultaneousGesture` so this fires alongside row/button taps
+                        // instead of stealing them — lets tapping empty space in the
+                        // scroll content dismiss the keyboard too.
+                        .simultaneousGesture(
+                            TapGesture().onEnded {
+                                UIApplication.shared.hideKeyboard()
+                            }
                         )
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        .padding(.vertical,10)
-                        
-                        HStack(spacing: 12) {
 
-                            // RESET (Wider)
-                            Button(action: {
-                                ResetMessages()
-                            }) {
-                                Text("RESET TO DEFAULTS")
-                                    .font(.custom("Inter-SemiBold", size: 16))
-                                    .foregroundColor(.gray)
-                                    .frame(maxWidth: .infinity, minHeight: 50)
-                                    .padding(.horizontal, 10)
-                                    .background(Color.white.opacity(0.03))
-                                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .stroke(Color.white.opacity(0.5), lineWidth: 1)
-                                    )
-                            }
-                            .layoutPriority(1)   // ⭐ Gives RESET more width
+                        //  THIS IS THE MAGIC LINE
+                        .onChange(of: openSection) { id in
+                            guard let id else { return }
 
-
-                            // SAVE (Smaller)
-                            Button(action: {
-                                saveMessages()
-                            }) {
-                                Text("SAVE")
-                                    .font(.custom("Inter-SemiBold", size: 16))
-                                    .foregroundColor(.black)
-                                    .frame(minWidth: 80, minHeight: 50) // smaller fixed width
-                                    .padding(.horizontal, 10)
-                                    .background(Color.white)
-                                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                                withAnimation(.easeInOut) {
+                                    proxy.scrollTo(id, anchor: .top)
+                                }
                             }
                         }
-                        
-
-                        
-                    }.padding(.horizontal, 10)
+                    }
                 }
-                
+
             }
             .onAppear {
                 loadSavedSelections()
             }
             .toast()
-            
+           
+            .modernAlert(item: $pendingDelete) { pending in
+                ModernAlertView(
+                    title: "Delete Message?",
+                    message: "Delete “\(pending.option.text)” from \(pending.categoryTitle) list?",
+                    isSuccess: false,
+                    buttonTitle: "Delete",
+                    action: {
+                        confirmDelete(pending)
+                        pendingDelete = nil
+                    },
+                    secondaryButtonTitle: "Cancel",
+                    secondaryAction: { pendingDelete = nil }
+                )
+            }
+
         }
-        
+
+    }
+
+    private func confirmDelete(_ pending: PendingDelete) {
+        switch pending.sectionId {
+        case 0:
+            deleteCustomMessage(pending.option, options: $grantedOptions, customKey: VoiceMessageCustomKeys.granted)
+        case 1:
+            deleteCustomMessage(pending.option, options: $deniedOptions, customKey: VoiceMessageCustomKeys.denied)
+        case 4:
+            deleteCustomMessage(pending.option, options: $unauthorizedOptions, customKey: VoiceMessageCustomKeys.unauthorized)
+        case 2:
+            deleteCustomMessage(pending.option, options: $greetingOptions, customKey: VoiceMessageCustomKeys.greeting)
+        default:
+            break
+        }
     }
     
     func loadSavedSelections() {
-        let savedGranted = UserDefaults.standard.string(forKey: "voice_granted")
-        let savedDenied = UserDefaults.standard.string(forKey: "voice_denied")
-        let savedUnauthorized = UserDefaults.standard.string(forKey: "voice_unauthorized")
-        
-        if let savedGranted {
-            for i in grantedOptions.indices {
-                grantedOptions[i].isSelected = (grantedOptions[i].text == savedGranted)
-            }
-        }
-        
-        if let savedDenied {
-            for i in deniedOptions.indices {
-                deniedOptions[i].isSelected = (deniedOptions[i].text == savedDenied)
-            }
-        }
-        
-        if let savedUnauthorized {
-            for i in unauthorizedOptions.indices {
-                unauthorizedOptions[i].isSelected = (unauthorizedOptions[i].text == savedUnauthorized)
-            }
-        }
-        
+        grantedOptions = optionsList(defaults: VoiceMessageDefaults.granted, customKey: VoiceMessageCustomKeys.granted)
+        deniedOptions = optionsList(defaults: VoiceMessageDefaults.denied, customKey: VoiceMessageCustomKeys.denied)
+        unauthorizedOptions = optionsList(defaults: VoiceMessageDefaults.unauthorized, customKey: VoiceMessageCustomKeys.unauthorized)
+        greetingOptions = optionsList(defaults: VoiceMessageDefaults.greetings, customKey: VoiceMessageCustomKeys.greeting)
+
+        applySavedSelection(&grantedOptions, savedText: UserDefaults.standard.string(forKey: "voice_granted"))
+        applySavedSelection(&deniedOptions, savedText: UserDefaults.standard.string(forKey: "voice_denied"))
+        applySavedSelection(&unauthorizedOptions, savedText: UserDefaults.standard.string(forKey: "voice_unauthorized"))
+        applySavedSelection(&greetingOptions, savedText: UserDefaults.standard.string(forKey: "voice_greeting"))
+
         isVoiceAnnouncementEnabled = UserDefaults.standard.object(forKey: "voice_announcement_enabled" ) as? Bool ?? true
+    }
+
+    private func optionsList(defaults: [MessageOption], customKey: String) -> [MessageOption] {
+        let customTexts = UserDefaults.standard.stringArray(forKey: customKey) ?? []
+        return defaults + customTexts.map { MessageOption(text: $0, isSelected: false, isCustom: true) }
+    }
+
+    private func applySavedSelection(_ options: inout [MessageOption], savedText: String?) {
+        guard let savedText else { return }
+        for i in options.indices {
+            options[i].isSelected = (options[i].text == savedText)
+        }
+    }
+
+    private func addCustomMessage(_ text: String, options: Binding<[MessageOption]>, customKey: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        guard !options.wrappedValue.contains(where: { $0.text.caseInsensitiveCompare(trimmed) == .orderedSame }) else {
+            toastManager.show(message: "This message already exists", type: .error, duration: 1.5)
+            return
+        }
+
+        options.wrappedValue.append(MessageOption(text: trimmed, isSelected: false, isCustom: true))
+        persistCustomMessages(options.wrappedValue, key: customKey)
+        toastManager.show(message: "Message added", type: .success, duration: 1.2)
+    }
+
+    private func deleteCustomMessage(_ option: MessageOption, options: Binding<[MessageOption]>, customKey: String) {
+        guard option.isCustom else { return }
+
+        let wasSelected = option.isSelected
+        options.wrappedValue.removeAll { $0.id == option.id }
+
+        if wasSelected, !options.wrappedValue.isEmpty {
+            for i in options.wrappedValue.indices {
+                options.wrappedValue[i].isSelected = (i == 0)
+            }
+        }
+
+        persistCustomMessages(options.wrappedValue, key: customKey)
+    }
+
+    private func persistCustomMessages(_ options: [MessageOption], key: String) {
+        let customTexts = options.filter { $0.isCustom }.map { $0.text }
+        UserDefaults.standard.set(customTexts, forKey: key)
     }
     
     func saveMessages() {
@@ -377,12 +459,11 @@ struct VoiceAnnouncementsDoor: View {
         let defaultDenied = VoiceMessageDefaults.denied.first!.text
         let defaultUnauthorized = VoiceMessageDefaults.unauthorized.first!.text
         let defaultGreeting = VoiceMessageDefaults.greetings.first!.text
-        
-        // Reset options arrays
-        grantedOptions = VoiceMessageDefaults.granted.map { MessageOption(text: $0.text, isSelected: $0.text == defaultGranted) }
-        deniedOptions = VoiceMessageDefaults.denied.map { MessageOption(text: $0.text, isSelected: $0.text == defaultDenied) }
-        unauthorizedOptions = VoiceMessageDefaults.unauthorized.map { MessageOption(text: $0.text, isSelected: $0.text == defaultUnauthorized) }
-        greetingOptions = VoiceMessageDefaults.greetings.map { MessageOption(text: $0.text, isSelected: $0.text == defaultGreeting) }
+
+        grantedOptions = grantedOptions.map { MessageOption(text: $0.text, isSelected: $0.text == defaultGranted, isCustom: $0.isCustom) }
+        deniedOptions = deniedOptions.map { MessageOption(text: $0.text, isSelected: $0.text == defaultDenied, isCustom: $0.isCustom) }
+        unauthorizedOptions = unauthorizedOptions.map { MessageOption(text: $0.text, isSelected: $0.text == defaultUnauthorized, isCustom: $0.isCustom) }
+        greetingOptions = greetingOptions.map { MessageOption(text: $0.text, isSelected: $0.text == defaultGreeting, isCustom: $0.isCustom) }
         
         // Update UserDefaults
         UserDefaults.standard.set(defaultGranted, forKey: "voice_granted")
@@ -418,13 +499,27 @@ struct MessageSection: View {
     let description: String
     @Binding var options: [MessageOption]
     @Binding var openSection: Int?
-    
+    var onAddCustom: (String) -> Void
+    var onRequestDelete: (MessageOption) -> Void
+
+    @State private var newMessageText = ""
+
+    private let maxMessageLength = 30
+
     private var isOpen: Bool {
         openSection == id
     }
-    
+
     var selectedText: String {
         options.first(where: { $0.isSelected })?.text ?? ""
+    }
+
+    private var trimmedNewMessage: String {
+        newMessageText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var remainingCharacters: Int {
+        maxMessageLength - newMessageText.count
     }
     
     var body: some View {
@@ -463,51 +558,116 @@ struct MessageSection: View {
             if isOpen {
                 VStack(spacing: 0) {
                     ForEach(options.indices, id: \.self) { idx in
-                        Button {
-                            select(idx)
-                        } label: {
-                            HStack {
-                                Text(options[idx].text)
-                                    .foregroundColor(.white)
-                                    .font(.custom("Inter-Regular", size: 14))
-                                    .multilineTextAlignment(.leading)
-                                
-                                Spacer()
-                                
-                                if options[idx].isSelected {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.green)
+                        HStack(spacing: 10) {
+                            Button {
+                                select(idx)
+                            } label: {
+                                HStack {
+                                    Text(options[idx].text)
+                                        .foregroundColor(.white)
+                                        .font(.custom("Inter-Regular", size: 14))
+                                        .multilineTextAlignment(.leading)
+
+                                    if options[idx].isCustom {
+                                        Text("Custom")
+                                            .font(.custom("Inter-Regular", size: 9))
+                                            .foregroundColor(.white.opacity(0.65))
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(Color.white.opacity(0.12))
+                                            .clipShape(Capsule())
+                                    }
+
+                                    Spacer()
+
+                                    if options[idx].isSelected {
+                                        Image(systemName: "checkmark")
+                                            .foregroundColor(.green)
+                                    }
                                 }
+                                .contentShape(Rectangle())
                             }
-                            .padding(.vertical, 10)
-                            .padding(.horizontal, 12)
+                            .buttonStyle(.plain)
+
+                            // Only ever shown for a user-added message — presets can
+                            // never be deleted.
+                            if options[idx].isCustom {
+                                Button {
+                                    onRequestDelete(options[idx])
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.red.opacity(0.85))
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 12)
                         //  .background(idx % 2 == 0 ? Color.white.opacity(0.03) : Color.white.opacity(0.05))
-                        
-                        if idx != options.count - 1 {
-                            Divider()
-                                .overlay(Color.white.opacity(0.08))
-                            //  .padding(.leading, 12)
-                        }
+
+                        Divider()
+                            .overlay(Color.white.opacity(0.08))
                     }
+
+                    // Add-your-own-message row
+                    VStack(alignment: .trailing, spacing: 4) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus.bubble")
+                                .font(.system(size: 14))
+                                .foregroundColor(.white.opacity(0.5))
+
+                            TextField("", text: $newMessageText, prompt: Text("Add your own message...").foregroundColor(.white.opacity(0.4)))
+                                .foregroundColor(.white)
+                                .font(.custom("Inter-Regular", size: 14))
+                                .submitLabel(.done)
+                                .onSubmit(addCustomMessage)
+                                .onChange(of: newMessageText) { newValue in
+                        
+                                    if newValue.count > maxMessageLength {
+                                        newMessageText = String(newValue.prefix(maxMessageLength))
+                                    }
+                                }
+
+                            Button(action: addCustomMessage) {
+                                Image(systemName: "arrow.up.circle.fill")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(trimmedNewMessage.isEmpty ? .white.opacity(0.25) : .green)
+                            }
+                            .disabled(trimmedNewMessage.isEmpty)
+                        }
+
+                        Text("\(remainingCharacters) characters left")
+                            .font(.custom("Inter-Regular", size: 11))
+                            .foregroundColor(remainingCharacters <= 10 ? .orange : .white.opacity(0.4))
+                    }
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 12)
                 }
                 .background(Color.white.opacity(0.2))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .transition(.opacity)
                 .padding(.top,-9)
             }
-            
+
         }
-        
+
     }
-    
+
     private func select(_ index: Int) {
         for i in options.indices {
             options[i].isSelected = (i == index)
         }
-        
+
         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
             openSection = nil
         }
+    }
+
+    private func addCustomMessage() {
+        guard !trimmedNewMessage.isEmpty else { return }
+        onAddCustom(trimmedNewMessage)
+        newMessageText = ""
+        UIApplication.shared.hideKeyboard()
     }
 }

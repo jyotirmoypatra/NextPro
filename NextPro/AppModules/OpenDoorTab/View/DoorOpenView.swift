@@ -632,7 +632,7 @@ struct DoorOpenView: View {
 
                 case .inactive:
                     print("⏸️ App became inactive")
-                    PassPresentationSuppressionManager.shared.stop()
+                  //  PassPresentationSuppressionManager.shared.stop()
 
                 @unknown default:
                     break
