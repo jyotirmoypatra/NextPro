@@ -49,6 +49,27 @@ struct VoiceMessageDefaults {
     ]
 }
 
+/// Which spoken pattern plays after a successful door open — either the access-granted
+/// message alone, or followed by the friendly greeting. Shared with `DoorOpenView`,
+/// which reads `storageKey` to decide what to speak.
+enum VoicePlaybackPattern: String {
+    case withGreeting
+    case grantedOnly
+
+    static let storageKey = "voice_playback_pattern"
+
+    static var saved: VoicePlaybackPattern {
+        VoicePlaybackPattern(rawValue: UserDefaults.standard.string(forKey: storageKey) ?? "") ?? .withGreeting
+    }
+
+    var steps: [String] {
+        switch self {
+        case .withGreeting: return ["Door Name", "Access granted message", "Friendly greeting message"]
+        case .grantedOnly: return ["Door Name", "Access granted message"]
+        }
+    }
+}
+
 private struct PendingDelete: Identifiable {
     let option: MessageOption
     let sectionId: Int
@@ -69,6 +90,7 @@ struct VoiceAnnouncementsDoor: View {
     @State private var greetingOptions = VoiceMessageDefaults.greetings
     @State private var isVoiceAnnouncementEnabled = true
     @State private var pendingDelete: PendingDelete?
+    @State private var selectedPlaybackPattern: VoicePlaybackPattern = .withGreeting
     
     var body: some View {
         GeometryReader { geometry in
@@ -215,58 +237,32 @@ struct VoiceAnnouncementsDoor: View {
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 15)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(Color.white.opacity(0.8), lineWidth: 2)
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
 
-                            VStack(alignment: .leading){
-                                HStack{
-                                    Image(systemName: "bell")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.white)
-                                        .padding(5)
+                            Divider()
+                                .overlay(Color.white.opacity(0.15))
+                                .padding(.vertical, 6)
 
-                                    Text("Playback Pattern")
-                                        .font(.custom("Inter-SemiBold", size: 14))
-                                        .foregroundColor(.white)
-                                    Spacer()
-                                } .padding(.horizontal,10)
-                                    .padding(.top,5)
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Choose Playback Pattern")
+                                    .font(.custom("Inter-SemiBold", size: 14))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 2)
 
-                                HStack{
-                                    Text("Door Name")
-                                        .font(.custom("Inter-Regular", size: 12))
-                                        .foregroundColor(.white.opacity(0.55))
+                                PlaybackPatternCard(
+                                    title: "Access message + Greeting",
+                                    steps: VoicePlaybackPattern.withGreeting.steps,
+                                    isSelected: selectedPlaybackPattern == .withGreeting,
+                                    onSelect: { selectedPlaybackPattern = .withGreeting }
+                                )
 
-                                    Text("->")
-                                        .font(.custom("Inter-Regular", size: 12))
-                                        .foregroundColor(.white.opacity(0.55))
-
-                                    Text("Access granted message")
-                                        .font(.custom("Inter-Regular", size: 12))
-                                        .foregroundColor(.white.opacity(0.55))
-
-                                    Text("->")
-                                        .font(.custom("Inter-Regular", size: 12))
-                                        .foregroundColor(.white.opacity(0.55))
-
-                                    Text("Friendly greeting message ")
-                                        .font(.custom("Inter-Regular", size: 12))
-                                        .foregroundColor(.white.opacity(0.55))
-
-                                }
-                                .padding(.horizontal,10)
-                                .padding(.bottom,5)
-
-
-                            }.overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(Color.white.opacity(0.8), lineWidth: 2)
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                            .padding(.vertical,10)
+                                PlaybackPatternCard(
+                                    title: "Access message only",
+                                    steps: VoicePlaybackPattern.grantedOnly.steps,
+                                    isSelected: selectedPlaybackPattern == .grantedOnly,
+                                    onSelect: { selectedPlaybackPattern = .grantedOnly }
+                                )
+                            }
+                            .padding(.vertical, 10)
 
                             HStack(spacing: 12) {
 
@@ -381,6 +377,7 @@ struct VoiceAnnouncementsDoor: View {
         applySavedSelection(&greetingOptions, savedText: UserDefaults.standard.string(forKey: "voice_greeting"))
 
         isVoiceAnnouncementEnabled = UserDefaults.standard.object(forKey: "voice_announcement_enabled" ) as? Bool ?? true
+        selectedPlaybackPattern = VoicePlaybackPattern.saved
     }
 
     private func optionsList(defaults: [MessageOption], customKey: String) -> [MessageOption] {
@@ -441,6 +438,7 @@ struct VoiceAnnouncementsDoor: View {
         UserDefaults.standard.set(greeting, forKey: "voice_greeting")
         
         UserDefaults.standard.set(isVoiceAnnouncementEnabled,forKey: "voice_announcement_enabled")
+        UserDefaults.standard.set(selectedPlaybackPattern.rawValue, forKey: VoicePlaybackPattern.storageKey)
 
         toastManager.show(
             message: "Saved successfully",
@@ -472,9 +470,11 @@ struct VoiceAnnouncementsDoor: View {
         UserDefaults.standard.set(defaultGreeting, forKey: "voice_greeting")
         
         isVoiceAnnouncementEnabled = true
+        selectedPlaybackPattern = .withGreeting
 
         UserDefaults.standard.set(true,forKey: "voice_announcement_enabled")
-        
+        UserDefaults.standard.set(VoicePlaybackPattern.withGreeting.rawValue, forKey: VoicePlaybackPattern.storageKey)
+
         // Show toast
         toastManager.show(
             message: "Successfully reset to defaults",
@@ -492,6 +492,48 @@ struct VoiceAnnouncementsDoor: View {
 
 
 
+
+/// One selectable "Playback Pattern" card — shows the message chain as
+/// `Door Name -> ... -> ...` with a radio button reflecting selection.
+private struct PlaybackPatternCard: View {
+    let title: String
+    let steps: [String]
+    let isSelected: Bool
+    let onSelect: () -> Void
+
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(alignment: .top, spacing: 10) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title)
+                        .font(.custom("Inter-SemiBold", size: 14))
+                        .foregroundColor(.white)
+
+                    Text(steps.joined(separator: "  ›  "))
+                        .font(.custom("Inter-Regular", size: 12))
+                        .foregroundColor(.white.opacity(0.55))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 8)
+
+                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                    .font(.system(size: 18))
+                    .foregroundColor(isSelected ? .white : .white.opacity(0.4))
+            }
+            .padding(14)
+            .frame(height: 74, alignment: .center)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background(isSelected ? Color.white.opacity(0.08) : Color.clear)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(isSelected ? Color.white.opacity(0.9) : Color.white.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+}
 
 struct MessageSection: View {
     let id: Int

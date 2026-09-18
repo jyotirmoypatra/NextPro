@@ -1030,7 +1030,7 @@ struct DoorOpenView: View {
                     setRemoteResult(isSuccess: true)
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                     if isVoiceAnnouncementEnabled {
-                        speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                        speakText(grantedSpeechMessage)
                     }
                 }else{
                     guard let sn = sn, let doorId = doorId else { return }
@@ -1047,7 +1047,7 @@ struct DoorOpenView: View {
 
                     setRemoteResult(isSuccess: true)
                     if isVoiceAnnouncementEnabled {
-                        speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                        speakText(grantedSpeechMessage)
                     }
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                 }else{
@@ -1073,7 +1073,7 @@ struct DoorOpenView: View {
                 }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 if isVoiceAnnouncementEnabled {
-                    speakText(accessGrantedMessage + " - " + accessGreetingMessage)
+                    speakText(grantedSpeechMessage)
                 }
             }
             else if let type = type, deniedTypes.contains(type) {
@@ -1192,7 +1192,7 @@ struct DoorOpenView: View {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         AceesMessage = accessGrantedMessage
         overlayMessage = accessGrantedMessage
-        speakAndReset(accessGrantedMessage + " - " + accessGreetingMessage) {
+        speakAndReset(grantedSpeechMessage) {
             guard !self.isScanningActive else { return }
             self.startBLE()
         }
@@ -1348,6 +1348,17 @@ struct DoorOpenView: View {
         bleManager.startContinuousScanning()
         isScanningActive = true
         monitorAndAutoOpenNearbyDoor()
+    }
+
+    /// The access-granted speech, with the friendly greeting appended only when the
+    /// user's chosen playback pattern (set in Voice Messages settings) includes it.
+    private var grantedSpeechMessage: String {
+        switch VoicePlaybackPattern.saved {
+        case .withGreeting:
+            return accessGrantedMessage + " - " + accessGreetingMessage
+        case .grantedOnly:
+            return accessGrantedMessage
+        }
     }
 
     private var defaultAccessMessage: String {
