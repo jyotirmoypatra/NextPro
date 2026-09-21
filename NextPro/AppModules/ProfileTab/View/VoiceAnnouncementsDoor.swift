@@ -777,7 +777,17 @@ struct MessageSection: View {
     private var remainingCharacters: Int {
         maxMessageLength - newMessageText.count
     }
-    
+
+    private let maxCustomMessages = 5
+
+    private var customMessageCount: Int {
+        options.filter { $0.isCustom }.count
+    }
+
+    private var canAddMoreCustomMessages: Bool {
+        customMessageCount < maxCustomMessages
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             
@@ -874,46 +884,51 @@ struct MessageSection: View {
                             .overlay(Color.white.opacity(0.08))
                     }
 
-                    // Add-your-own-message row
-                    VStack(alignment: .trailing, spacing: 4) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "plus.bubble")
-                                .font(.system(size: 14))
-                                .foregroundColor(.white.opacity(0.5))
+                    // Add-your-own-message row — hidden once this category already has
+                    // the max number of custom (deletable) messages.
+                    if canAddMoreCustomMessages {
+                        VStack(alignment: .trailing, spacing: 4) {
+                            HStack(spacing: 8) {
+                                Image("message")
+                                    .resizable()
+                                    .renderingMode(.template)
+                                    .frame(width: 20, height: 20)
+                                    .foregroundColor(.white.opacity(0.5))
 
-                            TextField("", text: $newMessageText, prompt: Text("Add your own message...").foregroundColor(.white.opacity(0.4)))
-                                .foregroundColor(.white)
-                                .font(.custom("Inter-Regular", size: 14))
-                                .submitLabel(.done)
-                                .disabled(isAdding)
-                                .onSubmit(addCustomMessage)
-                                .onChange(of: newMessageText) { newValue in
+                                TextField("", text: $newMessageText, prompt: Text("Add your own message...").foregroundColor(.white.opacity(0.4)))
+                                    .foregroundColor(.white)
+                                    .font(.custom("Inter-Regular", size: 14))
+                                    .submitLabel(.done)
+                                    .disabled(isAdding)
+                                    .onSubmit(addCustomMessage)
+                                    .onChange(of: newMessageText) { newValue in
 
-                                    if newValue.count > maxMessageLength {
-                                        newMessageText = String(newValue.prefix(maxMessageLength))
+                                        if newValue.count > maxMessageLength {
+                                            newMessageText = String(newValue.prefix(maxMessageLength))
+                                        }
                                     }
-                                }
 
-                            if isAdding {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .frame(width: 22, height: 22)
-                            } else {
-                                Button(action: addCustomMessage) {
-                                    Image(systemName: "arrow.up.circle.fill")
-                                        .font(.system(size: 22))
-                                        .foregroundColor(trimmedNewMessage.isEmpty ? .white.opacity(0.25) : .green)
+                                if isAdding {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .frame(width: 22, height: 22)
+                                } else {
+                                    Button(action: addCustomMessage) {
+                                        Image(systemName: "arrow.up.circle.fill")
+                                            .font(.system(size: 22))
+                                            .foregroundColor(trimmedNewMessage.isEmpty ? .white.opacity(0.25) : .green)
+                                    }
+                                    .disabled(trimmedNewMessage.isEmpty)
                                 }
-                                .disabled(trimmedNewMessage.isEmpty)
                             }
-                        }
 
-                        Text("\(remainingCharacters) characters left")
-                            .font(.custom("Inter-Regular", size: 11))
-                            .foregroundColor(remainingCharacters <= 10 ? .orange : .white.opacity(0.4))
+                            Text("\(remainingCharacters) characters left")
+                                .font(.custom("Inter-Regular", size: 11))
+                                .foregroundColor(remainingCharacters <= 10 ? .orange : .white.opacity(0.4))
+                        }
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 12)
                     }
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 12)
                 }
                 .background(Color.white.opacity(0.2))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
