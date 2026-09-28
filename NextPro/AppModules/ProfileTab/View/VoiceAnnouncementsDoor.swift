@@ -642,7 +642,9 @@ struct VoiceAnnouncementsDoor: View {
         let defaultDenied = defaultOption(in: deniedOptions)
         let defaultUnauthorized = defaultOption(in: unauthorizedOptions)
         let defaultGreeting = defaultOption(in: greetingOptions)
-        let resetToggle = voiceMessage?.is_active_voice ?? true
+        // Reset always turns voice announcements back on, regardless of the
+        // server's current `is_active_voice`.
+        let resetToggle = true
         let resetPattern = VoicePlaybackPattern.withGreeting
 
         guard let grantedId = defaultGranted?.serverId,

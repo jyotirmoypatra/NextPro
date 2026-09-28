@@ -38,10 +38,10 @@ class UserProfileEditViewModel: ObservableObject {
             return
         }
         
-        guard !phoneNo.isEmpty else {
-            errorMessage = "Phone number Should not empty!"
-            return
-        }
+//        guard !phoneNo.isEmpty else {
+//            errorMessage = "Phone number Should not empty!"
+//            return
+//        }
         
         guard !email.isEmpty else {
             errorMessage = "Email Should not empty!"
