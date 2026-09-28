@@ -1045,7 +1045,7 @@ struct DoorOpenView: View {
 
                     setRemoteResult(isSuccess: true)
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    if isGrantedVoiceEnabled {
+                    if shouldSpeakGranted {
                         speakText(grantedSpeechMessage)
                     }
                 }else{
@@ -1062,7 +1062,7 @@ struct DoorOpenView: View {
                     guard isMatchingPendingDoor(sn: sn, doorId: doorId) else { return }
 
                     setRemoteResult(isSuccess: true)
-                    if isGrantedVoiceEnabled {
+                    if shouldSpeakGranted {
                         speakText(grantedSpeechMessage)
                     }
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -1088,7 +1088,7 @@ struct DoorOpenView: View {
                     )
                 }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-                if isGrantedVoiceEnabled {
+                if shouldSpeakGranted {
                     speakText(grantedSpeechMessage)
                 }
             }
@@ -1208,7 +1208,7 @@ struct DoorOpenView: View {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         AceesMessage = accessGrantedMessage
         overlayMessage = accessGrantedMessage
-        speakAndReset(grantedSpeechMessage, voiceEnabled: isGrantedVoiceEnabled) {
+        speakAndReset(grantedSpeechMessage, voiceEnabled: shouldSpeakGranted) {
             guard !self.isScanningActive else { return }
             self.startBLE()
         }
@@ -1370,11 +1370,27 @@ struct DoorOpenView: View {
         monitorAndAutoOpenNearbyDoor()
     }
 
-    /// The access-granted speech, with the friendly greeting appended only when its
-    /// own toggle (`voice_enabled_greeting`, set on the Voice Messages screen) is on.
+    /// Built from the two independent toggles: both on speaks granted + greeting,
+    /// only granted on speaks just the granted message, only greeting on speaks
+    /// just the welcome message, and both off is "" (nothing to speak — see
+    /// `shouldSpeakGranted`).
     private var grantedSpeechMessage: String {
-        guard isGreetingVoiceEnabled else { return accessGrantedMessage }
-        return accessGrantedMessage + " - " + accessGreetingMessage
+        switch (isGrantedVoiceEnabled, isGreetingVoiceEnabled) {
+        case (true, true):
+            return accessGrantedMessage + " - " + accessGreetingMessage
+        case (true, false):
+            return accessGrantedMessage
+        case (false, true):
+            return accessGreetingMessage
+        case (false, false):
+            return ""
+        }
+    }
+
+    /// Whether anything should be spoken at all for the granted scenario — true as
+    /// long as either the granted or the greeting toggle is on.
+    private var shouldSpeakGranted: Bool {
+        isGrantedVoiceEnabled || isGreetingVoiceEnabled
     }
 
     private var defaultAccessMessage: String {
