@@ -61,11 +61,24 @@ class UserProfileDetailsViewModel: ObservableObject {
                 
                 // Voice message configuration from profile API
                 voiceMessage = response.data.voice_message
+
                 UserDefaults.standard.set(
-                    response.data.voice_message?.is_active_voice ?? true,
-                    forKey: "voice_announcement_enabled"
+                    response.data.voice_message?.is_voice_active_granted ?? true,
+                    forKey: "voice_enabled_granted"
                 )
-                
+                UserDefaults.standard.set(
+                    response.data.voice_message?.is_voice_active_denied ?? true,
+                    forKey: "voice_enabled_denied"
+                )
+                UserDefaults.standard.set(
+                    response.data.voice_message?.is_voice_active_unauthorized ?? true,
+                    forKey: "voice_enabled_unauthorized"
+                )
+                UserDefaults.standard.set(
+                    response.data.voice_message?.is_voice_active_welcome ?? true,
+                    forKey: "voice_enabled_greeting"
+                )
+
                 if let activeGranted = response.data.voice_message?.access_granted?.first(where: { $0.isActive == true })?.message {
                     UserDefaults.standard.set(activeGranted, forKey: "voice_granted")
                 }
@@ -78,10 +91,6 @@ class UserProfileDetailsViewModel: ObservableObject {
                 if let activeWelcome = response.data.voice_message?.welcome?.first(where: { $0.isActive == true })?.message {
                     UserDefaults.standard.set(activeWelcome, forKey: "voice_greeting")
                 }
-                if let activePattern = response.data.voice_message?.pattern?.first(where: { $0.isActive == true }),
-                   let mappedPattern = VoicePlaybackPattern(apiType: activePattern.type) {
-                    UserDefaults.standard.set(mappedPattern.rawValue, forKey: VoicePlaybackPattern.storageKey)
-                }
 
                 isSuccess = true
                 // Assign response to UI (no UserDefaults save)
@@ -91,16 +100,7 @@ class UserProfileDetailsViewModel: ObservableObject {
                 accountStatus = response.data.status ?? ""
                 image_url = response.data.image_url ?? ""
                 
-                // let  is_admin = response.data.is_admin ?? false
-//                let oldValue = UserDefaults.standard.bool(forKey: "is_admin")
-//
-//                if oldValue != is_admin {
-//                    UserDefaults.standard.set(is_admin, forKey: "is_admin")
-//
-//                    NotificationCenter.default.post(name: .roleChanged, object: nil)
-//                }
-                
-               // UserDefaults.standard.set(is_admin, forKey: "is_admin")
+
                 
                 UserDefaults.standard.set(response.data.user_type ?? "", forKey: "user_type")
                 

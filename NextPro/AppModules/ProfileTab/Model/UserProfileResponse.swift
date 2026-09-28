@@ -57,14 +57,14 @@ struct UserProfileData: Decodable {
 }
 
 struct VoiceMessage: Decodable {
-    let is_active_voice: Bool?
-
+    let is_voice_active_granted : Bool?
+    let is_voice_active_denied : Bool?
+    let is_voice_active_unauthorized : Bool?
+    let is_voice_active_welcome : Bool?
     let access_granted: [VoiceMessageOption]?
     let access_denied: [VoiceMessageOption]?
     let access_unauthorized: [VoiceMessageOption]?
     let welcome: [VoiceMessageOption]?
-
-    let pattern: [VoicePattern]?
 }
 
 

@@ -101,9 +101,13 @@ struct VoiceAnnouncementsDoor: View {
     @State private var deniedOptions: [MessageOption] = []
     @State private var unauthorizedOptions: [MessageOption] = []
     @State private var greetingOptions: [MessageOption] = []
-    @State private var isVoiceAnnouncementEnabled = true
+    
+    @State private var isGrantedVoiceEnabled = true
+    @State private var isDeniedVoiceEnabled = true
+    @State private var isUnauthorizedVoiceEnabled = true
+    @State private var isGreetingVoiceEnabled = true
+    
     @State private var pendingDelete: PendingDelete?
-
     @State private var deletingOptionId: UUID?
 
     @State private var isResetting = false
@@ -162,34 +166,6 @@ struct VoiceAnnouncementsDoor: View {
                         .padding(.top,2)
                         .multilineTextAlignment(.center)
                     
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Enable Voice Announcements")
-                                .font(.custom("Inter-SemiBold", size: 15))
-                                .foregroundColor(.white)
-
-                            Text("Play voice messages during door access events.")
-                                .font(.custom("Inter-Regular", size: 12))
-                                .foregroundColor(.white.opacity(0.55))
-                        }
-
-                        Spacer()
-
-                        Toggle("", isOn: $isVoiceAnnouncementEnabled)
-                            .labelsHidden()
-                            .tint(.green)
-                            .onChange(of: isVoiceAnnouncementEnabled) { newValue in
-                                UserDefaults.standard.set(newValue, forKey: "voice_announcement_enabled")
-                            }
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .background(Color.white.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 8)
-                    
-                   
                     ScrollViewReader { proxy in
                         ScrollView {
                             VStack(spacing: 22) {
@@ -202,14 +178,13 @@ struct VoiceAnnouncementsDoor: View {
                                     description: "This message played when door opens successfully.",
                                     options: $grantedOptions,
                                     openSection: $openSection,
+                                    isVoiceEnabled: $isGrantedVoiceEnabled,
                                     isAdding: addMessageVM.isLoading,
                                     deletingOptionId: deletingOptionId,
                                     onAddCustom: { addCustomMessage($0, options: $grantedOptions, customKey: VoiceMessageCustomKeys.granted, category: .accessGranted) },
                                     onRequestDelete: { pendingDelete = PendingDelete(option: $0, sectionId: 0, categoryTitle: "Access Granted") }
                                 )
                                 .id(0)
-                                Divider()
-                                    .overlay(Color.white.opacity(0.08))
 
                                 // MARK: 2 - Access Denied
                                 MessageSection(
@@ -218,6 +193,7 @@ struct VoiceAnnouncementsDoor: View {
                                     description: "This message played when door access failed.",
                                     options: $deniedOptions,
                                     openSection: $openSection,
+                                    isVoiceEnabled: $isDeniedVoiceEnabled,
                                     isAdding: addMessageVM.isLoading,
                                     deletingOptionId: deletingOptionId,
                                     onAddCustom: { addCustomMessage($0, options: $deniedOptions, customKey: VoiceMessageCustomKeys.denied, category: .accessDenied) },
@@ -226,8 +202,6 @@ struct VoiceAnnouncementsDoor: View {
                                 )
                                 .id(1)
 
-                                Divider()
-                                    .overlay(Color.white.opacity(0.08))
 
                                 // MARK: 3 - Unauthorized
                                 MessageSection(
@@ -236,6 +210,7 @@ struct VoiceAnnouncementsDoor: View {
                                     description: "This message played when approaching an unauthorized door.",
                                     options: $unauthorizedOptions,
                                     openSection: $openSection,
+                                    isVoiceEnabled: $isUnauthorizedVoiceEnabled,
                                     isAdding: addMessageVM.isLoading,
                                     deletingOptionId: deletingOptionId,
                                     onAddCustom: { addCustomMessage($0, options: $unauthorizedOptions, customKey: VoiceMessageCustomKeys.unauthorized, category: .accessUnauthorized) },
@@ -244,8 +219,6 @@ struct VoiceAnnouncementsDoor: View {
                                 )
                                 .id(4)
 
-                                Divider()
-                                    .overlay(Color.white.opacity(0.08))
 
                                 // MARK: 3 -  Friendly Welcome
                                 MessageSection(
@@ -254,6 +227,7 @@ struct VoiceAnnouncementsDoor: View {
                                     description: "Greeting played after successfull access",
                                     options: $greetingOptions,
                                     openSection: $openSection,
+                                    isVoiceEnabled: $isGreetingVoiceEnabled,
                                     isAdding: addMessageVM.isLoading,
                                     deletingOptionId: deletingOptionId,
                                     onAddCustom: { addCustomMessage($0, options: $greetingOptions, customKey: VoiceMessageCustomKeys.greeting, category: .welcome) },
@@ -267,36 +241,6 @@ struct VoiceAnnouncementsDoor: View {
                             Divider()
                                 .overlay(Color.white.opacity(0.15))
                                 .padding(.vertical, 6)
-
-                            VStack(alignment: .leading, spacing: 10) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "speaker.wave.2.fill")
-                                        .font(.system(size: 13))
-                                        .foregroundColor(.white)
-
-                                    Text("Choose Access Granted Playback Pattern")
-                                        .font(.custom("Inter-SemiBold", size: 16))
-                                        .foregroundColor(.white)
-                                }
-                                .padding(.horizontal, 2)
-
-                                if let apiPatterns = voiceMessage?.pattern, !apiPatterns.isEmpty {
-                                    ForEach(Array(apiPatterns.enumerated()), id: \.offset) { _, pattern in
-                                        let resolved = VoicePlaybackPattern(apiType: pattern.type) ?? .withGreeting
-                                        PlaybackPatternCard(
-                                            title: pattern.name ?? pattern.type ?? "Pattern",
-                                            steps: resolved.steps,
-                                            isSelected: selectedPlaybackPattern == resolved,
-                                            onSelect: { selectedPlaybackPattern = resolved }
-                                        )
-                                    }
-                                } else {
-                                    Text("No playback patterns available.")
-                                        .font(.custom("Inter-Regular", size: 12))
-                                        .foregroundColor(.white.opacity(0.5))
-                                }
-                            }
-                            .padding(.vertical, 10)
 
                             HStack(spacing: 12) {
 
@@ -376,6 +320,21 @@ struct VoiceAnnouncementsDoor: View {
             }
             .onAppear {
                 loadSavedSelections()
+            }
+            // Each section's toggle lives in MessageSection now, so its persistence
+            // side effect lives here instead of on a single top-level Toggle view —
+            // each one is independent, with its own UserDefaults key.
+            .onChange(of: isGrantedVoiceEnabled) { newValue in
+                UserDefaults.standard.set(newValue, forKey: "voice_enabled_granted")
+            }
+            .onChange(of: isDeniedVoiceEnabled) { newValue in
+                UserDefaults.standard.set(newValue, forKey: "voice_enabled_denied")
+            }
+            .onChange(of: isUnauthorizedVoiceEnabled) { newValue in
+                UserDefaults.standard.set(newValue, forKey: "voice_enabled_unauthorized")
+            }
+            .onChange(of: isGreetingVoiceEnabled) { newValue in
+                UserDefaults.standard.set(newValue, forKey: "voice_enabled_greeting")
             }
             .toast()
            
@@ -461,16 +420,24 @@ struct VoiceAnnouncementsDoor: View {
         ensureAtLeastOneSelected(&unauthorizedOptions)
         ensureAtLeastOneSelected(&greetingOptions)
 
-        
-        isVoiceAnnouncementEnabled = voiceMessage?.is_active_voice ?? true
 
-    
+        // Each section's toggle starts from its own locally-saved value if present
+        // (the user already flipped it independently on this device), otherwise
+        // falls back to that category's own `is_voice_active_*` flag from the server.
+        isGrantedVoiceEnabled = UserDefaults.standard.object(forKey: "voice_enabled_granted") as? Bool
+            ?? (voiceMessage?.is_voice_active_granted ?? true)
+        isDeniedVoiceEnabled = UserDefaults.standard.object(forKey: "voice_enabled_denied") as? Bool
+            ?? (voiceMessage?.is_voice_active_denied ?? true)
+        isUnauthorizedVoiceEnabled = UserDefaults.standard.object(forKey: "voice_enabled_unauthorized") as? Bool
+            ?? (voiceMessage?.is_voice_active_unauthorized ?? true)
+        isGreetingVoiceEnabled = UserDefaults.standard.object(forKey: "voice_enabled_greeting") as? Bool
+            ?? (voiceMessage?.is_voice_active_welcome ?? true)
+
+        // The server no longer has a separate playback-pattern list — keep
+        // whatever was last saved locally (defaulting to "with greeting").
         if let savedRaw = UserDefaults.standard.string(forKey: VoicePlaybackPattern.storageKey),
            let saved = VoicePlaybackPattern(rawValue: savedRaw) {
             selectedPlaybackPattern = saved
-        } else if let activeType = voiceMessage?.pattern?.first(where: { $0.isActive == true })?.type,
-                  let mapped = VoicePlaybackPattern(apiType: activeType) {
-            selectedPlaybackPattern = mapped
         } else {
             selectedPlaybackPattern = .withGreeting
         }
@@ -555,10 +522,6 @@ struct VoiceAnnouncementsDoor: View {
         }
     }
 
-    private var selectedPatternId: String? {
-        voiceMessage?.pattern?.first { VoicePlaybackPattern(apiType: $0.type) == selectedPlaybackPattern }?.id
-    }
-
     private func deleteCustomMessage(_ option: MessageOption, options: Binding<[MessageOption]>, customKey: String) {
         guard option.isCustom else { return }
 
@@ -591,8 +554,7 @@ struct VoiceAnnouncementsDoor: View {
         guard let grantedId = granted?.serverId,
               let deniedId = denied?.serverId,
               let unauthorizedId = unauthorized?.serverId,
-              let greetingId = greeting?.serverId,
-              let patternId = selectedPatternId
+              let greetingId = greeting?.serverId
         else {
             toastManager.show(message: "Can't save yet — one of the selected messages isn't synced with the server.", type: .error, duration: 2)
             return
@@ -600,12 +562,14 @@ struct VoiceAnnouncementsDoor: View {
 
         Task {
             await saveVoicePreferenceVM.saveFullVoiceSetting(
-                isActiveVoice: isVoiceAnnouncementEnabled,
+                isActiveVoiceGranted: isGrantedVoiceEnabled,
+                isActiveVoiceDenied: isDeniedVoiceEnabled,
+                isActiveVoiceUnauthorized: isUnauthorizedVoiceEnabled,
+                isActiveVoiceWelcome: isGreetingVoiceEnabled,
                 accessGrantedId: grantedId,
                 accessDeniedDId: deniedId,
                 accessUnauthorizedId: unauthorizedId,
-                welcomeId: greetingId,
-                patternId: patternId
+                welcomeId: greetingId
             )
 
             if saveVoicePreferenceVM.addSuccess {
@@ -614,7 +578,11 @@ struct VoiceAnnouncementsDoor: View {
                 UserDefaults.standard.set(unauthorized?.text, forKey: "voice_unauthorized")
                 UserDefaults.standard.set(greeting?.text, forKey: "voice_greeting")
 
-                UserDefaults.standard.set(isVoiceAnnouncementEnabled, forKey: "voice_announcement_enabled")
+                UserDefaults.standard.set(isGrantedVoiceEnabled, forKey: "voice_enabled_granted")
+                UserDefaults.standard.set(isDeniedVoiceEnabled, forKey: "voice_enabled_denied")
+                UserDefaults.standard.set(isUnauthorizedVoiceEnabled, forKey: "voice_enabled_unauthorized")
+                UserDefaults.standard.set(isGreetingVoiceEnabled, forKey: "voice_enabled_greeting")
+
                 UserDefaults.standard.set(selectedPlaybackPattern.rawValue, forKey: VoicePlaybackPattern.storageKey)
 
                 toastManager.show(message: "Saved successfully", type: .success, duration: 1.5)
@@ -643,15 +611,14 @@ struct VoiceAnnouncementsDoor: View {
         let defaultUnauthorized = defaultOption(in: unauthorizedOptions)
         let defaultGreeting = defaultOption(in: greetingOptions)
         // Reset always turns voice announcements back on, regardless of the
-        // server's current `is_active_voice`.
+        // server's current per-category `is_voice_active_*` flags.
         let resetToggle = true
         let resetPattern = VoicePlaybackPattern.withGreeting
 
         guard let grantedId = defaultGranted?.serverId,
               let deniedId = defaultDenied?.serverId,
               let unauthorizedId = defaultUnauthorized?.serverId,
-              let greetingId = defaultGreeting?.serverId,
-              let patternId = voiceMessage?.pattern?.first(where: { VoicePlaybackPattern(apiType: $0.type) == resetPattern })?.id
+              let greetingId = defaultGreeting?.serverId
         else {
             toastManager.show(message: "Can't reset yet — default messages aren't synced with the server.", type: .error, duration: 2)
             return
@@ -661,12 +628,14 @@ struct VoiceAnnouncementsDoor: View {
 
         Task {
             await saveVoicePreferenceVM.saveFullVoiceSetting(
-                isActiveVoice: resetToggle,
+                isActiveVoiceGranted: resetToggle,
+                isActiveVoiceDenied: resetToggle,
+                isActiveVoiceUnauthorized: resetToggle,
+                isActiveVoiceWelcome: resetToggle,
                 accessGrantedId: grantedId,
                 accessDeniedDId: deniedId,
                 accessUnauthorizedId: unauthorizedId,
-                welcomeId: greetingId,
-                patternId: patternId
+                welcomeId: greetingId
             )
 
             if saveVoicePreferenceVM.addSuccess {
@@ -675,14 +644,20 @@ struct VoiceAnnouncementsDoor: View {
                 unauthorizedOptions = unauthorizedOptions.map { MessageOption(text: $0.text, isSelected: $0.serverId == unauthorizedId, isCustom: $0.isCustom, serverId: $0.serverId) }
                 greetingOptions = greetingOptions.map { MessageOption(text: $0.text, isSelected: $0.serverId == greetingId, isCustom: $0.isCustom, serverId: $0.serverId) }
 
-                isVoiceAnnouncementEnabled = resetToggle
+                isGrantedVoiceEnabled = resetToggle
+                isDeniedVoiceEnabled = resetToggle
+                isUnauthorizedVoiceEnabled = resetToggle
+                isGreetingVoiceEnabled = resetToggle
                 selectedPlaybackPattern = resetPattern
 
                 UserDefaults.standard.set(defaultGranted?.text, forKey: "voice_granted")
                 UserDefaults.standard.set(defaultDenied?.text, forKey: "voice_denied")
                 UserDefaults.standard.set(defaultUnauthorized?.text, forKey: "voice_unauthorized")
                 UserDefaults.standard.set(defaultGreeting?.text, forKey: "voice_greeting")
-                UserDefaults.standard.set(resetToggle, forKey: "voice_announcement_enabled")
+                UserDefaults.standard.set(resetToggle, forKey: "voice_enabled_granted")
+                UserDefaults.standard.set(resetToggle, forKey: "voice_enabled_denied")
+                UserDefaults.standard.set(resetToggle, forKey: "voice_enabled_unauthorized")
+                UserDefaults.standard.set(resetToggle, forKey: "voice_enabled_greeting")
                 UserDefaults.standard.set(resetPattern.rawValue, forKey: VoicePlaybackPattern.storageKey)
 
                 toastManager.show(message: "Successfully reset to defaults", type: .success, duration: 1.5)
@@ -707,47 +682,6 @@ struct VoiceAnnouncementsDoor: View {
 
 
 
-/// One selectable "Playback Pattern" card — shows the message chain as
-/// `Door Name -> ... -> ...` with a radio button reflecting selection.
-private struct PlaybackPatternCard: View {
-    let title: String
-    let steps: [String]
-    let isSelected: Bool
-    let onSelect: () -> Void
-
-    var body: some View {
-        Button(action: onSelect) {
-            HStack(alignment: .top, spacing: 10) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(title)
-                        .font(.custom("Inter-SemiBold", size: 14))
-                        .foregroundColor(.white)
-
-                    Text(steps.joined(separator: "  ›  "))
-                        .font(.custom("Inter-Regular", size: 12))
-                        .foregroundColor(.white.opacity(0.55))
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer(minLength: 8)
-
-                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                    .font(.system(size: 18))
-                    .foregroundColor(isSelected ? .white : .white.opacity(0.4))
-            }
-            .padding(14)
-            .frame(height: 74, alignment: .center)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .background(isSelected ? Color.white.opacity(0.08) : Color.clear)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(isSelected ? Color.white.opacity(0.9) : Color.white.opacity(0.3), lineWidth: isSelected ? 2 : 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-    }
-}
 
 struct MessageSection: View {
     let id: Int
@@ -755,6 +689,7 @@ struct MessageSection: View {
     let description: String
     @Binding var options: [MessageOption]
     @Binding var openSection: Int?
+    @Binding var isVoiceEnabled: Bool
     var isAdding: Bool = false
     var deletingOptionId: UUID? = nil
     var onAddCustom: (String) -> Void
@@ -792,11 +727,24 @@ struct MessageSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            
-            Text(title)
-                .font(.custom("Inter-SemiBold", size: 16))
-                .foregroundColor(.white)
-            
+
+            HStack {
+                Text(title)
+                    .font(.custom("Inter-SemiBold", size: 16))
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                Text("Enable Voice")
+                    .font(.custom("Inter-Regular", size: 13))
+                    .foregroundColor(.white.opacity(0.7))
+
+                Toggle("", isOn: $isVoiceEnabled)
+                    .labelsHidden()
+                    .tint(.green)
+                    .padding(.trailing, 4)
+            }
+
             Text(description)
                 .font(.custom("Inter-Regular", size: 13))
                 .foregroundColor(.white.opacity(0.55))
@@ -882,8 +830,6 @@ struct MessageSection: View {
                         .padding(.horizontal, 12)
                         //  .background(idx % 2 == 0 ? Color.white.opacity(0.03) : Color.white.opacity(0.05))
 
-                        Divider()
-                            .overlay(Color.white.opacity(0.08))
                     }
 
                     // Add-your-own-message row — hidden once this category already has
@@ -939,6 +885,13 @@ struct MessageSection: View {
             }
 
         }
+        .padding(14)
+        .background(Color.white.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+        )
 
     }
 

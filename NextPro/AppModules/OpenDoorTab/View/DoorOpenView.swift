@@ -43,8 +43,14 @@ struct DoorOpenView: View {
     @State private var grantedBase = ""
     @State private var deniedBase = ""
     @State private var unauthorizedBase = ""
-    @State private var isVoiceAnnouncementEnabled = true
-    
+    // Each category's voice announcement is independently toggled on the Voice
+    // Messages screen (VoiceAnnouncementsDoor) and persisted under its own
+    // UserDefaults key — read here instead of a single combined enable flag.
+    @State private var isGrantedVoiceEnabled = true
+    @State private var isDeniedVoiceEnabled = true
+    @State private var isUnauthorizedVoiceEnabled = true
+    @State private var isGreetingVoiceEnabled = true
+
     @State private var accessGrantedMessage = ""
     @State private var accessDeniedMessage = ""
     @State private var accessUnAuthorizedMessage = ""
@@ -486,8 +492,14 @@ struct DoorOpenView: View {
                     await deviceVM.fetchDeviceDetailsIfNeeded() // load cache
                 }
                 
-                isVoiceAnnouncementEnabled =
-                UserDefaults.standard.object(forKey: "voice_announcement_enabled") as? Bool ?? true
+                isGrantedVoiceEnabled =
+                UserDefaults.standard.object(forKey: "voice_enabled_granted") as? Bool ?? true
+                isDeniedVoiceEnabled =
+                UserDefaults.standard.object(forKey: "voice_enabled_denied") as? Bool ?? true
+                isUnauthorizedVoiceEnabled =
+                UserDefaults.standard.object(forKey: "voice_enabled_unauthorized") as? Bool ?? true
+                isGreetingVoiceEnabled =
+                UserDefaults.standard.object(forKey: "voice_enabled_greeting") as? Bool ?? true
 
                 accessGreetingMessage =
                 UserDefaults.standard.string(forKey: "voice_greeting")
@@ -520,7 +532,10 @@ struct DoorOpenView: View {
                 // Load access flags from UserDefaults
                 hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
                 hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
-                isVoiceAnnouncementEnabled = UserDefaults.standard.object(forKey: "voice_announcement_enabled") as? Bool ?? true
+                isGrantedVoiceEnabled = UserDefaults.standard.object(forKey: "voice_enabled_granted") as? Bool ?? true
+                isDeniedVoiceEnabled = UserDefaults.standard.object(forKey: "voice_enabled_denied") as? Bool ?? true
+                isUnauthorizedVoiceEnabled = UserDefaults.standard.object(forKey: "voice_enabled_unauthorized") as? Bool ?? true
+                isGreetingVoiceEnabled = UserDefaults.standard.object(forKey: "voice_enabled_greeting") as? Bool ?? true
 
                 notificationCountVM.refreshUnreadCount()
                 Task { await UserProfileDetailsViewModel().fetchUserProfile() }
@@ -1025,7 +1040,7 @@ struct DoorOpenView: View {
 
                     setRemoteResult(isSuccess: true)
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    if isVoiceAnnouncementEnabled {
+                    if isGrantedVoiceEnabled {
                         speakText(grantedSpeechMessage)
                     }
                 }else{
@@ -1042,7 +1057,7 @@ struct DoorOpenView: View {
                     guard isMatchingPendingDoor(sn: sn, doorId: doorId) else { return }
 
                     setRemoteResult(isSuccess: true)
-                    if isVoiceAnnouncementEnabled {
+                    if isGrantedVoiceEnabled {
                         speakText(grantedSpeechMessage)
                     }
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -1068,7 +1083,7 @@ struct DoorOpenView: View {
                     )
                 }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
-                if isVoiceAnnouncementEnabled {
+                if isGrantedVoiceEnabled {
                     speakText(grantedSpeechMessage)
                 }
             }
@@ -1177,7 +1192,7 @@ struct DoorOpenView: View {
 
     private func remoteDeniedResponse(speech: String) {
         setRemoteResult(isSuccess: false)
-        if isVoiceAnnouncementEnabled {
+        if isDeniedVoiceEnabled {
             speakText(speech)
         }
         UINotificationFeedbackGenerator().notificationOccurred(.error)
@@ -1188,7 +1203,7 @@ struct DoorOpenView: View {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         AceesMessage = accessGrantedMessage
         overlayMessage = accessGrantedMessage
-        speakAndReset(grantedSpeechMessage) {
+        speakAndReset(grantedSpeechMessage, voiceEnabled: isGrantedVoiceEnabled) {
             guard !self.isScanningActive else { return }
             self.startBLE()
         }
@@ -1199,7 +1214,7 @@ struct DoorOpenView: View {
         AceesMessage = accessDeniedMessage
         overlayMessage = accessDeniedMessage
         animateFailure()
-        speakAndReset(speech) {
+        speakAndReset(speech, voiceEnabled: isDeniedVoiceEnabled) {
             guard !self.isScanningActive else { return }
             self.startBLE()
         }
@@ -1346,15 +1361,11 @@ struct DoorOpenView: View {
         monitorAndAutoOpenNearbyDoor()
     }
 
-    /// The access-granted speech, with the friendly greeting appended only when the
-    /// user's chosen playback pattern (set in Voice Messages settings) includes it.
+    /// The access-granted speech, with the friendly greeting appended only when its
+    /// own toggle (`voice_enabled_greeting`, set on the Voice Messages screen) is on.
     private var grantedSpeechMessage: String {
-        switch VoicePlaybackPattern.saved {
-        case .withGreeting:
-            return accessGrantedMessage + " - " + accessGreetingMessage
-        case .grantedOnly:
-            return accessGrantedMessage
-        }
+        guard isGreetingVoiceEnabled else { return accessGrantedMessage }
+        return accessGrantedMessage + " - " + accessGreetingMessage
     }
 
     private var defaultAccessMessage: String {
@@ -1732,8 +1743,8 @@ struct DoorOpenView: View {
     }
     
     
-    private func speakAndReset(_ text: String, onComplete: (() -> Void)? = nil) {
-        guard isVoiceAnnouncementEnabled else {
+    private func speakAndReset(_ text: String, voiceEnabled: Bool, onComplete: (() -> Void)? = nil) {
+        guard voiceEnabled else {
             // Voice announcements are off — don't play anything and don't wait on
             // speech completion; just hold the result on screen for a fixed 3s
             // before resetting, same role the 0.5s post-speech pause plays below.
@@ -1855,7 +1866,7 @@ struct DoorOpenView: View {
                         AceesMessage = deniedBase
                         animateFailureOutSideTime()
                         UINotificationFeedbackGenerator().notificationOccurred(.error)
-                        speakAndReset(door.name + ". " + deniedBase + ". Time Restricted") {
+                        speakAndReset(door.name + ". " + deniedBase + ". Time Restricted", voiceEnabled: isDeniedVoiceEnabled) {
                             guard !isScanningActive else { return }
                             startBLE()
                         }
@@ -1902,7 +1913,7 @@ struct DoorOpenView: View {
                     unauthorised()
                     AceesMessage = accessUnAuthorizedMessage
                     UINotificationFeedbackGenerator().notificationOccurred(.error)
-                    speakAndReset(accessUnAuthorizedMessage) {
+                    speakAndReset(accessUnAuthorizedMessage, voiceEnabled: isUnauthorizedVoiceEnabled) {
                         guard !isScanningActive else { return }
                         startBLE()
                     }

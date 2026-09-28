@@ -19,20 +19,24 @@ struct VoiceMessageResponse: Codable {
 // MARK: - Data
 
 struct VoiceMessageTemplatesData: Codable {
-    let isActiveVoice: Bool
+    let isActiveVoiceGranted: Bool
+    let isActiveVoiceDenied: Bool
+    let isActiveVoiceUnauthorized: Bool
+    let isActiveVoiceWelcome: Bool
     let accessGranted: [VoiceMessageOption]
     let accessDenied: [VoiceMessageOption]
     let accessUnauthorized: [VoiceMessageOption]
     let welcome: [VoiceMessageOption]
-    let pattern: [VoicePattern]
 
     enum CodingKeys: String, CodingKey {
-        case isActiveVoice = "is_active_voice"
+        case isActiveVoiceGranted = "is_voice_active_granted"
+        case isActiveVoiceDenied = "is_voice_active_denied"
+        case isActiveVoiceUnauthorized = "is_voice_active_unauthorized"
+        case isActiveVoiceWelcome = "is_voice_active_welcome"
         case accessGranted = "access_granted"
         case accessDenied = "access_denied"
         case accessUnauthorized = "access_unauthorized"
         case welcome
-        case pattern
     }
 }
 

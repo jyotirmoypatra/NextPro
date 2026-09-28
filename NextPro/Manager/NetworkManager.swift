@@ -932,7 +932,7 @@ class NetworkManager: ObservableObject {
         )
     }
     
-    func saveVoiceMessageSetting(isActiveVoice: Bool,accessGrantedId:String ,accessDeniedDId:String,accessUnauthorizedId:String,welcomeId:String,patternId:String) async throws -> CustomVoiceMessageResponse {
+    func saveVoiceMessageSetting(isActiveVoiceGranted: Bool,isActiveVoiceDenied: Bool,isActiveVoiceUnauthorized: Bool,isActiveVoiceWelcome: Bool,accessGrantedId:String ,accessDeniedDId:String,accessUnauthorizedId:String,welcomeId:String) async throws -> CustomVoiceMessageResponse {
 
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.saveVoiceSetting))!
         print("Add voice Message Response Api called----")
@@ -940,12 +940,14 @@ class NetworkManager: ObservableObject {
             url: url,
             method: "PUT",
             body: [
-                "is_active_voice": isActiveVoice,
+                "is_voice_active_granted": isActiveVoiceGranted,
+                "is_voice_active_denied": isActiveVoiceDenied,
+                "is_voice_active_unauthorized": isActiveVoiceUnauthorized,
+                "is_voice_active_welcome": isActiveVoiceWelcome,
                 "access_granted_id" : accessGrantedId,
                 "access_denied_id" : accessDeniedDId,
                 "access_unauthorized_id" : accessUnauthorizedId,
                 "welcome_id" : welcomeId,
-                "pattern_id" : patternId,
             ],
             requiresAuth: true,
             responseType: CustomVoiceMessageResponse.self,

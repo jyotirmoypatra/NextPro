@@ -18,7 +18,7 @@ class SaveVoicePreferenceViewModel: ObservableObject {
     private let networkManager = NetworkManager.shared
     @Published var addSuccess = false
     
-    func saveFullVoiceSetting(isActiveVoice: Bool,accessGrantedId:String ,accessDeniedDId:String,accessUnauthorizedId:String,welcomeId:String,patternId:String) async {
+    func saveFullVoiceSetting(isActiveVoiceGranted: Bool,isActiveVoiceDenied: Bool,isActiveVoiceUnauthorized: Bool,isActiveVoiceWelcome: Bool,accessGrantedId:String ,accessDeniedDId:String,accessUnauthorizedId:String,welcomeId:String) async {
        
 
         guard networkManager.hasInternet else {
@@ -43,10 +43,7 @@ class SaveVoicePreferenceViewModel: ObservableObject {
             errorMessage = "message Should not empty!"
             return
         }
-        guard !patternId.isEmpty else {
-            errorMessage = "message Should not empty!"
-            return
-        }
+       
         
         
         
@@ -55,7 +52,8 @@ class SaveVoicePreferenceViewModel: ObservableObject {
             errorMessage = ""
             addSuccess = false
 
-            let response = try await networkManager.saveVoiceMessageSetting(isActiveVoice: isActiveVoice, accessGrantedId: accessGrantedId, accessDeniedDId: accessDeniedDId, accessUnauthorizedId: accessUnauthorizedId, welcomeId: welcomeId, patternId: patternId)
+            
+            let response = try await networkManager.saveVoiceMessageSetting(isActiveVoiceGranted: isActiveVoiceGranted, isActiveVoiceDenied: isActiveVoiceDenied, isActiveVoiceUnauthorized: isActiveVoiceUnauthorized, isActiveVoiceWelcome: isActiveVoiceWelcome, accessGrantedId: accessGrantedId, accessDeniedDId: accessDeniedDId, accessUnauthorizedId: accessUnauthorizedId, welcomeId: welcomeId)
             if response.status {
                 // Assign response to UI (no UserDefaults save)
                 addSuccess = true
