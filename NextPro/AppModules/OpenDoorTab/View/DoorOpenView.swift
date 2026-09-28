@@ -34,6 +34,7 @@ struct DoorOpenView: View {
     @State private var isScanningActive = false
     @State private var isBLERestarting = false
     @State private var isViewVisible = false
+    @State private var isAppActive = true
     @ObservedObject var network = NetworkManager.shared
     
     @State private var AceesMessage : String?
@@ -524,6 +525,7 @@ struct DoorOpenView: View {
         
             .onAppear {
                 isViewVisible = true
+                isAppActive = (scenePhase == .active)
 
                 if scenePhase == .active {
                     PassPresentationSuppressionManager.shared.start()
@@ -625,6 +627,7 @@ struct DoorOpenView: View {
                 switch newPhase {
                 case .background:
                     print("🌙 App went to background — stopping BLE scanning and monitoring")
+                    isAppActive = false
                     stopBLE(reason: "Preparing Scan..")
                     PassPresentationSuppressionManager.shared.stop()
 
@@ -636,6 +639,7 @@ struct DoorOpenView: View {
                     resetOverlayState()
 
                 case .active:
+                    isAppActive = true
                     updateBLEState()
                     if isViewVisible {
                         PassPresentationSuppressionManager.shared.start()
@@ -711,6 +715,7 @@ struct DoorOpenView: View {
 
                 case .poweredOn:
                     print("🟢 Bluetooth ON")
+                    guard isAppActive else { break }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         restartBLE()
                     }
@@ -1345,6 +1350,10 @@ struct DoorOpenView: View {
             print("⛔ Time sync required — BLE start blocked")
             return
         }
+        guard isAppActive else {
+            print("⛔ App is backgrounded — BLE start blocked")
+            return
+        }
         guard isViewVisible else { return }
         guard selectedTab == 0 else { return }
         guard hasDigitalKeyAccess else { return }
@@ -1410,6 +1419,7 @@ struct DoorOpenView: View {
     /// stops it if it shouldn't be running, restarts it if it should be but has gone
     /// stale/inactive, or leaves it alone if everything already matches.
     private func updateBLEState() {
+        guard isAppActive else { return }
         guard isViewVisible else { return }
         guard selectedTab == 0 else { return }
         guard hasDigitalKeyAccess else { return }
@@ -1438,6 +1448,10 @@ struct DoorOpenView: View {
     /// notification + `bleState` publisher + scenePhase) never race into a duplicate ladder.
     private func restartBLE(retryIndex: Int = 0) {
         if retryIndex == 0 {
+            guard isAppActive else {
+                print("⛔ App is backgrounded — BLE restart skipped")
+                return
+            }
             guard !isBLERestarting else {
                 print("⏭️ BLE restart already in progress — skipping duplicate trigger")
                 return
@@ -1467,6 +1481,10 @@ struct DoorOpenView: View {
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + delays[retryIndex]) {
+            guard isAppActive else {
+                isBLERestarting = false
+                return
+            }
             guard isViewVisible else {
                 isBLERestarting = false
                 return
@@ -1806,8 +1824,10 @@ struct DoorOpenView: View {
         
         
         rssiTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { [weak bleManager, weak doorStorage] timer in
-            
+
+           
             guard
+                isAppActive,
                 isViewVisible,
                 let bleManager = bleManager,
                 let doorStorage = doorStorage
@@ -1842,7 +1862,7 @@ struct DoorOpenView: View {
             print("🎯 Closest device: \(name) with RSSI: \(rssi)")
             
             // Only act if RSSI is strong
-            guard rssi > -35 && rssi < 0 else { return }
+            guard rssi > -36 && rssi < 0 else { return }
             
             if let door = doorStorage.doors.first(where: { name.contains($0.devSn) }) {
                 // Authorized door
