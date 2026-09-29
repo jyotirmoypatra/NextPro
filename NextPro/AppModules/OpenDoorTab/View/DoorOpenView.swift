@@ -43,9 +43,7 @@ struct DoorOpenView: View {
     @State private var grantedBase = ""
     @State private var deniedBase = ""
     @State private var unauthorizedBase = ""
-    // Each category's voice announcement is independently toggled on the Voice
-    // Messages screen (VoiceAnnouncementsDoor) and persisted under its own
-    // UserDefaults key — read here instead of a single combined enable flag.
+   
     @State private var isGrantedVoiceEnabled = true
     @State private var isDeniedVoiceEnabled = true
     @State private var isUnauthorizedVoiceEnabled = true
@@ -73,9 +71,7 @@ struct DoorOpenView: View {
     @State private var selectedTab = 0
     @State private var isRemoteUnlock = false
     @State private var showDoorErrorAlert = false
-    // Frozen snapshot of the error text at the moment the alert was triggered — deviceVM's
-    // own errorMessage is live and gets reset to "" as soon as a retry/overlapping fetch
-    // starts, which would otherwise blank out the alert's text while it's still on screen.
+   
     @State private var doorErrorMessageText = ""
     
     @State private var hasDigitalKeyAccess: Bool = false
@@ -492,14 +488,6 @@ struct DoorOpenView: View {
                     await deviceVM.fetchDeviceDetailsIfNeeded() // load cache
                 }
 
-                // After a fresh login (e.g. logout → login as a different account),
-                // `doorStorage`/`bleManager` are process-wide singletons/StateObjects
-                // that may already have been sitting at the SAME `hasDoor`/`bleState`
-                // value as the previous session — Combine's `.onChange`/`.onReceive`
-                // only fire on an actual value change, so if the new account also
-                // resolves to e.g. `hasDoor == true`, nothing re-triggers scanning.
-                // Force a fresh, unconditional re-check here instead of hoping one of
-                // those publishers happens to fire.
                 bleManager.refreshAuthorizationStatus()
                 updateBLEState()
 
@@ -563,18 +551,11 @@ struct DoorOpenView: View {
                     startOfflineTimeObserver()
                 }
 
-                // Force a fresh Bluetooth read here too (not just wait on the
-                // centralManagerDidUpdateState delegate, which isn't guaranteed to
-                // re-fire promptly right after logging into a different account) —
-                // see the matching call in `.task` for the full reasoning.
+               
                 bleManager.refreshAuthorizationStatus()
                 updateBLEState()
 
-                // Safety net: doorStorage/BLE state can still resolve a moment after
-                // this — e.g. the device-details fetch or a delayed CoreBluetooth
-                // callback — so re-check shortly after instead of only relying on
-                // reactive triggers that may not fire if nothing about their
-                // underlying value actually changed since the previous session.
+              
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     guard isViewVisible else { return }
                     if hasAvailableDoor && bleManager.isBluetoothOn && !isScanningActive {
@@ -656,9 +637,7 @@ struct DoorOpenView: View {
                     stopBLE(reason: "Preparing Scan..")
                     PassPresentationSuppressionManager.shared.stop()
 
-                    // Don't let a pending speech-completion or reset timer fire late once
-                    // the app returns to foreground — that replayed the previous door's
-                    // voice/UI. Finish everything immediately instead.
+                  
                     SpeechManager.shared.stop()
                     animationResetTask?.cancel()
                     resetOverlayState()
@@ -704,9 +683,7 @@ struct DoorOpenView: View {
 
                     AceesMessage = "Preparing Scan..."
                     startBLE()
-//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-//                        startBLE()
-//                    }
+
                 }
             }
             .onReceive(NotificationCenter.default.publisher(
@@ -729,10 +706,6 @@ struct DoorOpenView: View {
                 switch state {
                 case .poweredOff:
                     print("🔴 Bluetooth OFF")
-                    // Actually stop scanning/monitoring here (not just flip the flag) —
-                    // otherwise the rssiTimer set up by monitorAndAutoOpenNearbyDoor()
-                    // keeps ticking on stale cached `bleManager.devices` data even
-                    // though Bluetooth is off and nothing new can be discovered.
                     stopBLE(reason: "Bluetooth is Off. Please turn it on.")
 
                 case .unauthorized:
@@ -1155,18 +1128,7 @@ struct DoorOpenView: View {
                     digitalDeniedResponse(speech: accessDeniedMessage)
                 }
             }
-            // A remote/BLE-initiated action's response has now actually been
-            // processed — self-clear the flag here instead of relying on a later
-            // tab switch to do it (that's what let a still-pending remote action
-            // get misclassified as a digital-key event if the tab changed first).
-            //
-            // NOTE: pendingDoorAction is deliberately NOT cleared here. For a remote
-            // action, RemoteDoorCardView keeps it set for the full success/failure
-            // display window (~5s) so every OTHER card stays disabled until that
-            // card's own UI has finished resetting — clearing it as soon as the MQTT
-            // response arrives would unlock the rest of the list while this card is
-            // still mid-animation. For a digital/BLE action it's cleared by
-            // resetOverlayState()/scheduleReset() once that flow's own reset fires.
+          
             if isRemoteUnlock {
                 isRemoteUnlock = false
             }
@@ -1175,12 +1137,6 @@ struct DoorOpenView: View {
         }
     }
 
-    /// Single source of truth for "does this MQTT response belong to the door action
-    /// we're currently waiting on?" — replaces the TC430/TC434 matching logic that used
-    /// to be repeated in every response-type branch above.
-    ///
-    /// TC430 has one physical door and may report MQTT doorID 0 or 1, so it matches by
-    /// controller serial alone. TC434 / other multi-door controllers match by serial + doorID.
     private func isMatchingPendingDoor(sn: String?, doorId: Int?) -> Bool {
         guard let pending = pendingDoorAction,
               let sn,
@@ -1211,9 +1167,7 @@ struct DoorOpenView: View {
         return true
     }
 
-    /// Builds the remote MQTT result using the app's own selected door key
-    /// (`pendingDoorAction.doorKey`) — never reconstructed from the MQTT SN/doorID,
-    /// since for TC430 that would not match the key `RemoteDoorCardView` identifies with.
+  
     private func setRemoteResult(isSuccess: Bool) {
         guard let pending = pendingDoorAction else { return }
         remoteMqttResult = RemoteMQTTResult(
@@ -1363,10 +1317,7 @@ struct DoorOpenView: View {
         UIApplication.shared.applicationState != .background
     }
 
-    /// THE single entry point for starting BLE scanning + nearby-door monitoring.
-    /// Safe to call from anywhere — no-ops if a time-sync alert is blocking access, or if the
-    /// view isn't visible, the digital-key tab isn't selected, there's no available door, or
-    /// Bluetooth is off.
+  
     private func startBLE() {
         guard !showTimeSyncAlert else {
             print("⛔ Time sync required — BLE start blocked")
@@ -1392,10 +1343,6 @@ struct DoorOpenView: View {
         monitorAndAutoOpenNearbyDoor()
     }
 
-    /// Built from the two independent toggles: both on speaks granted + greeting,
-    /// only granted on speaks just the granted message, only greeting on speaks
-    /// just the welcome message, and both off is "" (nothing to speak — see
-    /// `shouldSpeakGranted`).
     private var grantedSpeechMessage: String {
         switch (isGrantedVoiceEnabled, isGreetingVoiceEnabled) {
         case (true, true):
@@ -1409,8 +1356,7 @@ struct DoorOpenView: View {
         }
     }
 
-    /// Whether anything should be spoken at all for the granted scenario — true as
-    /// long as either the granted or the greeting toggle is on.
+
     private var shouldSpeakGranted: Bool {
         isGrantedVoiceEnabled || isGreetingVoiceEnabled
     }
@@ -1422,8 +1368,7 @@ struct DoorOpenView: View {
         return bleManager.isBluetoothOn ? "Walk closer to the door." : "Bluetooth is Off. Please turn it on."
     }
 
-    /// Case 1 (permission denied/restricted) vs Case 2 (permission granted, hardware off) —
-    /// routes to the correct feedback so callers never have to branch on this themselves.
+   
     private func handleBluetoothUnavailable() {
         if bleManager.bleState == .unauthorized {
             showBluetoothPermissionAlert = true
@@ -1432,9 +1377,7 @@ struct DoorOpenView: View {
         }
     }
 
-    /// THE single entry point for stopping BLE scanning, monitoring, and the RSSI timer.
-    /// Pass `reason` to show a specific status message; omit it to fall back to the same
-    /// Bluetooth-state-based message every caller used to compute for itself.
+  
     private func stopBLE(reason: String? = nil) {
         bleManager.stopContinuousScanning()
         bleManager.stopMonitoringDevice()
@@ -1453,9 +1396,7 @@ struct DoorOpenView: View {
         }()
     }
 
-    /// Re-evaluates whether BLE scanning should currently be running and reconciles state:
-    /// stops it if it shouldn't be running, restarts it if it should be but has gone
-    /// stale/inactive, or leaves it alone if everything already matches.
+ 
     private func updateBLEState() {
         guard isAppInForeground else { return }
         guard isViewVisible else { return }
@@ -1479,11 +1420,7 @@ struct DoorOpenView: View {
         }
     }
 
-    /// Stops, then retries `startBLE()` with progressively longer delays while CoreBluetooth
-    /// recovers (e.g. after returning from the background, or a Bluetooth power-on event).
-    /// `retryIndex` drives the recursive retry ladder — always call with the default (0) from
-    /// the outside. Guarded by `isBLERestarting` so overlapping triggers (foreground
-    /// notification + `bleState` publisher + scenePhase) never race into a duplicate ladder.
+  
     private func restartBLE(retryIndex: Int = 0) {
         if retryIndex == 0 {
             guard isAppInForeground else {
@@ -1558,9 +1495,7 @@ struct DoorOpenView: View {
         }
     }
 
-    
-    /// Single entry point for a remote door tap (Wi-Fi or BLE): records which door is now
-    /// pending an MQTT response, then hands off to the existing open-door implementation.
+
     private func startDoorAction(door: RemoteDoorItem, source: PendingDoorAction.Source) {
         pendingDoorAction = PendingDoorAction(
             source: source,
@@ -1724,14 +1659,6 @@ struct DoorOpenView: View {
                 progress = 1.0
             }
             
-//            // Reset after 2 seconds
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-//                resetOverlayState()
-//            }
-
-            // Reset after 3 seconds — tracked via animationResetTask so a new
-            // attempt starting in this window cancels THIS cleanup instead of
-            // this cleanup later cancelling the new attempt's own timeout.
             let cleanupTask = DispatchWorkItem {
                 resetOverlayState()
             }
@@ -1801,9 +1728,7 @@ struct DoorOpenView: View {
     
     private func speakAndReset(_ text: String, voiceEnabled: Bool, onComplete: (() -> Void)? = nil) {
         guard voiceEnabled else {
-            // Voice announcements are off — don't play anything and don't wait on
-            // speech completion; just hold the result on screen for a fixed 3s
-            // before resetting, same role the 0.5s post-speech pause plays below.
+           
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                 self.animationResetTask?.cancel()
                 self.resetOverlayState()
