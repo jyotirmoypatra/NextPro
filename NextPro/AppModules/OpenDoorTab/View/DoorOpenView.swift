@@ -34,7 +34,6 @@ struct DoorOpenView: View {
     @State private var isScanningActive = false
     @State private var isBLERestarting = false
     @State private var isViewVisible = false
-    @State private var isAppActive = true
     @ObservedObject var network = NetworkManager.shared
     
     @State private var AceesMessage : String?
@@ -492,7 +491,18 @@ struct DoorOpenView: View {
                 } else {
                     await deviceVM.fetchDeviceDetailsIfNeeded() // load cache
                 }
-                
+
+                // After a fresh login (e.g. logout → login as a different account),
+                // `doorStorage`/`bleManager` are process-wide singletons/StateObjects
+                // that may already have been sitting at the SAME `hasDoor`/`bleState`
+                // value as the previous session — Combine's `.onChange`/`.onReceive`
+                // only fire on an actual value change, so if the new account also
+                // resolves to e.g. `hasDoor == true`, nothing re-triggers scanning.
+                // Force a fresh, unconditional re-check here instead of hoping one of
+                // those publishers happens to fire.
+                bleManager.refreshAuthorizationStatus()
+                updateBLEState()
+
                 isGrantedVoiceEnabled =
                 UserDefaults.standard.object(forKey: "voice_enabled_granted") as? Bool ?? true
                 isDeniedVoiceEnabled =
@@ -525,7 +535,6 @@ struct DoorOpenView: View {
         
             .onAppear {
                 isViewVisible = true
-                isAppActive = (scenePhase == .active)
 
                 if scenePhase == .active {
                     PassPresentationSuppressionManager.shared.start()
@@ -554,7 +563,24 @@ struct DoorOpenView: View {
                     startOfflineTimeObserver()
                 }
 
+                // Force a fresh Bluetooth read here too (not just wait on the
+                // centralManagerDidUpdateState delegate, which isn't guaranteed to
+                // re-fire promptly right after logging into a different account) —
+                // see the matching call in `.task` for the full reasoning.
+                bleManager.refreshAuthorizationStatus()
                 updateBLEState()
+
+                // Safety net: doorStorage/BLE state can still resolve a moment after
+                // this — e.g. the device-details fetch or a delayed CoreBluetooth
+                // callback — so re-check shortly after instead of only relying on
+                // reactive triggers that may not fire if nothing about their
+                // underlying value actually changed since the previous session.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    guard isViewVisible else { return }
+                    if hasAvailableDoor && bleManager.isBluetoothOn && !isScanningActive {
+                        updateBLEState()
+                    }
+                }
 
                 if notificationNav.shouldOpenNotifications {
                     navigateToNotifications = true
@@ -627,7 +653,6 @@ struct DoorOpenView: View {
                 switch newPhase {
                 case .background:
                     print("🌙 App went to background — stopping BLE scanning and monitoring")
-                    isAppActive = false
                     stopBLE(reason: "Preparing Scan..")
                     PassPresentationSuppressionManager.shared.stop()
 
@@ -639,7 +664,6 @@ struct DoorOpenView: View {
                     resetOverlayState()
 
                 case .active:
-                    isAppActive = true
                     updateBLEState()
                     if isViewVisible {
                         PassPresentationSuppressionManager.shared.start()
@@ -705,8 +729,11 @@ struct DoorOpenView: View {
                 switch state {
                 case .poweredOff:
                     print("🔴 Bluetooth OFF")
-                    AceesMessage = "Bluetooth is Off. Please turn it on."
-                    isScanningActive = false
+                    // Actually stop scanning/monitoring here (not just flip the flag) —
+                    // otherwise the rssiTimer set up by monitorAndAutoOpenNearbyDoor()
+                    // keeps ticking on stale cached `bleManager.devices` data even
+                    // though Bluetooth is off and nothing new can be discovered.
+                    stopBLE(reason: "Bluetooth is Off. Please turn it on.")
 
                 case .unauthorized:
                     print("🚫 Bluetooth permission denied")
@@ -715,9 +742,10 @@ struct DoorOpenView: View {
 
                 case .poweredOn:
                     print("🟢 Bluetooth ON")
-                    guard isAppActive else { break }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        restartBLE()
+                    if isAppInForeground {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            restartBLE()
+                        }
                     }
                     
                 default:
@@ -1331,15 +1359,9 @@ struct DoorOpenView: View {
     }
 
     // MARK: - BLE Lifecycle
-    //
-    // Every BLE start/stop/restart decision in this view funnels through the four methods
-    // below instead of each call site re-implementing its own guard chain:
-    //   - startBLE()      the one place that begins scanning
-    //   - stopBLE(reason:) the one place that ends scanning
-    //   - restartBLE()    stop, then retry-until-ready start (CoreBluetooth foreground recovery)
-    //   - updateBLEState() "should scanning be running right now?" reconciliation, used by
-    //                      any hook that just needs to resync (onAppear, scenePhase active,
-    //                      door/bluetooth availability changes)
+    private var isAppInForeground: Bool {
+        UIApplication.shared.applicationState != .background
+    }
 
     /// THE single entry point for starting BLE scanning + nearby-door monitoring.
     /// Safe to call from anywhere — no-ops if a time-sync alert is blocking access, or if the
@@ -1350,7 +1372,7 @@ struct DoorOpenView: View {
             print("⛔ Time sync required — BLE start blocked")
             return
         }
-        guard isAppActive else {
+        guard isAppInForeground else {
             print("⛔ App is backgrounded — BLE start blocked")
             return
         }
@@ -1435,7 +1457,7 @@ struct DoorOpenView: View {
     /// stops it if it shouldn't be running, restarts it if it should be but has gone
     /// stale/inactive, or leaves it alone if everything already matches.
     private func updateBLEState() {
-        guard isAppActive else { return }
+        guard isAppInForeground else { return }
         guard isViewVisible else { return }
         guard selectedTab == 0 else { return }
         guard hasDigitalKeyAccess else { return }
@@ -1464,7 +1486,7 @@ struct DoorOpenView: View {
     /// notification + `bleState` publisher + scenePhase) never race into a duplicate ladder.
     private func restartBLE(retryIndex: Int = 0) {
         if retryIndex == 0 {
-            guard isAppActive else {
+            guard isAppInForeground else {
                 print("⛔ App is backgrounded — BLE restart skipped")
                 return
             }
@@ -1497,7 +1519,7 @@ struct DoorOpenView: View {
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + delays[retryIndex]) {
-            guard isAppActive else {
+            guard isAppInForeground else {
                 isBLERestarting = false
                 return
             }
@@ -1841,9 +1863,8 @@ struct DoorOpenView: View {
         
         rssiTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { [weak bleManager, weak doorStorage] timer in
 
-           
             guard
-                isAppActive,
+                isAppInForeground,
                 isViewVisible,
                 let bleManager = bleManager,
                 let doorStorage = doorStorage
