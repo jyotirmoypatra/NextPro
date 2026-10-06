@@ -323,6 +323,14 @@ struct CreateNewPasswordView: View {
                 }
                 
             }
+            .onChange(of: viewModel.newPassword) { newValue in
+                let fixed = newValue.withStraightPunctuation
+                if fixed != newValue { viewModel.newPassword = fixed }
+            }
+            .onChange(of: viewModel.confirmPassword) { newValue in
+                let fixed = newValue.withStraightPunctuation
+                if fixed != newValue { viewModel.confirmPassword = fixed }
+            }
             .onTapGesture {
                 UIApplication.shared.hideKeyboard()
             }
@@ -428,11 +436,11 @@ struct PasswordPolicyView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            PolicyRow(text: "Minimum 8 and maximum 64 characters", isValid: policy.validLength)
             PolicyRow(text: "At least one uppercase letter (A-Z)", isValid: policy.hasUppercase)
             PolicyRow(text: "At least one lowercase letter (a-z)", isValid: policy.hasLowercase)
             PolicyRow(text: "At least one number (0-9)", isValid: policy.hasNumber)
-            PolicyRow(text: "At least one special character (@#$%^&+=!)", isValid: policy.hasSpecialChar)
-            PolicyRow(text: "8-15 characters", isValid: policy.validLength)
+            PolicyRow(text: "At least one special character (\(passwordSpecialCharactersText))", isValid: policy.hasSpecialChar)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .transition(.opacity)
@@ -472,7 +480,7 @@ func passwordPolicy(for password: String) -> PasswordPolicy {
         hasUppercase: password.range(of: "[A-Z]", options: .regularExpression) != nil,
         hasLowercase: password.range(of: "[a-z]", options: .regularExpression) != nil,
         hasNumber: password.range(of: "[0-9]", options: .regularExpression) != nil,
-        hasSpecialChar: password.range(of: "[@#$%^&+=!]", options: .regularExpression) != nil,
-        validLength: password.count >= 8 && password.count <= 15
+        hasSpecialChar: password.range(of: #"[!@#$%^&*()_+\-={}\[\]|\\:;"'<>,.?/]"#, options: .regularExpression) != nil,
+        validLength: password.count >= 8 && password.count <= 64
     )
 }

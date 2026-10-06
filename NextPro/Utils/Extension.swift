@@ -120,14 +120,48 @@ extension UIImage {
 }
 
 
-func isPasswordValid(_ password: String) -> Bool {
-    let lengthOK = password.count >= 8
-    let upperOK  = password.range(of: "[A-Z]", options: .regularExpression) != nil
-    let lowerOK  = password.range(of: "[a-z]", options: .regularExpression) != nil
-    let numberOK = password.range(of: "[0-9]", options: .regularExpression) != nil
-    let specialOK = password.range(of: "[!@#$%^&*(),.?\":{}|<>]", options: .regularExpression) != nil
+//func isPasswordValid(_ password: String) -> Bool {
+//    let lengthOK = password.count >= 8
+//    let upperOK  = password.range(of: "[A-Z]", options: .regularExpression) != nil
+//    let lowerOK  = password.range(of: "[a-z]", options: .regularExpression) != nil
+//    let numberOK = password.range(of: "[0-9]", options: .regularExpression) != nil
+//    let specialOK = password.range(of: "[!@#$%^&*(),.?\":{}|<>]", options: .regularExpression) != nil
+//
+//    return lengthOK && upperOK && lowerOK && numberOK && specialOK
+//}
 
-    return lengthOK && upperOK && lowerOK && numberOK && specialOK
+extension String {
+    /// iOS "smart punctuation" swaps typed " ' - for curly quotes / en dash, which the
+    /// password rule doesn't allow — convert them back to the straight characters.
+    var withStraightPunctuation: String {
+        self.replacingOccurrences(of: "\u{201C}", with: "\"")
+            .replacingOccurrences(of: "\u{201D}", with: "\"")
+            .replacingOccurrences(of: "\u{2018}", with: "'")
+            .replacingOccurrences(of: "\u{2019}", with: "'")
+            .replacingOccurrences(of: "\u{2013}", with: "-")
+            .replacingOccurrences(of: "\u{2014}", with: "-")
+    }
+}
+
+// Single source of truth for the password rule's user-facing text — keep in sync
+// with the regex in `isPasswordValid` below.
+let passwordSpecialCharactersText = #"! @ # $ % ^ & * ( ) _ + - = { } [ ] | \ : ; " ' < > , . ? /"#
+
+let passwordPolicyMessage = """
+Password must meet the following requirements:
+• Minimum 8 and maximum 64 characters
+• At least 1 uppercase letter (A–Z)
+• At least 1 lowercase letter (a–z)
+• At least 1 number (0–9)
+• At least 1 special character (\(passwordSpecialCharactersText))
+"""
+
+/// 8–64 characters, with at least one uppercase, one lowercase, one digit and one
+/// special character (any symbol typeable on a standard keyboard), and nothing
+/// outside those character classes.
+func isPasswordValid(_ password: String) -> Bool {
+    let passwordRegex = #"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-={}\[\]|\\:;"'<>,.?/])[A-Za-z\d!@#$%^&*()_+\-={}\[\]|\\:;"'<>,.?/]{8,64}$"#
+    return password.range(of: passwordRegex, options: .regularExpression) != nil
 }
 
  func isValidEmail(_ email: String) -> Bool {
