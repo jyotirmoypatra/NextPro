@@ -17,7 +17,7 @@ struct APIConfig {
     }
 
   // Change only this line when switching environments
-   static let environment: Environment = .staging
+   static let environment: Environment = .development
     
     static var baseURL: String {
         switch environment {
@@ -71,7 +71,8 @@ struct APIConfig {
         
         static let setControllerDoorUnlockTime = "/api/deviceinventory/configure-door-opening-time/"
         
-        static let wifiUnlcokLog = "/api/deviceinventory/door-access-log/wifi-unlock/"
+       // static let wifiUnlcokLog = "/api/deviceinventory/door-access-log/wifi-unlock/"
+        static let accessLog = "/api/deviceinventory/door-access-log/events/"
         
         static let addNewVoiceMessage = "/api/voice-message/templates/"
         static let deleteCustomVoiceMessage = "/api/voice-message/templates/"
