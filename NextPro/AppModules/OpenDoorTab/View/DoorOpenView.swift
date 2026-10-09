@@ -1043,6 +1043,7 @@ struct DoorOpenView: View {
                 if isRemoteUnlock{
                     guard let sn = sn, let doorId = doorId else { return }
                     guard isMatchingPendingDoor(sn: sn, doorId: doorId) else { return }
+                    sendAccessLog(sn: sn, doorId: doorId, userId: deviceUserId, cardNo: digitalCardString, time: eventTime, eventCode: type)
 
                     setRemoteResult(isSuccess: true)
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -1052,6 +1053,7 @@ struct DoorOpenView: View {
                 }else{
                     guard let sn = sn, let doorId = doorId else { return }
                     guard isMatchingPendingDoor(sn: sn, doorId: doorId) else { return }
+                    sendAccessLog(sn: sn, doorId: doorId, userId: deviceUserId, cardNo: digitalCardString, time: eventTime, eventCode: type)
 
                     digitalGrantedResponse()
                 }
@@ -1061,6 +1063,7 @@ struct DoorOpenView: View {
                 if isRemoteUnlock{
                     guard let sn = sn, let doorId = doorId else { return }
                     guard isMatchingPendingDoor(sn: sn, doorId: doorId) else { return }
+                    sendAccessLog(sn: sn, doorId: doorId, userId: deviceUserId, cardNo: digitalCardString, time: eventTime, eventCode: type)
 
                     setRemoteResult(isSuccess: true)
                     if shouldSpeakGranted {
@@ -1070,6 +1073,7 @@ struct DoorOpenView: View {
                 }else{
                     guard let sn = sn, let doorId = doorId else { return }
                     guard isMatchingPendingDoor(sn: sn, doorId: doorId) else { return }
+                    sendAccessLog(sn: sn, doorId: doorId, userId: deviceUserId, cardNo: digitalCardString, time: eventTime, eventCode: type)
 
                     digitalGrantedResponse()
                 }
@@ -1077,17 +1081,9 @@ struct DoorOpenView: View {
             else if type == 8 { //wifi unlock
                 guard let sn = sn, let doorId = doorId else { return }
                 guard isMatchingPendingDoor(sn: sn, doorId: doorId) else { return }
+                sendAccessLog(sn: sn, doorId: doorId, userId: deviceUserId, cardNo: digitalCardString, time: eventTime, eventCode: type)
 
                 setRemoteResult(isSuccess: true)
-                Task {
-                    await WifiRemoteOpenLogViewModel().setWifiLog(
-                        controllerSerial: sn,
-                        relayDoorNo: doorId,
-                        userId: deviceUserId,
-                        cardNo: digitalCardString,
-                        time: eventTime
-                    )
-                }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 if shouldSpeakGranted {
                     speakText(grantedSpeechMessage)
@@ -1097,6 +1093,7 @@ struct DoorOpenView: View {
                 if isRemoteUnlock{
                     guard let sn = sn, let doorId = doorId else { return }
                     guard isMatchingPendingDoor(sn: sn, doorId: doorId) else { return }
+                    sendAccessLog(sn: sn, doorId: doorId, userId: deviceUserId, cardNo: digitalCardString, time: eventTime, eventCode: type)
 
                     remoteDeniedResponse(
                         speech: (type == 42 || type == 43)
@@ -1106,6 +1103,7 @@ struct DoorOpenView: View {
                 }else{
                     guard let sn = sn, let doorId = doorId else { return }
                     guard isMatchingPendingDoor(sn: sn, doorId: doorId) else { return }
+                    sendAccessLog(sn: sn, doorId: doorId, userId: deviceUserId, cardNo: digitalCardString, time: eventTime, eventCode: type)
 
                     let deniedSpeech = (type == 42 || type == 43)
                         ? accessDeniedMessage + ". " + "Time Restricted"
@@ -1119,11 +1117,13 @@ struct DoorOpenView: View {
                 if isRemoteUnlock {
                     guard let sn = sn, let doorId = doorId else { return }
                     guard isMatchingPendingDoor(sn: sn, doorId: doorId) else { return }
+                    sendAccessLog(sn: sn, doorId: doorId, userId: deviceUserId, cardNo: digitalCardString, time: eventTime, eventCode: type)
 
                     remoteDeniedResponse(speech: accessDeniedMessage)
                 } else {
                     guard let sn = sn, let doorId = doorId else { return }
                     guard isMatchingPendingDoor(sn: sn, doorId: doorId) else { return }
+                    sendAccessLog(sn: sn, doorId: doorId, userId: deviceUserId, cardNo: digitalCardString, time: eventTime, eventCode: type)
 
                     digitalDeniedResponse(speech: accessDeniedMessage)
                 }
@@ -1134,6 +1134,29 @@ struct DoorOpenView: View {
             }
             doorManager.closeMQTTWindow()
             doorManager.clearDoorEvent()
+        }
+    }
+
+    private func sendAccessLog(sn: String, doorId: Int, userId: Int, cardNo: String, time: String, eventCode: Int?) {
+        guard let eventCode, let source = pendingDoorAction?.source else { return }
+
+        let accessMode: String
+        switch source {
+        case .digitalBLE: accessMode = "tap"
+        case .remoteBLE: accessMode = "ble"
+        case .remoteWiFi: accessMode = "wifi"
+        }
+
+        Task {
+            await DoorAccessLogViewModel().setWifiLog(
+                accessMode: accessMode,
+                controllerSerial: sn,
+                relayDoorNo: doorId,
+                userId: userId,
+                cardNo: cardNo,
+                time: time,
+                eventCode: eventCode
+            )
         }
     }
 
