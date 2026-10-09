@@ -419,7 +419,17 @@ struct DoorOpenView: View {
                                                             }
                                                         },
                                                         canOpenDoor: {
-                                                            isWithinAccessWindow(accessGroups: door.accessGroups)
+                                                            let allowed = isWithinAccessWindow(accessGroups: door.accessGroups)
+                                                            if !allowed {
+                                                                // The card sets pendingDoorAction (wifi vs ble) just before asking.
+                                                                let mode = pendingDoorAction?.source == .remoteWiFi ? "wifi" : "ble"
+                                                                sendTimeRestrictedLog(
+                                                                    accessMode: mode,
+                                                                    serial: door.serial,
+                                                                    doorId: door.doorNumber
+                                                                )
+                                                            }
+                                                            return allowed
                                                         }
                                                     )
                                                 }
@@ -1160,6 +1170,35 @@ struct DoorOpenView: View {
         }
     }
 
+    /// Logs an access-denied-by-time-window attempt (event code 42, hardcoded) — these
+    private func sendTimeRestrictedLog(accessMode: String, serial: String, doorId: Int) {
+        // isWithinAccessWindow also returns false when server time isn't synced yet —
+        // that's a time-sync problem, not a real restriction, so don't log it.
+        guard let now = serverTimeVM.getEstimatedServerTime(),
+              let userId = deviceVM.deviceDetails?.deviceUserId,
+              let cardNo = deviceVM.deviceDetails?.digitalCardNumber
+        else { return }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        if let tzID = serverTimeVM.localTimeZoneID, let tz = TimeZone(identifier: tzID) {
+            formatter.timeZone = tz
+        }
+
+        Task {
+            await DoorAccessLogViewModel().setWifiLog(
+                accessMode: accessMode,
+                controllerSerial: serial,
+                relayDoorNo: doorId,
+                userId: userId,
+                cardNo: cardNo,
+                time: formatter.string(from: now),
+                eventCode: 42
+            )
+        }
+    }
+
     private func isMatchingPendingDoor(sn: String?, doorId: Int?) -> Bool {
         guard let pending = pendingDoorAction,
               let sn,
@@ -1866,6 +1905,11 @@ struct DoorOpenView: View {
                 
                 guard isWithinAccessWindow(accessGroups: door.accessGroups) else {
                     print("⛔ Outside allowed time window")
+                    sendTimeRestrictedLog(
+                        accessMode: "tap",
+                        serial: door.controllerSn ?? door.devSn,
+                        doorId: Int(door.doorID)
+                    )
                     DispatchQueue.main.async {
                         overlayMessage = door.name + ". " + deniedBase
                         AceesMessage = deniedBase
