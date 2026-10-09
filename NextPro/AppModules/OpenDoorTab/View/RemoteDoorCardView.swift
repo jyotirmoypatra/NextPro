@@ -46,7 +46,7 @@ struct RemoteDoorCardView: View {
     
     let canOpenDoor: () -> Bool
     @State private var deniedBase = ""
-    @State private var isVoiceAnnouncementEnabled = true
+    @State private var isDeniedVoiceEnabled = true
 
     // MARK: - Device power check (BLE proximity scan for door.serial)
     @StateObject private var deviceCheckBleManager = BLEManager()
@@ -382,8 +382,8 @@ struct RemoteDoorCardView: View {
             UserDefaults.standard.string(forKey: "voice_denied")
             ?? "Access denied"
 
-            isVoiceAnnouncementEnabled =
-            UserDefaults.standard.object(forKey: "voice_announcement_enabled") as? Bool ?? true
+            isDeniedVoiceEnabled =
+            UserDefaults.standard.object(forKey: "voice_enabled_denied") as? Bool ?? true
         }
         .onChange(of: scenePhase) { newPhase in
             guard newPhase == .background else { return }
@@ -537,7 +537,7 @@ struct RemoteDoorCardView: View {
     }
 
     private func speakAndReset(_ text: String, isWifi: Bool) {
-        guard isVoiceAnnouncementEnabled else {
+        guard isDeniedVoiceEnabled else {
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                 if isWifi {
                     resetWifiState()
