@@ -1158,7 +1158,7 @@ struct DoorOpenView: View {
         }
 
         Task {
-            await DoorAccessLogViewModel().setWifiLog(
+            await DoorAccessLogViewModel().reportAccessLog(
                 accessMode: accessMode,
                 controllerSerial: sn,
                 relayDoorNo: doorId,
@@ -1171,6 +1171,7 @@ struct DoorOpenView: View {
     }
 
     /// Logs an access-denied-by-time-window attempt (event code 42, hardcoded) — these
+    /// are blocked on the phone before any MQTT response exists, so nothing else logs them.
     private func sendTimeRestrictedLog(accessMode: String, serial: String, doorId: Int) {
         // isWithinAccessWindow also returns false when server time isn't synced yet —
         // that's a time-sync problem, not a real restriction, so don't log it.
@@ -1187,7 +1188,7 @@ struct DoorOpenView: View {
         }
 
         Task {
-            await DoorAccessLogViewModel().setWifiLog(
+            await DoorAccessLogViewModel().reportAccessLog(
                 accessMode: accessMode,
                 controllerSerial: serial,
                 relayDoorNo: doorId,

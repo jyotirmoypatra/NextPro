@@ -16,7 +16,7 @@ class DoorAccessLogViewModel: ObservableObject {
     @Published var success: Bool = false
     private let networkManager = NetworkManager.shared
 
-    func setWifiLog(accessMode:String,controllerSerial: String,relayDoorNo:Int,userId:Int,cardNo:String,time:String,eventCode:Int) async {
+    func reportAccessLog(accessMode:String,controllerSerial: String,relayDoorNo:Int,userId:Int,cardNo:String,time:String,eventCode:Int) async {
         
         guard networkManager.hasInternet else {
             errorMessage = "No internet connection."
