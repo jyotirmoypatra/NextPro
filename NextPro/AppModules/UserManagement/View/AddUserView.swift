@@ -87,7 +87,12 @@ struct AddUserView: View {
     }
     
     @FocusState private var focusedField: Field?
-    
+
+    private var isAnyPickerOrOverlayOpen: Bool {
+        showStartDatePicker || showEndDatePicker || showTimePicker
+            || showInfo || navigateToDoorAddView || openSection != nil
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -148,15 +153,15 @@ struct AddUserView: View {
                                 )
                                 
                                 .focused($focusedField, equals: .fullName)
-                                .submitLabel(.next)
+                                .submitLabel(.return)
                                 .onSubmit {
-                                    focusedField = .email
+                                    focusedField = nil
                                 }
                                 
                                 
                                 
                                 LabeledTextField(
-                                    title: "Email ID",
+                                    title: "Email",
                                     placeholder: "Enter email",
                                     isRequired: true,
                                     text: $email,
@@ -164,9 +169,9 @@ struct AddUserView: View {
                                 )
                     
                                 .focused($focusedField, equals: .email)
-                                .submitLabel(.next)
+                                .submitLabel(.return)
                                 .onSubmit {
-                                    focusedField = .phone
+                                    focusedField = nil
                                 }
                                 
                                 LabeledTextField(
@@ -178,7 +183,7 @@ struct AddUserView: View {
                                 )
                               
                                 .focused($focusedField, equals: .phone)
-                                .submitLabel(.done)
+                                .submitLabel(.return)
                                 .onSubmit {
                                     focusedField = nil
                                 }
@@ -948,6 +953,12 @@ struct AddUserView: View {
         .fullScreenCover(isPresented: $showInfo) {
             InfoScreenView(infoType: "user_add_info")
         }
+        .onChange(of: isAnyPickerOrOverlayOpen) { isOpen in
+            if isOpen {
+                focusedField = nil
+                UIApplication.shared.hideKeyboard()
+            }
+        }
         .onChange(of: phone) { newValue in
             // keep only digits
             let filtered = newValue.filter { $0.isNumber }
@@ -1508,6 +1519,7 @@ struct LabeledTextField: View {
     @State private var showGenerateButton: Bool = false   // 👈 NEW
     var keyboardType: UIKeyboardType = .default
     var isEditMode: Bool = false
+    private var isNumericOnly: Bool { keyboardType == .numberPad }
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
 
@@ -1579,14 +1591,23 @@ struct LabeledTextField: View {
                             SecureField("", text: $text)
                         } else {
                             TextField("", text: $text)
-                                .submitLabel(.next)
+                                .submitLabel(.return)
                         }
                     }
-                    .keyboardType(keyboardType)
+                    // `.numberPad` has no Return key on iPhone, so there's no built-in way
+                    // to dismiss it. `.numbersAndPunctuation` opens on the number layout
+                    // and has the normal Return/Done key inside the keyboard.
+                    .keyboardType(isNumericOnly ? .numbersAndPunctuation : keyboardType)
                     .foregroundColor(.white)
                     .font(.custom("Inter-Regular", size: 16))
                     .disabled(isHaveBtn)
                     .opacity(isHaveBtn ? 0.7 : 1)
+                    .onChange(of: text) { newValue in
+                        // That keyboard also allows symbols/letters, so keep digits only.
+                        guard isNumericOnly else { return }
+                        let digitsOnly = newValue.filter { $0.isNumber }
+                        if digitsOnly != newValue { text = digitsOnly }
+                    }
 
                     // 👁 Eye Button
                     if isSecure {
