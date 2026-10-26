@@ -24,6 +24,9 @@ struct GetUserData: Codable {
     
     let is_digital: Bool
     let is_remote: Bool
+    let is_ble: Bool?
+    let is_wifi: Bool?
+    let is_location_check_enabled: Bool?
     
     let nfc_type: String?
     let nfc_physical: String?

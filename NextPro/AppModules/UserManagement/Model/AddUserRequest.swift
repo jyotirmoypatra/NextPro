@@ -20,6 +20,9 @@ struct AddUserRequest: Codable {
     // MARK: - Access Mode
     let is_digital: Bool
     let is_remote: Bool
+    let is_ble: Bool
+    let is_wifi: Bool
+    let is_location_check_enabled: Bool
 
     // MARK: - NFC
     let nfc_type: String

@@ -32,6 +32,9 @@ struct AddUserView: View {
    
     @State private var digitalAccess = false
     @State private var remoteAccess = false
+    @State private var wifiAccess = false
+    @State private var locationCheckForWifi = true
+    @State private var bleAccess = false
 
 
     @State private var isOneTimeAccess: Bool = true
@@ -55,6 +58,8 @@ struct AddUserView: View {
     
     @State private var accessStartDate: Date? = nil
     @State private var accessEndDate: Date? = nil
+    @State private var noEndDate = false
+    @State private var allHours = false
 
 
     @State private var selectedWeekdays: Set<Int> = []   // 1 = Sun ... 7 = Sat
@@ -254,12 +259,20 @@ struct AddUserView: View {
                                                             //Sub Option
                                                             if remoteAccess {
                                                                 
-                                                                Toggle(isOn: $remoteAccess) {
+                                                                Toggle(isOn: $bleAccess) {
                                                                     Text("Bluetooth")
-                                                                        .foregroundColor(.white.opacity(0.5))
+                                                                        .foregroundColor(.white.opacity(0.8))
                                                                         .font(.system(size: 15, weight: .medium))
                                                                 }
                                                                 .tint(Color.green.opacity(0.5))
+                                                                .padding(.leading, 15)
+
+                                                                Toggle(isOn: $wifiAccess) {
+                                                                    Text("Wi-Fi")
+                                                                        .foregroundColor(.white.opacity(0.8))
+                                                                        .font(.system(size: 15, weight: .medium))
+                                                                }
+                                                                .tint(.green)
                                                                 .padding(.leading, 15)
                                                             }
                                                         }
@@ -320,7 +333,53 @@ struct AddUserView: View {
                                     .cornerRadius(12)
                                 }
                                 
-                                
+//                                // LOCATION CHECK FOR WI-FI UNLOCK
+//                                VStack(alignment: .leading, spacing: 14) {
+//                                    HStack(alignment: .top, spacing: 14) {
+//                                        Image(systemName: "mappin")
+//                                            .font(.system(size: 20, weight: .semibold))
+//                                            .foregroundColor(.white)
+//                                            .frame(width: 24)
+//                                            .padding(.top, 2)
+//
+//                                        VStack(alignment: .leading, spacing: 4) {
+//                                            Text("Location Check for Wi-Fi Unlock")
+//                                                .font(.system(size: 15, weight: .medium))
+//                                                .foregroundColor(.white)
+//                                            Text("Applies to Wi-Fi Unlock and Share Link.")
+//                                                .font(.custom("Inter-Regular", size: 13))
+//                                                .foregroundColor(.white.opacity(0.55))
+//                                        }
+//
+//                                        Spacer(minLength: 8)
+//
+//                                        Toggle("", isOn: $locationCheckForWifi)
+//                                            .labelsHidden()
+//                                            .tint(.green)
+//                                    }
+//
+//                                    HStack(alignment: .center, spacing: 12) {
+//                                        Image(systemName: "info.circle")
+//                                            .font(.system(size: 18))
+//                                            .foregroundColor(.white.opacity(0.8))
+//
+//                                        Text("We verify your location against the door's location. Wi-Fi unlocking works only when you're nearby.")
+//                                            .font(.custom("Inter-Regular", size: 14))
+//                                            .foregroundColor(.white.opacity(0.9))
+//                                            .fixedSize(horizontal: false, vertical: true)
+//                                    }
+//                                    .padding(10)
+//                                    .frame(maxWidth: .infinity, alignment: .leading)
+//                                    .background(Color.blue.opacity(0.18))
+//                                    .cornerRadius(12)
+//                                }
+//                                .padding(14)
+//                                .background(Color.white.opacity(0.05))
+//                                .cornerRadius(16)
+//                                .overlay(
+//                                    RoundedRectangle(cornerRadius: 16)
+//                                        .stroke(Color.white.opacity(0.35), lineWidth: 1)
+//                                )
                                 
                                 
                                 // ACCESS TYPE
@@ -435,6 +494,23 @@ struct AddUserView: View {
                                         dateBox(
                                             title: "End Date",
                                             value: accessEndDate,
+                                            isDisabled: noEndDate,
+                                            titleAccessory: AnyView(
+                                                Button {
+                                                    noEndDate.toggle()
+                                                    if noEndDate { accessEndDate = nil }
+                                                } label: {
+                                                    HStack(spacing: 6) {
+                                                        Image(noEndDate ? "square-check" : "square-uncheck")
+                                                            .resizable()
+                                                            .frame(width: 18, height: 18)
+                                                        Text("No end date")
+                                                            .font(.custom("Inter-Regular", size: 13))
+                                                            .foregroundColor(.white)
+                                                    }
+                                                }
+                                                .buttonStyle(.plain)
+                                            ),
                                             action: { showEndDatePicker = true }
                                         )
                                     } .padding()
@@ -449,6 +525,31 @@ struct AddUserView: View {
                                                 .font(.custom("Inter-Medium", size: 16))
                                                 .foregroundColor(.white)
                                             Text("*").foregroundColor(.red)
+
+                                            Spacer()
+
+                                            Button {
+                                                allHours.toggle()
+                                                if allHours {
+                                                    // One full-day slot: 12:00 AM – 11:59 PM.
+                                                    let startOfDay = Calendar.current.startOfDay(for: Date())
+                                                    let endOfDay = Calendar.current.date(bySettingHour: 23, minute: 59, second: 0, of: startOfDay)
+                                                    timeSlots = [TimeSlotUI(startTime: startOfDay, endTime: endOfDay)]
+                                                } else {
+                                                    // Back to a single empty slot.
+                                                    timeSlots = [TimeSlotUI()]
+                                                }
+                                            } label: {
+                                                HStack(spacing: 6) {
+                                                    Image(allHours ? "square-check" : "square-uncheck")
+                                                        .resizable()
+                                                        .frame(width: 18, height: 18)
+                                                    Text("All hours")
+                                                        .font(.custom("Inter-Regular", size: 13))
+                                                        .foregroundColor(.white)
+                                                }
+                                            }
+                                            .buttonStyle(.plain)
                                         }
 
                                         VStack(spacing: 10) {
@@ -484,7 +585,8 @@ struct AddUserView: View {
                                                         // Start Time
                                                         timeBox(
                                                             title: "Start Time",
-                                                            value: timeSlots[index].startTime
+                                                            value: timeSlots[index].startTime,
+                                                            isDisabled: allHours
                                                         ) {
                                                             showTimePicker = true
                                                             selectedTimeIndex = index
@@ -494,7 +596,8 @@ struct AddUserView: View {
                                                         // End Time
                                                         timeBox(
                                                             title: "End Time",
-                                                            value: timeSlots[index].endTime
+                                                            value: timeSlots[index].endTime,
+                                                            isDisabled: allHours
                                                         ) {
                                                             showTimePicker = true
                                                             selectedTimeIndex = index
@@ -513,7 +616,7 @@ struct AddUserView: View {
                                             }
                                             
                                             
-                                            if isScheduledAccess && timeSlots.count < maxSlots {
+                                            if isScheduledAccess && !allHours && timeSlots.count < maxSlots {
                                                 HStack{
                                                     Spacer()
                                                     Button {
@@ -543,6 +646,29 @@ struct AddUserView: View {
                                             .foregroundColor(.white)
                                             Text("*")
                                                 .foregroundColor(.red)
+
+                                            Spacer()
+
+                                            // Checked whenever all 7 days are selected (whether via
+                                            // this box or by tapping each day); toggling it selects or
+                                            // clears every day pill at once.
+                                            Button {
+                                                if selectedWeekdays.count == 7 {
+                                                    selectedWeekdays.removeAll()
+                                                } else {
+                                                    selectedWeekdays = Set(1...7)
+                                                }
+                                            } label: {
+                                                HStack(spacing: 6) {
+                                                    Image(selectedWeekdays.count == 7 ? "square-check" : "square-uncheck")
+                                                        .resizable()
+                                                        .frame(width: 18, height: 18)
+                                                    Text("All days")
+                                                        .font(.custom("Inter-Regular", size: 13))
+                                                        .foregroundColor(.white)
+                                                }
+                                            }
+                                            .buttonStyle(.plain)
                                         }
                                         
                                         LazyVGrid(
@@ -834,7 +960,11 @@ struct AddUserView: View {
                     
                     digitalAccess =  user.is_digital
                     remoteAccess =  user.is_remote
-                    isSharedLink = user.is_shared_link 
+                    bleAccess = user.is_ble ?? false
+                    wifiAccess = user.is_wifi ?? false
+                   // locationCheckForWifi = user.is_location_check_enabled ?? false
+                    locationCheckForWifi = true
+                    isSharedLink = user.is_shared_link
                     
                     isEditModeLoaded = true
                     
@@ -1119,6 +1249,10 @@ struct AddUserView: View {
             if nfcId.trimmingCharacters(in: .whitespaces).isEmpty {
                 return "Digital Card ID is not generated"
             }
+            
+            if !bleAccess && !wifiAccess{
+                return "Please select at least any remote options (Wifi or ble)"
+            }
         }
         
         if isSelectKeyFob {
@@ -1352,6 +1486,9 @@ struct AddUserView: View {
                 
                 is_digital: (isSelectMobileAPP && digitalAccess) ? true : false,
                 is_remote: (isSelectMobileAPP && remoteAccess) ? true : false,
+                is_ble: (isSelectMobileAPP && remoteAccess) ? bleAccess : false,
+                is_wifi: (isSelectMobileAPP && remoteAccess) ? wifiAccess : false,
+                is_location_check_enabled: locationCheckForWifi,
                 // NFC
                 nfc_type: nfcType,
                 nfc_physical: isSelectKeyFob  ? nfcPhysicalNumber : "",
@@ -1367,7 +1504,7 @@ struct AddUserView: View {
                 
                 // Schedule
                 start_date: isSelectDoor ? accessStartDate?.toAPIDate() : "",
-                end_date: isSelectDoor ?  accessEndDate?.toAPIDate() : "",
+                end_date: isSelectDoor ? (noEndDate ? "" : accessEndDate?.toAPIDate()) : "",
                 time_slots:  isSelectDoor ?  apiTimeSlots : [],
                 week_days: isSelectDoor ?  weekDaysString : "",
 
@@ -1416,6 +1553,9 @@ struct AddUserView: View {
         // MARK: - Access Mode
         digitalAccess = false
         remoteAccess = false
+        wifiAccess = false
+        locationCheckForWifi = true
+        bleAccess = false
         
         // Reset to default mode → Access Group
         isSelectAccessGroup = true
@@ -1428,7 +1568,9 @@ struct AddUserView: View {
         // MARK: - Dates & Time
         accessStartDate = nil
         accessEndDate = nil
+        noEndDate = false
         timeSlots = [TimeSlotUI()]
+        allHours = false
         
         
         // MARK: - Weekdays
@@ -1757,14 +1899,22 @@ struct AccessTypeRow: View {
 func dateBox(
     title: String,
     value: Date?,
+    isDisabled: Bool = false,
+    titleAccessory: AnyView = AnyView(EmptyView()),
     action: @escaping () -> Void
 ) -> some View {
 
     VStack(alignment: .leading, spacing: 6) {
 
-        Text(title)
-            .foregroundColor(.white)
-            .font(.custom("Inter-Regular", size: 15))
+        HStack {
+            Text(title)
+                .foregroundColor(.white)
+                .font(.custom("Inter-Regular", size: 15))
+
+            Spacer()
+
+            titleAccessory
+        }
 
         Button(action: action) {
             HStack {
@@ -1784,6 +1934,8 @@ func dateBox(
             }
             .padding()
         }
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.4 : 1)
         .overlay(
             RoundedRectangle(cornerRadius: 5)
                 .stroke(Color.white.opacity(0.4), lineWidth: 1)
@@ -1808,6 +1960,7 @@ private let amPmFormatter: DateFormatter = {
 func timeBox(
     title: String,
     value: Date?,
+    isDisabled: Bool = false,
     action: @escaping () -> Void
 ) -> some View {
 
@@ -1836,6 +1989,8 @@ func timeBox(
             }
             .padding()
         }
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.4 : 1)
         .overlay(
             RoundedRectangle(cornerRadius: 5)
                 .stroke(Color.white.opacity(0.4), lineWidth: 1)
