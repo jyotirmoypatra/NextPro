@@ -21,6 +21,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     private var updateCount = 0
     private let requiredUpdates = 3
+    /// Guards against `onLocationReady`/`onLocationError` firing more than once per
+    /// `startLocation()` call — CLLocationManager can still deliver an already-queued
+    /// location update after `stopUpdatingLocation()` is called, which would otherwise
+    /// re-satisfy `updateCount >= requiredUpdates` and fire the ready callback twice.
+    private var hasFinished = false
     
     var onLocationReady: (() -> Void)?   // main trigger
     
@@ -87,6 +92,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
 
         updateCount = 0
+        hasFinished = false
         latitude = ""
         longitude = ""
         address = ""
@@ -99,7 +105,10 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard !hasFinished else { return }
+
         guard CLLocationManager.locationServicesEnabled() else {
+            hasFinished = true
             manager.stopUpdatingLocation()
             onLocationError?(
                 """
@@ -113,6 +122,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
 
         guard manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways else {
+            hasFinished = true
             manager.stopUpdatingLocation()
             onLocationError?(
                 """
@@ -126,6 +136,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
 
         guard manager.accuracyAuthorization == .fullAccuracy else {
+            hasFinished = true
             manager.stopUpdatingLocation()
             onLocationError?(
                 """
@@ -150,7 +161,9 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         
         // Wait for 3 updates
         guard updateCount >= requiredUpdates else { return }
-        
+
+        hasFinished = true
+
         //  FINAL LOCATION
         latitude = "\(location.coordinate.latitude)"
         longitude = "\(location.coordinate.longitude)"
@@ -167,7 +180,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                     place.country
                 ].compactMap { $0 }.joined(separator: ", ")
             }
-            
+
             DispatchQueue.main.async {
                 print("Location Ready")
                 self.onLocationReady?()
@@ -176,6 +189,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        guard !hasFinished else { return }
+        hasFinished = true
         manager.stopUpdatingLocation()
         onLocationError?(error.localizedDescription)
     }
