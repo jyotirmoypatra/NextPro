@@ -76,6 +76,9 @@ struct DoorOpenView: View {
     
     @State private var hasDigitalKeyAccess: Bool = false
     @State private var hasRemoteAccess: Bool = false
+    @State private var isLocationCheckEnabled: Bool = false
+    @State private var locationAlertPayload: DoorLocationAlertPayload?
+    @State private var tooFarAlertPayload: DoorLocationAlertPayload?
     @State private var pullToRefresh: Bool = false
     
     @State private var didReceiveResponse = false
@@ -361,99 +364,9 @@ struct DoorOpenView: View {
                                 }
                                 
                                 // Digital Key Tab end
-                                
                                 else if selectedTab == 1 && hasRemoteAccess
                                 {
-                                    
-                                    
-                                    // Remote Access Tab
-                                    ScrollView(.vertical, showsIndicators: false) {
-                                        if deviceVM.standaloneControllerList.isEmpty {
-                                            VStack(spacing: 12) {
-                                                Image(systemName: "wifi.slash")
-                                                    .font(.system(size: 42))
-                                                    .foregroundColor(.gray)
-                                                
-                                                Text("No Remote Access Doors")
-                                                    .font(.custom("Inter-SemiBold", size: 18))
-                                                    .foregroundColor(.white)
-                                                
-                                                Text("You do not have any doors available for remote unlocking.")
-                                                    .font(.custom("Inter-Regular", size: 14))
-                                                    .foregroundColor(.gray)
-                                                    .multilineTextAlignment(.center)
-                                                    .padding(.horizontal, 30)
-                                            }
-                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                            .transition(.opacity)
-                                            .padding(.horizontal,10)
-                                            .padding(.top,80)
-                                        } else {
-                                            VStack(alignment: .leading, spacing: 20) {
-                                                ForEach(deviceVM.standaloneControllerList) { door in
-                                                    RemoteDoorCardView(
-                                                        door: door,
-                                                        pendingDoorAction: $pendingDoorAction,
-                                                        mqttResult: $remoteMqttResult,
-                                                        isBluetoothOn: .constant(bleManager.isBluetoothOn),
-                                                        isBluetoothPermissionDenied: .constant(bleManager.bleState == .unauthorized),
-                                                        showBluetoothAlert: $showBluetoothAlert,
-                                                        showBluetoothPermissionAlert: $showBluetoothPermissionAlert,
-                                                        showDeviceOfflineAlert: $showDeviceOfflineAlert,
-                                                        onRemoteOpen: {
-                                                            startDoorAction(door: door, source: .remoteWiFi)
-                                                        },
-                                                        onBleOpen: {
-                                                            startDoorAction(door: door, source: .remoteBLE)
-                                                        },
-                                                        onNoInternet: {
-                                                            toastManager.show(
-                                                                message: "Internet connection is required for Wi-Fi unlock.",
-                                                                type: .error,
-                                                                duration: 1.5
-                                                            )
-                                                        },
-                                                        onRemoteTimeout: {
-                                                            if isRemoteUnlock {
-                                                                isRemoteUnlock = false
-                                                            }
-                                                        },
-                                                        canOpenDoor: {
-                                                            let allowed = isWithinAccessWindow(accessGroups: door.accessGroups)
-                                                            if !allowed {
-                                                                // The card sets pendingDoorAction (wifi vs ble) just before asking.
-                                                                let mode = pendingDoorAction?.source == .remoteWiFi ? "wifi" : "ble"
-                                                                sendTimeRestrictedLog(
-                                                                    accessMode: mode,
-                                                                    serial: door.serial,
-                                                                    doorId: door.doorNumber
-                                                                )
-                                                            }
-                                                            return allowed
-                                                        }
-                                                    )
-                                                }
-                                            }
-                                            .padding(.horizontal, 10)
-                                            .padding(.top, 20)
-                                            .padding(.bottom, 20)
-                                        }
-                                    }
-                                    .id("remote-tab-\(selectedTab)")
-                                  //  .transition(.opacity)
-                                    
-                                    .refreshable{
-                                        pullToRefresh = true
-                                        
-                                        if network.hasInternet {
-                                            await deviceVM.fetchDeviceDetailsIfNeeded(force: true) // force API
-                                        } else {
-                                            await deviceVM.fetchDeviceDetailsIfNeeded() // load cache
-                                        }
-                                        
-                                        pullToRefresh = false
-                                    }
-                                    
+                                    remoteAccessTabView
                                 }
                                 
                             }
@@ -492,6 +405,8 @@ struct DoorOpenView: View {
             
         }.toast()
             .task{
+                isLocationCheckEnabled = UserDefaults.standard.bool(forKey: "is_location_check_enabled")
+
                 if network.hasInternet {
                     await deviceVM.fetchDeviceDetailsIfNeeded(force: true) // force API
                 } else {
@@ -541,6 +456,7 @@ struct DoorOpenView: View {
                 // Load access flags from UserDefaults
                 hasDigitalKeyAccess = UserDefaults.standard.bool(forKey: "digital_access")
                 hasRemoteAccess = UserDefaults.standard.bool(forKey: "remote_access")
+                isLocationCheckEnabled = UserDefaults.standard.bool(forKey: "is_location_check_enabled")
                 isGrantedVoiceEnabled = UserDefaults.standard.object(forKey: "voice_enabled_granted") as? Bool ?? true
                 isDeniedVoiceEnabled = UserDefaults.standard.object(forKey: "voice_enabled_denied") as? Bool ?? true
                 isUnauthorizedVoiceEnabled = UserDefaults.standard.object(forKey: "voice_enabled_unauthorized") as? Bool ?? true
@@ -777,7 +693,12 @@ struct DoorOpenView: View {
 
                 }
             }
-        
+            .modifier(DoorLocationAlertsModifier(
+                locationAlertPayload: $locationAlertPayload,
+                tooFarAlertPayload: $tooFarAlertPayload,
+                openAppSettings: openAppSettings
+            ))
+
             .bluetoothModernAlert(isPresented: $showBluetoothAlert) {
                 BluetoothAlertView(onDismiss: {showBluetoothAlert = false})
             }
@@ -1570,6 +1491,7 @@ struct DoorOpenView: View {
 
         switch source {
         case .remoteWiFi:
+            print("wifi unlock start")
             handleRemoteOpen(for: door)
         case .remoteBLE:
             handleBLEOpen(for: door)
@@ -1620,6 +1542,101 @@ struct DoorOpenView: View {
     }
     
     
+    @ViewBuilder
+    private var remoteAccessTabView: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            if deviceVM.standaloneControllerList.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "wifi.slash")
+                        .font(.system(size: 42))
+                        .foregroundColor(.gray)
+
+                    Text("No Remote Access Doors")
+                        .font(.custom("Inter-SemiBold", size: 18))
+                        .foregroundColor(.white)
+
+                    Text("You do not have any doors available for remote unlocking.")
+                        .font(.custom("Inter-Regular", size: 14))
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 30)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .transition(.opacity)
+                .padding(.horizontal,10)
+                .padding(.top,80)
+            } else {
+                VStack(alignment: .leading, spacing: 20) {
+                    ForEach(deviceVM.standaloneControllerList) { door in
+                        remoteDoorCard(for: door)
+                    }
+                }
+                .padding(.horizontal, 10)
+                .padding(.top, 20)
+                .padding(.bottom, 20)
+            }
+        }
+        .id("remote-tab-\(selectedTab)")
+        .refreshable{
+            pullToRefresh = true
+
+            if network.hasInternet {
+                await deviceVM.fetchDeviceDetailsIfNeeded(force: true) // force API
+            } else {
+                await deviceVM.fetchDeviceDetailsIfNeeded() // load cache
+            }
+
+            pullToRefresh = false
+        }
+    }
+
+    private func remoteDoorCard(for door: RemoteDoorItem) -> some View {
+        RemoteDoorCardView(
+            door: door,
+            isLocationCheckEnabled: isLocationCheckEnabled,
+            pendingDoorAction: $pendingDoorAction,
+            mqttResult: $remoteMqttResult,
+            isBluetoothOn: .constant(bleManager.isBluetoothOn),
+            isBluetoothPermissionDenied: .constant(bleManager.bleState == .unauthorized),
+            showBluetoothAlert: $showBluetoothAlert,
+            showBluetoothPermissionAlert: $showBluetoothPermissionAlert,
+            showDeviceOfflineAlert: $showDeviceOfflineAlert,
+            onRemoteOpen: {
+                startDoorAction(door: door, source: .remoteWiFi)
+            },
+            onBleOpen: {
+                startDoorAction(door: door, source: .remoteBLE)
+            },
+            onNoInternet: {
+                toastManager.show(
+                    message: "Internet connection is required for Wi-Fi unlock.",
+                    type: .error,
+                    duration: 1.5
+                )
+            },
+            onRemoteTimeout: {
+                if isRemoteUnlock {
+                    isRemoteUnlock = false
+                }
+            },
+            canOpenDoor: {
+                let allowed = isWithinAccessWindow(accessGroups: door.accessGroups)
+                if !allowed {
+                    // The card sets pendingDoorAction (wifi vs ble) just before asking.
+                    let mode = pendingDoorAction?.source == .remoteWiFi ? "wifi" : "ble"
+                    sendTimeRestrictedLog(
+                        accessMode: mode,
+                        serial: door.serial,
+                        doorId: door.doorNumber
+                    )
+                }
+                return allowed
+            },
+            locationAlertPayload: $locationAlertPayload,
+            tooFarAlertPayload: $tooFarAlertPayload
+        )
+    }
+
     private var DoorTabSection: some View {
         VStack(spacing: 0) {
             HStack {
@@ -1973,6 +1990,12 @@ struct DoorOpenView: View {
     }
     
     
+    private func openAppSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
+    }
+
     func maskCardNumber(_ cardNumber: String) -> String {
         guard cardNumber.count > 6 else {
             return String(repeating: "X", count: cardNumber.count)
@@ -1985,6 +2008,44 @@ struct DoorOpenView: View {
     
 }
 
+
+private struct DoorLocationAlertsModifier: ViewModifier {
+    @Binding var locationAlertPayload: DoorLocationAlertPayload?
+    @Binding var tooFarAlertPayload: DoorLocationAlertPayload?
+    let openAppSettings: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .modernAlert(item: $locationAlertPayload) { payload in
+                ModernAlertView(
+                    title: "Location Required",
+                    message: payload.message,
+                    isSuccess: false,
+                    buttonTitle: "Cancel",
+                    action: {
+                        payload.onPrimaryAction?()
+                        locationAlertPayload = nil
+                    },
+                    secondaryButtonTitle: "Open Settings",
+                    secondaryAction: {
+                        openAppSettings()
+                    }
+                )
+            }
+            .modernAlert(item: $tooFarAlertPayload) { payload in
+                ModernAlertView(
+                    title: "Too Far From Door",
+                    message: payload.message,
+                    isSuccess: false,
+                    buttonTitle: "OK",
+                    action: {
+                        payload.onPrimaryAction?()
+                        tooFarAlertPayload = nil
+                    }
+                )
+            }
+    }
+}
 
 struct HowItWorksView: View {
     var body: some View {

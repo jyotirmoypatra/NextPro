@@ -2,8 +2,14 @@
 
 import SwiftUI
 import CoreBluetooth
+import CoreLocation
 import Combine
 
+struct DoorLocationAlertPayload: Identifiable {
+    let id = UUID()
+    let message: String
+    var onPrimaryAction: (() -> Void)? = nil
+}
 
 struct RemoteMQTTResult: Equatable {
     let doorKey: String
@@ -32,6 +38,7 @@ struct PendingDoorAction: Equatable {
 struct RemoteDoorCardView: View {
     @Environment(\.scenePhase) private var scenePhase
     let door: RemoteDoorItem
+    var isLocationCheckEnabled: Bool = false
     @Binding var pendingDoorAction: PendingDoorAction?
     @Binding var mqttResult: RemoteMQTTResult?
     @Binding var isBluetoothOn: Bool
@@ -71,8 +78,12 @@ struct RemoteDoorCardView: View {
     
     @State private var wifiSuccessTask: DispatchWorkItem?
     @State private var bleSuccessTask: DispatchWorkItem?
-    
-    
+
+    // MARK: - Location check (Wi-Fi unlock only, same manager/flow as SetWiFiPassword)
+    @StateObject private var locationManager = LocationManager()
+    @Binding var locationAlertPayload: DoorLocationAlertPayload?
+    @Binding var tooFarAlertPayload: DoorLocationAlertPayload?
+
     private var isAdmin: Bool {
        UserDefaults.standard.bool(forKey: "is_admin")
       //  true
@@ -248,10 +259,15 @@ struct RemoteDoorCardView: View {
                                             showTimeRestrictedAndReset(isWifi: true)
                                             return
                                        }
-                                    
+
                                     resetBleState()
-                                    startWifiWaiting()
-                                    onRemoteOpen()
+
+                                    if isLocationCheckEnabled {
+                                        startLocationCheckThenOpen()
+                                    } else {
+                                        startWifiWaiting()
+                                        onRemoteOpen()
+                                    }
                                 } label: {
                                     VStack(spacing: 6) {
                                         Image(systemName: "wifi")
@@ -517,8 +533,115 @@ struct RemoteDoorCardView: View {
         bleSuccess = false
         mqttResult = nil
     }
-    
-    
+
+    // MARK: - Location check (Wi-Fi unlock)
+
+    private func startLocationCheckThenOpen() {
+        guard validateLocationRequirements() else {
+            pendingDoorAction = nil
+            return
+        }
+
+        wifiWaiting = true
+        wifiSuccess = false
+        isResultSuccess = false
+        statusMessage = ""
+
+        locationManager.onLocationReady = {
+            Task { @MainActor in
+                proceedAfterLocationReady()
+            }
+        }
+
+        locationManager.onLocationError = { message in
+            Task { @MainActor in
+                wifiWaiting = false
+                pendingDoorAction = nil
+                locationAlertPayload = DoorLocationAlertPayload(
+                    message: message.isEmpty ? "Unable to access location. Please check your settings and try again." : message
+                )
+            }
+        }
+
+        locationManager.startLocation()
+    }
+
+    private func proceedAfterLocationReady() {
+        guard
+            let doorLat = door.latitude,
+            let doorLong = door.longitude,
+            let userLat = Double(locationManager.latitude),
+            let userLong = Double(locationManager.longitude)
+        else {
+            startWifiWaiting()
+            onRemoteOpen()
+            return
+        }
+
+        let doorLocation = CLLocation(latitude: doorLat, longitude: doorLong)
+        let userLocation = CLLocation(latitude: userLat, longitude: userLong)
+        let distance = userLocation.distance(from: doorLocation)
+
+        guard distance <= 10 else {
+            wifiWaiting = false
+            wifiSuccess = true
+            isResultSuccess = false
+            statusMessage = "You are too far from the door"
+
+            tooFarAlertPayload = DoorLocationAlertPayload(
+                message: "You are too far from the door to unlock it.\nYou are \(Int(distance)) meters away — please move within 10 meters and try again.",
+                onPrimaryAction: {
+                    resetWifiState()
+                    pendingDoorAction = nil
+                }
+            )
+            return
+        }
+
+        startWifiWaiting()
+        onRemoteOpen()
+    }
+
+    private func validateLocationRequirements() -> Bool {
+        guard locationManager.isLocationServicesEnabled else {
+            locationAlertPayload = DoorLocationAlertPayload(message: """
+                Location Services are OFF
+
+                Go to:
+                Settings → Privacy & Security → Location Services → Turn ON
+                """)
+            return false
+        }
+
+        let status = locationManager.currentAuthorizationStatus
+
+        if status == .notDetermined {
+            locationManager.requestLocationAccess()
+        }
+
+        guard status == .authorizedWhenInUse || status == .authorizedAlways else {
+            locationAlertPayload = DoorLocationAlertPayload(message: """
+                Location permission required
+
+                Go to:
+                Settings → Apps → Zlyx → Location → Allow While Using App
+                """)
+            return false
+        }
+
+        guard locationManager.isPreciseLocationEnabled else {
+            locationAlertPayload = DoorLocationAlertPayload(message: """
+                Precise Location is OFF
+
+                Go to:
+                Settings → Apps → Zlyx → Location → Turn ON Precise Location
+                """)
+            return false
+        }
+
+        return true
+    }
+
     private func showTimeRestrictedAndReset(isWifi: Bool) {
         UINotificationFeedbackGenerator().notificationOccurred(.error)
 
