@@ -79,6 +79,7 @@ class DeviceDetailsViewModel: ObservableObject {
         if let encoded = try? JSONEncoder().encode(response) {
             UserDefaults.standard.set(encoded, forKey: "device_details")
         }
+        UserDefaults.standard.set(true, forKey: "is_location_check_enabled")
     }
     
     // MARK: - Load Saved Details
@@ -266,7 +267,9 @@ class DeviceDetailsViewModel: ObservableObject {
                         doorControllerType: controller.controllerModel,
                         sensorDetails: sensorDetails,
                         accessGroups: door.accessGroups,
-                        doorOpeningTime: controller.doorOpeningTime
+                        doorOpeningTime: controller.doorOpeningTime,
+                        latitude: controller.latitude,
+                        longitude: controller.longitude
 
                     )
                 )
@@ -299,7 +302,9 @@ class DeviceDetailsViewModel: ObservableObject {
                     doorControllerType: door.doorModel,
                     sensorDetails: sensorDetails,
                     accessGroups: door.accessGroups,
-                    doorOpeningTime: door.doorOpeningTime
+                    doorOpeningTime: door.doorOpeningTime,
+                    latitude: door.latitude,
+                    longitude: door.longitude
                 )
             )
         }
@@ -334,7 +339,9 @@ class DeviceDetailsViewModel: ObservableObject {
                         doorControllerType: controller.controllerModel,
                         sensorDetails: sensorDetails,
                         accessGroups: door.accessGroups,
-                        doorOpeningTime: controller.doorOpeningTime
+                        doorOpeningTime: controller.doorOpeningTime,
+                        latitude: controller.latitude,
+                        longitude: controller.longitude
                     )
                 )
             }

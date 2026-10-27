@@ -17,6 +17,7 @@ struct DeviceDetailsResponse: Codable {
     let userFullName: String?
     let physicalCardNumber: String?
     let digitalCardNumber: String?
+    let isLocationCheckEnabled: Bool?
     let controllers: [Controller]?
     let standaloneAllInOne: [Standalone_All_In_One_Door]?
     let standaloneController: [StandaloneController]?
@@ -30,6 +31,7 @@ struct DeviceDetailsResponse: Codable {
         case userFullName = "user_full_name"
         case physicalCardNumber = "physical_card_number"
         case digitalCardNumber = "digital_card_number"
+        case isLocationCheckEnabled = "is_location_check_enabled"
         case controllers = "controllers"
         case standaloneAllInOne = "standalone_all_in_one"
         case standaloneController = "standalone_controller"
