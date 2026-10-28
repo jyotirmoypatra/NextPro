@@ -79,7 +79,7 @@ class DeviceDetailsViewModel: ObservableObject {
         if let encoded = try? JSONEncoder().encode(response) {
             UserDefaults.standard.set(encoded, forKey: "device_details")
         }
-        UserDefaults.standard.set(true, forKey: "is_location_check_enabled")
+        UserDefaults.standard.set(response.isLocationCheckEnabled ?? false, forKey: "is_location_check_enabled")
     }
     
     // MARK: - Load Saved Details
