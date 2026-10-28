@@ -98,6 +98,18 @@ struct AddUserView: View {
             || showInfo || navigateToDoorAddView || openSection != nil
     }
 
+    // MARK: - Email / Phone required rules
+    // Share Link alone -> email optional, phone required.
+    // Mobile App and/or Key Fob (no Share Link) -> email required, phone optional.
+    // Share Link together with Mobile App and/or Key Fob -> both required.
+    private var isEmailRequired: Bool {
+        !(isSharedLink && !isSelectMobileAPP && !isSelectKeyFob)
+    }
+
+    private var isPhoneRequired: Bool {
+        isSharedLink
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -168,23 +180,24 @@ struct AddUserView: View {
                                 LabeledTextField(
                                     title: "Email",
                                     placeholder: "Enter email",
-                                    isRequired: true,
+                                    isRequired: isEmailRequired,
                                     text: $email,
-                                    
+
                                 )
-                    
+
                                 .focused($focusedField, equals: .email)
                                 .submitLabel(.return)
                                 .onSubmit {
                                     focusedField = nil
                                 }
-                                
+
                                 LabeledTextField(
                                     title: "Phone Number",
                                     placeholder: "Enter phone",
+                                    isRequired: isPhoneRequired,
                                     text: $phone,
                                     keyboardType: .numberPad
-                                    
+
                                 )
                               
                                 .focused($focusedField, equals: .phone)
@@ -1221,21 +1234,25 @@ struct AddUserView: View {
         }
         
 
-        if email.trimmingCharacters(in: .whitespaces).isEmpty {
+        if isEmailRequired && email.trimmingCharacters(in: .whitespaces).isEmpty {
             return "Email is required"
         }
 
-        if !isValidEmail(email) {
+        if !email.trimmingCharacters(in: .whitespaces).isEmpty && !isValidEmail(email) {
             return "Please enter a valid email address"
         }
-        
+
+        if isPhoneRequired && phone.trimmingCharacters(in: .whitespaces).isEmpty {
+            return "Phone number is required"
+        }
+
         if !phone.trimmingCharacters(in: .whitespaces).isEmpty {
             if phone.count != 10 {
                 return "Phone number must be 10 digits"
             }
         }
 
-        
+
         if !isSelectMobileAPP && !isSelectKeyFob && !isSharedLink{
             return "Please select at least one device access method"
         }
@@ -1250,7 +1267,7 @@ struct AddUserView: View {
                 return "Digital Card ID is not generated"
             }
             
-            if !bleAccess && !wifiAccess{
+            if remoteAccess &&  !bleAccess && !wifiAccess{
                 return "Please select at least any remote options (Wifi or ble)"
             }
         }
@@ -1260,17 +1277,6 @@ struct AddUserView: View {
                 return "Physical Key Fob ID is required"
             }
         }
-        
-        if isSharedLink {
-            if phone.trimmingCharacters(in: .whitespaces).isEmpty {
-                    return "Phone number is required when Share Link is enabled"
-            }
-
-            if phone.count != 10 {
-                return "Phone number must be 10 digits"
-            }
-        }
-        
         
         if isSelectDoor {
             
