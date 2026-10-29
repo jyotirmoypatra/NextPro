@@ -146,6 +146,10 @@ struct RemoteDoorCardView: View {
         door.doorType == "standalone_controller" && door.doorControllerType == "TC434"
     }
     
+    private var isBleDisabledForDoor: Bool {
+        isStandAloneControllerTC434 && door.doorNumber != 1
+    }
+    
     private var isStandAloneAllInOneM230: Bool {
         door.doorType == "all_in_one" && door.doorControllerType == "M230"
     }
@@ -305,6 +309,8 @@ struct RemoteDoorCardView: View {
                                // if !bleWaiting {
                                     Button {
 
+                                        guard !isBleDisabledForDoor else { return }
+                                        
                                         // Priority: permission → power state → BLE operation.
                                         if isBluetoothPermissionDenied {
                                             showBluetoothPermissionAlert = true
@@ -344,13 +350,33 @@ struct RemoteDoorCardView: View {
                                 
                             }
                             .frame(width: 68, height: 58)
-                            .opacity(bleOpacity)
-                            .allowsHitTesting(bleHitTesting)
+//                            .opacity(bleOpacity)
+//                            .allowsHitTesting(bleHitTesting)
+                        
+                        
+                            .opacity(
+                                isBleDisabledForDoor
+                                    ? 0.0
+                                    : bleOpacity
+                            )
+                            .allowsHitTesting(
+                                !isBleDisabledForDoor && bleHitTesting
+                            )
+                            .disabled(isBleDisabledForDoor)
+//                            .overlay {
+//                                if isBleDisabledForDoor {
+//                                    Image(systemName: "xmark")
+//                                        .font(.system(size: 28, weight: .regular))
+//                                        .foregroundColor(.red.opacity(0.2))
+//                                }
+//                            }
 
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
                                     .stroke(
-                                        bleWaiting ? .yellow.opacity(bleBorderOpacity) : bleSuccess && isResultSuccess ? .green.opacity(bleBorderOpacity) : bleSuccess && !isResultSuccess ? .red.opacity(bleBorderOpacity) : .white.opacity(bleBorderOpacity),
+                                        isBleDisabledForDoor
+                                                        ? Color.white.opacity(0.0)
+                                                        : bleWaiting ? .yellow.opacity(bleBorderOpacity) : bleSuccess && isResultSuccess ? .green.opacity(bleBorderOpacity) : bleSuccess && !isResultSuccess ? .red.opacity(bleBorderOpacity) : .white.opacity(bleBorderOpacity),
                                         lineWidth: 1
                                     )
                             )
