@@ -9,8 +9,11 @@ import SwiftUI
 
 
 struct LoginView: View {
+    @Environment(\.dismiss) private var dismiss
+
     var isUserInitialSetupCompleted : Bool
     var prefilledEmail: String = ""
+    var showsCloseButton = false
     @StateObject var network = NetworkManager.shared
     @StateObject private var vm = LoginViewModel()
     @StateObject private var validateVM = ValidateEmailViewModel()
@@ -40,10 +43,11 @@ struct LoginView: View {
     @FocusState private var focusedField: Field?
 
     
-    init(isUserInitialSetupCompleted: Bool,prefilledEmail: String = "") {
+    init(isUserInitialSetupCompleted: Bool, prefilledEmail: String = "", showsCloseButton: Bool = false) {
             self.isUserInitialSetupCompleted = isUserInitialSetupCompleted
             _isUserInitialSetupDone = State(initialValue: isUserInitialSetupCompleted)
-        self.prefilledEmail = prefilledEmail
+            self.prefilledEmail = prefilledEmail
+            self.showsCloseButton = showsCloseButton
         }
     
     var body: some View {
@@ -62,11 +66,22 @@ struct LoginView: View {
                     VStack{
                         
                         HStack {
-                            
+                            if showsCloseButton {
+                                Button {
+                                    dismiss()
+                                } label: {
+                                    Image(systemName: "xmark")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .padding(10)
+                                        .background(Color.white.opacity(0.15))
+                                        .clipShape(Circle())
+                                }
+                            }
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 10)
-                        .frame(maxWidth: .infinity, alignment: .top)
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
                         .zIndex(999)
                         
                         // Scrollable Fields

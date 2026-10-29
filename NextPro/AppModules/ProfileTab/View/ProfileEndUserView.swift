@@ -37,6 +37,8 @@ struct ProfileEndUserView: View {
     @State private var navigate_voice_message = false
     @State private var navigate_Debug = false
     @State private var showFailedAlert = false
+    @State private var showManageAccount = false
+    @State private var showAddAccountLogin = false
     
     
     @State private var showFullImage = false
@@ -148,6 +150,13 @@ struct ProfileEndUserView: View {
                                 }
                             }
                             
+                            Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
+
+                            UserProfileRow(title: "Manage Account", textColor: .white) {
+                                showManageAccount = true
+                            }
+
                             Divider().background(Color.white.opacity(0.15))
                                 .padding(.horizontal,20)
                             
@@ -442,6 +451,20 @@ struct ProfileEndUserView: View {
         .sheet(isPresented: $showDeleteAccountAlert) {
             DeleteConfirmationSheet()
         }
+        .sheet(isPresented: $showManageAccount) {
+            ManageAccountSheet(
+                fullName: viewModel.fullName,
+                email: viewModel.email,
+                imageURL: viewModel.image_url,
+                onAddAccount: {
+                    showManageAccount = false
+                    showAddAccountLogin = true
+                }
+            )
+        }
+        .fullScreenCover(isPresented: $showAddAccountLogin) {
+            LoginView(isUserInitialSetupCompleted: false, showsCloseButton: true)
+        }
 
     }
     
@@ -465,6 +488,96 @@ struct ProfileEndUserView: View {
     
 
     
+}
+
+struct ManageAccountSheet: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    let fullName: String
+    let email: String
+    let imageURL: String
+    let onAddAccount: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Capsule()
+                .fill(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.3))
+                .frame(width: 40, height: 5)
+                .frame(maxWidth: .infinity)
+
+            Text("Manage Accounts")
+                .font(.custom("Inter-SemiBold", size: 20))
+                .foregroundColor(colorScheme == .dark ? .white : .black)
+
+            Text("Switch between accounts signed in on this device.")
+                .font(.custom("Inter-Regular", size: 16))
+                .foregroundColor(colorScheme == .dark ? .white.opacity(0.7) : .black.opacity(0.8))
+//                .lineLimit(1)
+//                .minimumScaleFactor(0.7)
+
+            HStack(spacing: 14) {
+                ProfileImageView(imageUrl: imageURL)
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack{
+                        Text(fullName.isEmpty ? email : fullName)
+                            .font(.custom("Inter-SemiBold", size: 16))
+                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                            .lineLimit(1)
+
+                        Spacer()
+
+                        Text("CURRENT")
+                            .font(.custom("Inter-SemiBold", size: 11))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(Color.green.opacity(0.75))
+                            .clipShape(Capsule())
+                    }
+
+                    Text(email)
+                        .font(.custom("Inter-Regular", size: 14))
+                        .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.7))
+//                        .lineLimit(1)
+                }
+
+
+
+
+            }
+            .padding(14)
+            .background(colorScheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.04))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(colorScheme == .dark ? Color.white.opacity(0.8) : Color.black.opacity(0.7), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+
+            Button(action: onAddAccount) {
+                Text("+ Add another account")
+                    .font(.custom("Inter-SemiBold", size: 16))
+                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(
+                                colorScheme == .dark ? Color.white.opacity(0.35) : Color.black.opacity(0.35),
+                                style: StrokeStyle(lineWidth: 1, dash: [5])
+                            )
+                    )
+            }
+
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+        .padding(.bottom, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .presentationDetents([.height(350)])
+    }
 }
 
 // MARK: - Uniform Profile Row
@@ -931,4 +1044,3 @@ struct ShimmerTextView: View {
             .shadow(color: .white.opacity(0.2), radius: 2) // subtle glow
     }
 }
-
