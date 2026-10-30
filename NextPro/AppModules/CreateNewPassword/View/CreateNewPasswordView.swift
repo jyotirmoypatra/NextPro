@@ -16,6 +16,9 @@ struct CreateNewPasswordView: View {
     var userName: String
     var comingFrom: String
     var isAggremntAccepted: Bool? 
+    var isAccountAddition = false
+    var onClose: (() -> Void)?
+    var onAccountAdded: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @StateObject var network = NetworkManager.shared
     @StateObject private var viewModel = CreateNewPasswordViewModel()
@@ -76,7 +79,7 @@ struct CreateNewPasswordView: View {
                     
                     ScrollView(.vertical, showsIndicators: false) { // Add ScrollView to manage height & keyboard
                         VStack(spacing: 15) {
-                          Spacer().frame(height: 15)
+                          Spacer().frame(height: 10)
                             
                             // Header
                             VStack(spacing: 5) {
@@ -100,7 +103,7 @@ struct CreateNewPasswordView: View {
                                     .font(.custom("Inter-Regular", size: 16))
                                     .foregroundColor(Color.gray.opacity(0.8))
                             }
-                            .padding(.bottom, 40)
+                            .padding(.bottom, 20)
 
                             
                             VStack(alignment: .leading, spacing: 6) {
@@ -336,7 +339,14 @@ struct CreateNewPasswordView: View {
             }
             
             .navigationDestination(isPresented: $navigateToLogin) {
-                LoginView(isUserInitialSetupCompleted: true,prefilledEmail: UserDefaults.standard.string(forKey: "email") ?? "")
+                LoginView(
+                    isUserInitialSetupCompleted: true,
+                    prefilledEmail: userName,
+                    showsCloseButton: isAccountAddition,
+                    isAccountAddition: isAccountAddition,
+                    onAccountAdded: onAccountAdded,
+                    onClose: onClose
+                )
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)
@@ -399,7 +409,13 @@ struct CreateNewPasswordView: View {
                 ) { showLoginError = false }
             }
             .navigationDestination(isPresented: $navigateToAggrement) {
-                UserAgreementScreen(password:viewModel.confirmPassword)
+                UserAgreementScreen(
+                    password: viewModel.confirmPassword,
+                    userEmail: userName,
+                    isAccountAddition: isAccountAddition,
+                    onClose: onClose,
+                    onAccountAdded: onAccountAdded
+                )
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
             }
@@ -416,12 +432,16 @@ struct CreateNewPasswordView: View {
     func LoginApiCall() {
         Task {
         
-            loginViewModel.email = UserDefaults.standard.string(forKey: "email") ?? ""
+            loginViewModel.email = userName
             loginViewModel.password = viewModel.confirmPassword
             
             await loginViewModel.login()
             if loginViewModel.loginSuccess {
-                KeychainManager.shared.resetToLogin()
+                if isAccountAddition {
+                    onAccountAdded?()
+                } else {
+                    KeychainManager.shared.resetToLogin()
+                }
             } else {
                 showLoginError = true
             }

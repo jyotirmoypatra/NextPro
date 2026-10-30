@@ -45,9 +45,13 @@ struct ContentView: View {
                             .navigationBarBackButtonHidden(true)
                             .navigationBarHidden(true)
                     } else {
-                        LoginView(isUserInitialSetupCompleted: isUserInitialSetupDone)
-                            .navigationBarBackButtonHidden(true)
-                            .navigationBarHidden(true)
+                        if KeychainManager.shared.storedAccounts().isEmpty {
+                            LoginView(isUserInitialSetupCompleted: isUserInitialSetupDone)
+                                .navigationBarBackButtonHidden(true)
+                                .navigationBarHidden(true)
+                        } else {
+                            AccountPicker()
+                        }
                     }
                
                 }

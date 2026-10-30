@@ -14,6 +14,9 @@ struct LoginView: View {
     var isUserInitialSetupCompleted : Bool
     var prefilledEmail: String = ""
     var showsCloseButton = false
+    var isAccountAddition = false
+    var onAccountAdded: (() -> Void)?
+    var onClose: (() -> Void)?
     @StateObject var network = NetworkManager.shared
     @StateObject private var vm = LoginViewModel()
     @StateObject private var validateVM = ValidateEmailViewModel()
@@ -30,8 +33,8 @@ struct LoginView: View {
     @State private var goAggrementFromLogin = false
     @State private var isDeviceprov = false
     @State private var didPrefillEmail = false
-    @State private var emailToSend = ""
     @State private var isAcceptedAgreement = false
+    @State private var validatedEmail = ""
 
     @State private var isUserInitialSetupDone = false
     
@@ -43,11 +46,21 @@ struct LoginView: View {
     @FocusState private var focusedField: Field?
 
     
-    init(isUserInitialSetupCompleted: Bool, prefilledEmail: String = "", showsCloseButton: Bool = false) {
+    init(
+        isUserInitialSetupCompleted: Bool,
+        prefilledEmail: String = "",
+        showsCloseButton: Bool = false,
+        isAccountAddition: Bool = false,
+        onAccountAdded: (() -> Void)? = nil,
+        onClose: (() -> Void)? = nil
+    ) {
             self.isUserInitialSetupCompleted = isUserInitialSetupCompleted
             _isUserInitialSetupDone = State(initialValue: isUserInitialSetupCompleted)
             self.prefilledEmail = prefilledEmail
             self.showsCloseButton = showsCloseButton
+            self.isAccountAddition = isAccountAddition
+            self.onAccountAdded = onAccountAdded
+            self.onClose = onClose
         }
     
     var body: some View {
@@ -68,7 +81,7 @@ struct LoginView: View {
                         HStack {
                             if showsCloseButton {
                                 Button {
-                                    dismiss()
+                                    onClose?() ?? dismiss()
                                 } label: {
                                     Image(systemName: "xmark")
                                         .font(.system(size: 16, weight: .semibold))
@@ -295,7 +308,11 @@ struct LoginView: View {
                                             
                                             if vm.is_accept_aggrement {
                                                 isAdmin = vm.is_admin
-                                                navigateToHome = true
+                                                if isAccountAddition {
+                                                    onAccountAdded?()
+                                                } else {
+                                                    navigateToHome = true
+                                                }
                                             }else{
                                                 goAggrementFromLogin  = true
                                                 navigateToAggremnt = true
@@ -326,14 +343,45 @@ struct LoginView: View {
                                     
                                 }
                             }
+
+                            
+                           Button {
+                                focusedField = nil
+                                vm.email = ""
+                                vm.password = ""
+                                validateVM.email = ""
+                                isUserInitialSetupDone = false
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Text("New here?")
+                                        .font(.custom("Inter-Regular", size: 14))
+                                        .foregroundColor(.white.opacity(0.65))
+
+                                    Text("Set Up New Account")
+                                        .font(.custom("Inter-SemiBold", size: 14))
+                                        .foregroundColor(.white.opacity(0.75))
+
+                                    Image(systemName: "arrow.right")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(.white)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                )
+                            }
+                            .buttonStyle(.plain)
                             
                         }else{
                             Button(action: {
                                 print("continue account setup")
                                 Task {
                                 
-                                    await validateVM.validate()
+                                    await validateVM.validate(persistUserDefaults: !isAccountAddition)
                                     if validateVM.validateSuccess {
+                                        validatedEmail = validateVM.email
                                         
                                         if validateVM.isPasswordReset && validateVM.isAggrementAccept{
                                             isUserInitialSetupDone = true
@@ -361,8 +409,6 @@ struct LoginView: View {
                                             try? await Task.sleep(nanoseconds: 1_000_000_000)
                                             
                                             isAcceptedAgreement = validateVM.isAggrementAccept
-                                            emailToSend = validateVM.email
-                                            
                                             navigateToCreatePassword = true
                                         }
                                         
@@ -381,6 +427,36 @@ struct LoginView: View {
                                     .background(Color.white)
                                     .cornerRadius(10)
                             }
+
+                        
+                            Button {
+                                focusedField = nil
+                                validateVM.email = ""
+                                vm.email = ""
+                                vm.password = ""
+                                isUserInitialSetupDone = true
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Text("Already setup an account?")
+                                        .font(.custom("Inter-Regular", size: 14))
+                                        .foregroundColor(.white.opacity(0.65))
+
+                                    Text("Login In")
+                                        .font(.custom("Inter-SemiBold", size: 14))
+                                        .foregroundColor(.white.opacity(0.75))
+
+                                    Image(systemName: "arrow.right")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(.white)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
 
 
@@ -417,7 +493,14 @@ struct LoginView: View {
             .navigationBarBackButtonHidden(true)
             .ignoresSafeArea(.keyboard, edges: .bottom) // The key to stop resize
             .navigationDestination(isPresented: $navigateToCreatePassword) {
-                CreateNewPasswordView(userName: emailToSend, comingFrom: "validate_email",isAggremntAccepted: isAcceptedAgreement)
+                CreateNewPasswordView(
+                    userName: validatedEmail,
+                    comingFrom: "validate_email",
+                    isAggremntAccepted: isAcceptedAgreement,
+                    isAccountAddition: isAccountAddition,
+                    onClose: onClose,
+                    onAccountAdded: onAccountAdded
+                )
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)
@@ -425,13 +508,23 @@ struct LoginView: View {
             }
             
             .navigationDestination(isPresented: $navigateToResetPassword) { //forget password navigate
-              ResetPassword()
+              ResetPassword(
+                  isAccountAddition: isAccountAddition,
+                  onClose: onClose,
+                  onAccountAdded: onAccountAdded
+              )
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)
             }
             .navigationDestination(isPresented: $navigateToAggremnt) { //forget password navigate
-                UserAgreementScreen(fromLogin:  goAggrementFromLogin)
+                UserAgreementScreen(
+                    fromLogin: goAggrementFromLogin,
+                    userEmail: validatedEmail,
+                    isAccountAddition: isAccountAddition,
+                    onClose: onClose,
+                    onAccountAdded: onAccountAdded
+                )
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
             }
@@ -484,7 +577,3 @@ struct LoginView: View {
     }
     
 }
-
-
-
-

@@ -39,6 +39,12 @@ struct ProfileEndUserView: View {
     @State private var showFailedAlert = false
     @State private var showManageAccount = false
     @State private var showAddAccountLogin = false
+    @State private var isSwitchingAccount = false
+    @State private var switchingAccountName = ""
+    @State private var isRemovingCurrentAccount = false
+    @State private var accountRemovalStatus = "Removing account"
+    @State private var accountPendingDeletion: StoredAccount?
+    @State private var showSavedAccountDeleteAlert = false
     
     
     @State private var showFullImage = false
@@ -311,6 +317,13 @@ struct ProfileEndUserView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
             }
+
+            if showSavedAccountDeleteAlert {
+                Color.black.opacity(0.45)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                    .zIndex(5)
+            }
         
 
         }
@@ -456,14 +469,84 @@ struct ProfileEndUserView: View {
                 fullName: viewModel.fullName,
                 email: viewModel.email,
                 imageURL: viewModel.image_url,
+                showDeleteConfirmation: $showSavedAccountDeleteAlert,
+                accountPendingDeletion: $accountPendingDeletion,
+                storedAccounts: KeychainManager.shared.storedAccounts(),
                 onAddAccount: {
+                    KeychainManager.shared.saveCurrentAccount(
+                        fullName: viewModel.fullName,
+                        imageURL: viewModel.image_url
+                    )
                     showManageAccount = false
                     showAddAccountLogin = true
+                },
+                onSwitchAccount: { account in
+                    showManageAccount = false
+                    switchingAccountName = account.fullname?.isEmpty == false
+                        ? account.fullname!
+                        : (account.username.isEmpty ? account.email : account.username)
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        isSwitchingAccount = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                        KeychainManager.shared.activate(account)
+                        FCMTokenManager.shared.registerForCurrentAccount()
+                        isSwitchingAccount = false
+                        loadUserData()
+                        Task {
+                            await viewModel.fetchUserProfile()
+                        }
+                    }
+                },
+                onDeleteAccount: { account in
+                    accountPendingDeletion = account
+                    showSavedAccountDeleteAlert = true
+                },
+                onCurrentAccountDelete: {
+                    showManageAccount = false
+                    accountRemovalStatus = "Removing account"
+                    isRemovingCurrentAccount = true
+
+                    Task {
+                        try? await Task.sleep(nanoseconds: 800_000_000)
+                        accountRemovalStatus = "Logging out"
+                        await FCMTokenManager.shared.performLogout()
+                        try? await Task.sleep(nanoseconds: 800_000_000)
+                        isRemovingCurrentAccount = false
+                        KeychainManager.shared.resetToLogin()
+                    }
                 }
             )
         }
         .fullScreenCover(isPresented: $showAddAccountLogin) {
-            LoginView(isUserInitialSetupCompleted: false, showsCloseButton: true)
+            NavigationStack {
+                LoginView(
+                    isUserInitialSetupCompleted: false,
+                    showsCloseButton: true,
+                    isAccountAddition: true,
+                    onAccountAdded: {
+                        showAddAccountLogin = false
+                        FCMTokenManager.shared.registerForCurrentAccount()
+                        loadUserData()
+                        Task {
+                            await viewModel.fetchUserProfile()
+                        }
+                    },
+                    onClose: {
+                        showAddAccountLogin = false
+                    }
+                )
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
+            }
+        }
+        .fullScreenCover(isPresented: $isSwitchingAccount) {
+            AccountSwitchingOverlay(accountName: switchingAccountName)
+                .interactiveDismissDisabled(true)
+        }
+        .fullScreenCover(isPresented: $isRemovingCurrentAccount) {
+            AccountSwitchingOverlay(accountName: accountRemovalStatus, titlePrefix: "")
+                .interactiveDismissDisabled(true)
         }
 
     }
@@ -485,98 +568,433 @@ struct ProfileEndUserView: View {
         username = UserDefaults.standard.string(forKey: "username") ?? ""
 
     }
-    
 
-    
+}
+
+struct AccountSwitchingOverlay: View {
+    let accountName: String
+    var titlePrefix = "Switching to"
+    @State private var isAnimating = false
+    @State private var progress: CGFloat = 0.05
+
+    var body: some View {
+        ZStack {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .ignoresSafeArea()
+
+            Color.black.opacity(0.86)
+                .ignoresSafeArea()
+
+            VStack(spacing: 18) {
+                Circle()
+                    .trim(from: 0.08, to: 0.72)
+                    .stroke(Color.white, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: 75, height: 75)
+                    .rotationEffect(.degrees(isAnimating ? 360 : 0))
+
+                Text(titlePrefix.isEmpty ? accountName : "\(titlePrefix) \(accountName)")
+                    .font(.custom("Inter-SemiBold", size: 20))
+                    .foregroundColor(.white)
+
+                Text("Please wait...")
+                    .font(.custom("Inter-Regular", size: 15))
+                    .foregroundColor(.white.opacity(0.65))
+
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color.white.opacity(0.2))
+
+                        Capsule()
+                            .fill(Color.white)
+                            .frame(width: geometry.size.width * progress)
+                    }
+                }
+                .frame(width: 230, height: 5)
+            }
+            .multilineTextAlignment(.center)
+        }
+        .onAppear {
+            withAnimation(.linear(duration: 0.9).repeatForever(autoreverses: false)) {
+                isAnimating = true
+            }
+            withAnimation(.easeInOut(duration: 1.1)) {
+                progress = 0.82
+            }
+        }
+    }
 }
 
 struct ManageAccountSheet: View {
     @Environment(\.colorScheme) private var colorScheme
+    @State private var isDeleteMode = false
+    @State private var deletedAccountIDs = Set<String>()
 
     let fullName: String
     let email: String
     let imageURL: String
+    @Binding var showDeleteConfirmation: Bool
+    @Binding var accountPendingDeletion: StoredAccount?
+    let storedAccounts: [StoredAccount]
     let onAddAccount: () -> Void
+    let onSwitchAccount: (StoredAccount) -> Void
+    let onDeleteAccount: (StoredAccount) -> Void
+    let onCurrentAccountDelete: () -> Void
+
+    private func displayName(for account: StoredAccount?) -> String {
+        guard let account else { return "this saved account" }
+        if let fullname = account.fullname, !fullname.isEmpty { return fullname }
+        if !account.username.isEmpty { return account.username }
+        return account.email
+    }
+
+    private var totalAccountCount: Int {
+        var accountIDs = Set(storedAccounts.map {
+            $0.userID.isEmpty ? $0.email.lowercased() : $0.userID
+        })
+        accountIDs.insert(UserDefaults.standard.string(forKey: "user_id") ?? email.lowercased())
+        return accountIDs.count
+    }
+
+    private var currentAccount: StoredAccount? {
+        storedAccounts.first {
+            $0.email.caseInsensitiveCompare(email) == .orderedSame
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Capsule()
-                .fill(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.3))
-                .frame(width: 40, height: 5)
-                .frame(maxWidth: .infinity)
-
-            Text("Manage Accounts")
-                .font(.custom("Inter-SemiBold", size: 20))
-                .foregroundColor(colorScheme == .dark ? .white : .black)
-
-            Text("Switch between accounts signed in on this device.")
-                .font(.custom("Inter-Regular", size: 16))
-                .foregroundColor(colorScheme == .dark ? .white.opacity(0.7) : .black.opacity(0.8))
-//                .lineLimit(1)
-//                .minimumScaleFactor(0.7)
-
-            HStack(spacing: 14) {
-                ProfileImageView(imageUrl: imageURL)
-                    .frame(width: 40, height: 40)
-                    .clipShape(Circle())
-
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack{
-                        Text(fullName.isEmpty ? email : fullName)
-                            .font(.custom("Inter-SemiBold", size: 16))
-                            .foregroundColor(colorScheme == .dark ? .white : .black)
-                            .lineLimit(1)
-
-                        Spacer()
-
-                        Text("CURRENT")
-                            .font(.custom("Inter-SemiBold", size: 11))
-                            .foregroundColor(.black)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 7)
-                            .background(Color.green.opacity(0.75))
-                            .clipShape(Capsule())
-                    }
-
-                    Text(email)
-                        .font(.custom("Inter-Regular", size: 14))
-                        .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.7))
-//                        .lineLimit(1)
-                }
-
-
-
-
-            }
-            .padding(14)
-            .background(colorScheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.04))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(colorScheme == .dark ? Color.white.opacity(0.8) : Color.black.opacity(0.7), lineWidth: 1)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-
-            Button(action: onAddAccount) {
-                Text("+ Add another account")
-                    .font(.custom("Inter-SemiBold", size: 16))
+            //            Capsule()
+            //                .fill(colorScheme == .dark ? Color.white.opacity(0.6) : Color.black.opacity(0.3))
+            //                .frame(width: 40, height: 5)
+            //                .frame(maxWidth: .infinity)
+            VStack(alignment: .leading,spacing: 5){
+                Text("Manage Accounts")
+                    .font(.custom("Inter-SemiBold", size: 20))
                     .foregroundColor(colorScheme == .dark ? .white : .black)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 20)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                colorScheme == .dark ? Color.white.opacity(0.35) : Color.black.opacity(0.35),
-                                style: StrokeStyle(lineWidth: 1, dash: [5])
-                            )
+                    .padding(.top,20)
+                
+                Text("Switch between accounts signed in on this device.")
+                    .font(.custom("Inter-Regular", size: 14))
+                    .foregroundColor(colorScheme == .dark ? .white.opacity(0.7) : .black.opacity(0.8))
+            }
+           
+        VStack(alignment: .leading,spacing: 8){
+            
+            HStack(spacing: 8) {
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(.gray)
+                
+                Text("Saved accounts")
+                    .font(.custom("Inter-Medium", size: 14))
+                    .foregroundColor(
+                        colorScheme == .dark ? .white : .black
+                    )
+                
+                Spacer()
+                
+                Text("\(min(totalAccountCount, 5))/5")
+                    .font(.custom("Inter-SemiBold", size: 14))
+                    .foregroundColor(
+                        colorScheme == .dark ? .white : .black
                     )
             }
+            .padding(.top, 4)
+            
+            ProgressView(
+                value: Double(min(totalAccountCount, 5)),
+                total: 5
+            )
+            .tint(totalAccountCount >= 5 ? .orange : .white)
+            
+            Text(
+                totalAccountCount >= 5
+                ? "You've reached the 5-account limit. Remove a saved account to add another."
+                : "You can add up to 5 accounts on this device."
+            )
+            .font(.custom("Inter-Regular", size: 13))
+            .foregroundColor(
+                colorScheme == .dark ? .white : .black
+            )
+            .fixedSize(horizontal: false, vertical: true)
+        }
+          
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 15) {
+                    Button {
+                        if isDeleteMode, let currentAccount {
+                            onDeleteAccount(currentAccount)
+                        }
+                    } label: {
+                    HStack(spacing: 14) {
+                        ProfileImageView(imageUrl: imageURL, size: 40)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack{
+                                Text(fullName.isEmpty ? email : fullName)
+                                    .font(.custom("Inter-SemiBold", size: 16))
+                                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                                    .lineLimit(1)
+                                
+                                Spacer()
+                                
+                                if isDeleteMode {
+                                    Image(systemName: "trash.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .padding(10)
+                                        .background(Color.red)
+                                        .clipShape(Circle())
+                                } else {
+                                    Text("CURRENT")
+                                        .font(.custom("Inter-SemiBold", size: 11))
+                                        .foregroundColor(.black)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 7)
+                                        .background(Color.green.opacity(0.75))
+                                        .clipShape(Capsule())
+                                }
+                            }
+                            
+                            Text(email)
+                                .font(.custom("Inter-Regular", size: 14))
+                                .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.7))
+                           
+                            
+                            if let organizationName = UserDefaults.standard.string(
+                                forKey: "organizationName"
+                            ), !organizationName.isEmpty {
+                                Text(organizationName)
+                                    .font(.custom("Inter-Regular", size: 12))
+                                    .foregroundColor(colorScheme == .dark ? .gray.opacity(0.7) : .black.opacity(0.7))
+                            }
+                        }
+                        
+                        
+                        
+                        
+                    }
+                    }
+                    .padding(14)
+                    .background(colorScheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.04))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(colorScheme == .dark ? Color.white.opacity(0.8) : Color.black.opacity(0.7), lineWidth: 1)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    
+                    
+                    ForEach(storedAccounts.filter {
+                        $0.email.caseInsensitiveCompare(email) != .orderedSame && !deletedAccountIDs.contains($0.id)
+                    }) { account in
+                        Button {
+                            if isDeleteMode {
+                                onDeleteAccount(account)
+                            } else {
+                                onSwitchAccount(account)
+                            }
+                        } label: {
+                            HStack(spacing: 12) {
+                        ProfileImageView(imageUrl: account.imageURL, size: 40)
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(account.fullname?.isEmpty == false
+                                         ? account.fullname!
+                                         : (account.username.isEmpty ? account.email : account.username))
+                                    .font(.custom("Inter-SemiBold", size: 16))
+                                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                                    .lineLimit(1)
+                                    
+                                    Text(account.email)
+                                        .font(.custom("Inter-Regular", size: 14))
+                                        .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.7))
+                                        .lineLimit(1)
+                                }
+                                
+                                Spacer()
+                                if isDeleteMode {
+                                    Image(systemName: "trash.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .padding(10)
+                                        .background(Color.red)
+                                        .clipShape(Circle())
+                                } else {
+                                    Text("SWITCH")
+                                        .font(.custom("Inter-SemiBold", size: 11))
+                                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                                }
+                            }
+                            .padding(14)
+                            .background(colorScheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.07))
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
+                    }
+                    
+                    
+                    if totalAccountCount < 5 {
+//                        Button(action: onAddAccount) {
+//                            Text("+ Add another account")
+//                                .font(.custom("Inter-SemiBold", size: 16))
+//                                .foregroundColor(colorScheme == .dark ? .white : .black)
+//                                .frame(maxWidth: .infinity)
+//                                .padding(.vertical, 15)
+//                                .overlay(
+//                                    RoundedRectangle(cornerRadius: 16)
+//                                        .stroke(
+//                                            colorScheme == .dark ? Color.white.opacity(0.35) : Color.black.opacity(0.35),
+//                                            style: StrokeStyle(lineWidth: 1, dash: [5])
+//                                        )
+//                                )
+//                        }
+                        
+                        Button(action: onAddAccount) {
+                            HStack(spacing: 14) {
 
+                                // Plus icon container
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color.white.opacity(0.10))
+                                        .frame(width: 46, height: 46)
+
+                                    Image(systemName: "person.crop.circle.badge.plus")
+                                        .font(.system(size: 23, weight: .medium))
+                                        .foregroundColor(colorScheme == .dark ? .white : .gray)
+                                }
+
+                                // Title and subtitle
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text("Add Another Account")
+                                        .font(.custom("Inter-SemiBold", size: 15))
+                                        .foregroundColor(
+                                            colorScheme == .dark ? .white : .black
+                                        )
+
+                                    Text("Sign in with a different account")
+                                        .font(.custom("Inter-Regular", size: 12))
+                                        .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.7))
+                                        .lineLimit(1)
+                                }
+
+                                Spacer(minLength: 4)
+
+                                // Trailing arrow
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.7))
+                            }
+                            .padding(14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(
+                                RoundedRectangle(cornerRadius: 18)
+                                    .fill(
+                                        colorScheme == .dark
+                                            ? Color.white.opacity(0.045)
+                                            : Color.black.opacity(0.1)
+                                    )
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18)
+                                    .stroke(
+                                        colorScheme == .dark
+                                            ? Color.white.opacity(0.14)
+                                            : Color.black.opacity(0.12),
+                                        lineWidth: 1
+                                    )
+                            )
+                            .contentShape(RoundedRectangle(cornerRadius: 18))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            isDeleteMode.toggle()
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: isDeleteMode ? "xmark.circle" : "trash")
+                                .font(.system(size: 14, weight: .medium))
+
+                            Text(isDeleteMode ? "Cancel Remove" : "Remove Account")
+                                .font(.custom("Inter-Medium", size: 14))
+                        }
+                        .foregroundColor(
+                            isDeleteMode ? .red :
+                                
+                                colorScheme == .dark
+                                    ? Color.gray
+                                    : Color.black
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(
+                            isDeleteMode
+                                ? Color.red.opacity(0.2)
+                                :
+                            
+                            colorScheme == .dark
+                                ? Color.white.opacity(0.045)
+                                : Color.black.opacity(0.07)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(
+                                    isDeleteMode
+                                        ? Color.red.opacity(0.35)
+                                        : Color.white.opacity(0.12),
+                                    lineWidth: 1
+                                )
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    
+                    
+                }
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isDeleteMode = false
+        }
+//        .overlay {
+//            if showDeleteConfirmation {
+//                Color.black.opacity(0.45)
+//                    .ignoresSafeArea()
+//                    .allowsHitTesting(false)
+//            }
+//        }
+        .alert("Remove Account", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                accountPendingDeletion = nil
+            }
+            Button("Remove", role: .destructive) {
+                if let accountPendingDeletion {
+                    let deletingCurrentAccount = accountPendingDeletion.email.caseInsensitiveCompare(email) == .orderedSame
+                    KeychainManager.shared.removeStoredAccount(accountPendingDeletion)
+                    deletedAccountIDs.insert(accountPendingDeletion.id)
+                    if deletingCurrentAccount {
+                        onCurrentAccountDelete()
+                    }
+                }
+                self.accountPendingDeletion = nil
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isDeleteMode = false
+                }
+            }
+        } message: {
+            Text("Are you sure you want to remove \(displayName(for: accountPendingDeletion)) from this device? You can still log in again anytime using your email and password.")
         }
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .presentationDetents([.height(350)])
+        .presentationDetents([.height(CGFloat(350 + storedAccounts.count * 100)), .large])
+        .presentationDragIndicator(.visible)
     }
 }
 
@@ -645,7 +1063,8 @@ struct LogoutSheetView: View {
 
                         switch result {
                         case .success:
-                            break
+                            dismiss()
+                            KeychainManager.shared.resetToLogin()
                         case .failed(let message):
                             toastManager.show(message: message, type: .error)
                         }
@@ -736,6 +1155,19 @@ struct DeleteConfirmationSheet: View {
 
                         if deleteAccountViewModel.isDeleteSuccess {
 
+                            let storedAccounts = KeychainManager.shared.storedAccounts()
+                            let userID = UserDefaults.standard.string(forKey: "user_id") ?? ""
+                            let email = UserDefaults.standard.string(forKey: "email") ?? ""
+                            let account = storedAccounts.first(where: {
+                                !userID.isEmpty && $0.userID == userID
+                            }) ?? storedAccounts.first(where: {
+                                !email.isEmpty && $0.email.caseInsensitiveCompare(email) == .orderedSame
+                            })
+
+                            if let account {
+                                KeychainManager.shared.removeStoredAccount(account)
+                            }
+
                             // Clear login data
                             await FCMTokenManager.shared.performLogout()
 
@@ -801,15 +1233,20 @@ struct DeleteConfirmationSheet: View {
 
 struct ProfileImageView: View {
     let imageUrl: String?
-    let size: CGFloat = 100
+    let size: CGFloat
 
     @State private var isLoading: Bool = false
+
+    init(imageUrl: String?, size: CGFloat = 100) {
+        self.imageUrl = imageUrl
+        self.size = size
+    }
 
     var body: some View {
         ZStack {
 
             // Shimmer only when loading VALID image
-            if isLoading {
+            if validImageURL != nil && isLoading {
                 Circle()
                     .fill(Color.gray.opacity(0.3))
                     .frame(width: size, height: size)
@@ -823,7 +1260,7 @@ struct ProfileImageView: View {
                 Image(systemName: "person.circle.fill")
                     .resizable()
                     .scaledToFill()
-                    .foregroundColor(.gray.opacity(0.6))
+                    .foregroundColor(.gray)
                     .frame(width: size, height: size)
             }
 
@@ -866,13 +1303,23 @@ struct ProfileImageView: View {
 
     // MARK: - URL validation
     private func updateLoadingState() {
-        if let urlString = imageUrl,
-           let _ = URL(string: urlString),
-           !urlString.isEmpty {
-            isLoading = true
-        } else {
-            isLoading = false
+        isLoading = validImageURL != nil
+    }
+
+    private var validImageURL: URL? {
+        guard let imageUrl else { return nil }
+
+        let trimmedURL = imageUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedURL.isEmpty,
+              trimmedURL.lowercased() != "null",
+              let url = URL(string: trimmedURL),
+              let scheme = url.scheme?.lowercased(),
+              scheme == "http" || scheme == "https",
+              url.host != nil else {
+            return nil
         }
+
+        return url
     }
 }
 

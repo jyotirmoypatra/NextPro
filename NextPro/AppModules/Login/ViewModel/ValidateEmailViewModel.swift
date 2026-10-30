@@ -23,7 +23,7 @@ class ValidateEmailViewModel: ObservableObject {
 
     let networkManager = NetworkManager.shared
 
-    func validate() async {
+    func validate(persistUserDefaults: Bool = true) async {
 
         validateEmailError = ""
 
@@ -63,9 +63,10 @@ class ValidateEmailViewModel: ObservableObject {
 //               isAggrementAccept = false
                 validateSuccess = true
                 
-               // Save user details
-                UserDefaults.standard.set(response.email ?? email, forKey: "email")
-                UserDefaults.standard.set(response.is_aggrement_accept, forKey: "is_aggrement_accept")
+                if persistUserDefaults {
+                    UserDefaults.standard.set(response.email ?? email, forKey: "email")
+                    UserDefaults.standard.set(response.is_aggrement_accept, forKey: "is_aggrement_accept")
+                }
 
                
             } else {

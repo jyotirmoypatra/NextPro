@@ -99,6 +99,10 @@ class UserProfileDetailsViewModel: ObservableObject {
                 email = response.data.email ?? ""
                 accountStatus = response.data.status ?? ""
                 image_url = response.data.image_url ?? ""
+                KeychainManager.shared.updateCurrentAccountProfile(
+                    fullName: fullName,
+                    imageURL: image_url
+                )
                 
 
                 

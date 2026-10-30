@@ -13,6 +13,10 @@ import WebKit
 struct UserAgreementScreen: View {
     var password : String?
     var  fromLogin: Bool?
+    var userEmail: String? = nil
+    var isAccountAddition = false
+    var onClose: (() -> Void)?
+    var onAccountAdded: (() -> Void)?
     
     @State private var showAggremntError = false
     @State private var showLoginError = false
@@ -72,6 +76,23 @@ struct UserAgreementScreen: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
+                    if isAccountAddition {
+                        HStack {
+                            Button {
+                                onClose?() ?? dismiss()
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .padding(10)
+                                    .background(Color.white.opacity(0.15))
+                                    .clipShape(Circle())
+                            }
+                            Spacer()
+                        }
+                        .padding(.horizontal, 10)
+                    }
+
                     // Title — pinned just below safe area
                     VStack(spacing: 6) {
                         Text("User Agreement")
@@ -294,7 +315,14 @@ struct UserAgreementScreen: View {
             ) { showAggremntAcceptError = false }
         }
         .navigationDestination(isPresented: $navigateToLogin) {
-            LoginView(isUserInitialSetupCompleted: true,prefilledEmail: UserDefaults.standard.string(forKey: "email") ?? "")
+            LoginView(
+                isUserInitialSetupCompleted: true,
+                prefilledEmail: userEmail ?? UserDefaults.standard.string(forKey: "email") ?? "",
+                showsCloseButton: isAccountAddition,
+                isAccountAddition: isAccountAddition,
+                onAccountAdded: onAccountAdded,
+                onClose: onClose
+            )
                 .navigationBarBackButtonHidden(true)
                 .navigationBarHidden(true)
                 .interactiveDismissDisabled(true)
@@ -338,11 +366,14 @@ struct UserAgreementScreen: View {
         else{
             Task {
                 viewModel.isAggrementAccepted =  true
-                await viewModel.accept()
+                await viewModel.accept(
+                    email: userEmail,
+                    persistUserDefaults: !isAccountAddition
+                )
 
                 if viewModel.Successflag {
                     
-                   if let fromLoggedin = fromLogin, fromLoggedin {
+                   if let fromLoggedin = fromLogin, fromLoggedin, !isAccountAddition {
                        UserDefaults.standard.set(true, forKey: "is_logged_in")
                        KeychainManager.shared.resetToLogin()
                        
@@ -375,12 +406,16 @@ struct UserAgreementScreen: View {
     func LoginApiCall() {
         Task {
         
-            loginVM.email = UserDefaults.standard.string(forKey: "email") ?? ""
+            loginVM.email = userEmail ?? UserDefaults.standard.string(forKey: "email") ?? ""
             loginVM.password = password ?? ""
             
             await loginVM.login()
             if loginVM.loginSuccess {
-                KeychainManager.shared.resetToLogin()
+                if isAccountAddition {
+                    onAccountAdded?()
+                } else {
+                    KeychainManager.shared.resetToLogin()
+                }
             } else {
                 showLoginError = true
             }
@@ -769,5 +804,3 @@ struct WebContentView: UIViewRepresentable {
         }
     }
 }
-
-

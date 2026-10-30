@@ -99,11 +99,14 @@ class LoginViewModel: ObservableObject {
                 UserDefaults.standard.set(response.user_id ?? "", forKey: "user_id")
                 UserDefaults.standard.set(response.facility_id ?? "", forKey: "facility_id")
                 UserDefaults.standard.set(response.username ?? "", forKey: "username")
+                UserDefaults.standard.set(response.full_name ?? "", forKey: "fullname")
                 UserDefaults.standard.set(response.user_type ?? "", forKey: "user_type")
                 UserDefaults.standard.set(response.is_admin ?? false, forKey: "is_admin")
                 //UserDefaults.standard.set(true, forKey: "is_admin")
                 UserDefaults.standard.set(response.is_reset_password ?? true, forKey: "isPssswordReset")
                 UserDefaults.standard.set(true, forKey: "isUserInitialSetupCompleted")
+                KeychainManager.shared.clearRemovedAccount(response.user_id ?? "")
+                KeychainManager.shared.saveCurrentAccount(fullName: response.full_name ?? "")
                
 
                 // Digital access Tab

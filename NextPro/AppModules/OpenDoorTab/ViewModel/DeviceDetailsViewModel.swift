@@ -80,6 +80,7 @@ class DeviceDetailsViewModel: ObservableObject {
             UserDefaults.standard.set(encoded, forKey: "device_details")
         }
         UserDefaults.standard.set(response.isLocationCheckEnabled ?? false, forKey: "is_location_check_enabled")
+        UserDefaults.standard.set(response.organizationName ?? "", forKey: "organizationName")
     }
     
     // MARK: - Load Saved Details
