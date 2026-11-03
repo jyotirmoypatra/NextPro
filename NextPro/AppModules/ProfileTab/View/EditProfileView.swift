@@ -12,7 +12,9 @@ struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) var colorScheme
     @State private var fullName: String = ""
+    @State private var countryCode: String = ""
     @State private var phoneNumber: String = ""
+    @State private var selectedCountryID = ""
     @State private var email: String = ""
     @State private var address: String = ""
     @State private var profileImgUrl: String = ""
@@ -26,19 +28,33 @@ struct EditProfileView: View {
     @State private var showErrorAlert = false
     @State private var emailWasChanged = false
     @State private var isLoggingOut = false
+    @FocusState private var isPhoneFieldFocused: Bool
 
     @StateObject private var viewModel = UploadProfileImgViewModel()
     @StateObject private var editVm = UserProfileEditViewModel()
+    @StateObject private var countryListViewModel = CountryListViewModel()
+
+    private var countryOptions: [CountryOption] {
+        countryListViewModel.countries.map(CountryOption.init(country:))
+    }
+
+    private var selectedCountry: CountryOption {
+        countryOptions.first { $0.id == selectedCountryID }
+            ?? countryOptions.first
+            ?? CountryOption(id: selectedCountryID, name: "", dialingCode: "")
+    }
     
     
     // Parameters to receive data from ProfileEndUserView
     let initialFullName: String
+    let initialCountryCode: String
     let initialPhoneNumber: String
     let initialemail: String
     let initialProfileImageUrl: String
     
-    init(fullName: String = "", phoneNumber: String = "", email : String = "", profileImgUrl : String = "") {
+    init(fullName: String = "", countryCode:String = "",  phoneNumber: String = "", email : String = "", profileImgUrl : String = "") {
         self.initialFullName = fullName
+        self.initialCountryCode = countryCode
         self.initialPhoneNumber = phoneNumber
         self.initialemail = email
         self.initialProfileImageUrl = profileImgUrl
@@ -185,44 +201,81 @@ struct EditProfileView: View {
 //                                        .foregroundColor(.red)
                                 }
                                 
-                                ZStack(alignment: .leading) {
-                                    if phoneNumber.isEmpty {
-                                        Text("Enter your phone number")
-                                            .foregroundColor(Color.white.opacity(0.5))
-                                            .font(.custom("Inter-Regular", size: 16))
-                                            .padding(.leading, 14)
-                                    }
-                                    
-                                    TextField(
-                                        "",
-                                        text: Binding(
-                                            get: {
-                                                phoneNumber.formattedUSPhone()
-                                            },
-                                            set: { newValue in
-                                                phoneNumber = newValue
-                                            }
-                                        )
-                                    )
-                                        .foregroundColor(.white)
-                                        .font(.custom("Inter-Regular", size: 16))
-                                        .padding(.horizontal, 14)
-                                        .frame(height: 50)
-                                        .background(Color.white.opacity(0.15))
-                                        .cornerRadius(10)
-                                        .keyboardType(.numberPad)
-                                        .onChange(of: phoneNumber) { newValue in
-                                            
-                                            let digits = newValue.filter { $0.isNumber }
-                                            
-                                            if digits.count > 10 {
-                                                let generator = UIImpactFeedbackGenerator(style: .medium)
-                                                generator.impactOccurred()
-                                                phoneNumber = String(digits.prefix(10))
-                                            } else {
-                                                phoneNumber = digits
+                                HStack(alignment: .bottom, spacing: 8) {
+                                    Menu {
+                                        ForEach(countryOptions) { country in
+                                            Button {
+                                                selectedCountryID = country.id
+                                            } label: {
+                                                HStack {
+                                                    Text("\(country.flag) \(country.name) (\(country.dialingCode))")
+                                                        .lineLimit(1)
+                                                        .fixedSize(horizontal: true, vertical: false)
+                                                    Spacer(minLength: 12)
+                                                    if country.id == selectedCountryID {
+                                                        Image(systemName: "checkmark")
+                                                            .font(.system(size: 12, weight: .semibold))
+                                                    }
+                                                }
+                                                .frame(minWidth: 260, alignment: .leading)
                                             }
                                         }
+                                    } label: {
+                                        HStack(spacing: 10) {
+                                            Text("\(selectedCountry.flag) \(selectedCountry.dialingCode)")
+                                                .font(.custom("Inter-Regular", size: 15))
+                                                .foregroundColor(.white)
+                                                .lineLimit(1)
+
+                                            Image(systemName: "chevron.down")
+                                                .font(.system(size: 13, weight: .semibold))
+                                                .foregroundColor(.white)
+                                        }
+                                    }
+                                    .frame(height: 50)
+                                    .padding(.horizontal, 8)
+                                    .background(Color.white.opacity(0.15))
+                                    .cornerRadius(10)
+
+                                    ZStack(alignment: .leading) {
+                                        if phoneNumber.isEmpty {
+                                            Text("Enter your phone number")
+                                                .foregroundColor(Color.white.opacity(0.5))
+                                                .font(.custom("Inter-Regular", size: 16))
+                                                .padding(.leading, 14)
+                                        }
+
+                                        TextField(
+                                            "",
+                                            text: Binding(
+                                                get: {
+                                                    phoneNumber.formattedUSPhone()
+                                                },
+                                                set: { newValue in
+                                                    phoneNumber = newValue
+                                                }
+                                            )
+                                        )
+                                            .foregroundColor(.white)
+                                            .font(.custom("Inter-Regular", size: 16))
+                                            .padding(.horizontal, 14)
+                                            .frame(height: 50)
+                                            .background(Color.white.opacity(0.15))
+                                            .cornerRadius(10)
+                                            .keyboardType(.numberPad)
+                                            .focused($isPhoneFieldFocused)
+                                            .onChange(of: phoneNumber) { newValue in
+                                                let digits = newValue.filter { $0.isNumber }
+
+                                                if digits.count > 10 {
+                                                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                                                    generator.impactOccurred()
+                                                    phoneNumber = String(digits.prefix(10))
+                                                } else {
+                                                    phoneNumber = digits
+                                                }
+                                            }
+                                    }
                                 }
                             }
                             
@@ -317,6 +370,15 @@ struct EditProfileView: View {
         .toast()  // Add toast modifier
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    isPhoneFieldFocused = false
+                }
+                .font(.system(size: 14))
+            }
+        }
         .onAppear {
             loadUserData()
         }
@@ -498,6 +560,11 @@ struct EditProfileView: View {
     func loadUserData() {
         // Load data from passed parameters or UserDefaults as fallback
         fullName = !initialFullName.isEmpty ? initialFullName :  ""
+        countryCode = initialCountryCode
+        selectedCountryID = countryListViewModel.countries.first?.code ?? ""
+        if let country = CountryOption.matchingCountry(for: initialCountryCode, in: countryOptions) {
+            selectedCountryID = country.id
+        }
         phoneNumber = !initialPhoneNumber.isEmpty ? initialPhoneNumber :  ""
         email = !initialemail.isEmpty ? initialemail : ""
         profileImgUrl = !initialProfileImageUrl.isEmpty ? initialProfileImageUrl : ""
@@ -524,9 +591,10 @@ struct EditProfileView: View {
         let cleanNumber = phoneNumber.filter { $0.isNumber }
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let trimmedInitialEmail = initialemail.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let countryCode = selectedCountry.id
 
         Task {
-            await editVm.editProfile(fullName: fullName, phoneNo: cleanNumber, email: email)
+            await editVm.editProfile(fullName: fullName, countryCode: countryCode, phoneNo: cleanNumber, email: email)
             if editVm.editSuccess {
                 emailWasChanged = trimmedEmail != trimmedInitialEmail
                 showSuccessAlert = true

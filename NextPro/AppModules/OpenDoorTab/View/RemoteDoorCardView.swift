@@ -608,7 +608,7 @@ struct RemoteDoorCardView: View {
         let userLocation = CLLocation(latitude: userLat, longitude: userLong)
         let distance = userLocation.distance(from: doorLocation)
 
-        guard distance <= 10 else {
+        guard distance <= 50 else {
             wifiWaiting = false
             wifiSuccess = true
             isResultSuccess = false

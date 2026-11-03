@@ -361,3 +361,58 @@ extension APIConfig {
         }
     }
 }
+
+
+struct CountryOption: Identifiable {
+    let id: String
+    let name: String
+    let dialingCode: String
+
+    init(id: String, name: String, dialingCode: String) {
+        self.id = id
+        self.name = name
+        self.dialingCode = dialingCode
+    }
+
+    init(country: Country) {
+        id = country.code
+        name = country.name
+        dialingCode = country.dialCode
+    }
+
+    var flag: String {
+        let base: UInt32 = 127397
+        let scalars = id.uppercased().unicodeScalars
+        guard scalars.count == 2,
+              scalars.allSatisfy({ $0.value >= 65 && $0.value <= 90 }) else {
+            return ""
+        }
+        let flagScalars = scalars.compactMap { UnicodeScalar(base + $0.value) }
+        return String(String.UnicodeScalarView(flagScalars))
+    }
+
+}
+
+extension CountryOption {
+    static var supportedCountries: [CountryOption] {
+        guard let data = UserDefaults.standard.data(forKey: CountryListViewModel.countriesCacheKey),
+              let countries = try? JSONDecoder().decode([Country].self, from: data) else {
+            return [CountryOption(id: "", name: "", dialingCode: "")]
+        }
+        return countries.map(CountryOption.init(country:))
+    }
+
+    static func matchingCountry(for countryCode: String) -> CountryOption? {
+        matchingCountry(for: countryCode, in: supportedCountries)
+    }
+
+    static func matchingCountry(for countryCode: String, in countries: [CountryOption]) -> CountryOption? {
+        let normalizedCountryCode = countryCode.filter { $0.isNumber }
+
+        return countries.first {
+            $0.id.caseInsensitiveCompare(countryCode) == .orderedSame ||
+            $0.dialingCode == countryCode ||
+            $0.dialingCode.filter { $0.isNumber } == normalizedCountryCode
+        }
+    }
+}

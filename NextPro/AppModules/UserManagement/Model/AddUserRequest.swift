@@ -14,6 +14,7 @@ struct AddUserRequest: Codable {
     let password: String?
     let full_name: String
     let email: String
+    let country_code: String?
     let phone_number: String
     let user_type: String
 

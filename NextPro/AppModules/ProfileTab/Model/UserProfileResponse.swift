@@ -20,6 +20,7 @@ struct UserProfileData: Decodable {
     let email: String?
     let user_type: String?
 
+    let country_code: String?
     let phone_number: String?
     let status: String?
 

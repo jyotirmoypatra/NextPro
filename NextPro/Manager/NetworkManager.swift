@@ -499,6 +499,7 @@ class NetworkManager: ObservableObject {
     // MARK: - Edit profile
     func EditUserProfileDetails(
         fullName: String,
+        countryCode: String,
         phone: String,
         email: String
     ) async throws -> UserEditProfileResponse {
@@ -510,6 +511,7 @@ class NetworkManager: ObservableObject {
             method: "POST",
             body: [
                 "full_name": fullName,
+                "country_code": countryCode,
                 "phone_number": phone,
                 "email" : email
             ],
@@ -934,6 +936,7 @@ class NetworkManager: ObservableObject {
         )
     }
     
+    //Voice Setting Api
     func saveVoiceMessageSetting(isActiveVoiceGranted: Bool,isActiveVoiceDenied: Bool,isActiveVoiceUnauthorized: Bool,isActiveVoiceWelcome: Bool,accessGrantedId:String ,accessDeniedDId:String,accessUnauthorizedId:String,welcomeId:String) async throws -> CustomVoiceMessageResponse {
 
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.saveVoiceSetting))!
@@ -953,6 +956,20 @@ class NetworkManager: ObservableObject {
             ],
             requiresAuth: true,
             responseType: CustomVoiceMessageResponse.self,
+            retry: true
+        )
+    }
+    
+    //Country Fetch Api
+    func countryList() async throws -> CountryResponse {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.countryList))!
+        print("/Country List Fetch Api called----------------")
+        return try await performRequest(
+            url: url,
+            method: "GET",
+            requiresAuth: true,
+            responseType: CountryResponse.self,
             retry: true
         )
     }

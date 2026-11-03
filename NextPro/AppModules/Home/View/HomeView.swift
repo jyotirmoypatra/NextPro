@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var previousIsAdmin: Bool
     @ObservedObject private var notificationNav = NotificationNavigationManager.shared
     @StateObject private var profileRefreshViewModel = UserProfileDetailsViewModel()
+    @StateObject private var countryListViewModel = CountryListViewModel()
     private let tabBarHeight: CGFloat = 55
     @State private var openDoorsRefreshID = UUID()
     @State private var devicesRefreshID = UUID()
@@ -181,6 +182,9 @@ struct HomeView: View {
                 
 
             }
+        }
+        .task {
+            await countryListViewModel.getCountryList(force: true)
         }
         .onChange(of: isAdmin) { newValue in
             let oldValue = previousIsAdmin

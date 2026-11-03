@@ -77,6 +77,10 @@ struct APIConfig {
         static let addNewVoiceMessage = "/api/voice-message/templates/"
         static let deleteCustomVoiceMessage = "/api/voice-message/templates/"
         static let saveVoiceSetting = "/api/voice-message/settings/"
+        
+        static let countryList = "/api/countries/"
+        
+        
     }
     
     static func url(_ endpoint: String) -> String {

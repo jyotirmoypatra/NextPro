@@ -13,6 +13,7 @@ struct AddUserView: View {
     let onDismiss: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @StateObject private var addUserVM = AddUserViewModel()
+    @StateObject private var countryListViewModel = CountryListViewModel()
     @StateObject private var generateNFCID = GenerateUniqueNfcViewModel()
     @StateObject private var getAccessGroupVM = GetAccessGroupListViewModel()
     @State private var showAddUserVMError = false
@@ -27,6 +28,7 @@ struct AddUserView: View {
     @State private var username = ""
     @State private var password = "Password@2026"
     @State private var phone = ""
+    @State private var selectedCountryID = ""
     @State private var nfcId = ""
     @State private var nfcPhysicalNumber = ""
    
@@ -92,6 +94,16 @@ struct AddUserView: View {
     }
     
     @FocusState private var focusedField: Field?
+
+    private var countryOptions: [CountryOption] {
+        countryListViewModel.countries.map(CountryOption.init(country:))
+    }
+
+    private var selectedCountry: CountryOption {
+        countryOptions.first { $0.id == selectedCountryID }
+            ?? countryOptions.first
+            ?? CountryOption(id: selectedCountryID, name: "", dialingCode: "")
+    }
 
     private var isAnyPickerOrOverlayOpen: Bool {
         showStartDatePicker || showEndDatePicker || showTimePicker
@@ -191,19 +203,68 @@ struct AddUserView: View {
                                     focusedField = nil
                                 }
 
-                                LabeledTextField(
-                                    title: "Phone Number",
-                                    placeholder: "Enter phone",
-                                    isRequired: isPhoneRequired,
-                                    text: $phone,
-                                    keyboardType: .numberPad
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack(spacing: 2) {
+                                        Text("Phone Number")
+                                            .font(.custom("Inter-Medium", size: 16))
+                                            .foregroundColor(.white)
 
-                                )
-                              
-                                .focused($focusedField, equals: .phone)
-                                .submitLabel(.return)
-                                .onSubmit {
-                                    focusedField = nil
+                                        if isPhoneRequired {
+                                            Text("*")
+                                                .foregroundColor(.red)
+                                        }
+                                    }
+
+                                    HStack(alignment: .bottom, spacing: 8) {
+                                        Menu {
+                                            ForEach(countryOptions) { country in
+                                                Button {
+                                                    selectedCountryID = country.id
+                                                } label: {
+                                                    HStack {
+                                                        Text("\(country.flag) \(country.name) (\(country.dialingCode))")
+                                                            .lineLimit(1)
+                                                            .fixedSize(horizontal: true, vertical: false)
+                                                        Spacer(minLength: 12)
+                                                        if country.id == selectedCountryID {
+                                                            Image(systemName: "checkmark")
+                                                                .font(.system(size: 12, weight: .semibold))
+                                                        }
+                                                    }
+                                                    .frame(minWidth: 260, alignment: .leading)
+                                                }
+                                            }
+                                        } label: {
+                                            HStack(spacing: 10) {
+                                                Text("\(selectedCountry.flag) \(selectedCountry.dialingCode)")
+                                                    .font(.custom("Inter-Regular", size: 15))
+                                                    .foregroundColor(.white)
+                                                    .lineLimit(1)
+
+                                                Image(systemName: "chevron.down")
+                                                    .font(.system(size: 13, weight: .semibold))
+                                                    .foregroundColor(.white)
+                                            }
+                                        }
+                                        .frame(height: 50)
+                                        .padding(.horizontal, 8)
+                                        .background(Color.white.opacity(0.15))
+                                        .cornerRadius(10)
+
+                                        LabeledTextField(
+                                            title: "",
+                                            placeholder: "Enter phone",
+                                            isRequired: false,
+                                            text: $phone,
+                                            keyboardType: .numberPad
+                                        )
+                                        .padding(.top, -28)
+                                        .focused($focusedField, equals: .phone)
+                                        .submitLabel(.return)
+                                        .onSubmit {
+                                            focusedField = nil
+                                        }
+                                    }
                                 }
                                 
 //                                LabeledTextField(
@@ -935,6 +996,7 @@ struct AddUserView: View {
         .onAppear {
             guard !hasLoaded else { return }
             hasLoaded = true
+            selectedCountryID = countryListViewModel.countries.first?.code ?? ""
             Task {
 
                 isInitialLoading = true
@@ -946,7 +1008,12 @@ struct AddUserView: View {
                 if let user = editUser {
                     
                     fullName = user.full_name ?? ""
+                    
                     phone = user.phone_number ?? ""
+                    let initialCountryCode = user.country_code ?? ""
+                    if let country = CountryOption.matchingCountry(for: initialCountryCode, in: countryOptions) {
+                        selectedCountryID = country.id
+                    }
                     nfcId = user.nfc_digital ?? ""
                     email =  user.email ?? ""
                     username = user.username ?? ""
@@ -1484,6 +1551,7 @@ struct AddUserView: View {
                 password: isEditMode ? "" : password,
                 full_name: fullName,
                 email: email,
+                country_code: selectedCountry.id,
                 phone_number: phone,
                 user_type: "non_staff",
                 

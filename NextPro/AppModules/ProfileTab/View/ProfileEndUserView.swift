@@ -322,6 +322,7 @@ struct ProfileEndUserView: View {
         .navigationDestination(isPresented: $navigateToEditProfile) {
             EditProfileView(
                 fullName: viewModel.fullName,
+                countryCode: viewModel.countryCode,
                 phoneNumber: viewModel.phoneNumber,
                 email : viewModel.email,
                 profileImgUrl: viewModel.image_url

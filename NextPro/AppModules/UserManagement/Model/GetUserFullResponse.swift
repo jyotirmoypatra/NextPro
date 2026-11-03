@@ -19,6 +19,7 @@ struct GetUserData: Codable {
    let username: String?
     let email: String?
     let user_type: String?
+    let country_code: String?
     let phone_number: String?
     let status: String
     

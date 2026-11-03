@@ -16,6 +16,7 @@ class UserProfileDetailsViewModel: ObservableObject {
 
     @Published var fullName = ""
     @Published var phoneNumber = ""
+    @Published var countryCode = ""
     @Published var email = ""
     @Published var image_url = ""
     @Published var accountStatus = ""
@@ -95,6 +96,7 @@ class UserProfileDetailsViewModel: ObservableObject {
                 isSuccess = true
                 // Assign response to UI (no UserDefaults save)
                 fullName = response.data.full_name ?? ""
+                countryCode = response.data.country_code ?? ""
                 phoneNumber = response.data.phone_number ?? ""
                 email = response.data.email ?? ""
                 accountStatus = response.data.status ?? ""
