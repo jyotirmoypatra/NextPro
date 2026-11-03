@@ -9,6 +9,9 @@ import SwiftUI
 
 
 struct ResetPassword: View {
+    var isAccountAddition = false
+    var onClose: (() -> Void)?
+    var onAccountAdded: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @State private var navigateToVerifyOtp = false
     @StateObject private var toastManager = ToastManager.shared
@@ -35,11 +38,22 @@ struct ResetPassword: View {
                 VStack{
                     
                     HStack {
-                        
+                        if isAccountAddition {
+                            Button {
+                                onClose?() ?? dismiss()
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .padding(10)
+                                    .background(Color.white.opacity(0.15))
+                                    .clipShape(Circle())
+                            }
+                        }
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 10)
-                    .frame(maxWidth: .infinity, alignment: .top)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
                     .zIndex(999)
                     
                     // Scrollable Content
@@ -184,7 +198,12 @@ struct ResetPassword: View {
                 UIApplication.shared.hideKeyboard()
             }
             .navigationDestination(isPresented: $navigateToVerifyOtp) {
-                VerifyOtpAccount(email: viewModel.email)
+                VerifyOtpAccount(
+                    isAccountAddition: isAccountAddition,
+                    onClose: onClose,
+                    onAccountAdded: onAccountAdded,
+                    email: viewModel.email
+                )
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
                     .interactiveDismissDisabled(true)

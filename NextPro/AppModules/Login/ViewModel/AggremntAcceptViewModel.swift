@@ -21,7 +21,7 @@ class AggremntAcceptViewModel: ObservableObject {
 
     let networkManager = NetworkManager.shared
 
-    func accept() async {
+    func accept(email: String? = nil, persistUserDefaults: Bool = true) async {
 
         ErrorMessage = ""
 
@@ -32,7 +32,7 @@ class AggremntAcceptViewModel: ObservableObject {
             return
         }
         
-        guard let userEmail = UserDefaults.standard.string(forKey: "email") else {
+        guard let userEmail = email ?? UserDefaults.standard.string(forKey: "email") else {
             ErrorMessage = "Email missing!"
             return
         }
@@ -53,8 +53,9 @@ class AggremntAcceptViewModel: ObservableObject {
          
                 Successflag = true
                 
-               // Save user details
-                UserDefaults.standard.set(response.status, forKey: "is_aggrement_accept")
+                if persistUserDefaults {
+                    UserDefaults.standard.set(response.status, forKey: "is_aggrement_accept")
+                }
 
                
             } else {

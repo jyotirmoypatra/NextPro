@@ -102,6 +102,12 @@ final class FCMTokenManager {
         }
     }
 
+    func registerForCurrentAccount() {
+        UserDefaults.standard.removeObject(forKey: Keys.lastRegisteredToken)
+        UserDefaults.standard.removeObject(forKey: Keys.deviceTokenId)
+        registerIfNeeded()
+    }
+
     // MARK: - Logout
 
     enum StrictLogoutResult {

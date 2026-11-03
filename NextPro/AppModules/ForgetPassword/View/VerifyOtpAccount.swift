@@ -10,6 +10,9 @@ import Combine
 
 
 struct VerifyOtpAccount: View {
+    var isAccountAddition = false
+    var onClose: (() -> Void)?
+    var onAccountAdded: (() -> Void)?
     @State private var digit1 = ""
     @State private var digit2 = ""
     @State private var digit3 = ""
@@ -54,6 +57,24 @@ struct VerifyOtpAccount: View {
                 // Black translucent overlay
                 Color.black.opacity(0.9)
                     .ignoresSafeArea()
+
+                if isAccountAddition {
+                    HStack {
+                        Button {
+                            onClose?() ?? dismiss()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(10)
+                                .background(Color.white.opacity(0.15))
+                                .clipShape(Circle())
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal, 10)
+                    .zIndex(999)
+                }
                 
                 // Scrollable Content
                 ScrollView(.vertical, showsIndicators: false) {
@@ -347,7 +368,13 @@ struct VerifyOtpAccount: View {
     }
         .ignoresSafeArea(.keyboard, edges: .bottom) // Prevents UI from moving when keyboard appears
         .navigationDestination(isPresented: $navigateToResetPassword) {
-            CreateNewPasswordView(userName: self.email, comingFrom: "forgetPassword")
+            CreateNewPasswordView(
+                userName: self.email,
+                comingFrom: "forgetPassword",
+                isAccountAddition: isAccountAddition,
+                onClose: onClose,
+                onAccountAdded: onAccountAdded
+            )
                 .navigationBarBackButtonHidden(true)
                 .navigationBarHidden(true)
                 .interactiveDismissDisabled(true)

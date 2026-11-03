@@ -10,10 +10,129 @@ import Foundation
 import Security
 import SwiftUI
 
+struct StoredAccount: Codable, Identifiable {
+    let id: String
+    let email: String
+    let userID: String
+    let username: String
+    let fullname: String?
+    let imageURL: String?
+    let accessToken: String
+    let refreshToken: String
+}
+
 class KeychainManager {
     
     static let shared = KeychainManager()
     private init() {}
+
+    private let storedAccountsKey = "stored_accounts"
+    private let removedAccountsKey = "removed_stored_accounts"
+
+    func saveCurrentAccount(fullName: String? = nil, imageURL: String? = nil) {
+        guard let email = UserDefaults.standard.string(forKey: "email"), !email.isEmpty else { return }
+        let userID = UserDefaults.standard.string(forKey: "user_id") ?? ""
+        guard !userID.isEmpty else { return }
+        let removedAccounts = UserDefaults.standard.stringArray(forKey: removedAccountsKey) ?? []
+        guard !removedAccounts.contains(userID) else { return }
+
+        let account = StoredAccount(
+            id: userID,
+            email: email,
+            userID: userID,
+            username: UserDefaults.standard.string(forKey: "username") ?? "",
+            fullname: fullName ?? UserDefaults.standard.string(forKey: "fullname") ?? "",
+            imageURL: imageURL ?? UserDefaults.standard.string(forKey: "image_url") ?? "",
+            accessToken: get("access_token") ?? "",
+            refreshToken: get("refresh_token") ?? ""
+        )
+
+        var accounts = storedAccounts()
+        accounts.removeAll {
+            $0.id == account.id ||
+            $0.userID == account.userID ||
+            $0.email.caseInsensitiveCompare(account.email) == .orderedSame
+        }
+        accounts.append(account)
+        if let data = try? JSONEncoder().encode(accounts) {
+
+            UserDefaults.standard.set(data, forKey: storedAccountsKey)
+        }
+    }
+
+    func updateCurrentAccountProfile(fullName: String, imageURL: String) {
+        guard let email = UserDefaults.standard.string(forKey: "email"), !email.isEmpty else { return }
+
+        var accounts = storedAccounts()
+        guard let index = accounts.firstIndex(where: {
+            $0.email.caseInsensitiveCompare(email) == .orderedSame
+        }) else { return }
+
+        let account = accounts[index]
+        accounts[index] = StoredAccount(
+            id: account.userID,
+            email: account.email,
+            userID: account.userID,
+            username: account.username,
+            fullname: fullName.isEmpty ? account.fullname : fullName,
+            imageURL: imageURL,
+            accessToken: account.accessToken,
+            refreshToken: account.refreshToken
+        )
+
+        if let data = try? JSONEncoder().encode(accounts) {
+            UserDefaults.standard.set(data, forKey: storedAccountsKey)
+        }
+    }
+
+    func storedAccounts() -> [StoredAccount] {
+        guard let data = UserDefaults.standard.data(forKey: storedAccountsKey),
+              let accounts = try? JSONDecoder().decode([StoredAccount].self, from: data) else {
+            return []
+        }
+        let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+
+            if let jsonData = try? encoder.encode(accounts),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                print("Stored Accounts:\n\(jsonString)")
+            }
+        return accounts
+    }
+
+    func removeStoredAccount(_ account: StoredAccount) {
+        var accounts = storedAccounts()
+        accounts.removeAll {
+            $0.id == account.id || $0.userID == account.userID
+        }
+
+        var removedAccounts = UserDefaults.standard.stringArray(forKey: removedAccountsKey) ?? []
+        if !removedAccounts.contains(account.userID) {
+            removedAccounts.append(account.userID)
+            UserDefaults.standard.set(removedAccounts, forKey: removedAccountsKey)
+        }
+
+        if accounts.isEmpty {
+            UserDefaults.standard.removeObject(forKey: storedAccountsKey)
+        } else if let data = try? JSONEncoder().encode(accounts) {
+            UserDefaults.standard.set(data, forKey: storedAccountsKey)
+        }
+    }
+
+    func clearRemovedAccount(_ userID: String) {
+        var removedAccounts = UserDefaults.standard.stringArray(forKey: removedAccountsKey) ?? []
+        removedAccounts.removeAll { $0 == userID }
+        UserDefaults.standard.set(removedAccounts, forKey: removedAccountsKey)
+    }
+
+    func activate(_ account: StoredAccount) {
+        save(account.accessToken, forKey: "access_token")
+        save(account.refreshToken, forKey: "refresh_token")
+        UserDefaults.standard.set(account.email, forKey: "email")
+        UserDefaults.standard.set(account.userID, forKey: "user_id")
+        UserDefaults.standard.set(account.username, forKey: "username")
+        UserDefaults.standard.set(true, forKey: "is_logged_in")
+    }
 
     func save(_ value: String, forKey key: String) {
         let data = value.data(using: .utf8)!
@@ -84,6 +203,8 @@ class KeychainManager {
         if let bundleID = Bundle.main.bundleIdentifier {
             // Save the value you want to keep
             let isSetupCompleted = UserDefaults.standard.bool(forKey: "isUserInitialSetupCompleted")
+            let savedAccounts = UserDefaults.standard.data(forKey: storedAccountsKey)
+            let removedAccounts = UserDefaults.standard.stringArray(forKey: removedAccountsKey)
             
             // Clear all UserDefaults
             UserDefaults.standard.removePersistentDomain(forName: bundleID)
@@ -91,6 +212,8 @@ class KeychainManager {
             
             // Restore the value you want to keep
             UserDefaults.standard.set(isSetupCompleted, forKey: "isUserInitialSetupCompleted")
+            UserDefaults.standard.set(savedAccounts, forKey: storedAccountsKey)
+            UserDefaults.standard.set(removedAccounts, forKey: removedAccountsKey)
         }
 
         
