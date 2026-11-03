@@ -385,11 +385,7 @@
 				CODE_SIGN_ENTITLEMENTS = NextPro/NextPro.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-<<<<<<< HEAD
 				CURRENT_PROJECT_VERSION = 42;
-=======
-				CURRENT_PROJECT_VERSION = 40;
->>>>>>> feature/account-switch
 				DEVELOPMENT_TEAM = FF6DJYXQG8;
 				ENABLE_PREVIEWS = YES;
 				EXCLUDED_ARCHS = "";
