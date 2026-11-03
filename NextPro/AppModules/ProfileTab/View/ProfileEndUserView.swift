@@ -148,6 +148,14 @@ struct ProfileEndUserView: View {
 
                         // MARK: - Settings Section
                         VStack(spacing: 0) {
+                            
+                            UserProfileRow(title: "Manage Account", textColor: .white) {
+                                showManageAccount = true
+                            }
+
+                            Divider().background(Color.white.opacity(0.15))
+                                .padding(.horizontal,20)
+                            
                             // Update Password
                             UserProfileRow(title: "Update Password",textColor: .white) {
                                 // Handle password update
@@ -159,12 +167,6 @@ struct ProfileEndUserView: View {
                             Divider().background(Color.white.opacity(0.15))
                                 .padding(.horizontal,20)
 
-                            UserProfileRow(title: "Manage Account", textColor: .white) {
-                                showManageAccount = true
-                            }
-
-                            Divider().background(Color.white.opacity(0.15))
-                                .padding(.horizontal,20)
                             
                             if viewModel.canReadUserManagement || viewModel.canWriteUserManagement {
                                 
@@ -674,7 +676,7 @@ struct ManageAccountSheet: View {
                 Text("Manage Accounts")
                     .font(.custom("Inter-SemiBold", size: 20))
                     .foregroundColor(colorScheme == .dark ? .white : .black)
-                    .padding(.top,20)
+                    .padding(.top,10)
                 
                 Text("Switch between accounts signed in on this device.")
                     .font(.custom("Inter-Regular", size: 14))
@@ -992,11 +994,11 @@ struct ManageAccountSheet: View {
         }
         .padding(.horizontal, 20)
         .padding(.top, 12)
-        .padding(.bottom, 20)
+        .padding(.bottom, 10)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
        // .presentationDetents([.height(CGFloat(350 + storedAccounts.count * 100)), .large])
         .presentationDetents([
-            .height(CGFloat(350 + max(storedAccounts.count, 1) * 100)),
+            .height(CGFloat(330 + max(storedAccounts.count, 1) * 100)),
             .large
         ])
         .presentationDragIndicator(.visible)
