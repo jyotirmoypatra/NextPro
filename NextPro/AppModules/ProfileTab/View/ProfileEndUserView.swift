@@ -993,7 +993,11 @@ struct ManageAccountSheet: View {
         .padding(.top, 12)
         .padding(.bottom, 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .presentationDetents([.height(CGFloat(350 + storedAccounts.count * 100)), .large])
+       // .presentationDetents([.height(CGFloat(350 + storedAccounts.count * 100)), .large])
+        .presentationDetents([
+            .height(CGFloat(350 + max(storedAccounts.count, 1) * 100)),
+            .large
+        ])
         .presentationDragIndicator(.visible)
     }
 }
