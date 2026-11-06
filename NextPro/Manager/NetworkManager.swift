@@ -114,7 +114,7 @@ class NetworkManager: ObservableObject {
 
     func requestSessionExpiredAlert() {
         DispatchQueue.main.async {
-            guard self.isAuthenticatedSessionActive else {
+            guard UserDefaults.standard.bool(forKey: "is_logged_in") else {
                 self.resetSessionExpirationState()
                 return
             }
@@ -136,12 +136,6 @@ class NetworkManager: ObservableObject {
             self.sessionExpirationState = .idle
             self.showSessionExpiredAlert = false
         }
-    }
-
-    private var isAuthenticatedSessionActive: Bool {
-        guard UserDefaults.standard.bool(forKey: "is_logged_in") else { return false }
-        guard let token = KeychainManager.shared.get("access_token"), !token.isEmpty else { return false }
-        return true
     }
 
     // MARK: - Single-flight token refresh
@@ -195,6 +189,7 @@ class NetworkManager: ObservableObject {
         if requiresAuth {
             guard let token = KeychainManager.shared.get("access_token"),
                   !token.isEmpty else {
+                requestSessionExpiredAlert()
                 throw APIError.unAuthorized
             }
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")

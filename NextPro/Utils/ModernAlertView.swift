@@ -367,13 +367,14 @@ struct SessionExpiredAlertView: View {
 private final class SessionExpiredOverlayWindow {
     private var window: UIWindow?
 
-    func show<Content: View>(@ViewBuilder content: @escaping () -> Content) {
-        guard window == nil else { return }
+    @discardableResult
+    func show<Content: View>(@ViewBuilder content: @escaping () -> Content) -> Bool {
+        guard window == nil else { return true }
         guard let scene = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
             .first(where: { $0.activationState == .foregroundActive })
             ?? UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first
-        else { return }
+        else { return false }
 
         let hosting = UIHostingController(rootView: content())
         hosting.view.backgroundColor = .clear
@@ -386,6 +387,7 @@ private final class SessionExpiredOverlayWindow {
         newWindow.makeKeyAndVisible()
 
         window = newWindow
+        return true
     }
 
     func hide() {
@@ -402,23 +404,37 @@ struct SessionExpiredAlertModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .onAppear {
+                if isPresented {
+                    presentOverlay(retriesRemaining: 10)
+                }
+            }
             .onChange(of: isPresented) { presented in
                 if presented {
-                    overlay.show {
-                        ZStack {
-                            Color.black.opacity(0.8)
-                                .ignoresSafeArea()
-                                .transition(.opacity)
-
-                            alertView()
-                                .transition(.scale.combined(with: .opacity))
-                        }
-                        .animation(.spring(), value: presented)
-                    }
+                    presentOverlay(retriesRemaining: 10)
                 } else {
                     overlay.hide()
                 }
             }
+    }
+
+    private func presentOverlay(retriesRemaining: Int) {
+        let didPresent = overlay.show {
+            ZStack {
+                Color.black.opacity(0.8)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+
+                alertView()
+                    .transition(.scale.combined(with: .opacity))
+            }
+            .animation(.spring(), value: isPresented)
+        }
+
+        guard !didPresent, isPresented, retriesRemaining > 0 else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            presentOverlay(retriesRemaining: retriesRemaining - 1)
+        }
     }
 }
 
