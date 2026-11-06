@@ -105,8 +105,8 @@ class LoginViewModel: ObservableObject {
                 //UserDefaults.standard.set(true, forKey: "is_admin")
                 UserDefaults.standard.set(response.is_reset_password ?? true, forKey: "isPssswordReset")
                 UserDefaults.standard.set(true, forKey: "isUserInitialSetupCompleted")
-                KeychainManager.shared.clearRemovedAccount(response.user_id ?? "")
-                KeychainManager.shared.saveCurrentAccount(fullName: response.full_name ?? "")
+//                KeychainManager.shared.clearRemovedAccount(response.user_id ?? "")
+//                KeychainManager.shared.saveCurrentAccount(fullName: response.full_name ?? "")
                
 
                 // Digital access Tab
@@ -165,6 +165,14 @@ class LoginViewModel: ObservableObject {
                     KeychainManager.shared.save(String(creds.device_port),      forKey: "device_port")
                     KeychainManager.shared.save(creds.username,          forKey: "mqtt_username")
                     KeychainManager.shared.save(creds.password,          forKey: "mqtt_password")
+                    
+                    // Save account with its own encrypted MQTT configuration
+                    KeychainManager.shared.clearRemovedAccount(response.user_id ?? "")
+
+                       KeychainManager.shared.saveCurrentAccount(
+                           fullName: response.full_name ?? "",
+                           ctxBlob: ctxBlob
+                       )
                     print("MQTT credentials saved to Keychain")
 
                 } catch {

@@ -19,6 +19,8 @@ struct StoredAccount: Codable, Identifiable {
     let imageURL: String?
     let accessToken: String
     let refreshToken: String
+    // Encrypted MQTT configuration
+    var ctxBlob: String? = nil
 }
 
 class KeychainManager {
@@ -29,12 +31,62 @@ class KeychainManager {
     private let storedAccountsKey = "stored_accounts"
     private let removedAccountsKey = "removed_stored_accounts"
 
-    func saveCurrentAccount(fullName: String? = nil, imageURL: String? = nil) {
-        guard let email = UserDefaults.standard.string(forKey: "email"), !email.isEmpty else { return }
+//    func saveCurrentAccount(fullName: String? = nil, imageURL: String? = nil,ctxBlob: String? = nil) {
+//        guard let email = UserDefaults.standard.string(forKey: "email"), !email.isEmpty else { return }
+//        let userID = UserDefaults.standard.string(forKey: "user_id") ?? ""
+//        guard !userID.isEmpty else { return }
+//        let removedAccounts = UserDefaults.standard.stringArray(forKey: removedAccountsKey) ?? []
+//        guard !removedAccounts.contains(userID) else { return }
+//
+//        let account = StoredAccount(
+//            id: userID,
+//            email: email,
+//            userID: userID,
+//            username: UserDefaults.standard.string(forKey: "username") ?? "",
+//            fullname: fullName ?? UserDefaults.standard.string(forKey: "fullname") ?? "",
+//            imageURL: imageURL ?? UserDefaults.standard.string(forKey: "image_url") ?? "",
+//            accessToken: get("access_token") ?? "",
+//            refreshToken: get("refresh_token") ?? "",
+//            ctxBlob: ctxBlob
+//        )
+//
+//        var accounts = storedAccounts()
+//        
+//        accounts.removeAll {
+//            $0.id == account.id ||
+//            $0.userID == account.userID ||
+//            $0.email.caseInsensitiveCompare(account.email) == .orderedSame
+//        }
+//        accounts.append(account)
+//        if let data = try? JSONEncoder().encode(accounts) {
+//
+//            UserDefaults.standard.set(data, forKey: storedAccountsKey)
+//        }
+//    }
+    
+    func saveCurrentAccount(
+        fullName: String? = nil,
+        imageURL: String? = nil,
+        ctxBlob: String? = nil
+    ) {
+        guard let email = UserDefaults.standard.string(forKey: "email"),
+              !email.isEmpty else { return }
+
         let userID = UserDefaults.standard.string(forKey: "user_id") ?? ""
+
         guard !userID.isEmpty else { return }
+
         let removedAccounts = UserDefaults.standard.stringArray(forKey: removedAccountsKey) ?? []
+
         guard !removedAccounts.contains(userID) else { return }
+
+        // Get existing account list
+        var accounts = storedAccounts()
+
+        // Preserve previously saved ctxBlob for this account
+        let existingBlob = accounts.first {
+            $0.userID == userID
+        }?.ctxBlob
 
         let account = StoredAccount(
             id: userID,
@@ -44,18 +96,19 @@ class KeychainManager {
             fullname: fullName ?? UserDefaults.standard.string(forKey: "fullname") ?? "",
             imageURL: imageURL ?? UserDefaults.standard.string(forKey: "image_url") ?? "",
             accessToken: get("access_token") ?? "",
-            refreshToken: get("refresh_token") ?? ""
+            refreshToken: get("refresh_token") ?? "",
+            ctxBlob: ctxBlob ?? existingBlob
         )
 
-        var accounts = storedAccounts()
         accounts.removeAll {
             $0.id == account.id ||
             $0.userID == account.userID ||
             $0.email.caseInsensitiveCompare(account.email) == .orderedSame
         }
-        accounts.append(account)
-        if let data = try? JSONEncoder().encode(accounts) {
 
+        accounts.append(account)
+
+        if let data = try? JSONEncoder().encode(accounts) {
             UserDefaults.standard.set(data, forKey: storedAccountsKey)
         }
     }
@@ -77,7 +130,8 @@ class KeychainManager {
             fullname: fullName.isEmpty ? account.fullname : fullName,
             imageURL: imageURL,
             accessToken: account.accessToken,
-            refreshToken: account.refreshToken
+            refreshToken: account.refreshToken,
+            ctxBlob: account.ctxBlob
         )
 
         if let data = try? JSONEncoder().encode(accounts) {
@@ -125,13 +179,59 @@ class KeychainManager {
         UserDefaults.standard.set(removedAccounts, forKey: removedAccountsKey)
     }
 
+//    func activate(_ account: StoredAccount) {
+//        save(account.accessToken, forKey: "access_token")
+//        save(account.refreshToken, forKey: "refresh_token")
+//        UserDefaults.standard.set(account.email, forKey: "email")
+//        UserDefaults.standard.set(account.userID, forKey: "user_id")
+//        UserDefaults.standard.set(account.username, forKey: "username")
+//        UserDefaults.standard.set(true, forKey: "is_logged_in")
+//    }
     func activate(_ account: StoredAccount) {
+
+        // 1. Stop previous account's MQTT connection
+        MQTTManager.shared.disconnect()
+
+        // 2. Remove previous account's MQTT credentials
+        delete("mqtt_host")
+        delete("mqtt_port")
+        delete("device_port")
+        delete("mqtt_username")
+        delete("mqtt_password")
+
+        // 3. Activate selected account tokens
         save(account.accessToken, forKey: "access_token")
         save(account.refreshToken, forKey: "refresh_token")
+
         UserDefaults.standard.set(account.email, forKey: "email")
         UserDefaults.standard.set(account.userID, forKey: "user_id")
         UserDefaults.standard.set(account.username, forKey: "username")
         UserDefaults.standard.set(true, forKey: "is_logged_in")
+
+        // 4. Restore selected account's MQTT configuration
+        guard let ctxBlob = account.ctxBlob, !ctxBlob.isEmpty else {
+            print("❌ MQTT ctx_blob missing for this account. Re-login required.")
+            return
+        }
+
+        do {
+            let creds = try MQTTBlobDecoder.decrypt(
+                ctxBlob: ctxBlob,
+                accessToken: account.accessToken,
+                userId: account.userID
+            )
+
+            save(creds.host, forKey: "mqtt_host")
+            save(String(creds.app_port), forKey: "mqtt_port")
+            save(String(creds.device_port), forKey: "device_port")
+            save(creds.username, forKey: "mqtt_username")
+            save(creds.password, forKey: "mqtt_password")
+
+            print("✅ MQTT credentials restored for: \(account.email)")
+
+        } catch {
+            print("❌ MQTT credential restoration failed: \(error)")
+        }
     }
 
     func save(_ value: String, forKey key: String) {
