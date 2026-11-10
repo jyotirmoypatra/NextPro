@@ -14,6 +14,7 @@ class AccountSwitchViewModel: ObservableObject {
     @Published var errorMessage = ""
     @Published var isLoading = false
     @Published var successFlag = false
+    @Published var requiresLogin = false
 
     @Published var switchResponse: LoginResponseModel?
 
@@ -23,6 +24,7 @@ class AccountSwitchViewModel: ObservableObject {
 
         errorMessage = ""
         successFlag = false
+        requiresLogin = false
         switchResponse = nil
 
         guard !refreshToken.isEmpty else {
@@ -42,7 +44,7 @@ class AccountSwitchViewModel: ObservableObject {
             )
 
             guard response.status else {
-                errorMessage = "Unable to switch account."
+                errorMessage = response.message ?? "Unable to switch account."
                 return
             }
 
@@ -52,6 +54,10 @@ class AccountSwitchViewModel: ObservableObject {
         } catch {
             print("Account switch API error: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
+            if let apiError = error as? NetworkManager.APIError,
+               case .serverError(code: 401, message: _) = apiError {
+                requiresLogin = true
+            }
         }
     }
 }

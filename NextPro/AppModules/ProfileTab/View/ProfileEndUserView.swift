@@ -38,7 +38,14 @@ struct ProfileEndUserView: View {
     @State private var navigate_Debug = false
     @State private var showFailedAlert = false
     @State private var showManageAccount = false
-    @State private var showAddAccountLogin = false
+    @State private var loginRequest: LoginRequest?
+    @State private var pendingLoginRequest: LoginRequest?
+
+    private struct LoginRequest: Identifiable {
+        let id = UUID()
+        let email: String
+        let isReauth: Bool
+    }
     @State private var isSwitchingAccount = false
     @State private var switchingAccountName = ""
     @State private var isRemovingCurrentAccount = false
@@ -473,7 +480,13 @@ struct ProfileEndUserView: View {
         .sheet(isPresented: $showDeleteAccountAlert) {
             DeleteConfirmationSheet()
         }
-        .sheet(isPresented: $showManageAccount) {
+        .sheet(isPresented: $showManageAccount, onDismiss: {
+            // Present login only after the sheet has fully dismissed
+            if let request = pendingLoginRequest {
+                pendingLoginRequest = nil
+                loginRequest = request
+            }
+        }) {
             ManageAccountSheet(
                 fullName: viewModel.fullName,
                 email: viewModel.email,
@@ -486,11 +499,15 @@ struct ProfileEndUserView: View {
                         fullName: viewModel.fullName,
                         imageURL: viewModel.image_url
                     )
+                    pendingLoginRequest = LoginRequest(email: "", isReauth: false)
                     showManageAccount = false
-                    showAddAccountLogin = true
                 },
                 onSwitchAccount: { account in
                     showManageAccount = false
+                    if account.loginRequired == true {
+                        pendingLoginRequest = LoginRequest(email: account.email, isReauth: true)
+                        return
+                    }
                     Task { @MainActor in
                         await switchProfileAccount(account)
                     }
@@ -515,14 +532,15 @@ struct ProfileEndUserView: View {
                 }
             )
         }
-        .fullScreenCover(isPresented: $showAddAccountLogin) {
+        .fullScreenCover(item: $loginRequest) { request in
             NavigationStack {
                 LoginView(
-                    isUserInitialSetupCompleted: false,
+                    isUserInitialSetupCompleted: request.isReauth,
+                    prefilledEmail: request.email,
                     showsCloseButton: true,
                     isAccountAddition: true,
                     onAccountAdded: {
-                        showAddAccountLogin = false
+                        loginRequest = nil
                         FCMTokenManager.shared.registerForCurrentAccount()
                         loadUserData()
                         Task {
@@ -530,9 +548,10 @@ struct ProfileEndUserView: View {
                         }
                     },
                     onClose: {
-                        showAddAccountLogin = false
+                        loginRequest = nil
                     }
                 )
+                .id(request.id)
                 .navigationBarBackButtonHidden(true)
                 .navigationBarHidden(true)
             }
@@ -881,6 +900,13 @@ struct ManageAccountSheet: View {
                                         .font(.custom("Inter-Regular", size: 14))
                                         .foregroundColor(colorScheme == .dark ? .gray : .black.opacity(0.7))
                                         .lineLimit(1)
+
+                                    if account.loginRequired == true {
+                                        Text("Sign-in Required")
+                                            .font(.custom("Inter-Regular", size: 12))
+                                            .foregroundColor(Color.yellow.opacity(0.8))
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
                                 }
                                 
                                 Spacer()
@@ -892,7 +918,7 @@ struct ManageAccountSheet: View {
                                         .background(Color.red)
                                         .clipShape(Circle())
                                 } else {
-                                    Text("SWITCH")
+                                    Text(account.loginRequired == true ? "SIGN IN" : "SWITCH")
                                         .font(.custom("Inter-SemiBold", size: 11))
                                         .foregroundColor(colorScheme == .dark ? .white : .black)
                                 }

@@ -21,6 +21,7 @@ struct StoredAccount: Codable, Identifiable {
     let refreshToken: String
     // Encrypted MQTT configuration
     var ctxBlob: String? = nil
+    var loginRequired: Bool? = nil
 }
 
 class KeychainManager {
@@ -65,7 +66,8 @@ class KeychainManager {
             imageURL: imageURL ?? UserDefaults.standard.string(forKey: "image_url") ?? "",
             accessToken: get("access_token") ?? "",
             refreshToken: get("refresh_token") ?? "",
-            ctxBlob: ctxBlob ?? existingBlob
+            ctxBlob: ctxBlob ?? existingBlob,
+            loginRequired: false
         )
 
         accounts.removeAll {
@@ -99,7 +101,8 @@ class KeychainManager {
             imageURL: imageURL,
             accessToken: account.accessToken,
             refreshToken: account.refreshToken,
-            ctxBlob: account.ctxBlob
+            ctxBlob: account.ctxBlob,
+            loginRequired: account.loginRequired
         )
 
         if let data = try? JSONEncoder().encode(accounts) {
@@ -138,7 +141,8 @@ class KeychainManager {
             refreshToken: (refreshToken?.isEmpty == false)
                 ? refreshToken!
                 : account.refreshToken,
-            ctxBlob: account.ctxBlob
+            ctxBlob: account.ctxBlob,
+            loginRequired: account.loginRequired
         )
 
         if let data = try? JSONEncoder().encode(accounts) {
@@ -180,7 +184,8 @@ class KeychainManager {
             imageURL: oldAccount.imageURL,
             accessToken: accessToken,
             refreshToken: refreshToken,
-            ctxBlob: ctxBlob
+            ctxBlob: ctxBlob,
+            loginRequired: false
         )
 
         guard let data = try? JSONEncoder().encode(accounts) else {
@@ -192,6 +197,14 @@ class KeychainManager {
 
         print("✅ Account updated after switch")
         return true
+    }
+
+    func setLoginRequired(_ required: Bool, for userID: String) {
+        var accounts = storedAccounts()
+        guard let index = accounts.firstIndex(where: { $0.userID == userID }) else { return }
+        accounts[index].loginRequired = required
+        guard let data = try? JSONEncoder().encode(accounts) else { return }
+        UserDefaults.standard.set(data, forKey: storedAccountsKey)
     }
     
     func updateActiveAccountDetails(

@@ -541,6 +541,12 @@ struct LoginView: View {
                     showNoInternetAlert = true
                 }
             }
+            .onAppear {
+                prefillLoginEmailIfNeeded(prefilledEmail)
+            }
+            .onChange(of: prefilledEmail) { newEmail in
+                prefillLoginEmailIfNeeded(newEmail)
+            }
             .onDisappear {
                 validateVM.reset()  // now safe to reset
             }
@@ -574,6 +580,12 @@ struct LoginView: View {
             .toast()
 
     
+    }
+
+    private func prefillLoginEmailIfNeeded(_ email: String) {
+        guard !email.isEmpty else { return }
+        vm.email = email
+        didPrefillEmail = true
     }
     
 }

@@ -15,9 +15,15 @@ struct AccountPicker: View {
     @State private var accountPendingDeletion: StoredAccount?
     @State private var showDeleteConfirmation = false
     @State private var showRevokeErrorAlert = false
+    @State private var showSwitchErrorAlert = false
     @State private var accountBeingOpened: StoredAccount?
     @State private var showMaximumAccountsAlert = false
-    @State private var showLoginForAnotherAccount = false
+    @State private var loginRequest: LoginRequest?
+
+    private struct LoginRequest: Identifiable {
+        let id = UUID()
+        let email: String
+    }
 
     init() {
         _accounts = State(initialValue: KeychainManager.shared.storedAccounts())
@@ -48,6 +54,16 @@ struct AccountPicker: View {
     private func switchToAccount(_ account: StoredAccount) async {
 
         accountBeingOpened = account
+        let overlayStart = Date()
+        let minimumOverlayDuration: TimeInterval = 2.0
+
+        // Keeps the switching overlay visible for at least 2 seconds
+        func waitForMinimumOverlay() async {
+            let remaining = minimumOverlayDuration - Date().timeIntervalSince(overlayStart)
+            if remaining > 0 {
+                try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
+            }
+        }
 
         // 1. Call account switch API
         await switchViewModel.accountSwitch(
@@ -60,7 +76,13 @@ struct AccountPicker: View {
               let userID = response.user_id,
               userID == account.userID else {
 
+            if switchViewModel.requiresLogin {
+                KeychainManager.shared.setLoginRequired(true, for: account.userID)
+                accounts = KeychainManager.shared.storedAccounts()
+            }
+            await waitForMinimumOverlay()
             accountBeingOpened = nil
+            showSwitchErrorAlert = true
             return
         }
 
@@ -101,7 +123,10 @@ struct AccountPicker: View {
         // 8. Refresh account list
         accounts = KeychainManager.shared.storedAccounts()
 
-        // 9. Navigate to home
+        // 9. Ensure overlay was visible for at least 2 seconds
+        await waitForMinimumOverlay()
+
+        // 10. Navigate to home
         KeychainManager.shared.resetToHome()
     }
     
@@ -152,7 +177,7 @@ struct AccountPicker: View {
                                         ForEach(accounts) { account in
                                             ZStack(alignment: .topTrailing) {
                                                 HStack(spacing: 14) {
-                                                    ProfileImageView(imageUrl: account.imageURL, size: 56)
+                                                    ProfileImageView(imageUrl: account.imageURL, size: 40)
 
                                                     VStack(alignment: .leading, spacing: 4) {
                                                         Text(displayName(for: account))
@@ -164,6 +189,13 @@ struct AccountPicker: View {
                                                             .font(.custom("Inter-Regular", size: 14))
                                                             .foregroundColor(.white.opacity(0.62))
                                                             .lineLimit(1)
+
+                                                        if account.loginRequired == true {
+                                                            Text("Sign-in Required")
+                                                                .font(.custom("Inter-Regular", size: 12))
+                                                                .foregroundColor(Color.yellow.opacity(0.8))
+                                                                .fixedSize(horizontal: false, vertical: true)
+                                                        }
                                                     }
 
                                                     Spacer()
@@ -210,6 +242,11 @@ struct AccountPicker: View {
                                                         return
                                                     }
 
+                                                    if account.loginRequired == true {
+                                                        loginRequest = LoginRequest(email: account.email)
+                                                        return
+                                                    }
+
                                                     Task {
                                                         await switchToAccount(account)
                                                     }
@@ -229,7 +266,7 @@ struct AccountPicker: View {
                             if accounts.count >= 5 {
                                 showMaximumAccountsAlert = true
                             } else {
-                                showLoginForAnotherAccount = true
+                                loginRequest = LoginRequest(email: "")
                             }
                         } label: {
                             HStack(spacing: 14) {
@@ -345,6 +382,18 @@ struct AccountPicker: View {
                         showRevokeErrorAlert = false
                     }
                 }
+                .modernAlert(isPresented: $showSwitchErrorAlert) {
+                    ModernAlertView(
+                        title: "Account Switch Failed",
+                        message: switchViewModel.errorMessage.isEmpty
+                            ? "Unable to switch account."
+                            : switchViewModel.errorMessage,
+                        isSuccess: false,
+                        buttonTitle: "OK"
+                    ) {
+                        showSwitchErrorAlert = false
+                    }
+                }
                 .modernAlert(isPresented: $showMaximumAccountsAlert) {
                     ModernAlertView(
                         title: "Maximum Accounts Reached",
@@ -378,21 +427,23 @@ struct AccountPicker: View {
                 )
                     .interactiveDismissDisabled(true)
             }
-            .fullScreenCover(isPresented: $showLoginForAnotherAccount) {
+            .fullScreenCover(item: $loginRequest) { request in
                 NavigationStack {
                     LoginView(
                         isUserInitialSetupCompleted: true,
+                        prefilledEmail: request.email,
                         showsCloseButton: true,
                         isAccountAddition: true,
                         onAccountAdded: {
-                            showLoginForAnotherAccount = false
+                            loginRequest = nil
                             FCMTokenManager.shared.registerForCurrentAccount()
                             KeychainManager.shared.resetToHome()
                         },
                         onClose: {
-                            showLoginForAnotherAccount = false
+                            loginRequest = nil
                         }
                     )
+                    .id(request.id)
                     .navigationBarBackButtonHidden(true)
                     .navigationBarHidden(true)
                 }
