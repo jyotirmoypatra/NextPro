@@ -138,6 +138,46 @@ class KeychainManager {
             UserDefaults.standard.set(data, forKey: storedAccountsKey)
         }
     }
+    
+    func updateAccountTokens(
+        userID: String,
+        accessToken: String?,
+        refreshToken: String?
+    ) {
+        guard !userID.isEmpty else { return }
+
+        var accounts = storedAccounts()
+
+        guard let index = accounts.firstIndex(where: {
+            $0.userID == userID
+        }) else {
+            print("❌ Account not found for token update: \(userID)")
+            return
+        }
+
+        let account = accounts[index]
+
+        accounts[index] = StoredAccount(
+            id: account.id,
+            email: account.email,
+            userID: account.userID,
+            username: account.username,
+            fullname: account.fullname,
+            imageURL: account.imageURL,
+            accessToken: (accessToken?.isEmpty == false)
+                ? accessToken!
+                : account.accessToken,
+            refreshToken: (refreshToken?.isEmpty == false)
+                ? refreshToken!
+                : account.refreshToken,
+            ctxBlob: account.ctxBlob
+        )
+
+        if let data = try? JSONEncoder().encode(accounts) {
+            UserDefaults.standard.set(data, forKey: storedAccountsKey)
+            print("✅ Tokens updated for account: \(userID)")
+        }
+    }
 
     func storedAccounts() -> [StoredAccount] {
         guard let data = UserDefaults.standard.data(forKey: storedAccountsKey),

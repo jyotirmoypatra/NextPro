@@ -146,16 +146,40 @@ class NetworkManager: ObservableObject {
     // (single-use), the second concurrent call sends a token the first call already consumed,
     // gets rejected, and shows a spurious "session expired" alert even though the session is
     // fine. This makes every caller share one in-flight refresh instead.
-    private var refreshTask: Task<RefreshTokenResponse, Error>?
+//    private var refreshTask: Task<RefreshTokenResponse, Error>?
+//
+//    private func refreshTokenSingleFlight() async throws -> RefreshTokenResponse {
+//        if let existing = refreshTask {
+//            return try await existing.value
+//        }
+//
+//        let task = Task { try await refressToken() }
+//        refreshTask = task
+//        defer { refreshTask = nil }
+//        return try await task.value
+//    }
+    
+    private var refreshTasks: [String: Task<RefreshTokenResponse, Error>] = [:]
 
-    private func refreshTokenSingleFlight() async throws -> RefreshTokenResponse {
-        if let existing = refreshTask {
+    private func refreshTokenSingleFlight(
+        userID: String,
+        refreshToken: String
+    ) async throws -> RefreshTokenResponse {
+
+        if let existing = refreshTasks[userID] {
             return try await existing.value
         }
 
-        let task = Task { try await refressToken() }
-        refreshTask = task
-        defer { refreshTask = nil }
+        let task = Task {
+            try await refressToken(refreshToken: refreshToken)
+        }
+
+        refreshTasks[userID] = task
+
+        defer {
+            refreshTasks[userID] = nil
+        }
+
         return try await task.value
     }
 
@@ -167,7 +191,8 @@ class NetworkManager: ObservableObject {
         requiresAuth: Bool = false,
         responseType: T.Type,
         retry: Bool = false,
-        isPostRefreshRetry: Bool = false
+        isPostRefreshRetry: Bool = false,
+        accessTokenOverride: String? = nil
     ) async throws -> T {
 
         print("🌐 URL:", url.absoluteString)
@@ -186,13 +211,30 @@ class NetworkManager: ObservableObject {
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
         }
 
+//        if requiresAuth {
+//            guard let token = KeychainManager.shared.get("access_token"),
+//                  !token.isEmpty else {
+//                requestSessionExpiredAlert()
+//                throw APIError.unAuthorized
+//            }
+//            print("Access Token : \(token)")
+//            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+//        }
+        
+        
         if requiresAuth {
-            guard let token = KeychainManager.shared.get("access_token"),
+            guard let token = accessTokenOverride
+                    ?? KeychainManager.shared.get("access_token"),
                   !token.isEmpty else {
                 requestSessionExpiredAlert()
                 throw APIError.unAuthorized
             }
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+            print("Access Token : \(token)")
+            request.setValue(
+                "Bearer \(token)",
+                forHTTPHeaderField: "Authorization"
+            )
         }
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -210,11 +252,24 @@ class NetworkManager: ObservableObject {
         
         // 🔴 Access token expired
            if http.statusCode == 401, retry {
+               
+             // Capture the account BEFORE starting the asynchronous refresh.
+             let refreshUserID = UserDefaults.standard.string(forKey: "user_id") ?? ""
+               let refreshToken = KeychainManager.shared.get("refresh_token") ?? ""
+               guard !refreshUserID.isEmpty, !refreshToken.isEmpty else {
+                      requestSessionExpiredAlert()
+                      throw APIError.unAuthorized
+                  }
+               
                print("🔁 Access token expired. Refreshing...")
 
                let refreshResponse: RefreshTokenResponse
                do {
-                   refreshResponse = try await refreshTokenSingleFlight()
+                 //  refreshResponse = try await refreshTokenSingleFlight()
+                   refreshResponse = try await refreshTokenSingleFlight(
+                           userID: refreshUserID,
+                           refreshToken: refreshToken
+                       )
                } catch APIError.unAuthorized {
                    requestSessionExpiredAlert()
                    throw APIError.unAuthorized
@@ -222,14 +277,47 @@ class NetworkManager: ObservableObject {
                    requestSessionExpiredAlert()
                    throw APIError.unAuthorized
                }
+               
+               
+               let newAccess = refreshResponse.access
+               let newRefresh = refreshResponse.refresh
+               
+               guard let newAccess, !newAccess.isEmpty else {
+                      requestSessionExpiredAlert()
+                      throw APIError.unAuthorized
+                  }
+               
+               // Always update the account that initiated the refresh.
+                  KeychainManager.shared.updateAccountTokens(
+                      userID: refreshUserID,
+                      accessToken: newAccess,
+                      refreshToken: newRefresh
+                  )
+               
+               // Update global Keychain only if the same account is still active.
+                let currentUserID = UserDefaults.standard.string(forKey: "user_id") ?? ""
+               if currentUserID == refreshUserID {
 
-               if let newAccess = refreshResponse.access {
-                   KeychainManager.shared.save(newAccess, forKey: "access_token")
-               }
+                       KeychainManager.shared.save(
+                           newAccess,
+                           forKey: "access_token"
+                       )
 
-               if let newRefresh = refreshResponse.refresh {
-                   KeychainManager.shared.save(newRefresh, forKey: "refresh_token")
-               }
+                       if let newRefresh, !newRefresh.isEmpty {
+                           KeychainManager.shared.save(
+                               newRefresh,
+                               forKey: "refresh_token"
+                           )
+                       }
+                }
+
+//               if let newAccess = refreshResponse.access {
+//                   KeychainManager.shared.save(newAccess, forKey: "access_token")
+//               }
+//
+//               if let newRefresh = refreshResponse.refresh {
+//                   KeychainManager.shared.save(newRefresh, forKey: "refresh_token")
+//               }
 
                // 🔁 Retry original request once, now with the freshly-refreshed token
                return try await performRequest(
@@ -239,7 +327,8 @@ class NetworkManager: ObservableObject {
                    requiresAuth: requiresAuth,
                    responseType: responseType,
                    retry: false,
-                   isPostRefreshRetry: true
+                   isPostRefreshRetry: true,
+                   accessTokenOverride: newAccess
                )
            }
 
@@ -259,7 +348,8 @@ class NetworkManager: ObservableObject {
                 requiresAuth: requiresAuth,
                 responseType: responseType,
                 retry: false,
-                isPostRefreshRetry: false
+                isPostRefreshRetry: false,
+                accessTokenOverride: accessTokenOverride
             )
         }
 
@@ -633,10 +723,29 @@ class NetworkManager: ObservableObject {
         )
     }
     // MARK: - Refresh Token  api
-    func refressToken() async throws -> RefreshTokenResponse {
+//    func refressToken() async throws -> RefreshTokenResponse {
+//
+//        guard let refreshToken = KeychainManager.shared.get("refresh_token"),
+//              !refreshToken.isEmpty else {
+//            throw APIError.unAuthorized
+//        }
+//
+//        let url = URL(string: APIConfig.url(APIConfig.Endpoints.refreshToken))!
+//        print("🔄 Refresh token Api called")
+//
+//        return try await performRequest(
+//            url: url,
+//            method: "POST",
+//            body: [
+//                "refresh": refreshToken
+//            ],
+//            responseType: RefreshTokenResponse.self
+//        )
+//    }
+    
+    func refressToken(refreshToken: String) async throws -> RefreshTokenResponse {
 
-        guard let refreshToken = KeychainManager.shared.get("refresh_token"),
-              !refreshToken.isEmpty else {
+        guard !refreshToken.isEmpty else {
             throw APIError.unAuthorized
         }
 
