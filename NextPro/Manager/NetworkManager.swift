@@ -148,26 +148,6 @@ class NetworkManager: ObservableObject {
     }
 
     // MARK: - Single-flight token refresh
-    //
-    // Multiple authenticated calls can hit a 401 at nearly the same moment (e.g. DoorOpenView's
-    // device-details fetch and profile fetch both firing on appear). Without this, each one
-    // would independently call refressToken(). If the backend rotates refresh tokens
-    // (single-use), the second concurrent call sends a token the first call already consumed,
-    // gets rejected, and shows a spurious "session expired" alert even though the session is
-    // fine. This makes every caller share one in-flight refresh instead.
-//    private var refreshTask: Task<RefreshTokenResponse, Error>?
-//
-//    private func refreshTokenSingleFlight() async throws -> RefreshTokenResponse {
-//        if let existing = refreshTask {
-//            return try await existing.value
-//        }
-//
-//        let task = Task { try await refressToken() }
-//        refreshTask = task
-//        defer { refreshTask = nil }
-//        return try await task.value
-//    }
-    
     private var refreshTasks: [String: Task<RefreshTokenResponse, Error>] = [:]
 
     private func refreshTokenSingleFlight(
@@ -220,17 +200,7 @@ class NetworkManager: ObservableObject {
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
         }
 
-//        if requiresAuth {
-//            guard let token = KeychainManager.shared.get("access_token"),
-//                  !token.isEmpty else {
-//                requestSessionExpiredAlert()
-//                throw APIError.unAuthorized
-//            }
-//            print("Access Token : \(token)")
-//            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-//        }
-        
-        
+
         if requiresAuth {
             guard let token = accessTokenOverride
                     ?? KeychainManager.shared.get("access_token"),
@@ -320,13 +290,6 @@ class NetworkManager: ObservableObject {
                        }
                 }
 
-//               if let newAccess = refreshResponse.access {
-//                   KeychainManager.shared.save(newAccess, forKey: "access_token")
-//               }
-//
-//               if let newRefresh = refreshResponse.refresh {
-//                   KeychainManager.shared.save(newRefresh, forKey: "refresh_token")
-//               }
 
                // 🔁 Retry original request once, now with the freshly-refreshed token
                return try await performRequest(
@@ -341,12 +304,7 @@ class NetworkManager: ObservableObject {
                )
            }
 
-        // The token was JUST refreshed successfully, yet this retry still got a 401. That's
-        // much more likely to be a transient blip — e.g. the app resumed from a long
-        // background period and networking hasn't fully re-established yet — than a
-        // genuinely dead session we just proved was alive by refreshing it. Give it one
-        // silent extra try with that same fresh token before treating this as a real,
-        // user-visible auth failure.
+        
         if http.statusCode == 401, requiresAuth, isPostRefreshRetry {
             print("⏳ Retry with freshly-refreshed token still got 401 — treating as transient, retrying once more")
             try? await Task.sleep(nanoseconds: 700_000_000)
@@ -737,26 +695,6 @@ class NetworkManager: ObservableObject {
         )
     }
     // MARK: - Refresh Token  api
-//    func refressToken() async throws -> RefreshTokenResponse {
-//
-//        guard let refreshToken = KeychainManager.shared.get("refresh_token"),
-//              !refreshToken.isEmpty else {
-//            throw APIError.unAuthorized
-//        }
-//
-//        let url = URL(string: APIConfig.url(APIConfig.Endpoints.refreshToken))!
-//        print("🔄 Refresh token Api called")
-//
-//        return try await performRequest(
-//            url: url,
-//            method: "POST",
-//            body: [
-//                "refresh": refreshToken
-//            ],
-//            responseType: RefreshTokenResponse.self
-//        )
-//    }
-    
     func refressToken(refreshToken: String) async throws -> RefreshTokenResponse {
 
         guard !refreshToken.isEmpty else {
