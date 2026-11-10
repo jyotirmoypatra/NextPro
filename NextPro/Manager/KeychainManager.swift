@@ -242,7 +242,7 @@ class KeychainManager {
 
             if let jsonData = try? encoder.encode(accounts),
                let jsonString = String(data: jsonData, encoding: .utf8) {
-                print("Stored Accounts:\n\(jsonString)")
+              //  print("Stored Accounts:\n\(jsonString)")
             }
         return accounts
     }

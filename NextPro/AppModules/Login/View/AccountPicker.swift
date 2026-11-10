@@ -10,9 +10,11 @@ import SwiftUI
 struct AccountPicker: View {
     @State private var accounts: [StoredAccount]
     @StateObject private var switchViewModel = AccountSwitchViewModel()
+    @StateObject private var revokeTokenViewModel = RevokeTokenViewModel()
     @State private var isDeleteMode = false
     @State private var accountPendingDeletion: StoredAccount?
     @State private var showDeleteConfirmation = false
+    @State private var showRevokeErrorAlert = false
     @State private var accountBeingOpened: StoredAccount?
     @State private var showMaximumAccountsAlert = false
     @State private var showLoginForAnotherAccount = false
@@ -299,18 +301,29 @@ struct AccountPicker: View {
                         isSuccess: false,
                         buttonTitle: "Remove",
                         action: {
-                            if let accountPendingDeletion {
+                            guard let account = accountPendingDeletion,
+                                  !revokeTokenViewModel.isLoading else { return }
+
+                            Task { @MainActor in
+                                guard await revokeTokenViewModel.revoke(
+                                    refreshToken: account.refreshToken
+                                ) else {
+                                    showDeleteConfirmation = false
+                                    showRevokeErrorAlert = true
+                                    return
+                                }
+
                                 withAnimation(.easeInOut(duration: 0.2)) {
-                                    accounts.removeAll { $0.id == accountPendingDeletion.id }
-                                    KeychainManager.shared.removeStoredAccount(accountPendingDeletion)
+                                    accounts.removeAll { $0.id == account.id }
+                                    KeychainManager.shared.removeStoredAccount(account)
                                     self.accountPendingDeletion = nil
                                     isDeleteMode = false
-                                    if accounts.isEmpty {
-                                        KeychainManager.shared.resetToLogin()
-                                    }
+                                }
+                                showDeleteConfirmation = false
+                                if accounts.isEmpty {
+                                    KeychainManager.shared.resetToLogin()
                                 }
                             }
-                            showDeleteConfirmation = false
                         },
                         secondaryButtonTitle: "Cancel",
                         secondaryAction: {
@@ -321,6 +334,16 @@ struct AccountPicker: View {
                             showDeleteConfirmation = false
                         }
                     )
+                }
+                .modernAlert(isPresented: $showRevokeErrorAlert) {
+                    ModernAlertView(
+                        title: "Unable to Remove Account",
+                        message: revokeTokenViewModel.errorMessage ?? "Unable to remove this account.",
+                        isSuccess: false,
+                        buttonTitle: "OK"
+                    ) {
+                        showRevokeErrorAlert = false
+                    }
                 }
                 .modernAlert(isPresented: $showMaximumAccountsAlert) {
                     ModernAlertView(
@@ -336,6 +359,18 @@ struct AccountPicker: View {
             }
             .navigationBarBackButtonHidden(true)
             .ignoresSafeArea(.keyboard, edges: .bottom)
+            .overlay {
+                if revokeTokenViewModel.isLoading {
+                    ZStack {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.5)
+                    }
+                }
+            }
             .fullScreenCover(item: $accountBeingOpened) { account in
                 AccountSwitchingOverlay(
                     accountName: displayName(for: account),

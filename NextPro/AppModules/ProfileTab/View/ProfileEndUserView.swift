@@ -698,6 +698,8 @@ struct ManageAccountSheet: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var isDeleteMode = false
     @State private var deletedAccountIDs = Set<String>()
+    @StateObject private var revokeTokenViewModel = RevokeTokenViewModel()
+    @State private var removalErrorMessage: String?
 
     let fullName: String
     let email: String
@@ -1036,26 +1038,67 @@ struct ManageAccountSheet: View {
 //                    .allowsHitTesting(false)
 //            }
 //        }
-        .alert("Remove Account", isPresented: $showDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {
-                accountPendingDeletion = nil
-            }
-            Button("Remove", role: .destructive) {
-                if let accountPendingDeletion {
-                    let deletingCurrentAccount = accountPendingDeletion.email.caseInsensitiveCompare(email) == .orderedSame
-                    KeychainManager.shared.removeStoredAccount(accountPendingDeletion)
-                    deletedAccountIDs.insert(accountPendingDeletion.id)
-                    if deletingCurrentAccount {
-                        onCurrentAccountDelete()
-                    }
+        .alert(
+            removalErrorMessage == nil ? "Remove Account" : "Unable to Remove Account",
+            isPresented: $showDeleteConfirmation
+        ) {
+            if removalErrorMessage != nil {
+                Button("OK") {
+                    removalErrorMessage = nil
+                    accountPendingDeletion = nil
                 }
-                self.accountPendingDeletion = nil
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isDeleteMode = false
+            } else {
+                Button("Cancel", role: .cancel) {
+                    accountPendingDeletion = nil
+                }
+                Button("Remove", role: .destructive) {
+                    guard let account = accountPendingDeletion,
+                          !revokeTokenViewModel.isLoading else { return }
+
+                    removalErrorMessage = nil
+                    showDeleteConfirmation = false
+                    Task { @MainActor in
+                        guard await revokeTokenViewModel.revoke(
+                            refreshToken: account.refreshToken
+                        ) else {
+                            removalErrorMessage = revokeTokenViewModel.errorMessage
+                                ?? "Unable to remove this account."
+                            showDeleteConfirmation = true
+                            return
+                        }
+
+                        let deletingCurrentAccount = account.email.caseInsensitiveCompare(email) == .orderedSame
+                        KeychainManager.shared.removeStoredAccount(account)
+                        deletedAccountIDs.insert(account.id)
+                        accountPendingDeletion = nil
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            isDeleteMode = false
+                        }
+                        if deletingCurrentAccount {
+                            onCurrentAccountDelete()
+                        }
+                    }
                 }
             }
         } message: {
-            Text("Are you sure you want to remove \(displayName(for: accountPendingDeletion)) from this device? You can still log in again anytime using your email and password.")
+            if let removalErrorMessage {
+                Text(removalErrorMessage)
+            } else {
+                Text("Are you sure you want to remove \(displayName(for: accountPendingDeletion)) from this device? You can still log in again anytime using your email and password.")
+            }
+        }
+        .overlay {
+            if revokeTokenViewModel.isLoading {
+                ZStack {
+                    Color.black.opacity(0.1)
+                        .ignoresSafeArea()
+
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(1.5)
+                }
+                .zIndex(20)
+            }
         }
         .padding(.horizontal, 20)
         .padding(.top, 12)

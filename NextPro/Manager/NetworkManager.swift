@@ -976,6 +976,25 @@ class NetworkManager: ObservableObject {
             retry: true
         )
     }
+
+    // MARK: - Revoke Saved Account Token API
+    func revokeToken(
+        refreshToken: String,
+        deviceToken: String?
+    ) async throws -> UnRegisterFCMTokenResponse {
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.revokeToken))!
+        var body: [String: Any] = ["refresh": refreshToken]
+        if let deviceToken, !deviceToken.isEmpty {
+            body["device_token"] = deviceToken
+        }
+
+        return try await performRequest(
+            url: url,
+            method: "POST",
+            body: body,
+            responseType: UnRegisterFCMTokenResponse.self
+        )
+    }
     
     
     
