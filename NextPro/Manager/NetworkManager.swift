@@ -8,6 +8,7 @@
 import Foundation
 import Network
 import Combine
+import UIKit
 
 
 class NetworkManager: ObservableObject {
@@ -430,13 +431,18 @@ class NetworkManager: ObservableObject {
 
     func login(email: String, password: String) async throws -> LoginResponseModel {
         let url = URL(string: APIConfig.url(APIConfig.Endpoints.login))!
+        let deviceID = KeychainManager.shared.getOrCreateDeviceID()
         print("login Api called----------------")
         return try await performRequest(
             url: url,
             method: "POST",
             body: [
                 "username": email,
-                "password": password
+                "password": password,
+                "device_id": deviceID,
+                "device_name": UIDevice.current.name,
+                "platform": "ios",
+                "app_version": APIConfig.appVersionText
             ],
             responseType: LoginResponseModel.self
         )
@@ -756,7 +762,8 @@ class NetworkManager: ObservableObject {
             url: url,
             method: "POST",
             body: [
-                "refresh": refreshToken
+                "refresh": refreshToken,
+                "device_id": KeychainManager.shared.getOrCreateDeviceID()
             ],
             responseType: RefreshTokenResponse.self
         )
@@ -1075,6 +1082,24 @@ class NetworkManager: ObservableObject {
             requiresAuth: true,
             responseType: CountryResponse.self,
             retry: true
+        )
+    }
+    
+    // MARK: - Switch Account API
+    func switchAccount(refreshToken: String) async throws -> LoginResponseModel {
+
+        let url = URL(string: APIConfig.url(APIConfig.Endpoints.switchAccount))!
+
+        let deviceID = KeychainManager.shared.getOrCreateDeviceID()
+
+        return try await performRequest(
+            url: url,
+            method: "POST",
+            body: [
+                "refresh": refreshToken,
+                "device_id": deviceID
+            ],
+            responseType: LoginResponseModel.self
         )
     }
 

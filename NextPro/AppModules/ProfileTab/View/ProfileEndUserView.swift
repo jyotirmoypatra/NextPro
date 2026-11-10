@@ -25,7 +25,7 @@ struct ProfileEndUserView: View {
     @State private var webViewType = ""
     
     @StateObject private var viewModel = UserProfileDetailsViewModel()
-
+    @StateObject private var accountSwitchViewModel = AccountSwitchViewModel()
     
     @Environment(\.dismiss) var dismiss
     @State private var goToLogin = false
@@ -326,6 +326,12 @@ struct ProfileEndUserView: View {
                     .allowsHitTesting(false)
                     .zIndex(5)
             }
+
+            if isSwitchingAccount {
+                AccountSwitchingOverlay(accountName: switchingAccountName)
+                    .ignoresSafeArea()
+                    .zIndex(10)
+            }
         
 
         }
@@ -485,20 +491,8 @@ struct ProfileEndUserView: View {
                 },
                 onSwitchAccount: { account in
                     showManageAccount = false
-                    switchingAccountName = account.fullname?.isEmpty == false
-                        ? account.fullname!
-                        : (account.username.isEmpty ? account.email : account.username)
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        isSwitchingAccount = true
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                        KeychainManager.shared.activate(account)
-                        FCMTokenManager.shared.registerForCurrentAccount()
-                        isSwitchingAccount = false
-                        loadUserData()
-                        Task {
-                            await viewModel.fetchUserProfile()
-                        }
+                    Task { @MainActor in
+                        await switchProfileAccount(account)
                     }
                 },
                 onDeleteAccount: { account in
@@ -543,17 +537,88 @@ struct ProfileEndUserView: View {
                 .navigationBarHidden(true)
             }
         }
-        .fullScreenCover(isPresented: $isSwitchingAccount) {
-            AccountSwitchingOverlay(accountName: switchingAccountName)
-                .interactiveDismissDisabled(true)
-        }
         .fullScreenCover(isPresented: $isRemovingCurrentAccount) {
             AccountSwitchingOverlay(accountName: accountRemovalStatus, titlePrefix: "")
                 .interactiveDismissDisabled(true)
         }
 
     }
-    
+    @MainActor
+    private func switchProfileAccount(_ account: StoredAccount) async {
+
+        // 1. Show switching overlay
+        let overlayStartedAt = Date()
+        switchingAccountName = account.fullname?.isEmpty == false
+            ? account.fullname!
+            : (account.username.isEmpty ? account.email : account.username)
+
+        isSwitchingAccount = true
+
+        // 2. Call backend switch API
+        await accountSwitchViewModel.accountSwitch(
+            refreshToken: account.refreshToken
+        )
+
+        // 3. Validate API response
+        guard accountSwitchViewModel.successFlag,
+              let response = accountSwitchViewModel.switchResponse,
+              let userID = response.user_id,
+              userID == account.userID else {
+
+            print("Account switching failed: \(accountSwitchViewModel.errorMessage)")
+            await hideSwitchOverlayAfterMinimumDuration(since: overlayStartedAt)
+            return
+        }
+
+        // 4. Save fresh tokens and MQTT ctx_blob
+        let isUpdated = KeychainManager.shared.updateAccountAfterSwitch(
+            userID: userID,
+            response: response
+        )
+
+        guard isUpdated,
+              let updatedAccount = KeychainManager.shared.storedAccounts()
+                .first(where: { $0.userID == userID }) else {
+
+            await hideSwitchOverlayAfterMinimumDuration(since: overlayStartedAt)
+            return
+        }
+
+        // 5. Update active account details and permissions
+        KeychainManager.shared.updateActiveAccountDetails(
+            updatedAccount,
+            response: response
+        )
+
+        // 6. Activate selected account and restore MQTT credentials
+        guard KeychainManager.shared.activate(updatedAccount) else {
+            await hideSwitchOverlayAfterMinimumDuration(since: overlayStartedAt)
+            return
+        }
+
+        // 7. Register FCM for selected account
+        FCMTokenManager.shared.registerForCurrentAccount()
+
+        // 8. Refresh profile data
+        loadUserData()
+        await viewModel.fetchUserProfile()
+
+        // 9. Close the overlay and remain on the Profile page
+        await hideSwitchOverlayAfterMinimumDuration(since: overlayStartedAt)
+    }
+
+    @MainActor
+    private func hideSwitchOverlayAfterMinimumDuration(since start: Date) async {
+        // Allow for the Manage Account sheet's dismissal animation so the
+        // overlay remains visibly present for at least two seconds.
+        let minimumDuration: TimeInterval = 2.5
+        let elapsed = Date().timeIntervalSince(start)
+        if elapsed < minimumDuration {
+            let remainingNanoseconds = UInt64((minimumDuration - elapsed) * 1_000_000_000)
+            try? await Task.sleep(nanoseconds: remainingNanoseconds)
+        }
+        isSwitchingAccount = false
+    }
     
     private func isValidImageURL(_ urlString: String?) -> Bool {
         guard let urlString = urlString,

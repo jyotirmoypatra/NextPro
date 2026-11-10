@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AccountPicker: View {
     @State private var accounts: [StoredAccount]
+    @StateObject private var switchViewModel = AccountSwitchViewModel()
     @State private var isDeleteMode = false
     @State private var accountPendingDeletion: StoredAccount?
     @State private var showDeleteConfirmation = false
@@ -38,6 +39,68 @@ struct AccountPicker: View {
             return (String(parts[0].prefix(1)) + String(parts[1].prefix(1))).uppercased()
         }
         return String(displayName(for: account).prefix(2)).uppercased()
+    }
+    
+
+    @MainActor
+    private func switchToAccount(_ account: StoredAccount) async {
+
+        accountBeingOpened = account
+
+        // 1. Call account switch API
+        await switchViewModel.accountSwitch(
+            refreshToken: account.refreshToken
+        )
+
+        // 2. Check API response
+        guard switchViewModel.successFlag,
+              let response = switchViewModel.switchResponse,
+              let userID = response.user_id,
+              userID == account.userID else {
+
+            accountBeingOpened = nil
+            return
+        }
+
+        // 3. Save fresh tokens and ctx_blob
+        let isUpdated = KeychainManager.shared.updateAccountAfterSwitch(
+            userID: userID,
+            response: response
+        )
+
+        guard isUpdated else {
+            accountBeingOpened = nil
+            return
+        }
+
+        // 4. Get updated saved account
+        guard let updatedAccount = KeychainManager.shared.storedAccounts()
+            .first(where: { $0.userID == userID }) else {
+
+            accountBeingOpened = nil
+            return
+        }
+
+        // 5. Update active account details and permissions
+        KeychainManager.shared.updateActiveAccountDetails(
+            updatedAccount,
+            response: response
+        )
+
+        // 6. Activate account and restore MQTT credentials
+        guard KeychainManager.shared.activate(updatedAccount) else {
+            accountBeingOpened = nil
+            return
+        }
+
+        // 7. Register FCM for the selected account
+        FCMTokenManager.shared.registerForCurrentAccount()
+
+        // 8. Refresh account list
+        accounts = KeychainManager.shared.storedAccounts()
+
+        // 9. Navigate to home
+        KeychainManager.shared.resetToHome()
     }
     
     var body: some View {
@@ -130,13 +193,23 @@ struct AccountPicker: View {
                                                 )
                                                 .clipShape(RoundedRectangle(cornerRadius: 18))
                                                 .contentShape(Rectangle())
+//                                                .onTapGesture {
+//                                                    guard !isDeleteMode else { return }
+//                                                    accountBeingOpened = account
+//                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+//                                                        KeychainManager.shared.activate(account)
+//                                                        FCMTokenManager.shared.registerForCurrentAccount()
+//                                                        KeychainManager.shared.resetToHome()
+//                                                    }
+//                                                }
                                                 .onTapGesture {
-                                                    guard !isDeleteMode else { return }
-                                                    accountBeingOpened = account
-                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                                                        KeychainManager.shared.activate(account)
-                                                        FCMTokenManager.shared.registerForCurrentAccount()
-                                                        KeychainManager.shared.resetToHome()
+                                                    guard !isDeleteMode,
+                                                          !switchViewModel.isLoading else {
+                                                        return
+                                                    }
+
+                                                    Task {
+                                                        await switchToAccount(account)
                                                     }
                                                 }
                                             }

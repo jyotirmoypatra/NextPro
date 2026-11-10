@@ -79,6 +79,10 @@ struct APIConfig {
         static let saveVoiceSetting = "/api/voice-message/settings/"
         
         static let countryList = "/api/countries/"
+       
+        static let switchAccount = "/api/facility-user/switch-account/"
+        
+        static let revokeToken = "/api/authentication/token/revoke/"
         
         
     }
