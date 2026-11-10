@@ -23,6 +23,9 @@ class NetworkManager: ObservableObject {
     
     @Published var showSessionExpiredAlert = false
     private var sessionExpirationState: SessionExpirationState = .idle
+    /// Set after a password change: the server revokes every token, so background 401s are
+    /// expected and must not show the "Session Expired" alert.
+    var suppressSessionExpiredAlert = false
 
     private enum SessionExpirationState: Equatable {
         case idle
@@ -115,9 +118,14 @@ class NetworkManager: ObservableObject {
 
     func requestSessionExpiredAlert() {
         DispatchQueue.main.async {
+            guard !self.suppressSessionExpiredAlert else { return }
             guard UserDefaults.standard.bool(forKey: "is_logged_in") else {
                 self.resetSessionExpirationState()
                 return
+            }
+            // Session is dead for the active account: saved account must sign in again
+            if let userID = UserDefaults.standard.string(forKey: "user_id"), !userID.isEmpty {
+                KeychainManager.shared.setLoginRequired(true, for: userID)
             }
             guard self.sessionExpirationState == .idle else { return }
             self.sessionExpirationState = .presenting

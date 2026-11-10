@@ -239,6 +239,13 @@ struct CreateNewPasswordView: View {
                                 // Show success toast
                                 
                                 if comingFrom == "user_profile"{
+                                    // Server revoked all tokens: stop "Session Expired" alert
+                                    NetworkManager.shared.suppressSessionExpiredAlert = true
+                                    // Saved tokens are revoked: this account must sign in again
+                                    if let userID = UserDefaults.standard.string(forKey: "user_id"),
+                                       !userID.isEmpty {
+                                        KeychainManager.shared.setLoginRequired(true, for: userID)
+                                    }
                                     showSuccessUpdateAlert = true
                                 }
                                 else if comingFrom == "validate_email"  && !(isAggremntAccepted ?? false){ //open this and hide bellow to check agrement accepted or not - Step 1
@@ -387,15 +394,11 @@ struct CreateNewPasswordView: View {
                     guard !isLoggingOut else { return }
                     isLoggingOut = true
                     Task {
-                        let result = await FCMTokenManager.shared.logoutStrict()
+                        // Tokens are already revoked, so use the non-blocking logout.
+                        await FCMTokenManager.shared.performLogout()
                         isLoggingOut = false
-
-                        switch result {
-                        case .success:
-                            KeychainManager.shared.resetToLogin()
-                        case .failed(let message):
-                            toastManager.show(message: message, type: .error)
-                        }
+                        NetworkManager.shared.suppressSessionExpiredAlert = false
+                        KeychainManager.shared.resetToLogin()
                     }
                 }
             }
